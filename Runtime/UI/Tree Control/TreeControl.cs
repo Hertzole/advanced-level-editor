@@ -479,7 +479,9 @@ namespace Hertzole.ALE
             OnReparent?.Invoke(this, args);
             MoveChildren((TItem)draggingItem);
 
-            if (action == ItemDropAction.SetLastChild)
+            ITreeItem listItem = (ITreeItem)listView.GetListItem(listView.IndexOf(target));
+
+            if (listItem.Expanded && action == ItemDropAction.SetLastChild)
             {
                 List<TItem> children = getChildren((TItem)target);
                 listView.InsertItem(draggingItem, listView.IndexOf(target) + children.Count);
