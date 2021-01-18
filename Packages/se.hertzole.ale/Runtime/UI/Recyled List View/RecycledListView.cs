@@ -56,16 +56,22 @@ namespace Hertzole.ALE
             UpdateList();
         }
 
-        public void AddItems(IEnumerable<object> items)
+        public void AddItems(IEnumerable<object> items, bool updateList = true)
         {
             itemsSource.AddRange(items);
-            UpdateList(false);
+            if (updateList)
+            {
+                UpdateList(false);
+            }
         }
 
-        public void AddItem(object item)
+        public void AddItem(object item, bool updateList = true)
         {
             itemsSource.Add(item);
-            UpdateList(false);
+            if (updateList)
+            {
+                UpdateList(false);
+            }
         }
 
         public void RemoveItem(object item, bool updateList = true)
