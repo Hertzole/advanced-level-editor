@@ -313,16 +313,6 @@ namespace Hertzole.ALE
             }
         }
 
-        private void OnGUI()
-        {
-            GUILayout.BeginArea(new Rect(Screen.width - 800, 0, 300, Screen.height), GUI.skin.box);
-            for (int i = 0; i < itemsSource.Count; i++)
-            {
-                GUILayout.Label($"[{i}] {itemsSource[i]}");
-            }
-            GUILayout.EndArea();
-        }
-
 #if UNITY_EDITOR
         private void OnValidate()
         {
