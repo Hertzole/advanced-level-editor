@@ -483,7 +483,8 @@ namespace Hertzole.ALE
 
             if (listItem.Expanded && action == ItemDropAction.SetLastChild)
             {
-                List<TItem> children = getChildren((TItem)target);
+                List<TItem> children = new List<TItem>();
+                GetAllChildren((TItem)target, children, true);
                 listView.InsertItem(draggingItem, listView.IndexOf(target) + children.Count);
             }
 
@@ -578,7 +579,6 @@ namespace Hertzole.ALE
             int parentIndex = listView.IndexOf(parent);
             for (int i = 0; i < children.Count; i++)
             {
-                Debug.Log(children[i]);
                 listView.MoveItem(children[i], parentIndex + i + 1, false);
             }
         }
