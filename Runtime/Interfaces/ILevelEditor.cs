@@ -8,13 +8,14 @@
         ILevelEditorUI UI { get; }
         ILevelEditorSaveManager SaveManager { get; }
         ILevelEditorObjectManager ObjectManager { get; }
+        ILevelEditorInput Input { get; }
         ILevelEditorPlayMode PlayMode { get; }
 
-        void SetMode(int newMode);
+        bool IsDirty { get; }
+
+        void SetMode(int newMode, bool returnOnOutOfRange = true);
 
         void NewLevel();
-
-        bool IsDirty();
 
         void MarkDirty();
 

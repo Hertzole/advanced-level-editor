@@ -1,6 +1,4 @@
-﻿using UnityEngine;
-
-namespace Hertzole.ALE
+﻿namespace Hertzole.ALE
 {
     public interface ILevelEditorSnapping
     {
@@ -18,8 +16,6 @@ namespace Hertzole.ALE
         float ScaleSnapX { get; set; }
         float ScaleSnapY { get; set; }
         float ScaleSnapZ { get; set; }
-
-        Vector3 SnapVector3(Vector3 value, Vector3 increment);
 
         float Snap(float value, float increment);
     }
