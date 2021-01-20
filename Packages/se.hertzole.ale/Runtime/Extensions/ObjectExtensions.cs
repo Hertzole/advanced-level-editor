@@ -23,6 +23,20 @@ namespace Hertzole.ALE
             }
         }
 
+        public static T NeedComponent<T>(this GameObject go) where T : class
+        {
+            if (go.TryGetComponent<T>(out T result))
+            {
+                return result;
+            }
+            else
+            {
+                Debug.LogError($"'{go.name}' needs to have '{typeof(T).Name}' attached.");
+                return null;
+            }
+        }
+
+        [Obsolete("Use 'RequireTypeAttribute' and 'NeedComponent<T>' instead.")]
         public static bool ExistsAndHasComponent<T>(this GameObject go, string propertyName, GameObject myGameObject, bool mustExist = true)
         {
             if (go == null)
