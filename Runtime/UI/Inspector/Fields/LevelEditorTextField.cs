@@ -1,0 +1,84 @@
+﻿#if ALE_STRIP_UGUI
+#define OBSOLETE
+#endif
+
+#if OBSOLETE && !UNITY_EDITOR
+#define STRIP
+#endif
+
+#if !STRIP
+using TMPro;
+using UnityEngine;
+
+namespace Hertzole.ALE
+{
+#if UNITY_EDITOR
+    [DisallowMultipleComponent]
+#if !OBSOLETE
+    [AddComponentMenu("ALE/UI/uGUI/Fields/Text Field", 200)]
+#else
+    [System.Obsolete("LevelEditorTextField has been stripped and will be removed on build.", true)]
+#endif
+#endif
+    public class LevelEditorTextField : LevelEditorInspectorField
+    {
+        [SerializeField]
+        private TMP_InputField textField = null;
+        [SerializeField]
+        private bool placeholderAsName = true;
+
+        private bool isChar;
+
+        protected override void OnAwake()
+        {
+            this.LogIfStripped();
+
+            textField.onValueChanged.AddListener(x =>
+            {
+                if (isChar)
+                {
+                    if (string.IsNullOrEmpty(x))
+                    {
+                        x = "\0";
+                    }
+
+                    SetPropertyValue(char.Parse(x));
+                }
+                else
+                {
+                    SetPropertyValue(x);
+                }
+            });
+        }
+
+        public override bool SupportsType(ExposedProperty property)
+        {
+            return !property.isArray && (property.type == typeof(string) || property.type == typeof(char));
+        }
+
+        protected override void OnBound(ExposedProperty property, IExposedToLevelEditor exposed)
+        {
+            isChar = property.type == typeof(char);
+
+            textField.characterLimit = isChar ? 1 : 0;
+
+            if (placeholderAsName && textField.placeholder is TextMeshProUGUI placeholder)
+            {
+                placeholder.text = property.name;
+            }
+        }
+
+        protected override void SetFieldValue(object value)
+        {
+            if (isChar)
+            {
+                textField.SetTextWithoutNotify(((char)value).ToString());
+            }
+            else
+            {
+                textField.SetTextWithoutNotify((string)value);
+            }
+        }
+    }
+}
+#endif

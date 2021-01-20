@@ -23,8 +23,8 @@ namespace Hertzole.ALE
 
         void StopPlayMode();
 
-        void AddChildren(ILevelEditorObject child);
+        void AddChild(ILevelEditorObject child);
 
-        void RemoveChildren(ILevelEditorObject child);
+        void RemoveChild(ILevelEditorObject child);
     }
 }
