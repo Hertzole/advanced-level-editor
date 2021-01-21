@@ -66,12 +66,12 @@ namespace Hertzole.ALE
 
         public override bool SupportsType(ExposedProperty property)
         {
-            return !property.isArray && (property.type == typeof(Vector3) || property.type == typeof(Vector3Int));
+            return !property.IsArray && (property.Type == typeof(Vector3) || property.Type == typeof(Vector3Int));
         }
 
         protected override void OnBound(ExposedProperty property, IExposedToLevelEditor exposed)
         {
-            isInt = property.type == typeof(Vector3Int);
+            isInt = property.Type == typeof(Vector3Int);
 
             xField.contentType = isInt ? TMP_InputField.ContentType.IntegerNumber : TMP_InputField.ContentType.DecimalNumber;
             yField.contentType = isInt ? TMP_InputField.ContentType.IntegerNumber : TMP_InputField.ContentType.DecimalNumber;

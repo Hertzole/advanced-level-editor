@@ -43,55 +43,55 @@ namespace Hertzole.ALE
 
         public override bool SupportsType(ExposedProperty property)
         {
-            if (property.isArray)
+            if (property.IsArray)
             {
                 return false;
             }
 
-            return property.type == typeof(sbyte) || property.type == typeof(byte) || property.type == typeof(short) || property.type == typeof(ushort) ||
-                   property.type == typeof(int) || property.type == typeof(uint) || property.type == typeof(long) || property.type == typeof(ulong) ||
-                   property.type == typeof(float) || property.type == typeof(double) || property.type == typeof(decimal);
+            return property.Type == typeof(sbyte) || property.Type == typeof(byte) || property.Type == typeof(short) || property.Type == typeof(ushort) ||
+                   property.Type == typeof(int) || property.Type == typeof(uint) || property.Type == typeof(long) || property.Type == typeof(ulong) ||
+                   property.Type == typeof(float) || property.Type == typeof(double) || property.Type == typeof(decimal);
         }
 
         protected override void OnBound(ExposedProperty property, IExposedToLevelEditor exposed)
         {
-            if (property.type == typeof(sbyte))
+            if (property.Type == typeof(sbyte))
             {
                 currentType = NumberType.Sbyte;
             }
-            else if (property.type == typeof(byte))
+            else if (property.Type == typeof(byte))
             {
                 currentType = NumberType.Byte;
             }
-            else if (property.type == typeof(short))
+            else if (property.Type == typeof(short))
             {
                 currentType = NumberType.Short;
             }
-            else if (property.type == typeof(ushort))
+            else if (property.Type == typeof(ushort))
             {
                 currentType = NumberType.UShort;
             }
-            else if (property.type == typeof(int))
+            else if (property.Type == typeof(int))
             {
                 currentType = NumberType.Int;
             }
-            else if (property.type == typeof(uint))
+            else if (property.Type == typeof(uint))
             {
                 currentType = NumberType.UInt;
             }
-            else if (property.type == typeof(long))
+            else if (property.Type == typeof(long))
             {
                 currentType = NumberType.Long;
             }
-            else if (property.type == typeof(ulong))
+            else if (property.Type == typeof(ulong))
             {
                 currentType = NumberType.ULong;
             }
-            else if (property.type == typeof(float))
+            else if (property.Type == typeof(float))
             {
                 currentType = NumberType.Float;
             }
-            else if (property.type == typeof(double))
+            else if (property.Type == typeof(double))
             {
                 currentType = NumberType.Double;
             }
@@ -147,7 +147,7 @@ namespace Hertzole.ALE
 
             if (placeholderAsName && textField.placeholder is TextMeshProUGUI placeholder)
             {
-                placeholder.text = property.name;
+                placeholder.text = property.Name;
             }
         }
 

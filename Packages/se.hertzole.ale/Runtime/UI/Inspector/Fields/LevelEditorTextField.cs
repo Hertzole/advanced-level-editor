@@ -53,18 +53,18 @@ namespace Hertzole.ALE
 
         public override bool SupportsType(ExposedProperty property)
         {
-            return !property.isArray && (property.type == typeof(string) || property.type == typeof(char));
+            return !property.IsArray && (property.Type == typeof(string) || property.Type == typeof(char));
         }
 
         protected override void OnBound(ExposedProperty property, IExposedToLevelEditor exposed)
         {
-            isChar = property.type == typeof(char);
+            isChar = property.Type == typeof(char);
 
             textField.characterLimit = isChar ? 1 : 0;
 
             if (placeholderAsName && textField.placeholder is TextMeshProUGUI placeholder)
             {
-                placeholder.text = property.name;
+                placeholder.text = property.Name;
             }
         }
 

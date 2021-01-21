@@ -50,7 +50,7 @@ namespace Hertzole.ALE
                             object value = properties[k].value;
 
                             // Required to get the proper component that it needs.
-                            Type valueType = exposedComponents[j].GetValueType(properties[k].name);
+                            Type valueType = exposedComponents[j].GetValueType(properties[k].id);
                             if (valueType.IsSubclassOf(typeof(Component)))
                             {
                                 if (value != null)
@@ -59,7 +59,7 @@ namespace Hertzole.ALE
                                     value = targetObj.MyGameObject.GetComponent(valueType);
                                 }
                             }
-                            exposedComponents[j].SetValue(properties[k].name, value, false);
+                            exposedComponents[j].SetValue(properties[k].id, value, false);
                         }
                     }
                 }

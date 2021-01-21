@@ -44,11 +44,11 @@ namespace Hertzole.ALE
         public void Bind(ExposedProperty property, IExposedToLevelEditor exposed)
         {
             this.property = property;
-            Label = property.name;
+            Label = property.Name;
             this.exposed = exposed;
 
             OnBound(property, exposed);
-            SetFieldValue(exposed.GetValue(property.name));
+            SetFieldValue(exposed.GetValue(property.ID));
         }
 
         protected virtual void OnBound(ExposedProperty property, IExposedToLevelEditor exposed) { }
@@ -62,7 +62,7 @@ namespace Hertzole.ALE
 
         protected void SetPropertyValue(object value)
         {
-            exposed.SetValue(property.name, value, true);
+            exposed.SetValue(property.ID, value, true);
         }
 
 #if UNITY_EDITOR
@@ -105,17 +105,17 @@ namespace Hertzole.ALE
     {
         public override bool SupportsType(ExposedProperty property)
         {
-            if (property.isArray)
+            if (property.IsArray)
             {
-                return property.type.IsArray && property.type == typeof(T);
+                return property.Type.IsArray && property.Type == typeof(T);
             }
-            else if (property.isArray && !property.type.IsArray)
+            else if (property.IsArray && !property.Type.IsArray)
             {
                 return false;
             }
             else
             {
-                return property.type == typeof(T);
+                return property.Type == typeof(T);
             }
         }
 
