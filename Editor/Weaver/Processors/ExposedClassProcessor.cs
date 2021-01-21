@@ -8,7 +8,6 @@ using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Threading;
 using UnityEngine;
-using UnityEngine.Serialization;
 using EventAttributes = Mono.Cecil.EventAttributes;
 using FieldAttributes = Mono.Cecil.FieldAttributes;
 using MethodAttributes = Mono.Cecil.MethodAttributes;
@@ -294,7 +293,7 @@ namespace Hertzole.ALE.Editor
 
         private static void CreateValueChangedEvent(TypeDefinition type)
         {
-            TypeReference action = type.Module.ImportReference(typeof(Action<string, object>));
+            TypeReference action = type.Module.ImportReference(typeof(Action<int, object>));
             TypeReference voidType = type.Module.ImportReference(typeof(void));
             CustomAttribute compilerGenerated = new CustomAttribute(type.Module.ImportReference(typeof(CompilerGeneratedAttribute).GetConstructor(Array.Empty<Type>())));
 
@@ -392,7 +391,7 @@ namespace Hertzole.ALE.Editor
                                                                  MethodAttributes.NewSlot | MethodAttributes.Virtual, voidType);
 
             method.Overrides.Add(type.Module.ImportReference(typeof(IExposedToLevelEditor).GetMethod(remove ? "remove_OnValueChanged" : "add_OnValueChanged",
-                                                                                                    new Type[] { typeof(Action<string, object>) })));
+                                                                                                    new Type[] { typeof(Action<int, object>) })));
             method.Parameters.Add(new ParameterDefinition("value", ParameterAttributes.None, action));
 
             method.Body.Variables.Add(new VariableDefinition(type.Module.ImportReference(typeof(object))));
@@ -533,78 +532,23 @@ namespace Hertzole.ALE.Editor
             MethodDefinition method = new MethodDefinition("Hertzole.ALE.IExposedToLevelEditor.GetValue",
                 MethodAttributes.Private | MethodAttributes.Final | MethodAttributes.HideBySig | MethodAttributes.NewSlot | MethodAttributes.Virtual,
                 module.ImportReference(typeof(object)));
-            method.Parameters.Add(new ParameterDefinition("valueName", ParameterAttributes.None, module.ImportReference(typeof(string))));
-            method.Overrides.Add(module.ImportReference(typeof(IExposedToLevelEditor).GetMethod("GetValue", new Type[] { typeof(string) })));
+            method.Parameters.Add(new ParameterDefinition("id", ParameterAttributes.None, module.ImportReference(typeof(int))));
+            method.Overrides.Add(module.ImportReference(typeof(IExposedToLevelEditor).GetMethod("GetValue", new Type[] { typeof(int) })));
 
-            ILProcessor il = method.Body.GetILProcessor();
-
-            Instruction[] preIfInstructions = new Instruction[exposedFields.Count];
-            Instruction[] ifInstructions = new Instruction[exposedFields.Count];
-
-            List<string> formerNames = new List<string>();
-
-            for (int i = 0; i < exposedFields.Count; i++)
+            CreateIfContainer(exposedFields, method, (i, il) =>
             {
-                formerNames.Clear();
-
-                if (exposedFields[i].TryGetAttributes<FormerlySerializedAsAttribute>(out CustomAttribute[] formerAttributes))
-                {
-                    formerNames.Add(exposedFields[i].Name);
-
-                    for (int j = 0; j < formerAttributes.Length; j++)
-                    {
-                        formerNames.Add(formerAttributes[j].GetConstructorArgument<string>(0, null));
-                    }
-                }
-
                 Instruction first = Instruction.Create(OpCodes.Ldarg_1);
-                if (i != 0)
+                il.Append(first);
+                if (exposedFields[i].id != 0)
                 {
-                    ifInstructions[i - 1] = first;
+                    il.Append(GetIntInstruction(exposedFields[i].id));
                 }
 
-                Instruction innerIf = Instruction.Create(OpCodes.Ldarg_0);
-
-                if (formerNames.Count == 0)
-                {
-                    il.Append(first);
-                    il.Emit(OpCodes.Ldstr, exposedFields[i].Name);
-                    Instruction call = Instruction.Create(OpCodes.Call, stringEquality);
-                    il.Append(call);
-
-                    preIfInstructions[i] = call;
-                }
-                else
-                {
-                    for (int j = 0; j < formerNames.Count; j++)
-                    {
-                        if (j == 0)
-                        {
-                            il.Append(first);
-                        }
-                        else
-                        {
-                            il.Emit(OpCodes.Ldarg_1);
-                        }
-
-                        il.Emit(OpCodes.Ldstr, formerNames[j]);
-
-                        Instruction call = Instruction.Create(OpCodes.Call, stringEquality);
-
-                        il.Append(call);
-
-                        if (j == formerNames.Count - 1)
-                        {
-                            preIfInstructions[i] = call;
-                        }
-                        else
-                        {
-                            il.Emit(OpCodes.Brtrue_S, innerIf);
-                        }
-                    }
-                }
-
-                il.Append(innerIf);
+                return first;
+            }, (i, il) =>
+            {
+                Instruction first = Instruction.Create(OpCodes.Ldarg_0);
+                il.Append(first);
                 if (exposedFields[i].IsProperty)
                 {
                     il.Emit(OpCodes.Call, exposedFields[i].property.GetMethod);
@@ -615,22 +559,22 @@ namespace Hertzole.ALE.Editor
                 }
                 il.Emit(OpCodes.Box, exposedFields[i].FieldType);
                 il.Emit(OpCodes.Ret);
-            }
 
-            Instruction noProperty = Instruction.Create(OpCodes.Ldstr, "No exposed property called '");
-            il.Append(noProperty);
-            il.Emit(OpCodes.Ldarg_1);
-            il.Emit(OpCodes.Ldstr, "'.");
-            il.Emit(OpCodes.Call, stringConcat);
-            il.Emit(OpCodes.Newobj, argumentException);
-            il.Emit(OpCodes.Throw);
-
-            ifInstructions[ifInstructions.Length - 1] = noProperty;
-
-            for (int i = 0; i < ifInstructions.Length; i++)
+                return first;
+            }, (il) =>
             {
-                il.InsertAfter(preIfInstructions[i], Instruction.Create(OpCodes.Brfalse_S, ifInstructions[i]));
-            }
+                Instruction noProperty = Instruction.Create(OpCodes.Ldstr, "No exposed property with the ID '");
+                il.Append(noProperty);
+                il.Emit(OpCodes.Ldarg_1);
+                il.Emit(OpCodes.Ldstr, "'.");
+                il.Emit(OpCodes.Call, stringConcat);
+                il.Emit(OpCodes.Newobj, argumentException);
+                il.Emit(OpCodes.Throw);
+
+                return noProperty;
+            });
+
+            method.Body.Optimize();
 
             return method;
         }
@@ -640,10 +584,10 @@ namespace Hertzole.ALE.Editor
             MethodDefinition method = new MethodDefinition("Hertzole.ALE.IExposedToLevelEditor.SetValue",
                 MethodAttributes.Private | MethodAttributes.Final | MethodAttributes.HideBySig | MethodAttributes.NewSlot | MethodAttributes.Virtual,
                 module.ImportReference(typeof(void)));
-            method.Parameters.Add(new ParameterDefinition("valueName", ParameterAttributes.None, module.ImportReference(typeof(string))));
+            method.Parameters.Add(new ParameterDefinition("id", ParameterAttributes.None, module.ImportReference(typeof(int))));
             method.Parameters.Add(new ParameterDefinition("value", ParameterAttributes.None, module.ImportReference(typeof(object))));
             method.Parameters.Add(new ParameterDefinition("notify", ParameterAttributes.None, module.ImportReference(typeof(bool))));
-            method.Overrides.Add(module.ImportReference(typeof(IExposedToLevelEditor).GetMethod("SetValue", new Type[] { typeof(string), typeof(object), typeof(bool) })));
+            method.Overrides.Add(module.ImportReference(typeof(IExposedToLevelEditor).GetMethod("SetValue", new Type[] { typeof(int), typeof(object), typeof(bool) })));
 
             method.Body.Variables.Add(new VariableDefinition(module.ImportReference(typeof(bool))));
             method.Body.InitLocals = true;
@@ -653,67 +597,114 @@ namespace Hertzole.ALE.Editor
             il.Emit(OpCodes.Ldc_I4_0);
             il.Emit(OpCodes.Stloc_0);
 
-            List<string> fieldNames = new List<string>();
             List<Instruction> nameCheckFalse = new List<Instruction>();
-
+            List<Instruction> firsts = new List<Instruction>();
             Instruction checkChanged = Instruction.Create(OpCodes.Ldarg_3);
             Instruction ret = Instruction.Create(OpCodes.Ret);
-            Instruction noExposedFields = Instruction.Create(OpCodes.Ldstr, "There's no exposed field called ");
+            Instruction noExposedFields = Instruction.Create(OpCodes.Ldstr, "There's no exposed field with the ID '");
 
             int exposedIndex = 0;
 
+            //CreateIfContainer(exposedFields, method, (i, il) =>
+            //{
+            //    Instruction first = Instruction.Create(OpCodes.Ldarg_1);
+            //    il.Append(first);
+            //    if (exposedFields[i].id != 0)
+            //    {
+            //        il.Append(GetIntInstruction(exposedFields[i].id));
+            //    }
+
+            //    return first;
+            //}, (i, il) =>
+            //{
+            //    Instruction first = Instruction.Create(OpCodes.Ldarg_0);
+            //    il.Append(first);
+
+            //    if (exposedFields[i].IsProperty)
+            //    {
+            //        il.Emit(OpCodes.Call, exposedFields[i].property.GetMethod);
+            //    }
+            //    else
+            //    {
+            //        il.Emit(OpCodes.Ldfld, exposedFields[i].field);
+            //    }
+
+            //    il.Emit(OpCodes.Ldarg_2);
+            //    il.Emit(exposedFields[i].IsValueType ? OpCodes.Unbox_Any : OpCodes.Castclass, exposedFields[i].FieldType);
+            //    il.Emit(OpCodes.Beq_S, checkChanged);
+
+            //    return first;
+            //}, (il) =>
+            //{
+            //    Instruction noProperty = Instruction.Create(OpCodes.Ldstr, "No exposed property with the ID '");
+            //    il.Append(noProperty);
+            //    il.Emit(OpCodes.Ldarg_1);
+            //    il.Emit(OpCodes.Ldstr, "'.");
+            //    il.Emit(OpCodes.Call, stringConcat);
+            //    il.Emit(OpCodes.Newobj, argumentException);
+            //    il.Emit(OpCodes.Throw);
+
+            //    return noProperty;
+            //});
+
             for (int i = 0; i < exposedFields.Count; i++)
             {
-                fieldNames.Clear();
-                fieldNames.Add(exposedFields[i].Name);
-
-                if (exposedFields[i].TryGetAttributes<FormerlySerializedAsAttribute>(out CustomAttribute[] formerAttributes))
-                {
-                    for (int j = 0; j < formerAttributes.Length; j++)
-                    {
-                        fieldNames.Add(formerAttributes[j].GetConstructorArgument<string>(0, null));
-                    }
-                }
-
                 FieldOrProperty field = exposedFields[i];
 
                 Instruction postName = Instruction.Create(OpCodes.Ldarg_0);
-                Instruction firstNameCheck = Instruction.Create(OpCodes.Ldarg_1);
-                for (int j = 0; j < fieldNames.Count; j++)
+                //for (int j = 0; j < fieldNames.Count; j++)
+                //{
+                //    if (j == 0)
+                //    {
+                //        il.Append(firstNameCheck);
+                //    }
+                //    else
+                //    {
+                //        il.Emit(OpCodes.Ldarg_1);
+                //    }
+
+                //    il.Emit(OpCodes.Ldstr, fieldNames[j]);
+                //    Instruction nameCheckLast = Instruction.Create(OpCodes.Call, stringEquality);
+                //    il.Append(nameCheckLast);
+
+                //    if (j <= fieldNames.Count - 2)
+                //    {
+                //        il.Emit(OpCodes.Brtrue_S, postName);
+                //    }
+                //    else
+                //    {
+                //        if (i == exposedFields.Count - 1)
+                //        {
+                //            il.Emit(OpCodes.Brfalse_S, noExposedFields);
+                //        }
+                //        else
+                //        {
+                //            nameCheckFalse.Add(nameCheckLast);
+                //        }
+
+                //        if (exposedIndex > 0)
+                //        {
+                //            il.InsertAfter(nameCheckFalse[exposedIndex - 1], Instruction.Create(OpCodes.Brfalse_S, firstNameCheck));
+                //        }
+                //    }
+                //}
+
+                Instruction first = Instruction.Create(OpCodes.Ldarg_1);
+                il.Append(first);
+                if (field.id > 0)
                 {
-                    if (j == 0)
-                    {
-                        il.Append(firstNameCheck);
-                    }
-                    else
-                    {
-                        il.Emit(OpCodes.Ldarg_1);
-                    }
+                    Instruction intInstruction = GetIntInstruction(field.id);
+                    il.Append(intInstruction);
+                    nameCheckFalse.Add(intInstruction);
+                }
+                else
+                {
+                    nameCheckFalse.Add(first);
+                }
 
-                    il.Emit(OpCodes.Ldstr, fieldNames[j]);
-                    Instruction nameCheckLast = Instruction.Create(OpCodes.Call, stringEquality);
-                    il.Append(nameCheckLast);
-
-                    if (j <= fieldNames.Count - 2)
-                    {
-                        il.Emit(OpCodes.Brtrue_S, postName);
-                    }
-                    else
-                    {
-                        if (i == exposedFields.Count - 1)
-                        {
-                            il.Emit(OpCodes.Brfalse_S, noExposedFields);
-                        }
-                        else
-                        {
-                            nameCheckFalse.Add(nameCheckLast);
-                        }
-
-                        if (exposedIndex > 0)
-                        {
-                            il.InsertAfter(nameCheckFalse[exposedIndex - 1], Instruction.Create(OpCodes.Brfalse_S, firstNameCheck));
-                        }
-                    }
+                if (i != 0)
+                {
+                    firsts.Add(first);
                 }
 
                 il.Append(postName);
@@ -775,6 +766,8 @@ namespace Hertzole.ALE.Editor
             il.Emit(OpCodes.Newobj, argumentException);
             il.Emit(OpCodes.Throw);
 
+            firsts.Add(noExposedFields);
+
             il.Append(checkChanged);
             il.Emit(OpCodes.Ldloc_0);
             il.Emit(OpCodes.And);
@@ -795,6 +788,11 @@ namespace Hertzole.ALE.Editor
             il.Emit(OpCodes.Callvirt, module.ImportReference(typeof(Action<string, object>).GetMethod("Invoke", new Type[] { typeof(string), typeof(object) })));
             il.Append(ret);
 
+            for (int i = 0; i < nameCheckFalse.Count; i++)
+            {
+                il.InsertAfter(nameCheckFalse[i], Instruction.Create(exposedFields[i].id == 0 ? OpCodes.Brtrue_S : OpCodes.Bne_Un_S, firsts[i]));
+            }
+
             method.Body.Optimize();
 
             return method;
@@ -805,131 +803,71 @@ namespace Hertzole.ALE.Editor
             MethodDefinition method = new MethodDefinition("Hertzole.ALE.IExposedToLevelEditor.GetValueType",
                 MethodAttributes.Private | MethodAttributes.Final | MethodAttributes.HideBySig | MethodAttributes.NewSlot | MethodAttributes.Virtual,
                 module.ImportReference(typeof(Type)));
-            method.Parameters.Add(new ParameterDefinition("valueName", ParameterAttributes.None, module.ImportReference(typeof(string))));
-            method.Overrides.Add(module.ImportReference(typeof(IExposedToLevelEditor).GetMethod("GetValueType", new Type[] { typeof(string) })));
+            method.Parameters.Add(new ParameterDefinition("id", ParameterAttributes.None, module.ImportReference(typeof(int))));
+            method.Overrides.Add(module.ImportReference(typeof(IExposedToLevelEditor).GetMethod("GetValueType", new Type[] { typeof(int) })));
 
-            ILProcessor il = method.Body.GetILProcessor();
-
-            Instruction[] preIfInstructions = new Instruction[exposedFields.Count];
-            Instruction[] ifInstructions = new Instruction[exposedFields.Count];
-
-            MethodReference getType = module.ImportReference(typeof(Type).GetMethod("GetTypeFromHandle", new Type[] { typeof(RuntimeTypeHandle) }));
-
-            List<string> formerNames = new List<string>();
-
-            for (int i = 0; i < exposedFields.Count; i++)
+            CreateIfContainer(exposedFields, method, (i, il) =>
             {
-                formerNames.Clear();
-
-                if (exposedFields[i].TryGetAttributes<FormerlySerializedAsAttribute>(out CustomAttribute[] formerAttributes))
+                Instruction first = Instruction.Create(OpCodes.Ldarg_1);
+                il.Append(first);
+                if (exposedFields[i].id != 0)
                 {
-                    formerNames.Add(exposedFields[i].Name);
-
-                    for (int j = 0; j < formerAttributes.Length; j++)
-                    {
-                        formerNames.Add(formerAttributes[j].GetConstructorArgument<string>(0, null));
-                    }
+                    il.Append(GetIntInstruction(exposedFields[i].id));
                 }
 
-                Instruction first = Instruction.Create(OpCodes.Ldarg_1);
+                return first;
+            }, (i, il) =>
+            {
+                Instruction first = Instruction.Create(OpCodes.Ldtoken, exposedFields[i].FieldType);
+
+                il.Append(first);
+                il.Emit(OpCodes.Call, getType);
+                il.Emit(OpCodes.Ret);
+
+                return first;
+            }, (il) =>
+            {
+                Instruction noProperty = Instruction.Create(OpCodes.Ldstr, "No exposed property with the ID '");
+                il.Append(noProperty);
+                il.Emit(OpCodes.Ldarg_1);
+                il.Emit(OpCodes.Ldstr, "'.");
+                il.Emit(OpCodes.Call, stringConcat);
+                il.Emit(OpCodes.Newobj, argumentException);
+                il.Emit(OpCodes.Throw);
+
+                return noProperty;
+            });
+
+            method.Body.Optimize();
+
+            return method;
+        }
+
+        private static void CreateIfContainer(List<FieldOrProperty> fields, MethodDefinition method, Func<int, ILProcessor, Instruction> ifCheck, Func<int, ILProcessor, Instruction> body, Func<ILProcessor, Instruction> end)
+        {
+            ILProcessor il = method.Body.GetILProcessor();
+            Instruction[] preIfInstructions = new Instruction[fields.Count];
+            Instruction[] ifInstructions = new Instruction[fields.Count];
+
+            for (int i = 0; i < fields.Count; i++)
+            {
+                Instruction first = ifCheck(i, il);
                 if (i != 0)
                 {
                     ifInstructions[i - 1] = first;
                 }
 
-                Instruction innerIf = Instruction.Create(OpCodes.Ldtoken, exposedFields[i].FieldType);
-
-                if (formerNames.Count == 0)
-                {
-                    il.Append(first);
-                    il.Emit(OpCodes.Ldstr, exposedFields[i].Name);
-                    Instruction call = Instruction.Create(OpCodes.Call, stringEquality);
-                    il.Append(call);
-                    preIfInstructions[i] = call;
-                }
-                else
-                {
-                    for (int j = 0; j < formerNames.Count; j++)
-                    {
-                        if (j == 0)
-                        {
-                            il.Append(first);
-                        }
-                        else
-                        {
-                            il.Emit(OpCodes.Ldarg_1);
-                        }
-
-                        il.Emit(OpCodes.Ldstr, formerNames[j]);
-
-                        Instruction call = Instruction.Create(OpCodes.Call, stringEquality);
-
-                        il.Append(call);
-
-                        if (j == formerNames.Count - 1)
-                        {
-                            preIfInstructions[i] = call;
-                        }
-                        else
-                        {
-                            il.Emit(OpCodes.Brtrue_S, innerIf);
-                        }
-                    }
-                }
-
-                il.Append(innerIf);
-                il.Emit(OpCodes.Call, getType);
-                il.Emit(OpCodes.Ret);
+                Instruction ifBody = body(i, il);
+                preIfInstructions[i] = il.Body.Instructions[il.Body.Instructions.IndexOf(ifBody) - 1];
             }
 
-            Instruction noProperty = Instruction.Create(OpCodes.Ldstr, "No exposed property called '");
-            il.Append(noProperty);
-            il.Emit(OpCodes.Ldarg_1);
-            il.Emit(OpCodes.Ldstr, "'.");
-            il.Emit(OpCodes.Call, stringConcat);
-            il.Emit(OpCodes.Newobj, argumentException);
-            il.Emit(OpCodes.Throw);
-
-            ifInstructions[ifInstructions.Length - 1] = noProperty;
+            Instruction endProperty = end(il);
+            ifInstructions[ifInstructions.Length - 1] = endProperty;
 
             for (int i = 0; i < ifInstructions.Length; i++)
             {
-                il.InsertAfter(preIfInstructions[i], Instruction.Create(OpCodes.Brfalse_S, ifInstructions[i]));
+                il.InsertAfter(preIfInstructions[i], Instruction.Create(fields[i].id == 0 ? OpCodes.Brtrue_S : OpCodes.Bne_Un_S, ifInstructions[i]));
             }
-
-            //Instruction[] ifInstructions = new Instruction[exposedFields.Count];
-
-            //for (int i = 0; i < exposedFields.Count; i++)
-            //{
-            //    il.Emit(OpCodes.Ldarg_1);
-            //    il.Emit(OpCodes.Ldstr, exposedFields[i].Name);
-            //    Instruction lastInstruction = Instruction.Create(OpCodes.Call, stringCompare);
-            //    il.Append(lastInstruction);
-            //    ifInstructions[i] = lastInstruction;
-            //}
-
-            //Instruction noProperty = Instruction.Create(OpCodes.Ldstr, "No exposed property called '");
-            //il.Emit(OpCodes.Br_S, noProperty);
-
-            //for (int i = 0; i < exposedFields.Count; i++)
-            //{
-            //    Instruction first = Instruction.Create(OpCodes.Ldtoken, exposedFields[i].FieldType);
-
-            //    il.Append(first);
-            //    il.Emit(OpCodes.Call, getType);
-            //    il.Emit(OpCodes.Ret);
-
-            //    il.InsertAfter(ifInstructions[i], Instruction.Create(OpCodes.Brtrue_S, first));
-            //}
-
-            //il.Append(noProperty);
-            //il.Emit(OpCodes.Ldarg_1);
-            //il.Emit(OpCodes.Ldstr, "'.");
-            //il.Emit(OpCodes.Call, stringConcat);
-            //il.Emit(OpCodes.Newobj, argumentException);
-            //il.Emit(OpCodes.Throw);
-
-            return method;
         }
 
         private static OpCode GetBoolOpCode(bool value)

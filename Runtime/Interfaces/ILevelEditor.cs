@@ -9,6 +9,7 @@
         ILevelEditorSaveManager SaveManager { get; }
         ILevelEditorObjectManager ObjectManager { get; }
         ILevelEditorInput Input { get; }
+        ILevelEditorSelection Selection { get; }
         ILevelEditorPlayMode PlayMode { get; }
 
         bool IsDirty { get; }
