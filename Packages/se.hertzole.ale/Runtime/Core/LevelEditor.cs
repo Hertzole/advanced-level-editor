@@ -24,6 +24,8 @@ namespace Hertzole.ALE
         private GameObject objectManager = null;
         [SerializeField, RequireType(typeof(ILevelEditorInput))]
         private GameObject input = null;
+        [SerializeField, RequireType(typeof(ILevelEditorSelection))]
+        private GameObject selection = null;
         [SerializeField, RequireType(typeof(ILevelEditorPlayMode))]
         private GameObject playMode = null;
 
@@ -45,6 +47,7 @@ namespace Hertzole.ALE
         private ILevelEditorObjectManager objectManagerComp;
         private ILevelEditorPlayMode playModeComp;
         private ILevelEditorInput inputComp;
+        private ILevelEditorSelection selectionComp;
 
         public ILevelEditorSnapping Snapping { get { return snapSettings; } }
         public ILevelEditorCamera LevelEditorCamera { get { return editorCameraComp; } }
@@ -53,6 +56,7 @@ namespace Hertzole.ALE
         public ILevelEditorObjectManager ObjectManager { get { return objectManagerComp; } }
         public ILevelEditorPlayMode PlayMode { get { return playModeComp; } }
         public ILevelEditorInput Input { get { return inputComp; } }
+        public ILevelEditorSelection Selection { get { return selectionComp; } }
 
         public bool IsDirty { get { return isDirty; } }
 
@@ -70,6 +74,8 @@ namespace Hertzole.ALE
             uiComp = ui.NeedComponent<ILevelEditorUI>();
             saveManagerComp = saveManager.NeedComponent<ILevelEditorSaveManager>();
             objectManagerComp = objectManager.NeedComponent<ILevelEditorObjectManager>();
+            inputComp = input.NeedComponent<ILevelEditorInput>();
+            selectionComp = selection.NeedComponent<ILevelEditorSelection>();
             playModeComp = playMode.NeedComponent<ILevelEditorPlayMode>();
 
             editorModes = GetComponents<ILevelEditorMode>();
