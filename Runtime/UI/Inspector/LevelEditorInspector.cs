@@ -32,8 +32,8 @@ namespace Hertzole.ALE
 
             public TypeAndArray(ExposedProperty property)
             {
-                type = property.type;
-                isArray = property.isArray;
+                type = property.Type;
+                isArray = property.IsArray;
             }
 
             public override bool Equals(object obj)
@@ -144,7 +144,7 @@ namespace Hertzole.ALE
                     ExposedProperty[] properties = components[i].GetProperties();
                     for (int j = 0; j < properties.Length; j++)
                     {
-                        if (!properties[j].visible)
+                        if (!properties[j].IsVisible)
                         {
                             continue;
                         }
@@ -213,7 +213,7 @@ namespace Hertzole.ALE
 
             if (result == null)
             {
-                Debug.LogWarning("No field that supports " + property.type.FullName + (property.isArray ? "[]" : ""));
+                Debug.LogWarning("No field that supports " + property.Type.FullName + (property.IsArray ? "[]" : ""));
                 return null;
             }
 
@@ -257,7 +257,7 @@ namespace Hertzole.ALE
                 }
             }
 
-            Debug.LogWarning("No field that supports " + property.type.FullName + (property.isArray ? "[]" : ""));
+            Debug.LogWarning("No field that supports " + property.Type.FullName + (property.IsArray ? "[]" : ""));
 
             return false;
         }

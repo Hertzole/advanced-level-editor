@@ -16,64 +16,64 @@ namespace Hertzole.ALE
         private const string SCALE = "scale";
         private const string PARENT = "parent";
 
-        public event Action<string, object> OnValueChanged;
+        public event Action<int, object> OnValueChanged;
 
         ExposedProperty[] IExposedToLevelEditor.GetProperties()
         {
             return new ExposedProperty[4]
             {
-                new ExposedProperty(typeof(Vector3), POSITION, true, false, Array.Empty<string>()),
-                new ExposedProperty(typeof(Vector3), ROTATION, true, false, Array.Empty<string>()),
-                new ExposedProperty(typeof(Vector3), SCALE, true, false, Array.Empty<string>()),
-                new ExposedProperty(typeof(Transform), PARENT, false, false, Array.Empty<string>()),
+                new ExposedProperty(0, typeof(Vector3), POSITION, null, true, false),
+                new ExposedProperty(1, typeof(Vector3), ROTATION, null, true, false),
+                new ExposedProperty(2, typeof(Vector3), SCALE, null, true, false),
+                new ExposedProperty(3, typeof(Transform), PARENT, null, false, false),
             };
         }
 
-        object IExposedToLevelEditor.GetValue(string valueName)
+        object IExposedToLevelEditor.GetValue(int id)
         {
-            switch (valueName)
+            switch (id)
             {
-                case POSITION:
+                case 0:
                     return transform.position;
-                case ROTATION:
+                case 1:
                     return transform.eulerAngles;
-                case SCALE:
+                case 2:
                     return transform.localScale;
-                case PARENT:
+                case 3:
                     return transform.parent;
                 default:
-                    throw new ArgumentException($"No exposed property called '{valueName}'.");
+                    throw new ArgumentException($"No exposed property with the ID '{id}'.");
             }
         }
 
-        void IExposedToLevelEditor.SetValue(string valueName, object value, bool notify)
+        void IExposedToLevelEditor.SetValue(int id, object value, bool notify)
         {
             bool changed = false;
 
-            switch (valueName)
+            switch (id)
             {
-                case POSITION:
+                case 0:
                     if (transform.position != (Vector3)value)
                     {
                         transform.position = (Vector3)value;
                         changed = true;
                     }
                     break;
-                case ROTATION:
+                case 1:
                     if (transform.eulerAngles != (Vector3)value)
                     {
                         transform.eulerAngles = (Vector3)value;
                         changed = true;
                     }
                     break;
-                case SCALE:
+                case 2:
                     if (transform.localScale != (Vector3)value)
                     {
                         transform.localScale = (Vector3)value;
                         changed = true;
                     }
                     break;
-                case PARENT:
+                case 3:
                     if (transform.parent != (Transform)value)
                     {
                         transform.SetParent((Transform)value, true);
@@ -81,27 +81,27 @@ namespace Hertzole.ALE
                     }
                     break;
                 default:
-                    throw new ArgumentException($"No exposed property called '{valueName}'.");
+                    throw new ArgumentException($"No exposed property with the ID '{id}'.");
             }
 
             if (notify && changed)
             {
-                OnValueChanged?.Invoke(valueName, value);
+                OnValueChanged?.Invoke(id, value);
             }
         }
 
-        Type IExposedToLevelEditor.GetValueType(string valueName)
+        Type IExposedToLevelEditor.GetValueType(int id)
         {
-            switch (valueName)
+            switch (id)
             {
-                case POSITION:
-                case ROTATION:
-                case SCALE:
+                case 0:
+                case 1:
+                case 2:
                     return typeof(Vector3);
-                case PARENT:
+                case 3:
                     return typeof(Transform);
                 default:
-                    throw new ArgumentException($"No exposed property called '{valueName}'.");
+                    throw new ArgumentException($"No exposed property with the ID '{id}'.");
             }
         }
     }

@@ -9,14 +9,14 @@ namespace Hertzole.ALE
 
         int Order { get; }
 
-        event Action<string, object> OnValueChanged;
+        event Action<int, object> OnValueChanged;
 
         ExposedProperty[] GetProperties();
 
-        object GetValue(string valueName);
+        object GetValue(int id);
 
-        void SetValue(string valueName, object value, bool notify);
+        void SetValue(int id, object value, bool notify);
 
-        Type GetValueType(string valueName);
+        Type GetValueType(int id);
     }
 }
