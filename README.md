@@ -3,7 +3,7 @@ Advanced, but simple to use, runtime level editor for Unity.
 
 ⚠ **ALE IS VERY MUCH IN EARLY DEVELOPMENT! USE AT YOUR OWN RISK** ⚠
 
-## TODO List
+## ✅ TODO List
 #### Required
 - [ ] Binary serialization and deserialization
 - [ ] JSON serialization and deserialization
@@ -14,6 +14,16 @@ Advanced, but simple to use, runtime level editor for Unity.
 - [ ] Hierarchy
 - [x] Inspector
 - [ ] Resource browser
+- [ ] Scene gizmos
+
+#### Optional
+- [ ] Scene grid
+- [ ] Manipulation handles
+- [ ] Adaptive editor GUI
+- [ ] Clean up code
+- [ ] Tilemap integration
+- [ ] ProBuilder integration
+- [ ] Multiselection support
 
 ## 🔨 Getting Started
 #### Setup a level editor

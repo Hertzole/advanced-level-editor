@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 
 namespace Hertzole.ALE
 {
@@ -8,15 +9,19 @@ namespace Hertzole.ALE
 
         bool HasChildren { get; set; }
         bool Expanded { get; set; }
+        bool Selected { get; set; }
 
         int Depth { get; set; }
 
         List<object> Children { get; }
 
         TreeItemExpander.ExpandEvent OnExpandedChanged { get; }
+        event EventHandler<TreeItemSelectedEventArgs> OnSelected;
 
         void Initialize(TreeControl tree);
 
         void SetIsExpandedWithoutNotify(bool expanded);
+
+        void SetSelectedWithoutNotify(bool selected);
     }
 }
