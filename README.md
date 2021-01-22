@@ -3,14 +3,17 @@ Advanced, but simple to use, runtime level editor for Unity.
 
 ⚠ **ALE IS VERY MUCH IN EARLY DEVELOPMENT! USE AT YOUR OWN RISK** ⚠
 
-## 🎇 Features
-- Runtime level editor for your game
-- Save and load
-- Scene tree/hierarchy, inspector and resource browser
-- Expose fields/properties using attributes
-- *Should* support all platforms, both Mono and IL2CPP
-- Supports fast enter play mode
-- Extendable to suit your needs
+## TODO List
+#### Required
+- [ ] Binary serialization and deserialization
+- [ ] JSON serialization and deserialization
+- [ ] Full 2D support
+- [ ] Full 3D support
+- [ ] Input System support
+- [ ] Undo and redo
+- [ ] Hierarchy
+- [x] Inspector
+- [ ] Resource browser
 
 ## 🔨 Getting Started
 #### Setup a level editor

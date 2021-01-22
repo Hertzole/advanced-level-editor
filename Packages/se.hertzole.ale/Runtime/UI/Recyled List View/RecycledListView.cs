@@ -56,6 +56,17 @@ namespace Hertzole.ALE
             UpdateList();
         }
 
+        public void SetItems(IEnumerable<object> items, bool updateList = true)
+        {
+            itemsSource.Clear();
+            itemsSource.AddRange(items);
+
+            if (updateList)
+            {
+                UpdateList(true);
+            }
+        }
+
         public void AddItems(IEnumerable<object> items, bool updateList = true)
         {
             itemsSource.AddRange(items);
@@ -310,6 +321,14 @@ namespace Hertzole.ALE
                 RecycledListItem item = items[i];
                 item.Position = i;
                 OnBindItem?.Invoke(i, itemsSource[i], item);
+            }
+        }
+
+        public void ForEachListItem(Action<int, RecycledListItem> action)
+        {
+            foreach (KeyValuePair<int, RecycledListItem> item in items)
+            {
+                action.Invoke(item.Key, item.Value);
             }
         }
 

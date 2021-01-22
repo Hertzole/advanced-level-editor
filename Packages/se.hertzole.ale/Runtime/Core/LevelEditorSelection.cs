@@ -5,30 +5,22 @@ namespace Hertzole.ALE
 {
     public class LevelEditorSelection : MonoBehaviour, ILevelEditorSelection
     {
-        private static ILevelEditorObject currentSelected;
+        private ILevelEditorObject selection;
 
-        public static ILevelEditorObject CurrentSelected { get { return currentSelected; } set { SetSelected(value); } }
+        public ILevelEditorObject Selection { get { return selection; } set { SetSelection(value); } }
 
-        public static event Action<ILevelEditorObject> OnSelectionChanged;
+        public event EventHandler<SelectionEvent> OnSelectionChanged;
 
-#if UNITY_2019_3_OR_NEWER
-        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
-        static void ResetStatics()
+        private void SetSelection(ILevelEditorObject target)
         {
-            currentSelected = null;
-            OnSelectionChanged = null;
-        }
-#endif
-
-        private static void SetSelected(ILevelEditorObject value)
-        {
-            if (currentSelected != null && currentSelected.Equals(value))
+            if (selection == target)
             {
                 return;
             }
 
-            currentSelected = value;
-            OnSelectionChanged?.Invoke(currentSelected);
+            ILevelEditorObject old = selection;
+            selection = target;
+            OnSelectionChanged?.Invoke(this, new SelectionEvent(old, target));
         }
     }
 }

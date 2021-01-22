@@ -4,7 +4,7 @@ using UnityEngine.SceneManagement;
 
 namespace Hertzole.ALE
 {
-    public class LevelEditorHierarchy : MonoBehaviour
+    public class LevelEditorHierarchy : MonoBehaviour, ILevelEditorHierarchy
     {
         [SerializeField]
         private HierarchyTree treeControl = null;
@@ -33,8 +33,7 @@ namespace Hertzole.ALE
             treeControl.OnItemExpandingCollapsing += OnItemExpanding;
         }
 
-        // Start is called before the first frame update
-        void Start()
+        public void Initialize()
         {
             GameObject[] rootObjects = SceneManager.GetActiveScene().GetRootGameObjects();
             treeControl.AddItems(rootObjects);

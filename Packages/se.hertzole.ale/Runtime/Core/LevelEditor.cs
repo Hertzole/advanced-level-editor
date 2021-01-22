@@ -76,7 +76,10 @@ namespace Hertzole.ALE
             objectManagerComp = objectManager.NeedComponent<ILevelEditorObjectManager>();
             inputComp = input.NeedComponent<ILevelEditorInput>();
             selectionComp = selection.NeedComponent<ILevelEditorSelection>();
-            playModeComp = playMode.NeedComponent<ILevelEditorPlayMode>();
+            if (playMode != null) // Play mode is not required.
+            {
+                playModeComp = playMode.NeedComponent<ILevelEditorPlayMode>();
+            }
 
             editorModes = GetComponents<ILevelEditorMode>();
 
