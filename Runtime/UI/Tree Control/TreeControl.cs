@@ -42,6 +42,7 @@ namespace Hertzole.ALE
         private const float POINTER_VALIDATE_INTERVAL = 5f;
 
         private object draggingItem;
+        protected object selectedItem;
 
         private RectTransform rectTransform;
 
@@ -62,7 +63,7 @@ namespace Hertzole.ALE
             listView.OnCreateItem = CreateItem;
             listView.OnBindItem += BindItem;
 
-            if (dragDropTargetVisual != null)
+            if (canReorderItems && dragDropTargetVisual != null)
             {
                 dragDropTargetVisual.gameObject.SetActive(false);
             }
@@ -83,7 +84,7 @@ namespace Hertzole.ALE
 
         protected virtual void UpdateDragging()
         {
-            if (pointer == null)
+            if (pointer == null || !canReorderItems)
             {
                 return;
             }
@@ -183,6 +184,11 @@ namespace Hertzole.ALE
             }
         }
 
+        public void SetItems(IEnumerable<object> items)
+        {
+            listView.SetItems(items);
+        }
+
         public void AddItems(IEnumerable<object> items)
         {
             listView.AddItems(items);
@@ -224,7 +230,6 @@ namespace Hertzole.ALE
             int dataIndex = (int)contentYPos / (int)itemHeight;
 
             object target = listView.GetItem(dataIndex);
-            RecycledListItem listItem = listView.GetListItem(dataIndex);
             if (target == null)
             {
                 InvokeOnReparent(draggingItem, target, ItemDropAction.SetLastChild);
@@ -250,7 +255,6 @@ namespace Hertzole.ALE
                         if (newTarget != null)
                         {
                             target = newTarget;
-                            listItem = listView.GetListItem(dataIndex - 1);
                             insertDirection = 1;
                         }
                     }
@@ -259,7 +263,6 @@ namespace Hertzole.ALE
                         object newTarget = listView.GetItem(dataIndex + 1);
                         if (newTarget != null)
                         {
-                            listItem = listView.GetListItem(dataIndex + 1);
                             target = newTarget;
                             insertDirection = -1;
                         }
@@ -291,6 +294,8 @@ namespace Hertzole.ALE
                         InvokeOnReparent(draggingItem, target, ItemDropAction.SetNextSibling);
                         break;
                 }
+
+                SelectItemInternal(draggingItem);
             }
 
             draggingItem = null;
@@ -327,6 +332,8 @@ namespace Hertzole.ALE
 
             autoScrollSpeed = 0;
         }
+
+        protected virtual void SelectItemInternal(object item) { }
 
         protected virtual RecycledListItem CreateItem()
         {
@@ -416,6 +423,18 @@ namespace Hertzole.ALE
         }
     }
 
+    public class TreeSelectionArgs<T> : EventArgs
+    {
+        public T Old { get; private set; }
+        public T New { get; private set; }
+
+        public TreeSelectionArgs(T oldItem, T newItem)
+        {
+            Old = oldItem;
+            New = newItem;
+        }
+    }
+
     public abstract class TreeControl<TTreeItem, TItem> : TreeControl where TTreeItem : RecycledListItem, ITreeItem
     {
         [SerializeField]
@@ -424,6 +443,7 @@ namespace Hertzole.ALE
         public event EventHandler<TreeBindItemEventArgs<TTreeItem, TItem>> OnBindItem;
         public event EventHandler<TreeReparentEventArgs<TItem>> OnReparent;
         public event EventHandler<TreeExpandingEventArgs<TItem>> OnItemExpandingCollapsing;
+        public event EventHandler<TreeSelectionArgs<TItem>> OnSelectionChanged;
 
         private Func<TItem, TItem> getParent;
         private Func<TItem, List<TItem>> getChildren;
@@ -443,6 +463,39 @@ namespace Hertzole.ALE
             this.getChildren = getChildren;
         }
 
+        protected override void SelectItemInternal(object item)
+        {
+            if (selectedItem == item)
+            {
+                return;
+            }
+
+            TItem oldItem = (TItem)selectedItem;
+
+            ((ITreeItem)listView.GetListItem(listView.IndexOf(item))).Selected = true;
+            selectedItem = item;
+
+            OnSelectionChanged?.Invoke(this, new TreeSelectionArgs<TItem>(oldItem, (TItem)selectedItem));
+        }
+
+        public void SelectItem(TItem item)
+        {
+            SelectItemInternal(item);
+        }
+
+        public void ExpandTo(TItem item)
+        {
+            TItem parent = getParent(item);
+            do
+            {
+                OnItemExpanded(item, true, false);
+                parent = getParent(parent);
+            }
+            while (parent != null || listView.HasItem(parent));
+
+            listView.UpdateList(false);
+        }
+
         protected override float GetItemHeight()
         {
             return ((RectTransform)itemPrefab.transform).rect.height;
@@ -460,6 +513,7 @@ namespace Hertzole.ALE
                 depth++;
             }
             ((TTreeItem)item).Depth = depth;
+            ((ITreeItem)item).SetSelectedWithoutNotify(selectedItem == obj);
 
             TreeBindItemEventArgs<TTreeItem, TItem> args = new TreeBindItemEventArgs<TTreeItem, TItem>(index, (TItem)obj, (TTreeItem)item);
             OnBindItem?.Invoke(this, args);
@@ -481,8 +535,11 @@ namespace Hertzole.ALE
 
             ITreeItem listItem = (ITreeItem)listView.GetListItem(listView.IndexOf(target));
 
-            if (listItem.Expanded && action == ItemDropAction.SetLastChild)
+            if (action == ItemDropAction.SetLastChild)
             {
+                listItem.SetIsExpandedWithoutNotify(true);
+                expandedStates[target] = true;
+
                 List<TItem> children = new List<TItem>();
                 GetAllChildren((TItem)target, children, true);
                 listView.InsertItem(draggingItem, listView.IndexOf(target) + children.Count);
@@ -495,11 +552,25 @@ namespace Hertzole.ALE
         {
             TTreeItem item = Instantiate(itemPrefab);
             item.OnExpandedChanged.AddListener((expanded) => OnItemExpanded((TItem)item.Item, expanded));
+            item.OnSelected += OnItemSelected;
             item.Initialize(this);
             return item;
         }
 
-        private void OnItemExpanded(TItem item, bool isExpanded)
+        private void OnItemSelected(object sender, TreeItemSelectedEventArgs e)
+        {
+            selectedItem = e.Item;
+
+            listView.ForEachListItem((i, item) =>
+            {
+                if (i != e.Index)
+                {
+                    ((ITreeItem)item).SetSelectedWithoutNotify(false);
+                }
+            });
+        }
+
+        private void OnItemExpanded(TItem item, bool isExpanded, bool updateList = true)
         {
             expandedStates[item] = isExpanded;
 
@@ -523,7 +594,10 @@ namespace Hertzole.ALE
                 }
 
             }
-            listView.UpdateList(false);
+            if (updateList)
+            {
+                listView.UpdateList(false);
+            }
         }
 
         private void AddChildren(TItem parent, int parentIndex)

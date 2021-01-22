@@ -122,11 +122,6 @@ namespace Hertzole.ALE
 
         private void Set(bool value, bool sendCallback = true)
         {
-            //if (isExpanded == value)
-            //{
-            //    return;
-            //}
-
             isExpanded = value;
             PlayEffect(fadeTime <= 0);
             if (sendCallback)

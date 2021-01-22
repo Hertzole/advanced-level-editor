@@ -126,6 +126,11 @@ namespace Hertzole.ALE
             return index < 0 || index >= itemsSource.Count ? null : itemsSource[index];
         }
 
+        public bool HasItem(object item)
+        {
+            return itemsSource.Contains(item);
+        }
+
         public RecycledListItem GetListItem(int index)
         {
             return items[index];
