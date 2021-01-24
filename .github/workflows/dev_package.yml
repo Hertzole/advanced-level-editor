@@ -1,4 +1,4 @@
-name: Package
+name: Dev Package
 on:
   push:
     branches:

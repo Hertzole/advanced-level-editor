@@ -66,6 +66,10 @@ namespace Hertzole.ALE
                     obj.ID = resource.ID;
 
                     objGo.GetOrAddComponent<TransformWrapper>();
+                    if (objGo.TryGetComponent<Rigidbody>(out _))
+                    {
+                        objGo.GetOrAddComponent<RigidbodyWrapper>();
+                    }
                 }
 
                 obj.MyGameObject.name = resource.Name;
