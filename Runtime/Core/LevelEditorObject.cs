@@ -10,11 +10,25 @@ namespace Hertzole.ALE
 #endif
     public class LevelEditorObject : MonoBehaviour, ILevelEditorObject, IEquatable<LevelEditorObject>, IEquatable<ILevelEditorObject>
     {
+        private struct ValueInfo
+        {
+            public int id;
+            public object value;
+
+            public ValueInfo(int id, object value)
+            {
+                this.id = id;
+                this.value = value;
+            }
+        }
+
         private bool gotComponents = false;
         private bool gotPlayModeObjects = false;
 
         private IExposedToLevelEditor[] exposedComponents;
         private ILevelEditorPlayModeObject[] playModeObjects;
+
+        private Dictionary<int, ValueInfo[]> savedValues = new Dictionary<int, ValueInfo[]>();
 
         public string Name
         {
@@ -95,6 +109,15 @@ namespace Hertzole.ALE
         {
             CachePlayModeObjects();
 
+            for (int i = 0; i < exposedComponents.Length; i++)
+            {
+                ExposedProperty[] properties = exposedComponents[i].GetProperties();
+                for (int ii = 0; ii < properties.Length; ii++)
+                {
+                    savedValues[i][ii] = new ValueInfo(ii, exposedComponents[i].GetValue(ii));
+                }
+            }
+
             if (playModeObjects != null)
             {
                 for (int i = 0; i < playModeObjects.Length; i++)
@@ -106,6 +129,15 @@ namespace Hertzole.ALE
 
         public void StopPlayMode()
         {
+            for (int i = 0; i < exposedComponents.Length; i++)
+            {
+                ExposedProperty[] properties = exposedComponents[i].GetProperties();
+                for (int ii = 0; ii < properties.Length; ii++)
+                {
+                    exposedComponents[i].SetValue(savedValues[i][ii].id, savedValues[i][ii].value, true);
+                }
+            }
+
             if (playModeObjects != null)
             {
                 for (int i = 0; i < playModeObjects.Length; i++)
@@ -154,6 +186,11 @@ namespace Hertzole.ALE
             if (exposedComponents.Length > 1)
             {
                 Array.Sort(exposedComponents, (x, y) => x.Order.CompareTo(y.Order));
+            }
+
+            for (int i = 0; i < exposedComponents.Length; i++)
+            {
+                savedValues.Add(i, new ValueInfo[exposedComponents[i].GetProperties().Length]);
             }
 
             gotComponents = true;
