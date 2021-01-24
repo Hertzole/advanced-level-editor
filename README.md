@@ -12,8 +12,11 @@ Advanced, but simple to use, runtime level editor for Unity.
 - [ ] Input System support
 - [ ] Undo and redo
 - [ ] Hierarchy
+- [ ] Hierarchy customization
 - [x] Inspector
+- [ ] Custom inspector components UI
 - [ ] Resource browser
+- [ ] Resource browser customization
 - [ ] Scene gizmos
 
 #### Optional
@@ -24,6 +27,7 @@ Advanced, but simple to use, runtime level editor for Unity.
 - [ ] Tilemap integration
 - [ ] ProBuilder integration
 - [ ] Multiselection support
+- [ ] More errors and visuals to tell when something is wrong
 
 ## 🔨 Getting Started
 #### Setup a level editor

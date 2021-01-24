@@ -13,10 +13,33 @@ namespace Hertzole.ALE
         private bool gotComponents = false;
         private bool gotPlayModeObjects = false;
 
-        private ILevelEditorObject parent;
-
         private IExposedToLevelEditor[] exposedComponents;
         private ILevelEditorPlayModeObject[] playModeObjects;
+
+        public string Name
+        {
+            get { return gameObject.name; }
+            set
+            {
+                if (gameObject.name != value)
+                {
+                    gameObject.name = value;
+                    OnStateChanged?.Invoke(this, new LevelEditorObjectStateArgs(gameObject.name, gameObject.activeInHierarchy));
+                }
+            }
+        }
+        public bool IsActive
+        {
+            get { return gameObject.activeInHierarchy; }
+            set
+            {
+                if (gameObject.activeSelf != value)
+                {
+                    gameObject.SetActive(value);
+                    OnStateChanged?.Invoke(this, new LevelEditorObjectStateArgs(gameObject.name, gameObject.activeInHierarchy));
+                }
+            }
+        }
 
         public string ID { get; set; }
         public int InstanceID { get; set; }
@@ -26,6 +49,8 @@ namespace Hertzole.ALE
         public List<ILevelEditorObject> Children { get; set; } = new List<ILevelEditorObject>();
 
         GameObject ILevelEditorObject.MyGameObject { get { return gameObject; } }
+
+        public event EventHandler<LevelEditorObjectStateArgs> OnStateChanged;
 
         public IExposedToLevelEditor[] GetExposedComponents()
         {

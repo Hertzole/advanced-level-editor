@@ -329,6 +329,13 @@ namespace Hertzole.ALE
             }
         }
 
+        public void BindItem(object item)
+        {
+            int index = IndexOf(item);
+            RecycledListItem listItem = GetListItem(index);
+            OnBindItem?.Invoke(index, item, listItem);
+        }
+
         public void ForEachListItem(Action<int, RecycledListItem> action)
         {
             foreach (KeyValuePair<int, RecycledListItem> item in items)

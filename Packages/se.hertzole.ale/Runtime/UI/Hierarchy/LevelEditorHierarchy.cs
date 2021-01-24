@@ -1,6 +1,5 @@
 ﻿using System.Collections.Generic;
 using UnityEngine;
-using UnityEngine.SceneManagement;
 
 namespace Hertzole.ALE
 {
@@ -9,20 +8,28 @@ namespace Hertzole.ALE
         [SerializeField]
         private HierarchyTree treeControl = null;
 
+        private bool selectedThroughUI = false;
+        private bool selectedThroughObjectManager = false;
+
+        private ILevelEditor levelEditor;
+
         private void Awake()
         {
             treeControl.Initialize(
             (go) =>
             {
-                return go.transform.parent == null ? null : go.transform.parent.gameObject;
+                return go.Parent == null ? null : go.Parent;
             },
             (go) =>
             {
-                List<GameObject> result = new List<GameObject>();
+                List<ILevelEditorObject> result = new List<ILevelEditorObject>();
 
-                for (int i = 0; i < go.transform.childCount; i++)
+                if (go.HasChildren())
                 {
-                    result.Add(go.transform.GetChild(i).gameObject);
+                    for (int i = 0; i < go.Children.Count; i++)
+                    {
+                        result.Add(go.Children[i]);
+                    }
                 }
 
                 return result;
@@ -31,80 +38,131 @@ namespace Hertzole.ALE
             treeControl.OnBindItem += OnBindItem;
             treeControl.OnReparent += OnReparentItem;
             treeControl.OnItemExpandingCollapsing += OnItemExpanding;
+            treeControl.OnSelectionChanged += OnTreeSelectionChanged;
         }
 
-        public void Initialize()
+        public void Initialize(ILevelEditor levelEditor)
         {
-            GameObject[] rootObjects = SceneManager.GetActiveScene().GetRootGameObjects();
-            treeControl.AddItems(rootObjects);
+            this.levelEditor = levelEditor;
+            levelEditor.ObjectManager.OnCreateObject += OnObjectManagerCreatedObject;
+            levelEditor.ObjectManager.OnDeleteObject += OnObjectManagerDeleteObject;
+            levelEditor.Selection.OnSelectionChanged += OnSelectionChanged;
         }
 
-        private void OnBindItem(object sender, TreeBindItemEventArgs<HierarchyItem, GameObject> e)
+        private void OnObjectManagerCreatedObject(ILevelEditorObject obj)
         {
-            e.TreeItem.LabelText.text = e.Item.name;
-            e.TreeItem.HasChildren = e.Item.transform.childCount > 0;
+            obj.OnStateChanged += OnObjectStateChanged;
+            treeControl.AddItem(obj);
+        }
+
+        private void OnObjectManagerDeleteObject(ILevelEditorObject obj)
+        {
+            obj.OnStateChanged -= OnObjectStateChanged;
+            treeControl.RemoveItem(obj);
+        }
+
+        private void OnObjectStateChanged(object sender, LevelEditorObjectStateArgs e)
+        {
+            treeControl.RebindItem(sender);
+        }
+
+        private void OnSelectionChanged(object sender, SelectionEvent e)
+        {
+            if (selectedThroughUI)
+            {
+                selectedThroughUI = false;
+                return;
+            }
+
+            selectedThroughObjectManager = true;
+
+            treeControl.SelectItem(e.NewObject);
+        }
+
+        private void OnBindItem(object sender, TreeBindItemEventArgs<HierarchyItem, ILevelEditorObject> e)
+        {
+            e.TreeItem.LabelText.text = e.Item.MyGameObject.name;
+            e.TreeItem.HasChildren = e.Item.HasChildren();
 
 #if UNITY_EDITOR
-            e.TreeItem.gameObject.name = $"Item - {e.Item.name}";
+            e.TreeItem.gameObject.name = $"Item - {e.Item.MyGameObject.name}";
 #endif
         }
 
-        private void OnReparentItem(object sender, TreeReparentEventArgs<GameObject> e)
+        private void OnReparentItem(object sender, TreeReparentEventArgs<ILevelEditorObject> e)
         {
+            if (e.DraggingItem.Parent != null)
+            {
+                e.DraggingItem.Parent.RemoveChild(e.DraggingItem);
+            }
+
             switch (e.Action)
             {
                 case ItemDropAction.SetLastChild:
                     if (e.Target != null)
                     {
-                        e.DraggingItem.transform.SetParent(e.Target.transform, true);
-                        e.DraggingItem.transform.SetAsLastSibling();
+                        e.DraggingItem.MyGameObject.transform.SetParent(e.Target.MyGameObject.transform, true);
+                        e.DraggingItem.MyGameObject.transform.SetAsLastSibling();
+                        e.DraggingItem.Parent = e.Target;
+                        e.DraggingItem.Parent.AddChild(e.DraggingItem);
                     }
                     else
                     {
-                        e.DraggingItem.transform.SetParent(null, true);
+                        e.DraggingItem.MyGameObject.transform.SetParent(null, true);
+                        e.DraggingItem.Parent = null;
                     }
                     break;
                 case ItemDropAction.SetPreviousSibling:
                     if (e.Target != null)
                     {
-                        if (e.DraggingItem.transform.parent != e.Target.transform.parent)
+                        if (e.DraggingItem.Parent != e.Target.Parent)
                         {
-                            e.DraggingItem.transform.SetParent(e.Target.transform.parent, true);
+                            e.DraggingItem.MyGameObject.transform.SetParent(e.Target.MyGameObject.transform.parent, true);
+                            e.DraggingItem.Parent = e.Target.Parent;
+                            if (e.DraggingItem.Parent != null)
+                            {
+                                e.DraggingItem.Parent.AddChild(e.DraggingItem);
+                            }
                         }
 
-                        int targetIndex = e.Target.transform.GetSiblingIndex();
-                        int currentIndex = e.DraggingItem.transform.GetSiblingIndex();
+                        int targetIndex = e.Target.MyGameObject.transform.GetSiblingIndex();
+                        int currentIndex = e.DraggingItem.MyGameObject.transform.GetSiblingIndex();
 
                         if (targetIndex > currentIndex)
                         {
-                            e.DraggingItem.transform.SetSiblingIndex(targetIndex - 1);
+                            e.DraggingItem.MyGameObject.transform.SetSiblingIndex(targetIndex - 1);
                         }
                         else
                         {
-                            e.DraggingItem.transform.SetSiblingIndex(targetIndex);
+                            e.DraggingItem.MyGameObject.transform.SetSiblingIndex(targetIndex);
                         }
                     }
                     break;
                 case ItemDropAction.SetNextSibling:
                     if (e.Target != null)
                     {
-                        int targetIndex = e.Target.transform.GetSiblingIndex();
-                        int currentIndex = e.DraggingItem.transform.GetSiblingIndex();
+                        int targetIndex = e.Target.MyGameObject.transform.GetSiblingIndex();
+                        int currentIndex = e.DraggingItem.MyGameObject.transform.GetSiblingIndex();
 
-                        if (e.DraggingItem.transform.parent != e.Target.transform.parent)
+                        if (e.DraggingItem.Parent != e.Target.Parent)
                         {
-                            e.DraggingItem.transform.SetParent(e.Target.transform.parent, true);
-                            e.DraggingItem.transform.SetSiblingIndex(targetIndex + 1);
+                            e.DraggingItem.MyGameObject.transform.SetParent(e.Target.MyGameObject.transform.parent, true);
+                            e.DraggingItem.MyGameObject.transform.SetSiblingIndex(targetIndex + 1);
+                            e.DraggingItem.Parent = e.Target.Parent;
+                            if (e.DraggingItem.Parent != null)
+                            {
+                                e.DraggingItem.Parent.AddChild(e.DraggingItem);
+                            }
                         }
                         else
                         {
                             if (targetIndex < currentIndex)
                             {
-                                e.DraggingItem.transform.SetSiblingIndex(targetIndex + 1);
+                                e.DraggingItem.MyGameObject.transform.SetSiblingIndex(targetIndex + 1);
                             }
                             else
                             {
-                                e.DraggingItem.transform.SetSiblingIndex(targetIndex);
+                                e.DraggingItem.MyGameObject.transform.SetSiblingIndex(targetIndex);
                             }
                         }
                     }
@@ -114,15 +172,26 @@ namespace Hertzole.ALE
             }
         }
 
-        private void OnItemExpanding(object sender, TreeExpandingEventArgs<GameObject> e)
+        private void OnItemExpanding(object sender, TreeExpandingEventArgs<ILevelEditorObject> e)
         {
-            if (e.Parent.transform.childCount > 0)
+            if (e.Parent.HasChildren())
             {
-                for (int i = 0; i < e.Parent.transform.childCount; i++)
+                for (int i = 0; i < e.Parent.Children.Count; i++)
                 {
-                    e.Children.Add(e.Parent.transform.GetChild(i).gameObject);
+                    e.Children.Add(e.Parent.Children[i]);
                 }
             }
+        }
+
+        private void OnTreeSelectionChanged(object sender, TreeSelectionArgs<ILevelEditorObject> e)
+        {
+            if (!selectedThroughObjectManager)
+            {
+                selectedThroughUI = true;
+                selectedThroughObjectManager = false;
+            }
+
+            levelEditor.Selection.Selection = e.New;
         }
     }
 }

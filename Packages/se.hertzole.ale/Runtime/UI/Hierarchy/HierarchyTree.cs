@@ -1,8 +1,6 @@
-﻿using UnityEngine;
-
-namespace Hertzole.ALE
+﻿namespace Hertzole.ALE
 {
-    public class HierarchyTree : TreeControl<HierarchyItem, GameObject>
+    public class HierarchyTree : TreeControl<HierarchyItem, ILevelEditorObject>
     {
 
     }

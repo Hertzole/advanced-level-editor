@@ -2868,7 +2868,6 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   resourcePanel: {fileID: 970688937}
-  objectManager: {fileID: 1918987434}
 --- !u!224 &1922205037 stripped
 RectTransform:
   m_CorrespondingSourceObject: {fileID: 7876597587132607473, guid: b710a2d7ade41714298e4e67eef18342, type: 3}

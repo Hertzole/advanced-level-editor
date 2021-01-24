@@ -22,7 +22,7 @@ MonoBehaviour:
     asset: {fileID: 0}
     treeID: 0
     treeDepth: -1
-  - name: my folder
+  - name: Test Objects
     id: 
     customIcon: 0
     icon: {fileID: 0}
@@ -31,13 +31,13 @@ MonoBehaviour:
     asset: {fileID: 0}
     treeID: 5
     treeDepth: 0
-  - name: New Item
-    id: new_item
+  - name: Test Cube
+    id: test_cube
     customIcon: 0
     icon: {fileID: 0}
     limit: 0
     hidden: 0
-    asset: {fileID: 0}
+    asset: {fileID: 2837006266036230208, guid: 5eff2700aea877541bcf42c2b4dd5a91, type: 3}
     treeID: 6
     treeDepth: 1
   - name: Primitives
