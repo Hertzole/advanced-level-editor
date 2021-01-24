@@ -84,7 +84,7 @@ namespace Hertzole.ALE
             levelEditor.Selection.OnSelectionChanged += OnSelectionChanged;
 
             realInspectorPanel.Initialize();
-            realHierarchy.Initialize();
+            realHierarchy.Initialize(levelEditor);
 
             realSaveModal.Initialize();
             realLoadModal.Initialize();

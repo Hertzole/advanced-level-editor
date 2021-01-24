@@ -2,6 +2,6 @@
 {
     public interface ILevelEditorHierarchy
     {
-        void Initialize();
+        void Initialize(ILevelEditor levelEditor);
     }
 }

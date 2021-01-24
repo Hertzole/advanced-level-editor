@@ -199,6 +199,21 @@ namespace Hertzole.ALE
             listView.AddItem(item);
         }
 
+        public void RemoveItem(object item)
+        {
+            if (selectedItem == item)
+            {
+                SelectItemInternal(null);
+            }
+
+            listView.RemoveItem(item);
+        }
+
+        public void RebindItem(object item)
+        {
+            listView.BindItem(item);
+        }
+
         public void StartDragging(object item, PointerEventData eventData)
         {
             if (!canReorderItems)
@@ -450,6 +465,8 @@ namespace Hertzole.ALE
 
         private Dictionary<object, bool> expandedStates = new Dictionary<object, bool>();
 
+        public TItem SelectedItem { get { return (TItem)selectedItem; } }
+
         protected override void Awake()
         {
             base.Awake();
@@ -474,7 +491,14 @@ namespace Hertzole.ALE
 
             if (updateUI)
             {
-                ((ITreeItem)listView.GetListItem(listView.IndexOf(item))).Selected = true;
+                if (item != null)
+                {
+                    ((ITreeItem)listView.GetListItem(listView.IndexOf(item))).Selected = true;
+                }
+                else
+                {
+                    listView.ForEachListItem((i, item) => ((ITreeItem)item).SetSelectedWithoutNotify(false));
+                }
             }
 
             selectedItem = item;
@@ -533,6 +557,11 @@ namespace Hertzole.ALE
 
         protected override void InvokeOnReparent(object draggingItem, object target, ItemDropAction action)
         {
+            if (target == null)
+            {
+                return;
+            }
+
             TreeReparentEventArgs<TItem> args = new TreeReparentEventArgs<TItem>((TItem)draggingItem, (TItem)target, action);
             OnReparent?.Invoke(this, args);
             MoveChildren((TItem)draggingItem);

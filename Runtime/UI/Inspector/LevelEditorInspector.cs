@@ -100,7 +100,7 @@ namespace Hertzole.ALE
         {
             if (boundItem != null)
             {
-                boundItem.MyGameObject.name = newName;
+                boundItem.Name = newName;
             }
         }
 
@@ -108,7 +108,7 @@ namespace Hertzole.ALE
         {
             if (boundItem != null)
             {
-                boundItem.MyGameObject.SetActive(isActive);
+                boundItem.IsActive = isActive;
             }
         }
 
