@@ -52,4 +52,12 @@ public class TestScript : MonoBehaviour
     [SerializeField]
     [ExposeToLevelEditor(15)]
     private Vector3Int vector3IntTest = Vector3Int.zero;
+
+    [SerializeField]
+    [ExposeToLevelEditor(16, order = -1000, customName = "FAAAA")]
+    private char charTest = 'A';
+
+    [SerializeField]
+    [ExposeToLevelEditor(17)]
+    private bool boolTest = true;
 }

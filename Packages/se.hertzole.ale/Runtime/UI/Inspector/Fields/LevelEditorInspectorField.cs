@@ -44,7 +44,7 @@ namespace Hertzole.ALE
         public void Bind(ExposedProperty property, IExposedToLevelEditor exposed)
         {
             this.property = property;
-            Label = property.Name;
+            Label = string.IsNullOrEmpty(property.CustomName) ? TextUtility.FormatVariableLabel(property.Name) : property.CustomName;
             this.exposed = exposed;
 
             OnBound(property, exposed);

@@ -1328,6 +1328,9 @@ MonoBehaviour:
   fieldPrefabs:
   - {fileID: 893811246, guid: 21f9636c69e434643b14275c2e4a1c8e, type: 3}
   - {fileID: 893811246, guid: d422ed4a4566d3b49be2d8a3533afac5, type: 3}
+  - {fileID: 4177423067595552018, guid: ef10594cb17d33246b063063dd1760a3, type: 3}
+  - {fileID: 1651706494784217154, guid: 82dd6cc5ea0d63c4ea5253d4667e1877, type: 3}
+  - {fileID: 4781765418828379342, guid: 6a268e711a2070b4591ad7d9ab794df9, type: 3}
 --- !u!1 &1049410937
 GameObject:
   m_ObjectHideFlags: 0

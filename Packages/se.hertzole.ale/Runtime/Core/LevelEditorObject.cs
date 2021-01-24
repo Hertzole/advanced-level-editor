@@ -8,7 +8,7 @@ namespace Hertzole.ALE
     [DisallowMultipleComponent]
     [AddComponentMenu("")]
 #endif
-    public class LevelEditorObject : MonoBehaviour, ILevelEditorObject, IEquatable<LevelEditorObject>
+    public class LevelEditorObject : MonoBehaviour, ILevelEditorObject, IEquatable<LevelEditorObject>, IEquatable<ILevelEditorObject>
     {
         private bool gotComponents = false;
         private bool gotPlayModeObjects = false;
