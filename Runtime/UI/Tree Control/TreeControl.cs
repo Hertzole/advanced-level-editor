@@ -333,7 +333,7 @@ namespace Hertzole.ALE
             autoScrollSpeed = 0;
         }
 
-        protected virtual void SelectItemInternal(object item) { }
+        protected virtual void SelectItemInternal(object item, bool updateUI = true) { }
 
         protected virtual RecycledListItem CreateItem()
         {
@@ -463,7 +463,7 @@ namespace Hertzole.ALE
             this.getChildren = getChildren;
         }
 
-        protected override void SelectItemInternal(object item)
+        protected override void SelectItemInternal(object item, bool updateUI = true)
         {
             if (selectedItem == item)
             {
@@ -472,7 +472,11 @@ namespace Hertzole.ALE
 
             TItem oldItem = (TItem)selectedItem;
 
-            ((ITreeItem)listView.GetListItem(listView.IndexOf(item))).Selected = true;
+            if (updateUI)
+            {
+                ((ITreeItem)listView.GetListItem(listView.IndexOf(item))).Selected = true;
+            }
+
             selectedItem = item;
 
             OnSelectionChanged?.Invoke(this, new TreeSelectionArgs<TItem>(oldItem, (TItem)selectedItem));
@@ -559,7 +563,7 @@ namespace Hertzole.ALE
 
         private void OnItemSelected(object sender, TreeItemSelectedEventArgs e)
         {
-            selectedItem = e.Item;
+            SelectItemInternal(e.Item, false);
 
             listView.ForEachListItem((i, item) =>
             {

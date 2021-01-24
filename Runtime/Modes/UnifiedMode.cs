@@ -10,32 +10,28 @@ namespace Hertzole.ALE
     {
         [SerializeField, RequireType(typeof(ILevelEditorResourceView))]
         private GameObject resourcePanel = null;
-        [SerializeField, RequireType(typeof(ILevelEditorObjectManager))]
-        private GameObject objectManager = null;
 
         private ILevelEditorResourceView realResourcePanel;
-        private ILevelEditorObjectManager realObjectManager;
 
         private void Awake()
         {
             realResourcePanel = resourcePanel.NeedComponent<ILevelEditorResourceView>();
-            realObjectManager = objectManager.NeedComponent<ILevelEditorObjectManager>();
         }
 
         public override void OnModeEnable()
         {
-            //realResourcePanel.OnClickAsset += OnProjectViewClickAsset;
+            realResourcePanel.OnClickAsset += OnClickAsset;
         }
 
         public override void OnModeDisable()
         {
-            //realResourcePanel.OnClickAsset -= OnProjectViewClickAsset;
+            realResourcePanel.OnClickAsset -= OnClickAsset;
         }
 
-        private void OnProjectViewClickAsset(string id)
+        private void OnClickAsset(object sender, AssetClickEventArgs e)
         {
-            ILevelEditorObject newObj = realObjectManager.CreateObject(id);
-            Selection.Selection = newObj;
+            ILevelEditorObject obj = ObjectManager.CreateObject(e.Asset);
+            Selection.Selection = obj;
         }
     }
 }
