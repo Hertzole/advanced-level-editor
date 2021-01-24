@@ -22,6 +22,24 @@ MonoBehaviour:
     asset: {fileID: 0}
     treeID: 0
     treeDepth: -1
+  - name: my folder
+    id: 
+    customIcon: 0
+    icon: {fileID: 0}
+    limit: 0
+    hidden: 0
+    asset: {fileID: 0}
+    treeID: 5
+    treeDepth: 0
+  - name: New Item
+    id: new_item
+    customIcon: 0
+    icon: {fileID: 0}
+    limit: 0
+    hidden: 0
+    asset: {fileID: 0}
+    treeID: 6
+    treeDepth: 1
   - name: Primitives
     id: 
     customIcon: 0
@@ -40,15 +58,6 @@ MonoBehaviour:
     asset: {fileID: 5095166001233792179, guid: 310d20bf3f6095a4887870b8c93a893a, type: 3}
     treeID: 2
     treeDepth: 1
-  - name: Sphere
-    id: sphere
-    customIcon: 0
-    icon: {fileID: 0}
-    limit: 0
-    hidden: 0
-    asset: {fileID: 6966430461679545458, guid: 3e49689623017b1479ea56d4afb4ba98, type: 3}
-    treeID: 4
-    treeDepth: 1
   - name: Capsule
     id: capsule
     customIcon: 0
@@ -57,4 +66,13 @@ MonoBehaviour:
     hidden: 0
     asset: {fileID: 2419182660156681843, guid: 61b3ebe03045a7d43828715f3d988763, type: 3}
     treeID: 3
+    treeDepth: 1
+  - name: Sphere
+    id: sphere
+    customIcon: 0
+    icon: {fileID: 0}
+    limit: 0
+    hidden: 0
+    asset: {fileID: 6966430461679545458, guid: 3e49689623017b1479ea56d4afb4ba98, type: 3}
+    treeID: 4
     treeDepth: 1

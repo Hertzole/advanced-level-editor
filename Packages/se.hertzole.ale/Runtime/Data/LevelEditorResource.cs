@@ -68,13 +68,8 @@ namespace Hertzole.ALE
 
         public bool Equals(LevelEditorResource other)
         {
-            return other != null &&
-                   customIcon == other.customIcon &&
-                   hidden == other.hidden &&
-                   limit == other.limit &&
-                   treeID == other.treeID &&
-                   treeDepth == other.treeDepth &&
-                   id == other.id;
+            return other != null && customIcon == other.customIcon && hidden == other.hidden && limit == other.limit &&
+                   treeID == other.treeID && treeDepth == other.treeDepth && id == other.id;
         }
 
         public override int GetHashCode()
