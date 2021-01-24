@@ -108,10 +108,12 @@ namespace Hertzole.ALE.Editor
         private static MethodDefinition internalAddMethod;
         private static MethodDefinition internalRemoveMethod;
 
-        private static MethodReference stringConcat;
+        private static MethodReference stringFormat;
         private static MethodReference stringEquality;
         private static MethodReference argumentException;
         private static MethodReference getType;
+
+        private const string NO_EXPOSED_FIELDS = "There's no exposed property with the ID '{0}'.";
 
         public override bool IsValidClass(TypeDefinition type)
         {
@@ -234,7 +236,7 @@ namespace Hertzole.ALE.Editor
                 return (true, false);
             }
 
-            stringConcat = module.ImportReference(typeof(string).GetMethod("Concat", new Type[] { typeof(string), typeof(string), typeof(string) }));
+            stringFormat = module.ImportReference(typeof(string).GetMethod("Format", new Type[] { typeof(string), typeof(object) }));
             stringEquality = module.ImportReference(typeof(string).GetMethod("op_Equality", new Type[] { typeof(string), typeof(string) }));
             argumentException = module.ImportReference(typeof(ArgumentException).GetConstructor(new Type[] { typeof(string) }));
             getType = module.ImportReference(typeof(Type).GetMethod("GetTypeFromHandle", new Type[] { typeof(RuntimeTypeHandle) }));
@@ -563,11 +565,11 @@ namespace Hertzole.ALE.Editor
                 return first;
             }, (il) =>
             {
-                Instruction noProperty = Instruction.Create(OpCodes.Ldstr, "No exposed property with the ID '");
+                Instruction noProperty = Instruction.Create(OpCodes.Ldstr, NO_EXPOSED_FIELDS);
                 il.Append(noProperty);
                 il.Emit(OpCodes.Ldarg_1);
-                il.Emit(OpCodes.Ldstr, "'.");
-                il.Emit(OpCodes.Call, stringConcat);
+                il.Emit(OpCodes.Box, module.ImportReference(typeof(int)));
+                il.Emit(OpCodes.Call, stringFormat);
                 il.Emit(OpCodes.Newobj, argumentException);
                 il.Emit(OpCodes.Throw);
 
@@ -601,7 +603,6 @@ namespace Hertzole.ALE.Editor
             List<Instruction> firsts = new List<Instruction>();
             Instruction checkChanged = Instruction.Create(OpCodes.Ldarg_3);
             Instruction ret = Instruction.Create(OpCodes.Ret);
-            Instruction noExposedFields = Instruction.Create(OpCodes.Ldstr, "There's no exposed field with the ID '");
 
             int exposedIndex = 0;
 
@@ -759,10 +760,11 @@ namespace Hertzole.ALE.Editor
                 exposedIndex++;
             }
 
+            Instruction noExposedFields = Instruction.Create(OpCodes.Ldstr, NO_EXPOSED_FIELDS);
             il.Append(noExposedFields);
             il.Emit(OpCodes.Ldarg_1);
-            il.Emit(OpCodes.Ldstr, ".");
-            il.Emit(OpCodes.Call, stringConcat);
+            il.Emit(OpCodes.Box, module.ImportReference(typeof(int)));
+            il.Emit(OpCodes.Call, stringFormat);
             il.Emit(OpCodes.Newobj, argumentException);
             il.Emit(OpCodes.Throw);
 
@@ -785,7 +787,7 @@ namespace Hertzole.ALE.Editor
 
             il.Append(invokeEvent);
             il.Emit(OpCodes.Ldarg_2);
-            il.Emit(OpCodes.Callvirt, module.ImportReference(typeof(Action<string, object>).GetMethod("Invoke", new Type[] { typeof(string), typeof(object) })));
+            il.Emit(OpCodes.Callvirt, module.ImportReference(typeof(Action<int, object>).GetMethod("Invoke", new Type[] { typeof(int), typeof(object) })));
             il.Append(ret);
 
             for (int i = 0; i < nameCheckFalse.Count; i++)
@@ -827,11 +829,11 @@ namespace Hertzole.ALE.Editor
                 return first;
             }, (il) =>
             {
-                Instruction noProperty = Instruction.Create(OpCodes.Ldstr, "No exposed property with the ID '");
+                Instruction noProperty = Instruction.Create(OpCodes.Ldstr, NO_EXPOSED_FIELDS);
                 il.Append(noProperty);
                 il.Emit(OpCodes.Ldarg_1);
-                il.Emit(OpCodes.Ldstr, "'.");
-                il.Emit(OpCodes.Call, stringConcat);
+                il.Emit(OpCodes.Box, module.ImportReference(typeof(int)));
+                il.Emit(OpCodes.Call, stringFormat);
                 il.Emit(OpCodes.Newobj, argumentException);
                 il.Emit(OpCodes.Throw);
 
