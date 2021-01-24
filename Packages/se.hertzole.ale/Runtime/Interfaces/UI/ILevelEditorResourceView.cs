@@ -13,12 +13,12 @@ namespace Hertzole.ALE
 {
     public class AssetClickEventArgs : EventArgs
     {
-        public ILevelEditorResource Asset { get; private set; }
+        public ILevelEditorResource Resource { get; private set; }
         public bool IsFolder { get; private set; }
 
-        public AssetClickEventArgs(ILevelEditorResource asset, bool isFolder)
+        public AssetClickEventArgs(ILevelEditorResource resource, bool isFolder)
         {
-            Asset = asset;
+            Resource = resource;
             IsFolder = isFolder;
         }
     }

@@ -3,6 +3,7 @@ using UnityEngine;
 
 public class TestScript : MonoBehaviour
 {
+#pragma warning disable CS0414
     [SerializeField]
     [ExposeToLevelEditor(0)]
     private string testString = null;
@@ -60,4 +61,5 @@ public class TestScript : MonoBehaviour
     [SerializeField]
     [ExposeToLevelEditor(17)]
     private bool boolTest = true;
+#pragma warning restore CS0414
 }
