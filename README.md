@@ -19,6 +19,8 @@ Advanced, but simple to use, runtime level editor for Unity.
 - [x] Resource browser
 - [ ] Resource browser customization
 - [ ] Level editor gizmos
+- [ ] Play mode
+- [x] Save all exposed values in play mode
 
 #### Optional
 - [ ] Orientation gizmos
