@@ -37,6 +37,10 @@ namespace Hertzole.ALE
             folderTree.OnBindItem += OnBindTreeItem;
             folderTree.OnItemExpandingCollapsing += OnTreeItemExpandCollapsing;
             folderTree.OnSelectionChanged += OnTreeSelectionChanged;
+
+            RuntimePreviewGenerator.OrthographicMode = true;
+            RuntimePreviewGenerator.BackgroundColor = Color.clear;
+            RuntimePreviewGenerator.MarkTextureNonReadable = true;
         }
 
         private void OnBindTreeItem(object sender, TreeBindItemEventArgs<TreeItem, object> e)
@@ -92,6 +96,21 @@ namespace Hertzole.ALE
 #if UNITY_EDITOR
                     activeButtons[i].gameObject.name = $"{assetButtonPrefab.name} - {resource.Children[i].Name} ({resource.Children[i].ID})";
 #endif
+
+                    if (resource.Children[i].CustomIcon && resource.Children[i].Icon != null)
+                    {
+                        activeButtons[i].Icon.sprite = resource.Children[i].Icon;
+                    }
+                    else
+                    {
+#if UNITY_EDITOR
+                        if (resource.Children[i].Asset is GameObject go)
+                        {
+                            Texture2D icon = RuntimePreviewGenerator.GenerateModelPreview(go.transform, 128, 128, true);
+                            activeButtons[i].Icon.sprite = Sprite.Create(icon, new Rect(0, 0, icon.width, icon.height), new Vector2(0.5f, 0.5f));
+                        }
+#endif
+                    }
                 }
             }
         }

@@ -30,8 +30,12 @@ namespace Hertzole.ALE
 
         private void OnClickAsset(object sender, AssetClickEventArgs e)
         {
-            ILevelEditorObject obj = ObjectManager.CreateObject(e.Asset);
-            Selection.Selection = obj;
+            if (e.Resource.Asset is GameObject)
+            {
+                ILevelEditorObject obj = ObjectManager.CreateObject(e.Resource);
+                Selection.Selection = obj;
+            }
+
         }
     }
 }
