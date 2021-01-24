@@ -5,21 +5,22 @@ Advanced, but simple to use, runtime level editor for Unity.
 
 ## ✅ TODO List
 #### Required
-- [ ] Binary serialization and deserialization
+- [x] Binary serialization and deserialization
 - [ ] JSON serialization and deserialization
 - [ ] Full 2D support
 - [ ] Full 3D support
 - [ ] Input System support
 - [ ] Undo and redo
-- [ ] Hierarchy
+- [x] Hierarchy
 - [ ] Hierarchy customization
 - [x] Inspector
 - [ ] Custom inspector components UI
-- [ ] Resource browser
+- [x] Resource browser
 - [ ] Resource browser customization
-- [ ] Scene gizmos
+- [ ] Level editor gizmos
 
 #### Optional
+- [ ] Orientation gizmos
 - [ ] Scene grid
 - [ ] Manipulation handles
 - [ ] Adaptive editor GUI

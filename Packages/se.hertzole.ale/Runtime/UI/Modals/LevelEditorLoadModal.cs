@@ -1,4 +1,5 @@
 ﻿using System;
+using System.IO;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -6,6 +7,8 @@ namespace Hertzole.ALE
 {
     public class LevelEditorLoadModal : MonoBehaviour, ILevelEditorLoadModal
     {
+        [SerializeField]
+        private Button closeButton = null;
         [SerializeField]
         private LevelToggle levelToggle = null;
         [SerializeField]
@@ -27,7 +30,11 @@ namespace Hertzole.ALE
             listView.OnCreateItem = OnCreateListItem;
             listView.OnBindItem += OnBindListItem;
 
+            listView.Initialize(null, ((RectTransform)levelToggle.transform).sizeDelta.y);
+
             loadButton.onClick.AddListener(ClickLoadLevel);
+            closeButton.onClick.AddListener(Close);
+
             ValidateLoadButton();
         }
 
@@ -40,6 +47,12 @@ namespace Hertzole.ALE
 
         private void OnLevelToggled(int index, bool isOn)
         {
+            if (isOn)
+            {
+                selectedLevel = index;
+                ValidateLoadButton();
+            }
+
             listView.ForEachListItem((i, item) =>
             {
                 if (item is LevelToggle toggle)
@@ -55,7 +68,7 @@ namespace Hertzole.ALE
             if (listItem is LevelToggle toggle)
             {
                 toggle.Index = index;
-                toggle.Label.text = (string)item;
+                toggle.Label.text = Path.GetFileNameWithoutExtension((string)item);
                 toggle.SetToggledWithoutNotify(index == selectedLevel);
                 toggle.Interactable = index != selectedLevel;
             }
@@ -64,6 +77,7 @@ namespace Hertzole.ALE
         private void ClickLoadLevel()
         {
             OnClickLoadLevel?.Invoke(levels[selectedLevel]);
+            OnClickClose?.Invoke();
         }
 
         public void Close()
