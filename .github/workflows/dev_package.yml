@@ -1,0 +1,31 @@
+name: Package
+on:
+  push:
+    branches:
+    - master
+jobs:
+  release:
+    name: Checkout
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+      with:
+        fetch-depth: 0
+    - name: Create dev package branch
+      run: |
+        git branch -d dev-package &> /dev/null || echo dev-package branch not found
+        git subtree split -P "$PKG_ROOT" -b dev-package
+        mv "Assets/ALE Example" /tmp/example
+        mv README.md /tmp/README.md
+        git checkout dev-package
+        mv /tmp/README.md README.md
+        git add README.md
+        mv /tmp/example "Samples~/Completed"
+        git add "Samples~/Completed"
+        git config --global user.name 'github-bot'
+        git config --global user.email 'github-bot@users.noreply.github.com'
+        git commit -am "Packaged project"
+        git push -f -u origin dev-package
+      env:
+        PKG_ROOT: "Packages/se.hertzole.ale"
+        

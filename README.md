@@ -7,6 +7,7 @@ Advanced, but simple to use, runtime level editor for Unity.
 #### Required
 - [x] Binary serialization and deserialization
 - [ ] JSON serialization and deserialization
+- [ ] Editor camera
 - [ ] Full 2D support
 - [ ] Full 3D support
 - [ ] Input System support

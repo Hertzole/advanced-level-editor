@@ -17,5 +17,12 @@
     "name": "Hertzole",
     "url": "https://www.hertzole.se"
   },
-  "type": "tool"
+  "type": "tool",
+  "samples": [
+	{
+		"displayName": "Completed Scene",
+		"description": "A completed example scene with all the UI hooked up.",
+		"path": "Samples~/Completed"
+	}
+  ]
 }
