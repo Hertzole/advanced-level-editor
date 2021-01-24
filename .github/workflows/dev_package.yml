@@ -20,6 +20,7 @@ jobs:
         git checkout dev-package
         mv /tmp/README.md README.md
         git add README.md
+        mkdir "Samples~"
         mv /tmp/example "Samples~/Completed"
         git add "Samples~/Completed"
         git config --global user.name 'github-bot'
