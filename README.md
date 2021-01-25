@@ -7,7 +7,7 @@ Advanced, but simple to use, runtime level editor for Unity.
 #### Required
 - [x] Binary serialization and deserialization
 - [ ] JSON serialization and deserialization
-- [ ] Editor camera
+- [x] Editor camera
 - [ ] Full 2D support
 - [ ] Full 3D support
 - [ ] Input System support
@@ -15,7 +15,7 @@ Advanced, but simple to use, runtime level editor for Unity.
 - [x] Hierarchy
 - [ ] Hierarchy customization
 - [x] Inspector
-- [ ] Custom inspector components UI
+- [ ] Custom component fields
 - [x] Resource browser
 - [ ] Resource browser customization
 - [ ] Level editor gizmos
@@ -32,6 +32,7 @@ Advanced, but simple to use, runtime level editor for Unity.
 - [ ] ProBuilder integration
 - [ ] Multiselection support
 - [ ] More errors and visuals to tell when something is wrong
+- [ ] Custom component UGUI
 
 ## 🔨 Getting Started
 #### Setup a level editor
