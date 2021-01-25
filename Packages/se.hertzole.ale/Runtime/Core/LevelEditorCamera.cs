@@ -17,6 +17,21 @@ namespace Hertzole.ALE
         [SerializeField]
         private float zoomSpeed = 0.1f;
 
+        [Space]
+
+        [SerializeField]
+        private bool canFly = true;
+        [SerializeField]
+        private bool canElevate = true;
+        [SerializeField]
+        private bool canZoom = true;
+        [SerializeField]
+        private bool canDolly = true;
+        [SerializeField]
+        private bool canPan = true;
+        [SerializeField]
+        private bool canOrbit = true;
+
         [Header("Input")]
         [SerializeField]
         private string altModifier = "Alt Modifier";
@@ -108,7 +123,7 @@ namespace Hertzole.ALE
                 }
             }
 
-            if ((realInput.GetAxis(cameraZoom, false) != 0f || (realInput.GetButton(cameraFly) && realInput.GetButton(altModifier))) && !realInput.IsMouseOverUI())
+            if (((realInput.GetAxis(cameraZoom, false) != 0f && canZoom) || (realInput.GetButton(cameraFly) && realInput.GetButton(altModifier) && canDolly)) && !realInput.IsMouseOverUI())
             {
                 float delta = realInput.GetAxis(cameraZoom, false);
 
@@ -135,7 +150,7 @@ namespace Hertzole.ALE
             }
 
             // WASD camera flying.
-            if (realInput.GetButton(cameraFly) && !realInput.GetButton(altModifier))
+            if (realInput.GetButton(cameraFly) && !realInput.GetButton(altModifier) && canFly)
             {
                 cameraState = ViewTool.Look;
                 eatMouse = true;
@@ -153,11 +168,14 @@ namespace Hertzole.ALE
                 transform.position += transform.forward * speed * moveInput.y;
                 transform.position += transform.right * speed * moveInput.x;
 
-                transform.position += (transform.up * realInput.GetAxis(cameraElevate, true)) * speed;
+                if (canElevate)
+                {
+                    transform.position += (transform.up * realInput.GetAxis(cameraElevate, true)) * speed;
+                }
 
                 pivot = transform.position + transform.forward * distanceToCamera;
             }
-            else if (realInput.GetButton(altModifier) && realInput.GetButton(cameraOrbit)) // Orbit
+            else if (realInput.GetButton(altModifier) && realInput.GetButton(cameraOrbit) && canOrbit) // Orbit
             {
                 cameraState = ViewTool.Orbit;
                 eatMouse = true;
@@ -170,7 +188,7 @@ namespace Hertzole.ALE
                 transform.localRotation *= Quaternion.AngleAxis(rotationY, Vector3.left);
                 transform.position = CalculateCameraPosition(pivot);
             }
-            else if (realInput.GetButton(cameraPan)) // Pan
+            else if (realInput.GetButton(cameraPan) && canPan) // Pan
             {
                 cameraState = ViewTool.Pan;
 

@@ -2705,6 +2705,12 @@ MonoBehaviour:
   orbitSpeed: 7
   scrollModifier: 100
   zoomSpeed: 0.1
+  canFly: 1
+  canElevate: 1
+  canZoom: 1
+  canDolly: 1
+  canPan: 1
+  canOrbit: 1
   altModifier: Alt Modifier
   cameraZoom: Camera Zoom
   cameraFly: Camera Fly

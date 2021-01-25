@@ -48,6 +48,7 @@ public string MyProperty { get; set; }
 
 ## ❤ Credits
 [yasirkula](https://github.com/yasirkula) - [Dynamic Panels for Unity3D](https://github.com/yasirkula/UnityDynamicPanels) for panels  
-[yasirkula](https://github.com/yasirkula) - [Runtime Inspector & Hierarchy for Unity 3D](https://github.com/yasirkula/UnityRuntimeInspector) for tree control
+[yasirkula](https://github.com/yasirkula) - [Runtime Inspector & Hierarchy for Unity 3D](https://github.com/yasirkula/UnityRuntimeInspector) for tree control  
+Unity Technologies/ProBuilder team - [GILES](https://github.com/Unity-Technologies/giles) for editor camera
 
 ❤ Developed with love and support from [Limit Break Studio](https://main.limitbreakstudio.com/) ❤
