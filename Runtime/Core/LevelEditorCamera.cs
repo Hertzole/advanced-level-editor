@@ -7,6 +7,9 @@ namespace Hertzole.ALE
     public class LevelEditorCamera : MonoBehaviour, ILevelEditorCamera
     {
         [SerializeField]
+        private bool twoDMode = false;
+
+        [SerializeField]
         private float moveSpeed = 15f;
         [SerializeField]
         private float lookSpeed = 5f;
@@ -16,6 +19,10 @@ namespace Hertzole.ALE
         private float scrollModifier = 100f;
         [SerializeField]
         private float zoomSpeed = 0.1f;
+        [SerializeField]
+        private float minZoom = 1f;
+        [SerializeField]
+        private float maxZoom = 20f;
 
         [Space]
 
@@ -93,6 +100,11 @@ namespace Hertzole.ALE
             rotationY = -transform.eulerAngles.x;
 
             previousPosition = transform.position;
+
+            if (twoDMode)
+            {
+                cam.orthographic = true;
+            }
         }
 
         private void Start()
@@ -133,9 +145,19 @@ namespace Hertzole.ALE
                     delta = CalcSignedMouseDelta(realInput.MousePosition, previousMousePosition);
                 }
 
-                distanceToCamera -= delta * (distanceToCamera / MAX_CAM_DISTANCE) * scrollModifier;
-                distanceToCamera = Mathf.Clamp(distanceToCamera, MIN_CAM_DISTANCE, MAX_CAM_DISTANCE);
-                transform.position = transform.localRotation * (Vector3.forward * -distanceToCamera) + pivot;
+                if (twoDMode)
+                {
+                    float size = cam.orthographicSize;
+                    size -= delta * (size / maxZoom) * scrollModifier;
+                    size = Mathf.Clamp(size, minZoom, maxZoom);
+                    cam.orthographicSize = size;
+                }
+                else
+                {
+                    distanceToCamera -= delta * (distanceToCamera / MAX_CAM_DISTANCE) * scrollModifier;
+                    distanceToCamera = Mathf.Clamp(distanceToCamera, MIN_CAM_DISTANCE, MAX_CAM_DISTANCE);
+                    transform.position = transform.localRotation * (Vector3.forward * -distanceToCamera) + pivot;
+                }
             }
 
             if (!currentActionValid)
@@ -149,61 +171,89 @@ namespace Hertzole.ALE
                 return;
             }
 
-            // WASD camera flying.
-            if (realInput.GetButton(cameraFly) && !realInput.GetButton(altModifier) && canFly)
+            if (realInput.GetButton(cameraFly) && !realInput.GetButton(altModifier) && canFly) // WASD camera flying
             {
-                cameraState = ViewTool.Look;
-                eatMouse = true;
-
-                Vector2 lookInput = realInput.GetVector2(cameraLook, false);
-                rotationX += lookInput.x * lookSpeed;
-                rotationY += lookInput.y * lookSpeed;
-
-                transform.localRotation = Quaternion.AngleAxis(rotationX, Vector3.up);
-                transform.localRotation *= Quaternion.AngleAxis(rotationY, Vector3.left);
-
-                Vector2 moveInput = realInput.GetVector2(cameraMove, true);
-
-                float speed = moveSpeed * Time.unscaledDeltaTime;
-                transform.position += transform.forward * speed * moveInput.y;
-                transform.position += transform.right * speed * moveInput.x;
-
-                if (canElevate)
+                if (twoDMode)
                 {
-                    transform.position += (transform.up * realInput.GetAxis(cameraElevate, true)) * speed;
+                    Pan();
                 }
-
-                pivot = transform.position + transform.forward * distanceToCamera;
+                else
+                {
+                    FlyMode();
+                }
             }
             else if (realInput.GetButton(altModifier) && realInput.GetButton(cameraOrbit) && canOrbit) // Orbit
             {
-                cameraState = ViewTool.Orbit;
-                eatMouse = true;
-
-                Vector2 lookInput = realInput.GetVector2(cameraLook, false);
-                rotationX += lookInput.x * orbitSpeed;
-                rotationY += lookInput.y * orbitSpeed;
-
-                transform.localRotation = Quaternion.AngleAxis(rotationX, Vector3.up);
-                transform.localRotation *= Quaternion.AngleAxis(rotationY, Vector3.left);
-                transform.position = CalculateCameraPosition(pivot);
+                if (twoDMode)
+                {
+                    Pan();
+                }
+                else
+                {
+                    Orbit();
+                }
             }
             else if (realInput.GetButton(cameraPan) && canPan) // Pan
             {
-                cameraState = ViewTool.Pan;
-
-                Vector2 delta = realInput.MousePosition - previousMousePosition;
-
-                delta.x = ScreenToWorldDistance(delta.x, distanceToCamera);
-                delta.y = ScreenToWorldDistance(delta.y, distanceToCamera);
-
-                transform.position -= transform.right * delta.x;
-                transform.position -= transform.up * delta.y;
-
-                pivot = transform.position + transform.forward * distanceToCamera;
+                Pan();
             }
 
             previousMousePosition = realInput.MousePosition;
+        }
+
+        private void FlyMode()
+        {
+            cameraState = ViewTool.Look;
+            eatMouse = true;
+
+            Vector2 lookInput = realInput.GetVector2(cameraLook, false);
+            rotationX += lookInput.x * lookSpeed;
+            rotationY += lookInput.y * lookSpeed;
+
+            transform.localRotation = Quaternion.AngleAxis(rotationX, Vector3.up);
+            transform.localRotation *= Quaternion.AngleAxis(rotationY, Vector3.left);
+
+            Vector2 moveInput = realInput.GetVector2(cameraMove, true);
+
+            float speed = moveSpeed * Time.unscaledDeltaTime;
+            transform.position += transform.forward * speed * moveInput.y;
+            transform.position += transform.right * speed * moveInput.x;
+
+            if (canElevate)
+            {
+                transform.position += (transform.up * realInput.GetAxis(cameraElevate, true)) * speed;
+            }
+
+            pivot = transform.position + transform.forward * distanceToCamera;
+        }
+
+        private void Orbit()
+        {
+            cameraState = ViewTool.Orbit;
+            eatMouse = true;
+
+            Vector2 lookInput = realInput.GetVector2(cameraLook, false);
+            rotationX += lookInput.x * orbitSpeed;
+            rotationY += lookInput.y * orbitSpeed;
+
+            transform.localRotation = Quaternion.AngleAxis(rotationX, Vector3.up);
+            transform.localRotation *= Quaternion.AngleAxis(rotationY, Vector3.left);
+            transform.position = CalculateCameraPosition(pivot);
+        }
+
+        private void Pan()
+        {
+            cameraState = ViewTool.Pan;
+
+            Vector2 delta = realInput.MousePosition - previousMousePosition;
+
+            delta.x = ScreenToWorldDistance(delta.x, distanceToCamera);
+            delta.y = ScreenToWorldDistance(delta.y, distanceToCamera);
+
+            transform.position -= transform.right * delta.x;
+            transform.position -= transform.up * delta.y;
+
+            pivot = transform.position + transform.forward * distanceToCamera;
         }
 
         public bool IsUsingMouse()
