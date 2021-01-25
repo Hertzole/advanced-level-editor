@@ -710,6 +710,8 @@ namespace Hertzole.ALE.Editor
 
                 il.Append(postName);
 
+                TypeReference type = field.FieldType;
+
                 if (field.IsProperty)
                 {
                     il.Emit(OpCodes.Call, field.property.GetMethod);
@@ -719,17 +721,33 @@ namespace Hertzole.ALE.Editor
                     il.Emit(OpCodes.Ldfld, field.field);
                 }
 
+                if (type.Is<Color32>())
+                {
+                    il.Emit(OpCodes.Call, module.ImportReference(typeof(Color32).GetMethod("op_Implicit", new Type[] { typeof(Color32) })));
+                }
+
                 il.Emit(OpCodes.Ldarg_2);
+
+                if (type.Is<Color32>())
+                {
+                    type = module.ImportReference(typeof(Color)); // Needs to convert to color because Color32 is being stupid with equals check.
+                }
+
                 if (field.IsValueType)
                 {
-                    il.Emit(OpCodes.Unbox_Any, field.FieldType);
+                    il.Emit(OpCodes.Unbox_Any, type);
                 }
                 else
                 {
-                    il.Emit(OpCodes.Castclass, field.FieldType);
+                    il.Emit(OpCodes.Castclass, type);
                 }
 
-                if (field.FieldTypeDefinition.TryGetMethodInBaseType("op_Inequality", out MethodDefinition equalityMethod))
+                if (field.FieldType.Is<Color32>())
+                {
+                    il.Emit(OpCodes.Call, module.ImportReference(typeof(Color).GetMethod("op_Inequality", new Type[] { typeof(Color), typeof(Color) })));
+                    il.Emit(OpCodes.Brfalse_S, checkChanged);
+                }
+                else if (field.FieldTypeDefinition.TryGetMethodInBaseType("op_Inequality", out MethodDefinition equalityMethod))
                 {
                     il.Emit(OpCodes.Call, module.ImportReference(equalityMethod));
                     il.Emit(OpCodes.Brfalse, checkChanged);
@@ -741,7 +759,12 @@ namespace Hertzole.ALE.Editor
 
                 il.Emit(OpCodes.Ldarg_0);
                 il.Emit(OpCodes.Ldarg_2);
-                il.Emit(field.IsValueType ? OpCodes.Unbox_Any : OpCodes.Castclass, field.FieldType);
+                il.Emit(field.IsValueType ? OpCodes.Unbox_Any : OpCodes.Castclass, type);
+
+                if (field.FieldType.Is<Color32>())
+                {
+                    il.Emit(OpCodes.Call, module.ImportReference(typeof(Color32).GetMethod("op_Implicit", new Type[] { typeof(Color) })));
+                }
 
                 if (field.IsProperty)
                 {
