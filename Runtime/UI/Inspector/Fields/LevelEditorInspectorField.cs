@@ -30,6 +30,8 @@ namespace Hertzole.ALE
         public ExposedProperty BoundProperty { get { return property; } }
         public IExposedToLevelEditor BoundComponent { get { return exposed; } }
 
+        public ILevelEditorUI UI { get; set; }
+
         private void Awake()
         {
 #if OBSOLETE

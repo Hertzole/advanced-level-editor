@@ -10,6 +10,8 @@ namespace Hertzole.ALE
         ILevelEditorResourceView ResourcePanel { get; }
         ILevelEditorHierarchy HierarchyPanel { get; }
 
+        ILevelEditorColorPickerWindow ColorPickerWindow { get; }
+
         void Initialize(ILevelEditor levelEditor);
 
         void InitializeResources(ILevelEditorResource[] resources);
