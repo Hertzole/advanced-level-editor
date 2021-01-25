@@ -2,7 +2,7 @@
 {
     public interface ILevelEditorInspector
     {
-        void Initialize();
+        void Initialize(ILevelEditorUI ui);
 
         void BindObject(ILevelEditorObject target);
     }

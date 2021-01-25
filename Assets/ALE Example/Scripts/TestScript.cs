@@ -55,11 +55,24 @@ public class TestScript : MonoBehaviour
     private Vector3Int vector3IntTest = Vector3Int.zero;
 
     [SerializeField]
-    [ExposeToLevelEditor(16, order = -1000, customName = "FAAAA")]
+    [ExposeToLevelEditor(16, order = -1000, customName = "FAAAA", visible = false)]
     private char charTest = 'A';
 
     [SerializeField]
     [ExposeToLevelEditor(17)]
     private bool boolTest = true;
+
+    [SerializeField]
+    [ExposeToLevelEditor(18)]
+    private Color colorField = Color.red;
+    [SerializeField]
+    [ExposeToLevelEditor(19)]
+    private Color32 color32Field;
+    [SerializeField]
+    [ExposeToLevelEditor(20)]
+    private Transform otherObject = null;
+    [SerializeField]
+    [ExposeToLevelEditor(21)]
+    private string[] messages = null;
 #pragma warning restore CS0414
 }

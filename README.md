@@ -21,6 +21,8 @@ Advanced, but simple to use, runtime level editor for Unity.
 - [ ] Level editor gizmos
 - [ ] Play mode
 - [x] Save all exposed values in play mode
+- [ ] Auto serialize unknown types
+- [ ] Unified serializer for binary and JSON
 
 #### Optional
 - [ ] Orientation gizmos
@@ -33,6 +35,17 @@ Advanced, but simple to use, runtime level editor for Unity.
 - [ ] Multiselection support
 - [ ] More errors and visuals to tell when something is wrong
 - [ ] Custom component UGUI
+
+#### Inspector fields
+- [x] Number fields
+- [x] Text fields
+- [x] Toggle field
+- [x] Vector2(int) field
+- [x] Vector3(int) field
+- [ ] Vector4 field
+- [ ] Object reference field
+- [x] Color field
+- [ ] Arrays
 
 ## 🔨 Getting Started
 #### Setup a level editor
@@ -50,6 +63,7 @@ public string MyProperty { get; set; }
 ## ❤ Credits
 [yasirkula](https://github.com/yasirkula) - [Dynamic Panels for Unity3D](https://github.com/yasirkula/UnityDynamicPanels) for panels  
 [yasirkula](https://github.com/yasirkula) - [Runtime Inspector & Hierarchy for Unity 3D](https://github.com/yasirkula/UnityRuntimeInspector) for tree control  
-Unity Technologies/ProBuilder team - [GILES](https://github.com/Unity-Technologies/giles) for editor camera
+Unity Technologies/ProBuilder team - [GILES](https://github.com/Unity-Technologies/giles) for editor camera  
+[judah4](https://github.com/judah4) - [HSV Color Picker](https://github.com/judah4/HSV-Color-Picker-Unity) for color picker
 
 ❤ Developed with love and support from [Limit Break Studio](https://main.limitbreakstudio.com/) ❤

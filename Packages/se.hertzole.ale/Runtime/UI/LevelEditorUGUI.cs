@@ -32,6 +32,11 @@ namespace Hertzole.ALE
         [SerializeField, RequireType(typeof(ILevelEditorNotificationModal))]
         private GameObject notificationModal = null;
 
+        [Header("Windows")]
+        [SerializeField]
+        [RequireType(typeof(ILevelEditorColorPickerWindow))]
+        private GameObject colorPickerWindow = null;
+
         private ILevelEditor levelEditor;
         private ILevelEditorSaveModal realSaveModal;
         private ILevelEditorLoadModal realLoadModal;
@@ -39,6 +44,7 @@ namespace Hertzole.ALE
         private ILevelEditorInspector realInspectorPanel;
         private ILevelEditorResourceView realResourcePanel;
         private ILevelEditorHierarchy realHierarchy;
+        private ILevelEditorColorPickerWindow realColorPickerWindow;
 
         public ILevelEditor LevelEditor { get { return levelEditor; } }
         public ILevelEditorSaveModal SaveModal { get { return realSaveModal; } }
@@ -47,6 +53,7 @@ namespace Hertzole.ALE
         public ILevelEditorInspector InspectorPanel { get { return realInspectorPanel; } }
         public ILevelEditorResourceView ResourcePanel { get { return realResourcePanel; } }
         public ILevelEditorHierarchy HierarchyPanel { get { return realHierarchy; } }
+        public ILevelEditorColorPickerWindow ColorPickerWindow { get { return realColorPickerWindow; } }
 
         protected virtual void Awake()
         {
@@ -56,6 +63,7 @@ namespace Hertzole.ALE
             realInspectorPanel = inspectorPanel.NeedComponent<ILevelEditorInspector>();
             realResourcePanel = resourcePanel.NeedComponent<ILevelEditorResourceView>();
             realHierarchy = hierarchyPanel.NeedComponent<ILevelEditorHierarchy>();
+            realColorPickerWindow = colorPickerWindow.NeedComponent<ILevelEditorColorPickerWindow>();
 
             ToggleSaveModal(false);
             ToggleLoadModal(false);
@@ -83,7 +91,7 @@ namespace Hertzole.ALE
 
             levelEditor.Selection.OnSelectionChanged += OnSelectionChanged;
 
-            realInspectorPanel.Initialize();
+            realInspectorPanel.Initialize(this);
             realHierarchy.Initialize(levelEditor);
 
             realSaveModal.Initialize();

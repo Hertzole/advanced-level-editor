@@ -72,6 +72,7 @@ namespace Hertzole.ALE
         private LevelEditorInspectorField[] fieldPrefabs = null;
 
         private ILevelEditorObject boundItem;
+        private ILevelEditorUI ui;
 
         private List<LevelEditorComponentUI> activeComponents = new List<LevelEditorComponentUI>();
         private Stack<LevelEditorComponentUI> pooledComponents = new Stack<LevelEditorComponentUI>();
@@ -91,9 +92,9 @@ namespace Hertzole.ALE
             objectInfoHolder.SetActive(false);
         }
 
-        public void Initialize()
+        public void Initialize(ILevelEditorUI ui)
         {
-
+            this.ui = ui;
         }
 
         private void OnObjectNameFieldChanged(string newName)
@@ -189,6 +190,7 @@ namespace Hertzole.ALE
                 else
                 {
                     result = Instantiate(fieldPrefabs[fieldIndex], parent);
+                    result.UI = ui;
                     result.Index = fieldIndex;
                 }
             }

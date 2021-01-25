@@ -31,6 +31,15 @@ MonoBehaviour:
     asset: {fileID: 0}
     treeID: 5
     treeDepth: 0
+  - name: Color Cube
+    id: color_cube
+    customIcon: 0
+    icon: {fileID: 0}
+    limit: 0
+    hidden: 0
+    asset: {fileID: 2837006266036230208, guid: e8db0cfb4b297824b84949c3c4fa6025, type: 3}
+    treeID: 10
+    treeDepth: 1
   - name: Physics Cube
     id: physics_cube
     customIcon: 0

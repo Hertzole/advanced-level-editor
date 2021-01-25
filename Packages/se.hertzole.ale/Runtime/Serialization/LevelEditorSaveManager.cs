@@ -78,6 +78,7 @@ namespace Hertzole.ALE
             try
             {
                 LevelEditorBinarySerializer.Serialize(saveData, saveLocation);
+                //LevelEditorJSONSerializer.Serialize(saveData, saveLocation, true);
             }
             catch (Exception ex)
             {
