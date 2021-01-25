@@ -479,7 +479,7 @@ PrefabInstance:
     m_Modifications:
     - target: {fileID: 6464335026621190028, guid: 8be025fa1f513484bbcfe76a6b9b7caa, type: 3}
       propertyPath: m_Name
-      value: Background
+      value: Toolbar
       objectReference: {fileID: 0}
     - target: {fileID: 6464335026621190031, guid: 8be025fa1f513484bbcfe76a6b9b7caa, type: 3}
       propertyPath: m_Pivot.x
@@ -2582,7 +2582,6 @@ GameObject:
   - component: {fileID: 1687258585}
   - component: {fileID: 1687258584}
   - component: {fileID: 1687258582}
-  - component: {fileID: 1687258583}
   - component: {fileID: 1687258586}
   - component: {fileID: 1687258587}
   m_Layer: 0
@@ -2600,46 +2599,6 @@ AudioListener:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1687258581}
   m_Enabled: 1
---- !u!114 &1687258583
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1687258581}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: be76e5f14cfee674cb30b491fb72b09b, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  boost: 3.5
-  positionLerpTime: 0.2
-  mouseSensitivityCurve:
-    serializedVersion: 2
-    m_Curve:
-    - serializedVersion: 3
-      time: 0
-      value: 0.5
-      inSlope: 0
-      outSlope: 5
-      tangentMode: 0
-      weightedMode: 0
-      inWeight: 0
-      outWeight: 0
-    - serializedVersion: 3
-      time: 1
-      value: 2.5
-      inSlope: 0
-      outSlope: 0
-      tangentMode: 0
-      weightedMode: 0
-      inWeight: 0
-      outWeight: 0
-    m_PreInfinity: 2
-    m_PostInfinity: 2
-    m_RotationOrder: 4
-  rotationLerpTime: 0.01
-  invertY: 1
 --- !u!20 &1687258584
 Camera:
   m_ObjectHideFlags: 0
@@ -2663,7 +2622,7 @@ Camera:
     y: 0
     width: 1
     height: 1
-  near clip plane: 0.3
+  near clip plane: 0.01
   far clip plane: 1000
   field of view: 60
   orthographic: 0
@@ -2741,6 +2700,21 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: e135fca2fd743cf4fa6f353a35244789, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  moveSpeed: 15
+  lookSpeed: 5
+  orbitSpeed: 7
+  scrollModifier: 100
+  zoomSpeed: 0.1
+  altModifier: Alt Modifier
+  cameraZoom: Camera Zoom
+  cameraFly: Camera Fly
+  cameraMove: Camera Move
+  cameraLook: Camera Look
+  cameraElevate: Camera Elevate
+  cameraOrbit: Camera Orbit
+  cameraPan: Camera Pan
+  input: {fileID: 1918987434}
+  cam: {fileID: 1687258584}
 --- !u!1 &1728858838
 GameObject:
   m_ObjectHideFlags: 0
@@ -3233,6 +3207,39 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d4615cb67eac1d642bad8d9275a11ba4, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  inputs:
+  - name: Alt Modifier
+    type: 0
+    action: Alt Modifier
+    action2: 
+  - name: Camera Zoom
+    type: 1
+    action: Mouse ScrollWheel
+    action2: 
+  - name: Camera Fly
+    type: 0
+    action: Right Mouse
+    action2: 
+  - name: Camera Move
+    type: 2
+    action: Horizontal
+    action2: Vertical
+  - name: Camera Look
+    type: 2
+    action: Mouse X
+    action2: Mouse Y
+  - name: Camera Elevate
+    type: 1
+    action: Camera Elevate
+    action2: 
+  - name: Camera Orbit
+    type: 0
+    action: Left Mouse
+    action2: 
+  - name: Camera Pan
+    type: 0
+    action: Middle Mouse
+    action2: 
 --- !u!114 &1918987438
 MonoBehaviour:
   m_ObjectHideFlags: 0

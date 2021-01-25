@@ -9,5 +9,7 @@ namespace Hertzole.ALE
         Camera CameraComponent { get; }
 
         ViewTool CameraState { get; }
+
+        bool IsUsingMouse();
     }
 }
