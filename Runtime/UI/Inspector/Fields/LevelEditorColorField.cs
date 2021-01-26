@@ -9,6 +9,8 @@ namespace Hertzole.ALE
         private Button colorButton = null;
         [SerializeField]
         private Image colorImage = null;
+        [SerializeField]
+        private Slider alphaSlider = null;
 
         private Color color;
 
@@ -28,6 +30,11 @@ namespace Hertzole.ALE
             this.color = color;
 
             colorImage.color = new Color(color.r, color.g, color.b, 1f);
+            if (alphaSlider != null)
+            {
+                alphaSlider.value = color.a;
+            }
+
             SetPropertyValue(color);
         }
 
@@ -48,11 +55,19 @@ namespace Hertzole.ALE
             {
                 this.color = color;
                 colorImage.color = new Color(color.r, color.g, color.b, 1);
+                if (alphaSlider != null)
+                {
+                    alphaSlider.SetValueWithoutNotify(color.a);
+                }
             }
             else if (value is Color32 color32)
             {
                 this.color = color32;
                 colorImage.color = new Color32(color32.r, color32.g, color32.b, 255);
+                if (alphaSlider != null)
+                {
+                    alphaSlider.value = color32.a / 1f;
+                }
             }
         }
     }
