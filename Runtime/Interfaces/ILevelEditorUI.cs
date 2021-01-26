@@ -11,6 +11,7 @@ namespace Hertzole.ALE
         ILevelEditorHierarchy HierarchyPanel { get; }
 
         ILevelEditorColorPickerWindow ColorPickerWindow { get; }
+        ILevelEditorObjectPickerWindow ObjectPickerWindow { get; }
 
         void Initialize(ILevelEditor levelEditor);
 

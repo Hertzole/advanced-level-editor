@@ -6,7 +6,7 @@ using UnityEngine.UI;
 namespace Hertzole.ALE
 {
     [RequireComponent(typeof(Toggle))]
-    public class LevelToggle : RecycledListItem
+    public class ListToggle : RecycledListItem
     {
         [SerializeField]
         private TextMeshProUGUI label = null;
