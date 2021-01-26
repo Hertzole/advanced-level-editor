@@ -5,6 +5,7 @@ Advanced, but simple to use, runtime level editor for Unity.
 
 ## ✅ TODO List
 #### Required
+What needs to be done before 1.0.0 verified.  
 - [x] Binary serialization and deserialization
 - [ ] JSON serialization and deserialization
 - [x] Editor camera
@@ -23,8 +24,10 @@ Advanced, but simple to use, runtime level editor for Unity.
 - [x] Save all exposed values in play mode
 - [ ] Auto serialize unknown types
 - [ ] Unified serializer for binary and JSON
+- [ ] Menu items
 
 #### Optional
+What would be really nice to have before 1.0.0 verified.  
 - [ ] Orientation gizmos
 - [ ] Scene grid
 - [ ] Manipulation handles
@@ -35,21 +38,25 @@ Advanced, but simple to use, runtime level editor for Unity.
 - [ ] Multiselection support
 - [ ] More errors and visuals to tell when something is wrong
 - [ ] Custom component UGUI
+- [ ] Unity mathematics support
 
 #### Inspector fields
+The supported inspector fields.  
 - [x] Number fields
 - [x] Text fields
 - [x] Toggle field
 - [x] Vector2(int) field
 - [x] Vector3(int) field
 - [ ] Vector4 field
-- [ ] Object reference field
+- [x] Object reference field
 - [x] Color field
 - [ ] Arrays
 
 ## 🔨 Getting Started
 #### Setup a level editor
-TODO
+TODO  
+Start by creating an empty object and add the `Level Editor` component. Then assign the required fields.
+
 #### Expose a field to the level editor
 To expose a field or property to the level editor, you simply do  
 ```cs

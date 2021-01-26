@@ -36,6 +36,9 @@ namespace Hertzole.ALE
         [SerializeField]
         [RequireType(typeof(ILevelEditorColorPickerWindow))]
         private GameObject colorPickerWindow = null;
+        [SerializeField]
+        [RequireType(typeof(ILevelEditorObjectPickerWindow))]
+        private GameObject objectPickerWindow = null;
 
         private ILevelEditor levelEditor;
         private ILevelEditorSaveModal realSaveModal;
@@ -45,6 +48,7 @@ namespace Hertzole.ALE
         private ILevelEditorResourceView realResourcePanel;
         private ILevelEditorHierarchy realHierarchy;
         private ILevelEditorColorPickerWindow realColorPickerWindow;
+        private ILevelEditorObjectPickerWindow realObjectPickerWindow;
 
         public ILevelEditor LevelEditor { get { return levelEditor; } }
         public ILevelEditorSaveModal SaveModal { get { return realSaveModal; } }
@@ -54,6 +58,7 @@ namespace Hertzole.ALE
         public ILevelEditorResourceView ResourcePanel { get { return realResourcePanel; } }
         public ILevelEditorHierarchy HierarchyPanel { get { return realHierarchy; } }
         public ILevelEditorColorPickerWindow ColorPickerWindow { get { return realColorPickerWindow; } }
+        public ILevelEditorObjectPickerWindow ObjectPickerWindow { get { return realObjectPickerWindow; } }
 
         protected virtual void Awake()
         {
@@ -64,6 +69,7 @@ namespace Hertzole.ALE
             realResourcePanel = resourcePanel.NeedComponent<ILevelEditorResourceView>();
             realHierarchy = hierarchyPanel.NeedComponent<ILevelEditorHierarchy>();
             realColorPickerWindow = colorPickerWindow.NeedComponent<ILevelEditorColorPickerWindow>();
+            realObjectPickerWindow = objectPickerWindow.NeedComponent<ILevelEditorObjectPickerWindow>();
 
             ToggleSaveModal(false);
             ToggleLoadModal(false);
@@ -71,6 +77,7 @@ namespace Hertzole.ALE
             notificationModal.IfExists(x => x.gameObject.SetActive(false));
 
             colorPickerWindow.SetActive(false);
+            objectPickerWindow.SetActive(false);
         }
 
         public void Initialize(ILevelEditor levelEditor)
@@ -98,6 +105,8 @@ namespace Hertzole.ALE
 
             realSaveModal.Initialize();
             realLoadModal.Initialize();
+
+            realObjectPickerWindow.Initialize(levelEditor);
         }
 
         private void OnDestroy()

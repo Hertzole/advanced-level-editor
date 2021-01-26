@@ -32,6 +32,8 @@ namespace Hertzole.ALE
 
         public ILevelEditorUI UI { get; set; }
 
+        public object RawValue { get { return BoundComponent.GetValue(BoundProperty.ID); } }
+
         private void Awake()
         {
 #if OBSOLETE
@@ -105,6 +107,8 @@ namespace Hertzole.ALE
 #endif
     public abstract class LevelEditorInspectorField<T> : LevelEditorInspectorField
     {
+        public T Value { get { return (T)RawValue; } }
+
         public override bool SupportsType(ExposedProperty property)
         {
             if (property.IsArray)

@@ -1,0 +1,98 @@
+﻿using System;
+using TMPro;
+using UnityEngine;
+using UnityEngine.UI;
+using UnityObject = UnityEngine.Object;
+
+namespace Hertzole.ALE
+{
+    //TODO: Implement drop support
+    public class LevelEditorObjectField : LevelEditorInspectorField
+    {
+        [SerializeField]
+        private Button objectButton = null;
+        [SerializeField]
+        private TextMeshProUGUI objectLabel = null;
+        [SerializeField]
+        private string labelFormat = "{0} ({1})";
+        [SerializeField]
+        private string nullValueText = "None";
+
+        private bool isComponent = false;
+
+        protected override void OnAwake()
+        {
+            objectButton.onClick.AddListener(OnClickObjectButton);
+        }
+
+        private void OnClickObjectButton()
+        {
+            UI.ObjectPickerWindow.Show(BoundProperty.Type, isComponent);
+            UI.ObjectPickerWindow.OnWindowClose.AddListener(OnPickerWindowClose);
+            UI.ObjectPickerWindow.OnObjectSelected += OnPickerObjectSelected;
+        }
+
+        private void OnPickerWindowClose()
+        {
+            UI.ObjectPickerWindow.OnWindowClose.RemoveListener(OnPickerWindowClose);
+            UI.ObjectPickerWindow.OnObjectSelected -= OnPickerObjectSelected;
+        }
+
+        private void OnPickerObjectSelected(UnityObject obj)
+        {
+            if (isComponent)
+            {
+                if (obj == null)
+                {
+                    SetPropertyValue(null);
+                }
+                else
+                {
+                    SetPropertyValue(((Component)obj).GetComponent(BoundProperty.Type));
+                }
+
+                UpdateLabel((UnityObject)RawValue);
+            }
+            else
+            {
+                throw new NotImplementedException("Non-components are not supported yet.");
+            }
+        }
+
+        public override bool SupportsType(ExposedProperty property)
+        {
+            if (property.IsArray || property.Type.IsArray)
+            {
+                return false;
+            }
+
+            return property.Type.IsSubclassOf(typeof(UnityObject));
+        }
+
+        protected override void SetFieldValue(object value)
+        {
+            UnityObject obj = (UnityObject)value;
+
+            UpdateLabel(obj);
+
+            isComponent = BoundProperty.Type.IsSubclassOf(typeof(Component));
+        }
+
+        private void UpdateLabel(UnityObject value)
+        {
+            objectLabel.text = string.Format(labelFormat, value == null ? nullValueText : value.name, BoundProperty.Type.Name);
+        }
+
+#if UNITY_EDITOR
+        protected override void GetStandardComponents()
+        {
+            base.GetStandardComponents();
+
+            if (objectButton != null && objectLabel == null)
+            {
+                objectLabel = objectButton.GetComponentInChildren<TextMeshProUGUI>();
+            }
+        }
+#endif
+    }
+}

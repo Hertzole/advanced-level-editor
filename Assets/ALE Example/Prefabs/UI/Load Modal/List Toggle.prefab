@@ -12,7 +12,7 @@ GameObject:
   - component: {fileID: 144795487843596020}
   - component: {fileID: 144795487843596021}
   m_Layer: 5
-  m_Name: Level Toggle
+  m_Name: List Toggle
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -96,7 +96,7 @@ MonoBehaviour:
   m_GameObject: {fileID: 144795487843596022}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 22ceae27b330511448d5de24be298d05, type: 3}
+  m_Script: {fileID: 11500000, guid: f842572e41cadeb458e573ff60897c64, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
   label: {fileID: 1002607068451111735}

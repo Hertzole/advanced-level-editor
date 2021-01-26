@@ -10,7 +10,7 @@ namespace Hertzole.ALE
         [SerializeField]
         private Button closeButton = null;
         [SerializeField]
-        private LevelToggle levelToggle = null;
+        private ListToggle levelToggle = null;
         [SerializeField]
         private RecycledListView listView = null;
         [SerializeField]
@@ -40,7 +40,7 @@ namespace Hertzole.ALE
 
         private RecycledListItem OnCreateListItem()
         {
-            LevelToggle toggle = Instantiate(levelToggle);
+            ListToggle toggle = Instantiate(levelToggle);
             toggle.OnToggled += OnLevelToggled;
             return toggle;
         }
@@ -55,7 +55,7 @@ namespace Hertzole.ALE
 
             listView.ForEachListItem((i, item) =>
             {
-                if (item is LevelToggle toggle)
+                if (item is ListToggle toggle)
                 {
                     toggle.SetToggledWithoutNotify(i == index);
                     toggle.Interactable = i != index;
@@ -65,7 +65,7 @@ namespace Hertzole.ALE
 
         private void OnBindListItem(int index, object item, RecycledListItem listItem)
         {
-            if (listItem is LevelToggle toggle)
+            if (listItem is ListToggle toggle)
             {
                 toggle.Index = index;
                 toggle.Label.text = Path.GetFileNameWithoutExtension((string)item);

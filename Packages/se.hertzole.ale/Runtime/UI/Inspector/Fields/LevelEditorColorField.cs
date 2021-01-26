@@ -14,7 +14,7 @@ namespace Hertzole.ALE
 
         private Color color;
 
-        private void Awake()
+        protected override void OnAwake()
         {
             colorButton.onClick.AddListener(() =>
             {

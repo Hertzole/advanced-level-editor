@@ -4,7 +4,7 @@ using UnityEngine.UI;
 
 namespace Hertzole.ALE
 {
-    public class LevelEditorWindow : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndDragHandler
+    public class LevelEditorWindow : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndDragHandler, ILevelEditorWindow
     {
         [SerializeField]
         private bool canDrag = true;
@@ -26,8 +26,19 @@ namespace Hertzole.ALE
         public RectTransform DragArea { get { return dragArea; } set { dragArea = value; } }
         public RectTransform RectTransform { get { if (!rectTransform) { rectTransform = (RectTransform)transform; } return rectTransform; } }
 
+        protected ILevelEditor LevelEditor { get; private set; }
+
         public LevelEditorWindowEvent OnWindowOpen { get { return onWindowOpen; } set { onWindowOpen = value; } }
         public LevelEditorWindowEvent OnWindowClose { get { return onWindowClose; } set { onWindowClose = value; } }
+
+        public void Initialize(ILevelEditor levelEditor)
+        {
+            LevelEditor = levelEditor;
+
+            OnInitialized();
+        }
+
+        protected virtual void OnInitialized() { }
 
         public virtual void Show()
         {
@@ -45,6 +56,11 @@ namespace Hertzole.ALE
         {
             Show();
 
+            if (rootCanvas == null)
+            {
+                rootCanvas = GetComponentInParent<Canvas>();
+            }
+
             Canvas windowCanvas = gameObject.GetComponent<Canvas>();
             GraphicRaycaster raycaster = gameObject.GetComponent<GraphicRaycaster>();
 
@@ -60,11 +76,6 @@ namespace Hertzole.ALE
 
             windowCanvas.overrideSorting = true;
             windowCanvas.sortingOrder = 30000;
-
-            if (rootCanvas == null)
-            {
-                rootCanvas = GetComponentInParent<Canvas>();
-            }
 
             blocker = CreateBlocker(rootCanvas, dismissOnBackgroundClick, backgroundColor);
             transform.SetAsLastSibling();

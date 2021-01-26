@@ -25,8 +25,8 @@ namespace Hertzole.ALE
         private readonly Dictionary<int, RecycledListItem> items = new Dictionary<int, RecycledListItem>();
         private readonly Stack<RecycledListItem> pooledItems = new Stack<RecycledListItem>();
 
-        private RectTransform Viewport { get { return scroll.viewport; } }
-        private RectTransform Content { get { return scroll.content; } }
+        public RectTransform Viewport { get { return scroll.viewport; } }
+        public RectTransform Content { get { return scroll.content; } }
 
         private List<object> itemsSource = new List<object>();
 
