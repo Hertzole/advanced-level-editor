@@ -69,6 +69,8 @@ namespace Hertzole.ALE
             ToggleLoadModal(false);
 
             notificationModal.IfExists(x => x.gameObject.SetActive(false));
+
+            colorPickerWindow.SetActive(false);
         }
 
         public void Initialize(ILevelEditor levelEditor)

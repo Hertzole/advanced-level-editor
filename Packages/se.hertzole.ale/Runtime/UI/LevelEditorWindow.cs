@@ -29,12 +29,6 @@ namespace Hertzole.ALE
         public LevelEditorWindowEvent OnWindowOpen { get { return onWindowOpen; } set { onWindowOpen = value; } }
         public LevelEditorWindowEvent OnWindowClose { get { return onWindowClose; } set { onWindowClose = value; } }
 
-        protected virtual void Awake()
-        {
-            rootCanvas = GetComponentInParent<Canvas>();
-            gameObject.SetActive(false);
-        }
-
         public virtual void Show()
         {
             gameObject.SetActive(true);
@@ -66,6 +60,11 @@ namespace Hertzole.ALE
 
             windowCanvas.overrideSorting = true;
             windowCanvas.sortingOrder = 30000;
+
+            if (rootCanvas == null)
+            {
+                rootCanvas = GetComponentInParent<Canvas>();
+            }
 
             blocker = CreateBlocker(rootCanvas, dismissOnBackgroundClick, backgroundColor);
             transform.SetAsLastSibling();
