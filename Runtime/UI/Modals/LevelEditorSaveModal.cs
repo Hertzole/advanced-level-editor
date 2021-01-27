@@ -24,7 +24,11 @@ namespace Hertzole.ALE
         public void Initialize()
         {
             nameField.onValueChanged.AddListener(x => ValidateSaveButton());
-            saveButton.onClick.AddListener(() => OnClickSave?.Invoke(nameField.text));
+            saveButton.onClick.AddListener(() =>
+            {
+                OnClickSave?.Invoke(nameField.text);
+                Close();
+            });
             closeButton.onClick.AddListener(Close);
         }
 

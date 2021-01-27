@@ -282,7 +282,7 @@ namespace Hertzole.ALE.Editor
             lockField = GetOrCreateField("ALE_ExposedToLevelEditor_lockObject", type, typeof(object));
             type.Fields.Add(lockField);
 
-            MethodDefinition typeConstructor = type.GetMethod(".ctor");
+            MethodDefinition typeConstructor = type.GetConstructor();
             ILProcessor il = typeConstructor.Body.GetILProcessor();
 
             Instruction newObj = Instruction.Create(OpCodes.Newobj, type.Module.ImportReference(typeof(object).GetConstructor(Array.Empty<Type>())));

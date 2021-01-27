@@ -27,6 +27,7 @@ namespace Hertzole.ALE.Editor
                     {
                         WriterParameters writeParams = new WriterParameters { WriteSymbols = true };
                         assembly.Write(writeParams);
+                        Debug.Log("Writing assembly " + assembly.FullName);
                     }
 
                     return success;
