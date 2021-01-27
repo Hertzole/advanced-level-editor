@@ -554,7 +554,9 @@ namespace Hertzole.ALE
                 }
 
                 binary = null;
+#if ALE_JSON
                 json = null;
+#endif
 
                 disposedValue = true;
             }
