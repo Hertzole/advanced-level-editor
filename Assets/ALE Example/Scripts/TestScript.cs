@@ -24,7 +24,7 @@ public class TestScript : MonoBehaviour
     private int testInt = 0;
     [SerializeField]
     [ExposeToLevelEditor(6)]
-    private int testUint = 0;
+    private uint testUint = 0;
     [SerializeField]
     [ExposeToLevelEditor(7)]
     private long testLong = 0;
@@ -71,8 +71,8 @@ public class TestScript : MonoBehaviour
     [SerializeField]
     [ExposeToLevelEditor(20)]
     private Transform otherObject = null;
-    [SerializeField]
-    [ExposeToLevelEditor(21)]
-    private string[] messages = null;
+    //[SerializeField]
+    //[ExposeToLevelEditor(21)]
+    //private string[] messages = null;
 #pragma warning restore CS0414
 }

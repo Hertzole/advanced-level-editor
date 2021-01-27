@@ -123,3 +123,11 @@ MonoBehaviour:
   vector2IntTest: {x: 0, y: 0}
   vector3Test: {x: 0, y: 0, z: 0}
   vector3IntTest: {x: 0, y: 0, z: 0}
+  charTest: 65
+  boolTest: 1
+  colorField: {r: 1, g: 0, b: 0, a: 1}
+  color32Field:
+    serializedVersion: 2
+    rgba: 4278255360
+  otherObject: {fileID: 0}
+  messages: []

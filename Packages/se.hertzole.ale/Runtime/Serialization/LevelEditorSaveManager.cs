@@ -18,6 +18,10 @@ namespace Hertzole.ALE
         private string saveSuffix = "Saved Levels";
         [SerializeField]
         private string fileExtension = ".bin";
+#if ALE_JSON
+        [SerializeField]
+        private bool saveAsJson = false;
+#endif
 
         private ILevelEditorObjectManager realObjectManager;
 
@@ -53,7 +57,19 @@ namespace Hertzole.ALE
 
         public virtual LevelEditorSaveData LoadLevel(string path)
         {
-            LevelEditorSaveData data = LevelEditorBinarySerializer.Deserialize(path);
+            LevelEditorSaveData data;
+
+#if ALE_JSON
+            if (saveAsJson)
+            {
+                data = LevelEditorSerializer.DeserializeJson(File.ReadAllText(path));
+            }
+            else
+#endif
+            {
+                data = LevelEditorSerializer.DeserializeBinary(File.ReadAllBytes(path));
+            }
+
             return LoadLevel(data);
         }
 
@@ -75,10 +91,21 @@ namespace Hertzole.ALE
         public virtual void SaveLevel(LevelEditorSaveData saveData)
         {
             string saveLocation = BuildSaveLocation(baseSaveLocation, saveSuffix) + saveData.name + ToFileExtension(fileExtension);
+
             try
             {
-                LevelEditorBinarySerializer.Serialize(saveData, saveLocation);
-                //LevelEditorJSONSerializer.Serialize(saveData, saveLocation, true);
+#if ALE_JSON
+                if (saveAsJson)
+                {
+                    string json = LevelEditorSerializer.SerializeJson(saveData, false);
+                    File.WriteAllText(saveLocation, json);
+                }
+                else
+#endif
+                {
+                    byte[] data = LevelEditorSerializer.SerializeBinary(saveData);
+                    File.WriteAllBytes(saveLocation, data);
+                }
             }
             catch (Exception ex)
             {

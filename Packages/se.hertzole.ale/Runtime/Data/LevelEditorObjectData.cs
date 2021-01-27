@@ -55,6 +55,11 @@ namespace Hertzole.ALE
             }
         }
 
+        public override string ToString()
+        {
+            return $"Level Editor Object Data ({name}, {id}, {instanceId}, {active}, {(components == null ? "null" : components.Length.ToString())} components)";
+        }
+
         public static bool operator ==(LevelEditorObjectData left, LevelEditorObjectData right)
         {
             return left.Equals(right);

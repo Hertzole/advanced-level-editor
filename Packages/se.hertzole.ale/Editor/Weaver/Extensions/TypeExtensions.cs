@@ -85,6 +85,24 @@ namespace Hertzole.ALE.Editor
             return true;
         }
 
+        public static PropertyDefinition GetProperty(this TypeDefinition type, string property)
+        {
+            if (!type.HasProperties)
+            {
+                return null;
+            }
+
+            for (int i = 0; i < type.Properties.Count; i++)
+            {
+                if (type.Properties[i].Name == property)
+                {
+                    return type.Properties[i];
+                }
+            }
+
+            return null;
+        }
+
         public static FieldDefinition GetField(this TypeDefinition type, string field)
         {
             if (!type.HasFields)

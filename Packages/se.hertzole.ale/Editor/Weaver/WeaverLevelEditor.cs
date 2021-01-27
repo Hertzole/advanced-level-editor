@@ -1,7 +1,6 @@
 ﻿using Mono.Cecil;
 using System;
 using System.Collections.Generic;
-using UnityEngine;
 
 namespace Hertzole.ALE.Editor
 {
@@ -9,12 +8,15 @@ namespace Hertzole.ALE.Editor
     {
         private static readonly BaseProcessor[] processors = new BaseProcessor[]
         {
-            new ExposedClassProcessor()
+            new LevelEditorReaderWriterProcessor(),
+            new ExposedClassProcessor(),
         };
 
         public static (bool success, bool dirty) ProcessAssembly(AssemblyDefinition assembly)
         {
             bool dirty = false;
+
+            TypeDefinition readerWritersType = null;
 
             foreach (ModuleDefinition module in assembly.Modules)
             {
@@ -30,26 +32,32 @@ namespace Hertzole.ALE.Editor
 
                     if (type.Name != "<Module>")
                     {
-                        if (type.IsSubclassOf<MonoBehaviour>())
+                        for (int i = 0; i < processors.Length; i++)
                         {
-                            for (int i = 0; i < processors.Length; i++)
+                            if (!processors[i].IsValidClass(type))
                             {
-                                if (!processors[i].IsValidClass(type))
-                                {
-                                    continue;
-                                }
+                                continue;
+                            }
 
-                                (bool success, bool dirtyClass) = processors[i].ProcessClass(module, type);
-                                if (dirtyClass)
-                                {
-                                    dirty = true;
-                                    typeModified = true;
-                                }
+                            if (i == 0 && readerWritersType == null) // Writer/Reader processor
+                            {
+                                readerWritersType = new TypeDefinition("Hertzole.ALE", "GeneratedLevelEditorCode", TypeAttributes.AutoClass |
+                                    TypeAttributes.Abstract | TypeAttributes.Sealed | TypeAttributes.BeforeFieldInit | TypeAttributes.Public);
 
-                                if (!success)
-                                {
-                                    return (false, false);
-                                }
+                                module.Types.Add(readerWritersType);
+                                LevelEditorReaderWriterProcessor.generatedClass = readerWritersType;
+                            }
+
+                            (bool success, bool dirtyClass) = processors[i].ProcessClass(module, type);
+                            if (dirtyClass)
+                            {
+                                dirty = true;
+                                typeModified = true;
+                            }
+
+                            if (!success)
+                            {
+                                return (false, false);
                             }
                         }
                     }
