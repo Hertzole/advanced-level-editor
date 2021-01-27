@@ -40,6 +40,7 @@ What needs to be done before 1.0.0 verified.
 - [ ] Menu items
 - [ ] Custom component wrappers
 - [ ] Serialize arrays
+- [ ] Resource limit support
 
 #### Optional
 What would be really nice to have before 1.0.0 verified.  
