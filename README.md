@@ -1,9 +1,20 @@
 # Advanced Level Editor (ALE)
-Advanced, but simple to use, runtime level editor for Unity.
 
-⚠ **ALE IS VERY MUCH IN EARLY DEVELOPMENT! USE AT YOUR OWN RISK** ⚠
+⚠ **ALE IS VERY MUCH IN EARLY DEVELOPMENT! EVERYTHING CAN CHANGE ALL OF A SUDDEN! USE AT YOUR OWN RISK** ⚠
+
+## ❓ What is it?
+ALE is a runtime level editor for Unity that aims to be simple to use both for the user and the developer. It's built with performance and usability in mind. It should also be extendable so you can adapt it to fit just right for your game.
+
+ALE works on a "editor mode system" where each mode does it's own thing and you switch between them. Right now there is only the (very much WIP!) unified mode that tries to replicate Unity. You can create your own modes and add them as components on the level editor and the mode will just work. 
+
+ALE also does some "magic" for you to simplify your life. It uses Mono.Cecil to do some code weaving and inject code into your assemblies to automate your workflow. This means it will be very performant since you can do stuff like exposing properties without reflection (which can be rather slow)! It also means that, in theory, ALE should work on ALL platforms, Mono and IL2CPP!
+
+## ✨ The magic
+As mentioned above, ALE does some "magic" for you. I've tried to avoid reflection as much as possible since it can be rather slow and instead opted to generate code during compile time, IL weaving if you will. The best example of this is the `ExposeToLevelEditor` attribute that injects `IExposeToLevelEditor` in your scripts.  
+In the future, the same will magic will be applied to serializers and much more. It's coming eventually™.
 
 ## ✅ TODO List
+ALE is still in EARLY development. There's still a lot to do and it's nowhere close to finish. But it should be useable now. Anyways, here are some things that I need to do and the things that are finished.
 #### Required
 What needs to be done before 1.0.0 verified.  
 - [x] Binary serialization and deserialization
@@ -63,7 +74,7 @@ To install it without the package manager, download the project as a zip file an
 Currently, only the development package is available. It's updated with each commit to the master branch.   
 
 1. Open the package manager and click 'Add from Git url' in the top right corner
-2. Paste in `https://github.com/Hertzole/gold-player.git#dev-package` and click enter
+2. Paste in `https://github.com/Hertzole/advanced-level-editor.git#dev-package` and click enter
 3. Wait an eternity for Unity to realize that you have installed the package.
 4. It should now be installed. Either create it from scratch or import the "Complete" sample and modify that. I recommend the sample because it's currently quite a pain to set everything up...
 
