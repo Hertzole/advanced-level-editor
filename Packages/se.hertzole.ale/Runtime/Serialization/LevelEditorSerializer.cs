@@ -1,10 +1,12 @@
-﻿using Newtonsoft.Json;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Text;
 using UnityEngine;
+#if ALE_JSON
+using System.Text;
 using UnityEngine.Assertions;
+using Newtonsoft.Json;
+#endif
 
 namespace Hertzole.ALE
 {
@@ -112,8 +114,12 @@ namespace Hertzole.ALE
             return bytes;
         }
 
+#if !ALE_JSON
+        [Obsolete("SerializeJson can only be used with the Json.Net package. Install 'com.unity.nuget-newtonsoft-json' package to use Json.")]
+#endif
         public static string SerializeJson(LevelEditorSaveData data, bool prettyPrint = false)
         {
+#if ALE_JSON
             StringBuilder sb = new StringBuilder();
             StringWriter sw = new StringWriter(sb);
 
@@ -124,6 +130,9 @@ namespace Hertzole.ALE
             sw.Dispose();
 
             return sb.ToString();
+#else
+            return string.Empty;
+#endif
         }
 
         public static LevelEditorSaveData DeserializeBinary(byte[] bytes)
@@ -139,14 +148,21 @@ namespace Hertzole.ALE
             return data;
         }
 
+#if !ALE_JSON
+        [Obsolete("SerializeJson can only be used with the Json.Net package. Install 'com.unity.nuget-newtonsoft-json' package to use Json.")]
+#endif
         public static LevelEditorSaveData DeserializeJson(string json)
         {
+#if ALE_JSON
             JsonTextReader reader = new JsonTextReader(new StringReader(json));
 
             LevelEditorSaveData data = Deserialize(new LevelEditorReader(reader));
             ((IDisposable)reader).Dispose();
 
             return data;
+#else
+            return new LevelEditorSaveData();
+#endif
         }
 
         private static void Serialize(LevelEditorSaveData data, LevelEditorWriter writer)
@@ -437,11 +453,6 @@ namespace Hertzole.ALE
                     palette.Add(intId, stringId);
                 });
             }
-        }
-
-        public static string ToGoodString(this JsonReader reader)
-        {
-            return $"Value: {reader.Value} | Token: {reader.TokenType} | Depth: {reader.Depth} | Path: {reader.Path}";
         }
     }
 }

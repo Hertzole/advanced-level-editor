@@ -1,8 +1,8 @@
 ﻿using System;
 using System.IO;
 using UnityEngine;
-using UnityEngine.Assertions;
 #if ALE_JSON
+using UnityEngine.Assertions;
 using Newtonsoft.Json;
 #endif
 
@@ -142,8 +142,6 @@ namespace Hertzole.ALE
                 Assert.AreEqual(json.TokenType, JsonToken.EndArray);
 
             }
-#else
-            return 0;
 #endif
         }
 
@@ -346,6 +344,8 @@ namespace Hertzole.ALE
                 json.Read();
                 return (bool)json.ReadAsBoolean();
             }
+#else
+            return false;
 #endif
         }
 
@@ -490,7 +490,9 @@ namespace Hertzole.ALE
                 }
 
                 binary = null;
+#if ALE_JSON
                 json = null;
+#endif
 
                 disposedValue = true;
             }
