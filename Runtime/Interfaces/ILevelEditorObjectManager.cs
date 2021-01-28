@@ -4,10 +4,47 @@ using UnityEngine;
 
 namespace Hertzole.ALE
 {
+    public class LevelEditorObjectEvent : EventArgs
+    {
+        public LevelEditorObjectEvent(ILevelEditorObject levelEditorObject)
+        {
+            Object = levelEditorObject;
+        }
+
+        public ILevelEditorObject Object { get; private set; }
+    }
+
+    public class LevelEditorObjectEventSpawningEvent : EventArgs
+    {
+        public bool Cancel { get; set; }
+
+        public ILevelEditorResource Resource { get; private set; }
+
+        public LevelEditorObjectEventSpawningEvent(ILevelEditorResource resource)
+        {
+            Resource = resource;
+        }
+    }
+
+    public class LevelEditorObjectEventDeletingEvent : EventArgs
+    {
+        public bool Cancel { get; set; }
+
+        public ILevelEditorObject Object { get; private set; }
+
+        public LevelEditorObjectEventDeletingEvent(ILevelEditorObject levelEditorObject)
+        {
+            Object = levelEditorObject;
+        }
+    }
+
     public interface ILevelEditorObjectManager
     {
-        event Action<ILevelEditorObject> OnCreateObject;
-        event Action<ILevelEditorObject> OnDeleteObject;
+        event EventHandler<LevelEditorObjectEventSpawningEvent> OnCreatingObject;
+        event EventHandler<LevelEditorObjectEventDeletingEvent> OnDeletingObject;
+
+        event EventHandler<LevelEditorObjectEvent> OnCreatedObject;
+        event EventHandler<LevelEditorObjectEvent> OnDeletedObject;
 
         ILevelEditorResources Resources { get; }
 

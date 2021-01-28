@@ -44,21 +44,21 @@ namespace Hertzole.ALE
         public void Initialize(ILevelEditor levelEditor)
         {
             this.levelEditor = levelEditor;
-            levelEditor.ObjectManager.OnCreateObject += OnObjectManagerCreatedObject;
-            levelEditor.ObjectManager.OnDeleteObject += OnObjectManagerDeleteObject;
+            levelEditor.ObjectManager.OnCreatedObject += OnObjectManagerCreatedObject;
+            levelEditor.ObjectManager.OnDeletedObject += OnObjectManagerDeleteObject;
             levelEditor.Selection.OnSelectionChanged += OnSelectionChanged;
         }
 
-        private void OnObjectManagerCreatedObject(ILevelEditorObject obj)
+        private void OnObjectManagerCreatedObject(object sender, LevelEditorObjectEvent args)
         {
-            obj.OnStateChanged += OnObjectStateChanged;
-            treeControl.AddItem(obj);
+            args.Object.OnStateChanged += OnObjectStateChanged;
+            treeControl.AddItem(args.Object);
         }
 
-        private void OnObjectManagerDeleteObject(ILevelEditorObject obj)
+        private void OnObjectManagerDeleteObject(object sender, LevelEditorObjectEvent args)
         {
-            obj.OnStateChanged -= OnObjectStateChanged;
-            treeControl.RemoveItem(obj);
+            args.Object.OnStateChanged -= OnObjectStateChanged;
+            treeControl.RemoveItem(args.Object);
         }
 
         private void OnObjectStateChanged(object sender, LevelEditorObjectStateArgs e)

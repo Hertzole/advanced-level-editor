@@ -34,8 +34,10 @@ namespace Hertzole.ALE
             }
         }
 
-        public event Action<ILevelEditorObject> OnCreateObject;
-        public event Action<ILevelEditorObject> OnDeleteObject;
+        public event EventHandler<LevelEditorObjectEventSpawningEvent> OnCreatingObject;
+        public event EventHandler<LevelEditorObjectEventDeletingEvent> OnDeletingObject;
+        public event EventHandler<LevelEditorObjectEvent> OnCreatedObject;
+        public event EventHandler<LevelEditorObjectEvent> OnDeletedObject;
 
 #if !ALE_STRIP_SAFETY || UNITY_EDITOR
         private void Awake()
@@ -51,6 +53,16 @@ namespace Hertzole.ALE
         {
             if (resource.Asset is GameObject go)
             {
+                LevelEditorObjectEventSpawningEvent args = new LevelEditorObjectEventSpawningEvent(resource);
+
+                OnCreatingObject?.Invoke(this, args);
+
+                if (args.Cancel)
+                {
+                    LevelEditorLogger.Log("CreateObject canceled. Returning null.");
+                    return null;
+                }
+
                 ILevelEditorObject obj;
 
                 if (pooledObjects.ContainsKey(resource.ID) && pooledObjects[resource.ID].Count > 0)
@@ -105,7 +117,7 @@ namespace Hertzole.ALE
                     LevelEditorGLRenderer.Add(gizmos);
                 }
 
-                OnCreateObject?.Invoke(obj);
+                OnCreatedObject?.Invoke(this, new LevelEditorObjectEvent(obj));
 
                 return obj;
             }
@@ -158,6 +170,16 @@ namespace Hertzole.ALE
                 return false;
             }
 
+            LevelEditorObjectEventDeletingEvent args = new LevelEditorObjectEventDeletingEvent(target);
+
+            OnDeletingObject?.Invoke(this, args);
+
+            if (args.Cancel)
+            {
+                LevelEditorLogger.Log("DeleteObject canceled.");
+                return false;
+            }
+
             DeleteObjectInternal(target);
 
             allObjects.Remove(target);
@@ -198,7 +220,7 @@ namespace Hertzole.ALE
 
             target.MyGameObject.SetActive(false);
 
-            OnDeleteObject?.Invoke(target);
+            OnDeletedObject?.Invoke(this, new LevelEditorObjectEvent(target));
         }
 
         public void ResetInstanceID()

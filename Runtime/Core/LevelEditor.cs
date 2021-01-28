@@ -139,7 +139,7 @@ namespace Hertzole.ALE
             }
 #endif
 
-            objectManagerComp.OnCreateObject += OnCreateDeleteObject;
+            objectManagerComp.OnCreatedObject += OnCreateDeleteObject;
 
             if (playModeComp != null)
             {
@@ -158,7 +158,7 @@ namespace Hertzole.ALE
             }
 #endif
 
-            objectManagerComp.OnCreateObject -= OnCreateDeleteObject;
+            objectManagerComp.OnCreatedObject -= OnCreateDeleteObject;
 
             if (playModeComp != null)
             {
@@ -292,7 +292,7 @@ namespace Hertzole.ALE
             return true;
         }
 
-        private void OnCreateDeleteObject(ILevelEditorObject obj)
+        private void OnCreateDeleteObject(object sender, LevelEditorObjectEvent args)
         {
             MarkDirty();
         }
