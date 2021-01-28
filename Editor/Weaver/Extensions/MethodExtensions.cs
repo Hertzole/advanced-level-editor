@@ -1,10 +1,100 @@
 ﻿using Mono.Cecil;
+using Mono.Cecil.Cil;
 using System;
 
 namespace Hertzole.ALE.Editor
 {
     public static partial class WeaverExtensions
     {
+        public static MethodDefinition Duplicate(this MethodDefinition m)
+        {
+            MethodDefinition method = new MethodDefinition(m.Name, m.Attributes, m.ReturnType);
+            if (m.HasParameters)
+            {
+                for (int i = 0; i < m.Parameters.Count; i++)
+                {
+                    method.Parameters.Add(new ParameterDefinition(m.Parameters[i].Name, m.Parameters[i].Attributes, m.Parameters[i].ParameterType));
+                }
+            }
+            if (m.HasBody)
+            {
+                for (int i = 0; i < m.Body.Instructions.Count; i++)
+                {
+                    method.Body.Instructions.Add(m.Body.Instructions[i].Duplicate());
+                }
+            }
+
+            return method;
+        }
+
+        public static Instruction Duplicate(this Instruction i)
+        {
+            if (i.Operand is byte b)
+            {
+                return Instruction.Create(i.OpCode, b);
+            }
+            else if (i.Operand is CallSite callSite)
+            {
+                return Instruction.Create(i.OpCode, callSite);
+            }
+            else if (i.Operand is double d)
+            {
+                return Instruction.Create(i.OpCode, d);
+            }
+            else if (i.Operand is TypeReference type)
+            {
+                return Instruction.Create(i.OpCode, type);
+            }
+            else if (i.Operand is MethodReference method)
+            {
+                return Instruction.Create(i.OpCode, method);
+            }
+            else if (i.Operand is FieldReference field)
+            {
+                return Instruction.Create(i.OpCode, field);
+            }
+            else if (i.Operand is string s)
+            {
+                return Instruction.Create(i.OpCode, s);
+            }
+            else if (i.Operand is sbyte sb)
+            {
+                return Instruction.Create(i.OpCode, sb);
+            }
+            else if (i.Operand is int _i)
+            {
+                return Instruction.Create(i.OpCode, _i);
+            }
+            else if (i.Operand is long l)
+            {
+                return Instruction.Create(i.OpCode, l);
+            }
+            else if (i.Operand is float f)
+            {
+                return Instruction.Create(i.OpCode, f);
+            }
+            else if (i.Operand is Instruction target)
+            {
+                return Instruction.Create(i.OpCode, target);
+            }
+            else if (i.Operand is Instruction[] targets)
+            {
+                return Instruction.Create(i.OpCode, targets);
+            }
+            else if (i.Operand is VariableDefinition variable)
+            {
+                return Instruction.Create(i.OpCode, variable);
+            }
+            else if (i.Operand is ParameterDefinition parameter)
+            {
+                return Instruction.Create(i.OpCode, parameter);
+            }
+            else
+            {
+                return Instruction.Create(i.OpCode);
+            }
+        }
+
         public static bool HasMethod(this TypeDefinition type, string methodName, params Type[] parameterTypes)
         {
             if (type.HasMethods)
