@@ -92,7 +92,11 @@ namespace Hertzole.ALE
 #if ALE_JSON
             else
             {
-                json.WritePropertyName(name);
+                if (!string.IsNullOrWhiteSpace(name))
+                {
+                    json.WritePropertyName(name);
+                }
+
                 json.WriteStartArray();
             }
 #endif
@@ -117,7 +121,11 @@ namespace Hertzole.ALE
 #if ALE_JSON
             else
             {
-                json.WritePropertyName(name);
+                if (!string.IsNullOrWhiteSpace(name))
+                {
+                    json.WritePropertyName(name);
+                }
+
                 json.WriteValue(value);
             }
 #endif
@@ -132,7 +140,11 @@ namespace Hertzole.ALE
 #if ALE_JSON
             else
             {
-                json.WritePropertyName(name);
+                if (!string.IsNullOrWhiteSpace(name))
+                {
+                    json.WritePropertyName(name);
+                }
+
                 json.WriteValue(value);
             }
 #endif
@@ -147,7 +159,11 @@ namespace Hertzole.ALE
 #if ALE_JSON
             else
             {
-                json.WritePropertyName(name);
+                if (!string.IsNullOrWhiteSpace(name))
+                {
+                    json.WritePropertyName(name);
+                }
+
                 json.WriteValue(value);
             }
 #endif
@@ -162,7 +178,11 @@ namespace Hertzole.ALE
 #if ALE_JSON
             else
             {
-                json.WritePropertyName(name);
+                if (!string.IsNullOrWhiteSpace(name))
+                {
+                    json.WritePropertyName(name);
+                }
+
                 json.WriteValue(value);
             }
 #endif
@@ -177,7 +197,11 @@ namespace Hertzole.ALE
 #if ALE_JSON
             else
             {
-                json.WritePropertyName(name);
+                if (!string.IsNullOrWhiteSpace(name))
+                {
+                    json.WritePropertyName(name);
+                }
+
                 json.WriteValue(value);
             }
 #endif
@@ -192,7 +216,11 @@ namespace Hertzole.ALE
 #if ALE_JSON
             else
             {
-                json.WritePropertyName(name);
+                if (!string.IsNullOrWhiteSpace(name))
+                {
+                    json.WritePropertyName(name);
+                }
+
                 json.WriteValue(value);
             }
 #endif
@@ -207,7 +235,11 @@ namespace Hertzole.ALE
 #if ALE_JSON
             else
             {
-                json.WritePropertyName(name);
+                if (!string.IsNullOrWhiteSpace(name))
+                {
+                    json.WritePropertyName(name);
+                }
+
                 json.WriteValue(value);
             }
 #endif
@@ -222,7 +254,11 @@ namespace Hertzole.ALE
 #if ALE_JSON
             else
             {
-                json.WritePropertyName(name);
+                if (!string.IsNullOrWhiteSpace(name))
+                {
+                    json.WritePropertyName(name);
+                }
+
                 json.WriteValue(value);
             }
 #endif
@@ -237,7 +273,11 @@ namespace Hertzole.ALE
 #if ALE_JSON
             else
             {
-                json.WritePropertyName(name);
+                if (!string.IsNullOrWhiteSpace(name))
+                {
+                    json.WritePropertyName(name);
+                }
+
                 json.WriteValue(value);
             }
 #endif
@@ -252,7 +292,11 @@ namespace Hertzole.ALE
 #if ALE_JSON
             else
             {
-                json.WritePropertyName(name);
+                if (!string.IsNullOrWhiteSpace(name))
+                {
+                    json.WritePropertyName(name);
+                }
+
                 json.WriteValue(value);
             }
 #endif
@@ -267,7 +311,11 @@ namespace Hertzole.ALE
 #if ALE_JSON
             else
             {
-                json.WritePropertyName(name);
+                if (!string.IsNullOrWhiteSpace(name))
+                {
+                    json.WritePropertyName(name);
+                }
+
                 json.WriteValue(value);
             }
 #endif
@@ -282,7 +330,11 @@ namespace Hertzole.ALE
 #if ALE_JSON
             else
             {
-                json.WritePropertyName(name);
+                if (!string.IsNullOrWhiteSpace(name))
+                {
+                    json.WritePropertyName(name);
+                }
+
                 json.WriteValue(value);
             }
 #endif
@@ -297,7 +349,11 @@ namespace Hertzole.ALE
 #if ALE_JSON
             else
             {
-                json.WritePropertyName(name);
+                if (!string.IsNullOrWhiteSpace(name))
+                {
+                    json.WritePropertyName(name);
+                }
+
                 json.WriteValue(value);
             }
 #endif
@@ -312,7 +368,11 @@ namespace Hertzole.ALE
 #if ALE_JSON
             else
             {
-                json.WritePropertyName(name);
+                if (!string.IsNullOrWhiteSpace(name))
+                {
+                    json.WritePropertyName(name);
+                }
+
                 json.WriteValue(value);
             }
 #endif
@@ -328,7 +388,11 @@ namespace Hertzole.ALE
 #if ALE_JSON
             else
             {
-                json.WritePropertyName(name);
+                if (!string.IsNullOrWhiteSpace(name))
+                {
+                    json.WritePropertyName(name);
+                }
+
                 json.WriteStartObject();
                 json.WritePropertyName("x");
                 json.WriteValue(value.x);
@@ -349,7 +413,11 @@ namespace Hertzole.ALE
 #if ALE_JSON
             else
             {
-                json.WritePropertyName(name);
+                if (!string.IsNullOrWhiteSpace(name))
+                {
+                    json.WritePropertyName(name);
+                }
+
                 json.WriteStartObject();
                 json.WritePropertyName("x");
                 json.WriteValue(value.x);
@@ -371,7 +439,11 @@ namespace Hertzole.ALE
 #if ALE_JSON
             else
             {
-                json.WritePropertyName(name);
+                if (!string.IsNullOrWhiteSpace(name))
+                {
+                    json.WritePropertyName(name);
+                }
+
                 json.WriteStartObject();
                 json.WritePropertyName("x");
                 json.WriteValue(value.x);
@@ -395,7 +467,11 @@ namespace Hertzole.ALE
 #if ALE_JSON
             else
             {
-                json.WritePropertyName(name);
+                if (!string.IsNullOrWhiteSpace(name))
+                {
+                    json.WritePropertyName(name);
+                }
+
                 json.WriteStartObject();
                 json.WritePropertyName("x");
                 json.WriteValue(value.x);
@@ -420,7 +496,11 @@ namespace Hertzole.ALE
 #if ALE_JSON
             else
             {
-                json.WritePropertyName(name);
+                if (!string.IsNullOrWhiteSpace(name))
+                {
+                    json.WritePropertyName(name);
+                }
+
                 json.WriteStartObject();
                 json.WritePropertyName("x");
                 json.WriteValue(value.x);
@@ -447,7 +527,11 @@ namespace Hertzole.ALE
 #if ALE_JSON
             else
             {
-                json.WritePropertyName(name);
+                if (!string.IsNullOrWhiteSpace(name))
+                {
+                    json.WritePropertyName(name);
+                }
+
                 json.WriteStartObject();
                 json.WritePropertyName("x");
                 json.WriteValue(value.x);
@@ -479,7 +563,11 @@ namespace Hertzole.ALE
 #if ALE_JSON
             else
             {
-                json.WritePropertyName(name);
+                if (!string.IsNullOrWhiteSpace(name))
+                {
+                    json.WritePropertyName(name);
+                }
+
                 json.WriteStartObject();
                 json.WritePropertyName("r");
                 json.WriteValue(value.r);
@@ -516,7 +604,11 @@ namespace Hertzole.ALE
 #if ALE_JSON
             else
             {
-                json.WritePropertyName(name);
+                if (!string.IsNullOrWhiteSpace(name))
+                {
+                    json.WritePropertyName(name);
+                }
+
                 if (value == null)
                 {
                     json.WriteValue(0);

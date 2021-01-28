@@ -3758,6 +3758,8 @@ MonoBehaviour:
   baseSaveLocation: 1
   saveSuffix: Saved Levels
   fileExtension: .bin
+  saveAsJson: 0
+  prettyPrint: 1
 --- !u!114 &1918987441
 MonoBehaviour:
   m_ObjectHideFlags: 0

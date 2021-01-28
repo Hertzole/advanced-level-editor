@@ -39,7 +39,7 @@ What needs to be done before 1.0.0 verified.
 - [ ] Integrate custom serializers
 - [ ] Menu items
 - [ ] Custom component wrappers
-- [ ] Serialize arrays
+- [x] Serialize arrays
 - [ ] Resource limit support
 
 #### Optional

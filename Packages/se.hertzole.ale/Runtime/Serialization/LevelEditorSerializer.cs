@@ -39,29 +39,29 @@ namespace Hertzole.ALE
             LevelEditorWriter<Color>.Write = (writer, value, name) => writer.Write(value, name);
             LevelEditorWriter<Color32>.Write = (writer, value, name) => writer.Write(value, name);
 
-            LevelEditorReader<byte>.Read = (reader) => reader.ReadByte();
-            LevelEditorReader<sbyte>.Read = (reader) => reader.ReadSByte();
-            LevelEditorReader<short>.Read = (reader) => reader.ReadShort();
-            LevelEditorReader<ushort>.Read = (reader) => reader.ReadUShort();
-            LevelEditorReader<int>.Read = (reader) => reader.ReadInt();
-            LevelEditorReader<uint>.Read = (reader) => reader.ReadUInt();
-            LevelEditorReader<long>.Read = (reader) => reader.ReadLong();
-            LevelEditorReader<ulong>.Read = (reader) => reader.ReadULong();
-            LevelEditorReader<float>.Read = (reader) => reader.ReadFloat();
-            LevelEditorReader<double>.Read = (reader) => reader.ReadDouble();
-            LevelEditorReader<decimal>.Read = (reader) => reader.ReadDecimal();
-            LevelEditorReader<string>.Read = (reader) => reader.ReadString();
-            LevelEditorReader<char>.Read = (reader) => reader.ReadChar();
-            LevelEditorReader<bool>.Read = (reader) => reader.ReadBool();
-            LevelEditorReader<Vector2>.Read = (reader) => reader.ReadVector2();
-            LevelEditorReader<Vector2Int>.Read = (reader) => reader.ReadVector2Int();
-            LevelEditorReader<Vector3>.Read = (reader) => reader.ReadVector3();
-            LevelEditorReader<Vector3Int>.Read = (reader) => reader.ReadVector3Int();
-            LevelEditorReader<Vector4>.Read = (reader) => reader.ReadVector4();
-            LevelEditorReader<Quaternion>.Read = (reader) => reader.ReadQuaternion();
-            LevelEditorReader<Component>.Read = (reader) => reader.ReadComponent();
-            LevelEditorReader<Color>.Read = (reader) => reader.ReadColor();
-            LevelEditorReader<Color32>.Read = (reader) => reader.ReadColor32();
+            LevelEditorReader<byte>.Read = (reader, withName) => reader.ReadByte(withName);
+            LevelEditorReader<sbyte>.Read = (reader, withName) => reader.ReadSByte(withName);
+            LevelEditorReader<short>.Read = (reader, withName) => reader.ReadShort(withName);
+            LevelEditorReader<ushort>.Read = (reader, withName) => reader.ReadUShort(withName);
+            LevelEditorReader<int>.Read = (reader, withName) => reader.ReadInt(withName);
+            LevelEditorReader<uint>.Read = (reader, withName) => reader.ReadUInt(withName);
+            LevelEditorReader<long>.Read = (reader, withName) => reader.ReadLong(withName);
+            LevelEditorReader<ulong>.Read = (reader, withName) => reader.ReadULong(withName);
+            LevelEditorReader<float>.Read = (reader, withName) => reader.ReadFloat(withName);
+            LevelEditorReader<double>.Read = (reader, withName) => reader.ReadDouble(withName);
+            LevelEditorReader<decimal>.Read = (reader, withName) => reader.ReadDecimal(withName);
+            LevelEditorReader<string>.Read = (reader, withName) => reader.ReadString(withName);
+            LevelEditorReader<char>.Read = (reader, withName) => reader.ReadChar(withName);
+            LevelEditorReader<bool>.Read = (reader, withName) => reader.ReadBool(withName);
+            LevelEditorReader<Vector2>.Read = (reader, withName) => reader.ReadVector2(withName);
+            LevelEditorReader<Vector2Int>.Read = (reader, withName) => reader.ReadVector2Int(withName);
+            LevelEditorReader<Vector3>.Read = (reader, withName) => reader.ReadVector3(withName);
+            LevelEditorReader<Vector3Int>.Read = (reader, withName) => reader.ReadVector3Int(withName);
+            LevelEditorReader<Vector4>.Read = (reader, withName) => reader.ReadVector4(withName);
+            LevelEditorReader<Quaternion>.Read = (reader, withName) => reader.ReadQuaternion(withName);
+            LevelEditorReader<Component>.Read = (reader, withName) => reader.ReadComponent(withName);
+            LevelEditorReader<Color>.Read = (reader, withName) => reader.ReadColor(withName);
+            LevelEditorReader<Color32>.Read = (reader, withName) => reader.ReadColor32(withName);
         }
 
         private static readonly Dictionary<string, Action<LevelEditorWriter, object, string>> writers = new Dictionary<string, Action<LevelEditorWriter, object, string>>()
@@ -91,31 +91,31 @@ namespace Hertzole.ALE
             { "UnityEngine.Color32", (writer, value, name) => writer.Write((Color32)value, name) },
         };
 
-        private static readonly Dictionary<string, Func<LevelEditorReader, object>> readers = new Dictionary<string, Func<LevelEditorReader, object>>()
+        private static readonly Dictionary<string, Func<LevelEditorReader, bool, object>> readers = new Dictionary<string, Func<LevelEditorReader, bool, object>>()
         {
-            { "System.Byte", (reader) => reader.ReadByte() },
-            { "System.SByte", (reader) => reader.ReadSByte() },
-            { "System.Int16", (reader) => reader.ReadShort() },
-            { "System.UInt16", (reader) => reader.ReadUShort() },
-            { "System.Int32", (reader) => reader.ReadInt() },
-            { "System.UInt32", (reader) => reader.ReadUInt() },
-            { "System.Int64", (reader) => reader.ReadLong() },
-            { "System.UInt64", (reader) => reader.ReadULong() },
-            { "System.Single", (reader) => reader.ReadFloat() },
-            { "System.Double", (reader) => reader.ReadDouble() },
-            { "System.Decimal", (reader) => reader.ReadDecimal() },
-            { "System.String", (reader) => reader.ReadString() },
-            { "System.Char", (reader) => reader.ReadChar() },
-            { "System.Boolean", (reader) => reader.ReadBool() },
-            { "UnityEngine.Vector2", (reader) => reader.ReadVector2() },
-            { "UnityEngine.Vector2Int", (reader) => reader.ReadVector2Int() },
-            { "UnityEngine.Vector3", (reader) => reader.ReadVector3() },
-            { "UnityEngine.Vector3Int", (reader) => reader.ReadVector3Int() },
-            { "UnityEngine.Vector4", (reader) => reader.ReadVector4() },
-            { "UnityEngine.Quaternion", (reader) => reader.ReadQuaternion() },
-            { "UnityEngine.Component", (reader) => reader.ReadComponent() },
-            { "UnityEngine.Color", (reader) => reader.ReadColor() },
-            { "UnityEngine.Color32", (reader) => reader.ReadColor32() },
+            { "System.Byte", (reader, withName) => reader.ReadByte(withName) },
+            { "System.SByte", (reader, withName) => reader.ReadSByte(withName) },
+            { "System.Int16", (reader, withName) => reader.ReadShort(withName) },
+            { "System.UInt16", (reader, withName) => reader.ReadUShort(withName) },
+            { "System.Int32", (reader, withName) => reader.ReadInt(withName) },
+            { "System.UInt32", (reader, withName) => reader.ReadUInt(withName) },
+            { "System.Int64", (reader, withName) => reader.ReadLong(withName) },
+            { "System.UInt64", (reader, withName) => reader.ReadULong(withName) },
+            { "System.Single", (reader, withName) => reader.ReadFloat(withName) },
+            { "System.Double", (reader, withName) => reader.ReadDouble(withName) },
+            { "System.Decimal", (reader, withName) => reader.ReadDecimal(withName) },
+            { "System.String", (reader, withName) => reader.ReadString(withName) },
+            { "System.Char", (reader, withName) => reader.ReadChar(withName) },
+            { "System.Boolean", (reader, withName) => reader.ReadBool(withName) },
+            { "UnityEngine.Vector2", (reader, withName) => reader.ReadVector2(withName) },
+            { "UnityEngine.Vector2Int", (reader, withName) => reader.ReadVector2Int(withName) },
+            { "UnityEngine.Vector3", (reader, withName) => reader.ReadVector3(withName) },
+            { "UnityEngine.Vector3Int", (reader, withName) => reader.ReadVector3Int(withName) },
+            { "UnityEngine.Vector4", (reader, withName) => reader.ReadVector4(withName) },
+            { "UnityEngine.Quaternion", (reader, withName) => reader.ReadQuaternion(withName) },
+            { "UnityEngine.Component", (reader, withName) => reader.ReadComponent(withName) },
+            { "UnityEngine.Color", (reader, withName) => reader.ReadColor(withName) },
+            { "UnityEngine.Color32", (reader, withName) => reader.ReadColor32(withName) },
         };
 
         public static byte[] SerializeBinary(LevelEditorSaveData data)
@@ -310,32 +310,27 @@ namespace Hertzole.ALE
                         writer.Write(prop.id, "id"); // Write property name.
                         writer.Write(typePalette[prop.typeName], "type"); // Write type name.
                         writer.Write(prop.isArray, "isArray"); // Write if it's an array.
-                        if (prop.isArray)
+                        if (writers.TryGetValue(prop.typeName, out Action<LevelEditorWriter, object, string> typeWriter))
                         {
-                            throw new NotImplementedException($"Can not serialize {comp.type}, {prop.id}. Array support is not yet supported. Sorry!");
-
-                            //object[] valueArray = (object[])prop.value;
-
-                            //writer.Write(valueArray.Length); // Write array length.
-
-                            //if (TryGetFormatter(prop.typeName, allFormatters, out BaseFormatter formatter))
-                            //{
-                            //    for (int v = 0; v < valueArray.Length; v++)
-                            //    {
-                            //        formatter.Serialize(valueArray[i], writer);
-                            //    }
-                            //}
-                        }
-                        else
-                        {
-                            if (writers.TryGetValue(prop.typeName, out Action<LevelEditorWriter, object, string> typeWriter))
+                            if (prop.isArray)
                             {
-                                typeWriter.Invoke(writer, prop.value, "value");
+                                object[] valueArray = (object[])prop.value;
+
+                                writer.WriteStartArray(valueArray.Length);
+                                for (int v = 0; v < valueArray.Length; v++)
+                                {
+                                    typeWriter.Invoke(writer, valueArray[v], string.Empty);
+                                }
+                                writer.WriteEndArray();
                             }
                             else
                             {
-                                Debug.LogWarning($"No writer for type '{prop.typeName}'.");
+                                typeWriter.Invoke(writer, prop.value, "value");
                             }
+                        }
+                        else
+                        {
+                            Debug.LogWarning($"No writer for type '{prop.typeName}'.");
                         }
                         writer.WriteEndObject(); // Property
                     }
@@ -406,31 +401,55 @@ namespace Hertzole.ALE
                             isArray = isArray
                         };
 
-                        if (isArray)
+                        if (readers.TryGetValue(prop.typeName, out Func<LevelEditorReader, bool, object> typeReader))
                         {
-
-                        }
-                        else
-                        {
-                            if (readers.TryGetValue(prop.typeName, out Func<LevelEditorReader, object> typeReader))
+                            if (isArray)
                             {
-                                prop.value = typeReader.Invoke(reader);
+                                List<object> objectArray = new List<object>();
+
+                                reader.ReadArray(false, (x) =>
+                                {
+                                    object value = typeReader.Invoke(reader, false);
+
+#if ALE_JSON
+                                    if (reader.IsJson && reader.Json.TokenType == JsonToken.EndArray)
+                                    {
+                                        return false;
+                                    }
+#endif
+
+                                    objectArray.Add(value);
+
+                                    return true;
+                                });
+
+                                prop.value = objectArray.ToArray();
                             }
                             else
                             {
-                                Debug.LogWarning($"No reader for type '{prop.typeName}'.");
+                                prop.value = typeReader.Invoke(reader, true);
                             }
+                        }
+                        else
+                        {
+                            Debug.LogWarning($"No reader for type '{prop.typeName}'.");
                         }
 
                         properties.Add(prop);
+
+                        return true;
                     });
 
                     comp.properties = properties.ToArray();
                     components.Add(comp);
+
+                    return true;
                 });
 
                 obj.components = components.ToArray();
                 data.objects.Add(obj);
+
+                return true;
             });
 
             reader.ReadObjectEnd(); // Data end
@@ -469,6 +488,8 @@ namespace Hertzole.ALE
                     string stringId = reader.ReadString();
                     int intId = reader.ReadInt();
                     palette.Add(intId, stringId);
+
+                    return true;
                 });
             }
         }

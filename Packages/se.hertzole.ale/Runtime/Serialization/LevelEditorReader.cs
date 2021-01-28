@@ -10,7 +10,7 @@ namespace Hertzole.ALE
 {
     public static class LevelEditorReader<T>
     {
-        public static Action<LevelEditorReader> Read { get; set; }
+        public static Action<LevelEditorReader, bool> Read { get; set; }
     }
 
     public class LevelEditorReader : IDisposable
@@ -53,7 +53,7 @@ namespace Hertzole.ALE
         }
 #endif
 
-        public void Read<T>()
+        public void Read<T>(bool withName = true)
         {
             if (LevelEditorReader<T>.Read == null)
             {
@@ -61,7 +61,7 @@ namespace Hertzole.ALE
                 return;
             }
 
-            LevelEditorReader<T>.Read(this);
+            LevelEditorReader<T>.Read(this, withName);
         }
 
         [System.Diagnostics.Conditional("ALE_JSON")]
@@ -81,7 +81,7 @@ namespace Hertzole.ALE
         }
 
         [System.Diagnostics.Conditional("ALE_JSON")]
-        public void ReadObjectEnd()
+        public void ReadObjectEnd(bool withName = true)
         {
 #if ALE_JSON
             if (IsJson)
@@ -92,14 +92,17 @@ namespace Hertzole.ALE
 #endif
         }
 
-        public void ReadArray(bool readObject, Action<int> forEach)
+        public void ReadArray(bool readObject, Func<int, bool> forEach)
         {
             if (binary != null)
             {
                 int count = binary.ReadInt32();
                 for (int i = 0; i < count; i++)
                 {
-                    forEach.Invoke(i);
+                    if (!forEach.Invoke(i))
+                    {
+                        break;
+                    }
                 }
             }
 #if ALE_JSON
@@ -123,19 +126,15 @@ namespace Hertzole.ALE
                         break;
                     }
 
-                    forEach.Invoke(index);
+                    if (!forEach.Invoke(index))
+                    {
+                        break;
+                    }
 
                     if (readObject)
                     {
                         json.Read();
                     }
-
-                    //json.Read();
-                    //Debug.Log(json.ToGoodString());
-
-                    //json.Read();
-
-
 
                     index++;
                 }
@@ -145,7 +144,7 @@ namespace Hertzole.ALE
 #endif
         }
 
-        public byte ReadByte()
+        public byte ReadByte(bool withName = true)
         {
             if (binary != null)
             {
@@ -154,7 +153,11 @@ namespace Hertzole.ALE
 #if ALE_JSON
             else
             {
-                json.Read();
+                if (withName)
+                {
+                    json.Read();
+                }
+
                 return json.ReadAsByte();
             }
 #else
@@ -162,7 +165,7 @@ namespace Hertzole.ALE
 #endif
         }
 
-        public sbyte ReadSByte()
+        public sbyte ReadSByte(bool withName = true)
         {
             if (binary != null)
             {
@@ -171,7 +174,11 @@ namespace Hertzole.ALE
 #if ALE_JSON
             else
             {
-                json.Read();
+                if (withName)
+                {
+                    json.Read();
+                }
+
                 return json.ReadAsSByte();
             }
 #else
@@ -179,7 +186,7 @@ namespace Hertzole.ALE
 #endif
         }
 
-        public short ReadShort()
+        public short ReadShort(bool withName = true)
         {
             if (binary != null)
             {
@@ -188,7 +195,11 @@ namespace Hertzole.ALE
 #if ALE_JSON
             else
             {
-                json.Read();
+                if (withName)
+                {
+                    json.Read();
+                }
+
                 return json.ReadAsInt16();
             }
 #else
@@ -196,7 +207,7 @@ namespace Hertzole.ALE
 #endif
         }
 
-        public ushort ReadUShort()
+        public ushort ReadUShort(bool withName = true)
         {
             if (binary != null)
             {
@@ -205,7 +216,11 @@ namespace Hertzole.ALE
 #if ALE_JSON
             else
             {
-                json.Read();
+                if (withName)
+                {
+                    json.Read();
+                }
+
                 return json.ReadAsUInt16();
             }
 #else
@@ -213,7 +228,7 @@ namespace Hertzole.ALE
 #endif
         }
 
-        public int ReadInt()
+        public int ReadInt(bool withName = true)
         {
             if (binary != null)
             {
@@ -222,7 +237,11 @@ namespace Hertzole.ALE
 #if ALE_JSON
             else
             {
-                json.Read();
+                if (withName)
+                {
+                    json.Read();
+                }
+
                 return (int)json.ReadAsInt32();
             }
 #else
@@ -230,7 +249,7 @@ namespace Hertzole.ALE
 #endif
         }
 
-        public uint ReadUInt()
+        public uint ReadUInt(bool withName = true)
         {
             if (binary != null)
             {
@@ -239,7 +258,11 @@ namespace Hertzole.ALE
 #if ALE_JSON
             else
             {
-                json.Read();
+                if (withName)
+                {
+                    json.Read();
+                }
+
                 return json.ReadAsUInt32();
             }
 #else
@@ -247,7 +270,7 @@ namespace Hertzole.ALE
 #endif
         }
 
-        public long ReadLong()
+        public long ReadLong(bool withName = true)
         {
             if (binary != null)
             {
@@ -256,7 +279,11 @@ namespace Hertzole.ALE
 #if ALE_JSON
             else
             {
-                json.Read();
+                if (withName)
+                {
+                    json.Read();
+                }
+
                 return json.ReadAsInt64();
             }
 #else
@@ -264,7 +291,7 @@ namespace Hertzole.ALE
 #endif
         }
 
-        public ulong ReadULong()
+        public ulong ReadULong(bool withName = true)
         {
             if (binary != null)
             {
@@ -273,7 +300,11 @@ namespace Hertzole.ALE
 #if ALE_JSON
             else
             {
-                json.Read();
+                if (withName)
+                {
+                    json.Read();
+                }
+
                 return json.ReadAsUInt64();
             }
 #else
@@ -281,7 +312,7 @@ namespace Hertzole.ALE
 #endif
         }
 
-        public float ReadFloat()
+        public float ReadFloat(bool withName = true)
         {
             if (binary != null)
             {
@@ -290,7 +321,11 @@ namespace Hertzole.ALE
 #if ALE_JSON
             else
             {
-                json.Read(); // Read property name.
+                if (withName)
+                {
+                    json.Read(); // Read property name.
+                }
+
                 return json.ReadAsFloat();
             }
 #else
@@ -298,7 +333,7 @@ namespace Hertzole.ALE
 #endif
         }
 
-        public double ReadDouble()
+        public double ReadDouble(bool withName = true)
         {
             if (binary != null)
             {
@@ -307,7 +342,11 @@ namespace Hertzole.ALE
 #if ALE_JSON
             else
             {
-                json.Read();
+                if (withName)
+                {
+                    json.Read();
+                }
+
                 return (double)json.ReadAsDouble();
             }
 #else
@@ -315,7 +354,7 @@ namespace Hertzole.ALE
 #endif
         }
 
-        public decimal ReadDecimal()
+        public decimal ReadDecimal(bool withName = true)
         {
             if (binary != null)
             {
@@ -324,7 +363,11 @@ namespace Hertzole.ALE
 #if ALE_JSON
             else
             {
-                json.Read();
+                if (withName)
+                {
+                    json.Read();
+                }
+
                 return (decimal)json.ReadAsDecimal();
             }
 #else
@@ -332,7 +375,7 @@ namespace Hertzole.ALE
 #endif
         }
 
-        public bool ReadBool()
+        public bool ReadBool(bool withName = true)
         {
             if (binary != null)
             {
@@ -341,7 +384,11 @@ namespace Hertzole.ALE
 #if ALE_JSON
             else
             {
-                json.Read();
+                if (withName)
+                {
+                    json.Read();
+                }
+
                 return (bool)json.ReadAsBoolean();
             }
 #else
@@ -349,7 +396,7 @@ namespace Hertzole.ALE
 #endif
         }
 
-        public string ReadString()
+        public string ReadString(bool withName = true)
         {
             if (binary != null)
             {
@@ -358,7 +405,11 @@ namespace Hertzole.ALE
 #if ALE_JSON
             else
             {
-                json.Read();
+                if (withName)
+                {
+                    json.Read();
+                }
+
                 return json.ReadAsString();
             }
 #else
@@ -366,7 +417,7 @@ namespace Hertzole.ALE
 #endif
         }
 
-        public char ReadChar()
+        public char ReadChar(bool withName = true)
         {
             if (binary != null)
             {
@@ -375,7 +426,11 @@ namespace Hertzole.ALE
 #if ALE_JSON
             else
             {
-                json.Read();
+                if (withName)
+                {
+                    json.Read();
+                }
+
                 return json.ReadAsChar();
             }
 #else
@@ -383,9 +438,9 @@ namespace Hertzole.ALE
 #endif
         }
 
-        public Vector2 ReadVector2()
+        public Vector2 ReadVector2(bool withName = true)
         {
-            ReadObjectStart(true);
+            ReadObjectStart(withName);
             float x = ReadFloat();
             float y = ReadFloat();
             ReadObjectEnd();
@@ -393,9 +448,9 @@ namespace Hertzole.ALE
             return new Vector2(x, y);
         }
 
-        public Vector2Int ReadVector2Int()
+        public Vector2Int ReadVector2Int(bool withName = true)
         {
-            ReadObjectStart(true);
+            ReadObjectStart(withName);
             int x = ReadInt();
             int y = ReadInt();
             ReadObjectEnd();
@@ -403,9 +458,9 @@ namespace Hertzole.ALE
             return new Vector2Int(x, y);
         }
 
-        public Vector3 ReadVector3()
+        public Vector3 ReadVector3(bool withName = true)
         {
-            ReadObjectStart(true);
+            ReadObjectStart(withName);
             float x = ReadFloat();
             float y = ReadFloat();
             float z = ReadFloat();
@@ -414,9 +469,9 @@ namespace Hertzole.ALE
             return new Vector3(x, y, z);
         }
 
-        public Vector3Int ReadVector3Int()
+        public Vector3Int ReadVector3Int(bool withName = true)
         {
-            ReadObjectStart(true);
+            ReadObjectStart(withName);
             int x = ReadInt();
             int y = ReadInt();
             int z = ReadInt();
@@ -425,9 +480,9 @@ namespace Hertzole.ALE
             return new Vector3Int(x, y, z);
         }
 
-        public Vector4 ReadVector4()
+        public Vector4 ReadVector4(bool withName = true)
         {
-            ReadObjectStart(true);
+            ReadObjectStart(withName);
             float x = ReadFloat();
             float y = ReadFloat();
             float z = ReadFloat();
@@ -437,9 +492,9 @@ namespace Hertzole.ALE
             return new Vector4(x, y, z, w);
         }
 
-        public Quaternion ReadQuaternion()
+        public Quaternion ReadQuaternion(bool withName = true)
         {
-            ReadObjectStart(true);
+            ReadObjectStart(withName);
             float x = ReadFloat();
             float y = ReadFloat();
             float z = ReadFloat();
@@ -449,14 +504,14 @@ namespace Hertzole.ALE
             return new Quaternion(x, y, z, w);
         }
 
-        public Color ReadColor()
+        public Color ReadColor(bool withName = true)
         {
-            return ReadColor32();
+            return ReadColor32(withName);
         }
 
-        public Color32 ReadColor32()
+        public Color32 ReadColor32(bool withName = true)
         {
-            ReadObjectStart(true);
+            ReadObjectStart(withName);
             byte r = ReadByte();
             byte g = ReadByte();
             byte b = ReadByte();
@@ -466,9 +521,9 @@ namespace Hertzole.ALE
             return new Color32(r, g, b, a);
         }
 
-        public int ReadComponent()
+        public int ReadComponent(bool withName = true)
         {
-            return ReadInt();
+            return ReadInt(withName);
         }
 
         protected virtual void Dispose(bool disposing)

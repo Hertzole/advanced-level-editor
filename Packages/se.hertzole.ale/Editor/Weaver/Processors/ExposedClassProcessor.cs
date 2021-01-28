@@ -13,6 +13,7 @@ using FieldAttributes = Mono.Cecil.FieldAttributes;
 using MethodAttributes = Mono.Cecil.MethodAttributes;
 using ParameterAttributes = Mono.Cecil.ParameterAttributes;
 using PropertyAttributes = Mono.Cecil.PropertyAttributes;
+using TypeAttributes = Mono.Cecil.TypeAttributes;
 
 namespace Hertzole.ALE.Editor
 {
@@ -101,6 +102,8 @@ namespace Hertzole.ALE.Editor
             }
         }
 
+        private static int converterIndex = 0;
+
         private static EventDefinition internalOnValueChanged;
         private static FieldDefinition lockField;
         private static FieldDefinition internalOnValueChangedField;
@@ -144,6 +147,8 @@ namespace Hertzole.ALE.Editor
 
         public override (bool success, bool dirty) ProcessClass(ModuleDefinition module, TypeDefinition type)
         {
+            converterIndex = 0;
+
             List<FieldOrProperty> exposedFields = new List<FieldOrProperty>();
             List<int> usedIds = new List<int>();
             if (type.HasFields)
@@ -266,7 +271,7 @@ namespace Hertzole.ALE.Editor
 
             MethodDefinition getPropertiesMethod = CreateGetProperties(module, exposedFields);
             MethodDefinition getValueMethod = CreateGetValue(module, exposedFields);
-            MethodDefinition setValueMethod = CreateSetValue(module, exposedFields);
+            MethodDefinition setValueMethod = CreateSetValue(type, module, exposedFields);
             MethodDefinition getValueTypeMethod = CreateGetValueType(module, exposedFields);
 
             type.Methods.Add(getPropertiesMethod);
@@ -581,7 +586,7 @@ namespace Hertzole.ALE.Editor
             return method;
         }
 
-        private static MethodDefinition CreateSetValue(ModuleDefinition module, List<FieldOrProperty> exposedFields)
+        private static MethodDefinition CreateSetValue(TypeDefinition baseType, ModuleDefinition module, List<FieldOrProperty> exposedFields)
         {
             MethodDefinition method = new MethodDefinition("Hertzole.ALE.IExposedToLevelEditor.SetValue",
                 MethodAttributes.Private | MethodAttributes.Final | MethodAttributes.HideBySig | MethodAttributes.NewSlot | MethodAttributes.Virtual,
@@ -604,91 +609,12 @@ namespace Hertzole.ALE.Editor
             Instruction checkChanged = Instruction.Create(OpCodes.Ldarg_3);
             Instruction ret = Instruction.Create(OpCodes.Ret);
 
-            int exposedIndex = 0;
-
-            //CreateIfContainer(exposedFields, method, (i, il) =>
-            //{
-            //    Instruction first = Instruction.Create(OpCodes.Ldarg_1);
-            //    il.Append(first);
-            //    if (exposedFields[i].id != 0)
-            //    {
-            //        il.Append(GetIntInstruction(exposedFields[i].id));
-            //    }
-
-            //    return first;
-            //}, (i, il) =>
-            //{
-            //    Instruction first = Instruction.Create(OpCodes.Ldarg_0);
-            //    il.Append(first);
-
-            //    if (exposedFields[i].IsProperty)
-            //    {
-            //        il.Emit(OpCodes.Call, exposedFields[i].property.GetMethod);
-            //    }
-            //    else
-            //    {
-            //        il.Emit(OpCodes.Ldfld, exposedFields[i].field);
-            //    }
-
-            //    il.Emit(OpCodes.Ldarg_2);
-            //    il.Emit(exposedFields[i].IsValueType ? OpCodes.Unbox_Any : OpCodes.Castclass, exposedFields[i].FieldType);
-            //    il.Emit(OpCodes.Beq_S, checkChanged);
-
-            //    return first;
-            //}, (il) =>
-            //{
-            //    Instruction noProperty = Instruction.Create(OpCodes.Ldstr, "No exposed property with the ID '");
-            //    il.Append(noProperty);
-            //    il.Emit(OpCodes.Ldarg_1);
-            //    il.Emit(OpCodes.Ldstr, "'.");
-            //    il.Emit(OpCodes.Call, stringConcat);
-            //    il.Emit(OpCodes.Newobj, argumentException);
-            //    il.Emit(OpCodes.Throw);
-
-            //    return noProperty;
-            //});
+            TypeDefinition converterType = null;
+            FieldDefinition converterInstanceField = null;
 
             for (int i = 0; i < exposedFields.Count; i++)
             {
                 FieldOrProperty field = exposedFields[i];
-
-                Instruction postName = Instruction.Create(OpCodes.Ldarg_0);
-                //for (int j = 0; j < fieldNames.Count; j++)
-                //{
-                //    if (j == 0)
-                //    {
-                //        il.Append(firstNameCheck);
-                //    }
-                //    else
-                //    {
-                //        il.Emit(OpCodes.Ldarg_1);
-                //    }
-
-                //    il.Emit(OpCodes.Ldstr, fieldNames[j]);
-                //    Instruction nameCheckLast = Instruction.Create(OpCodes.Call, stringEquality);
-                //    il.Append(nameCheckLast);
-
-                //    if (j <= fieldNames.Count - 2)
-                //    {
-                //        il.Emit(OpCodes.Brtrue_S, postName);
-                //    }
-                //    else
-                //    {
-                //        if (i == exposedFields.Count - 1)
-                //        {
-                //            il.Emit(OpCodes.Brfalse_S, noExposedFields);
-                //        }
-                //        else
-                //        {
-                //            nameCheckFalse.Add(nameCheckLast);
-                //        }
-
-                //        if (exposedIndex > 0)
-                //        {
-                //            il.InsertAfter(nameCheckFalse[exposedIndex - 1], Instruction.Create(OpCodes.Brfalse_S, firstNameCheck));
-                //        }
-                //    }
-                //}
 
                 Instruction first = Instruction.Create(OpCodes.Ldarg_1);
                 il.Append(first);
@@ -708,62 +634,119 @@ namespace Hertzole.ALE.Editor
                     firsts.Add(first);
                 }
 
-                il.Append(postName);
-
                 TypeReference type = field.FieldType;
+                il.Emit(field.IsArray ? OpCodes.Ldarg_2 : OpCodes.Ldarg_0);
 
-                if (field.IsProperty)
+                if (!field.IsArray)
                 {
-                    il.Emit(OpCodes.Call, field.property.GetMethod);
+                    if (field.IsProperty)
+                    {
+                        il.Emit(OpCodes.Call, field.property.GetMethod);
+                    }
+                    else
+                    {
+                        il.Emit(OpCodes.Ldfld, field.field);
+                    }
+
+                    if (type.Is<Color32>())
+                    {
+                        il.Emit(OpCodes.Call, module.ImportReference(typeof(Color32).GetMethod("op_Implicit", new Type[] { typeof(Color32) })));
+                    }
+
+                    il.Emit(OpCodes.Ldarg_2);
+
+                    if (type.Is<Color32>())
+                    {
+                        type = module.ImportReference(typeof(Color)); // Needs to convert to color because Color32 is being stupid with equals check.
+                    }
+
+                    if (field.IsValueType)
+                    {
+                        il.Emit(OpCodes.Unbox_Any, type);
+                    }
+                    else
+                    {
+                        il.Emit(OpCodes.Castclass, type);
+                    }
+
+                    if (field.FieldType.Is<Color32>())
+                    {
+                        il.Emit(OpCodes.Call, module.ImportReference(typeof(Color).GetMethod("op_Inequality", new Type[] { typeof(Color), typeof(Color) })));
+                        Debug.Log(checkChanged);
+                        il.Emit(OpCodes.Brfalse, checkChanged);
+                    }
+                    else if (field.FieldTypeDefinition.TryGetMethodInBaseType("op_Inequality", out MethodDefinition equalityMethod))
+                    {
+                        il.Emit(OpCodes.Call, module.ImportReference(equalityMethod));
+                        il.Emit(OpCodes.Brfalse, checkChanged);
+                    }
+                    else
+                    {
+                        il.Emit(OpCodes.Beq, checkChanged);
+                    }
+
+                    il.Emit(OpCodes.Ldarg_0);
+                    il.Emit(OpCodes.Ldarg_2);
+                    il.Emit(field.IsValueType ? OpCodes.Unbox_Any : OpCodes.Castclass, type);
+
+                    if (field.FieldType.Is<Color32>())
+                    {
+                        il.Emit(OpCodes.Call, module.ImportReference(typeof(Color32).GetMethod("op_Implicit", new Type[] { typeof(Color) })));
+                    }
                 }
                 else
                 {
-                    il.Emit(OpCodes.Ldfld, field.field);
-                }
+                    if (converterType == null)
+                    {
+                        converterType = LoadOrCreateConverterType(baseType, out converterInstanceField);
+                        baseType.NestedTypes.Add(converterType);
+                    }
 
-                if (type.Is<Color32>())
-                {
-                    il.Emit(OpCodes.Call, module.ImportReference(typeof(Color32).GetMethod("op_Implicit", new Type[] { typeof(Color32) })));
-                }
+                    CreateConverterField(baseType, converterType, field.FieldType.Resolve(), field.Name, "SetValue", out FieldDefinition converterField, out MethodDefinition converterMethod);
 
-                il.Emit(OpCodes.Ldarg_2);
+                    int localIndex = method.Body.Variables.Count;
+                    method.Body.Variables.Add(new VariableDefinition(type));
 
-                if (type.Is<Color32>())
-                {
-                    type = module.ImportReference(typeof(Color)); // Needs to convert to color because Color32 is being stupid with equals check.
-                }
+                    MethodReference convertMethod = module.ImportReference(typeof(Array).GetMethod("ConvertAll"));
 
-                if (field.IsValueType)
-                {
-                    il.Emit(OpCodes.Unbox_Any, type);
-                }
-                else
-                {
-                    il.Emit(OpCodes.Castclass, type);
-                }
+                    GenericInstanceMethod genericConvert = new GenericInstanceMethod(convertMethod);
+                    genericConvert.GenericArguments.Add(module.ImportReference(typeof(object)));
+                    genericConvert.GenericArguments.Add(module.ImportReference(type.Resolve()));
 
-                if (field.FieldType.Is<Color32>())
-                {
-                    il.Emit(OpCodes.Call, module.ImportReference(typeof(Color).GetMethod("op_Inequality", new Type[] { typeof(Color), typeof(Color) })));
-                    il.Emit(OpCodes.Brfalse_S, checkChanged);
-                }
-                else if (field.FieldTypeDefinition.TryGetMethodInBaseType("op_Inequality", out MethodDefinition equalityMethod))
-                {
-                    il.Emit(OpCodes.Call, module.ImportReference(equalityMethod));
-                    il.Emit(OpCodes.Brfalse, checkChanged);
-                }
-                else
-                {
-                    il.Emit(OpCodes.Beq, checkChanged);
-                }
+                    Instruction callConvert = Instruction.Create(OpCodes.Call, genericConvert);
 
-                il.Emit(OpCodes.Ldarg_0);
-                il.Emit(OpCodes.Ldarg_2);
-                il.Emit(field.IsValueType ? OpCodes.Unbox_Any : OpCodes.Castclass, type);
+                    il.Emit(OpCodes.Castclass, module.ImportReference(typeof(object[])));
+                    il.Emit(OpCodes.Ldsfld, converterField);
+                    il.Emit(OpCodes.Dup);
+                    il.Emit(OpCodes.Brtrue_S, callConvert);
 
-                if (field.FieldType.Is<Color32>())
-                {
-                    il.Emit(OpCodes.Call, module.ImportReference(typeof(Color32).GetMethod("op_Implicit", new Type[] { typeof(Color) })));
+                    il.Emit(OpCodes.Pop);
+                    il.Emit(OpCodes.Ldsfld, converterInstanceField);
+                    il.Emit(OpCodes.Ldftn, converterMethod);
+
+                    TypeReference conv = module.ImportReference(typeof(Converter<,>));
+                    GenericInstanceType genericConv = conv.MakeGenericInstanceType(module.ImportReference(typeof(object)), module.ImportReference(type.Resolve()));
+                    MethodReference convCctor = module.ImportReference(genericConv.Resolve().GetConstructor(module.ImportReference(typeof(object)), module.ImportReference(typeof(IntPtr)))).MakeHostInstanceGeneric(genericConv);
+
+                    il.Emit(OpCodes.Newobj, convCctor);
+                    il.Emit(OpCodes.Dup);
+                    il.Emit(OpCodes.Stsfld, converterField);
+                    il.Append(callConvert);
+                    il.Append(GetStloc(localIndex));
+                    il.Emit(OpCodes.Ldarg_0);
+                    if (field.IsProperty)
+                    {
+                        il.Emit(OpCodes.Call, field.property.GetMethod);
+                    }
+                    else
+                    {
+                        il.Emit(OpCodes.Ldfld, field.field);
+                    }
+                    il.Append(GetLdloc(localIndex));
+                    il.Emit(OpCodes.Beq_S, checkChanged);
+
+                    il.Emit(OpCodes.Ldarg_0);
+                    il.Emit(OpCodes.Ldloc_1);
                 }
 
                 if (field.IsProperty)
@@ -779,8 +762,6 @@ namespace Hertzole.ALE.Editor
                 il.Emit(OpCodes.Stloc_0);
 
                 il.Emit(OpCodes.Br, checkChanged);
-
-                exposedIndex++;
             }
 
             Instruction noExposedFields = Instruction.Create(OpCodes.Ldstr, NO_EXPOSED_FIELDS);
@@ -794,6 +775,7 @@ namespace Hertzole.ALE.Editor
             firsts.Add(noExposedFields);
 
             il.Append(checkChanged);
+            Debug.Log("Added check changed");
             il.Emit(OpCodes.Ldloc_0);
             il.Emit(OpCodes.And);
             il.Emit(OpCodes.Brfalse_S, ret);
@@ -821,6 +803,84 @@ namespace Hertzole.ALE.Editor
             method.Body.Optimize();
 
             return method;
+        }
+
+        private static void CreateConverterField(TypeDefinition baseType, TypeDefinition converterType, TypeDefinition fieldType, string name, string methodName,
+                                                 out FieldDefinition converterField, out MethodDefinition converterMethod)
+        {
+            TypeReference convType = baseType.Module.ImportReference(typeof(Converter<,>));
+            GenericInstanceType genericConvType = convType.MakeGenericInstanceType(baseType.Module.ImportReference(typeof(object)), baseType.Module.ImportReference(fieldType));
+
+            converterField = new FieldDefinition($"<>_{name}__{converterIndex}", FieldAttributes.Public | FieldAttributes.Static, genericConvType);
+            FieldDefinition baseField = new FieldDefinition($"<>_{name}__{converterIndex}", FieldAttributes.Public | FieldAttributes.Static, genericConvType);
+
+            baseType.Fields.Add(baseField);
+            converterType.Fields.Add(converterField);
+
+            converterMethod = new MethodDefinition($"<{methodName}>_converter__{converterIndex}", MethodAttributes.Assembly | MethodAttributes.HideBySig,
+                                                    baseType.Module.ImportReference(fieldType));
+            converterMethod.Parameters.Add(new ParameterDefinition("item", ParameterAttributes.None, baseType.Module.ImportReference(typeof(object))));
+
+            ILProcessor il = converterMethod.Body.GetILProcessor();
+            il.Emit(OpCodes.Ldarg_1);
+            il.Emit(fieldType.IsValueType ? OpCodes.Unbox_Any : OpCodes.Castclass, baseType.Module.ImportReference(fieldType));
+            il.Emit(OpCodes.Ret);
+
+            MethodDefinition baseMethod = converterMethod.Duplicate();
+
+            baseType.Methods.Add(baseMethod);
+            converterType.Methods.Add(converterMethod);
+
+            converterIndex++;
+        }
+
+        private static TypeDefinition LoadOrCreateConverterType(TypeDefinition type, out FieldDefinition instanceField)
+        {
+            for (int i = 0; i < type.NestedTypes.Count; i++)
+            {
+                if (type.NestedTypes[i].Name == "<>c")
+                {
+                    instanceField = null;
+
+                    for (int j = 0; j < type.NestedTypes[i].Methods.Count; j++)
+                    {
+                        if (type.NestedTypes[i].Methods[j].Name == ".cctor")
+                        {
+                            instanceField = (FieldDefinition)type.NestedTypes[i].Methods[j].Body.Instructions[1].Operand;
+                        }
+                    }
+
+                    return type.NestedTypes[i];
+                }
+            }
+
+            TypeDefinition converter = new TypeDefinition("", "<>c", TypeAttributes.NestedPrivate | TypeAttributes.AutoClass | TypeAttributes.AnsiClass |
+                 TypeAttributes.Sealed | TypeAttributes.Serializable | TypeAttributes.BeforeFieldInit, type.Module.ImportReference(typeof(object)));
+            converter.CustomAttributes.Add(new CustomAttribute(type.Module.ImportReference(typeof(CompilerGeneratedAttribute).GetConstructor(Type.EmptyTypes))));
+
+            instanceField = new FieldDefinition("instance", FieldAttributes.Public | FieldAttributes.Static | FieldAttributes.InitOnly, converter);
+            converter.Fields.Add(instanceField);
+
+            MethodDefinition constructor = new MethodDefinition(".cctor", MethodAttributes.Private | MethodAttributes.HideBySig | MethodAttributes.SpecialName
+                | MethodAttributes.SpecialName | MethodAttributes.RTSpecialName | MethodAttributes.Static, type.Module.ImportReference(typeof(void)));
+
+            MethodDefinition converterConstructor = new MethodDefinition(".ctor", MethodAttributes.Public | MethodAttributes.HideBySig | MethodAttributes.SpecialName
+                | MethodAttributes.RTSpecialName, type.Module.ImportReference(typeof(void)));
+
+            ILProcessor il = constructor.Body.GetILProcessor();
+            il.Emit(OpCodes.Newobj, converterConstructor);
+            il.Emit(OpCodes.Stsfld, instanceField);
+            il.Emit(OpCodes.Ret);
+
+            il = converterConstructor.Body.GetILProcessor();
+            il.Emit(OpCodes.Ldarg_0);
+            il.Emit(OpCodes.Call, type.Module.ImportReference(typeof(object).GetConstructor(Type.EmptyTypes)));
+            il.Emit(OpCodes.Ret);
+
+            converter.Methods.Add(constructor);
+            converter.Methods.Add(converterConstructor);
+
+            return converter;
         }
 
         private static MethodDefinition CreateGetValueType(ModuleDefinition module, List<FieldOrProperty> exposedFields)
@@ -898,6 +958,40 @@ namespace Hertzole.ALE.Editor
         private static OpCode GetBoolOpCode(bool value)
         {
             return value == true ? OpCodes.Ldc_I4_1 : OpCodes.Ldc_I4_0;
+        }
+
+        private static Instruction GetStloc(int index)
+        {
+            switch (index)
+            {
+                case 0:
+                    return Instruction.Create(OpCodes.Stloc_0);
+                case 1:
+                    return Instruction.Create(OpCodes.Stloc_1);
+                case 2:
+                    return Instruction.Create(OpCodes.Stloc_2);
+                case 3:
+                    return Instruction.Create(OpCodes.Stloc_3);
+                default:
+                    return Instruction.Create(OpCodes.Stloc_S, index);
+            }
+        }
+
+        private static Instruction GetLdloc(int index)
+        {
+            switch (index)
+            {
+                case 0:
+                    return Instruction.Create(OpCodes.Ldloc_0);
+                case 1:
+                    return Instruction.Create(OpCodes.Ldloc_1);
+                case 2:
+                    return Instruction.Create(OpCodes.Ldloc_2);
+                case 3:
+                    return Instruction.Create(OpCodes.Ldloc_3);
+                default:
+                    return Instruction.Create(OpCodes.Ldloc_S, index);
+            }
         }
 
         private static Instruction GetIntInstruction(int value)

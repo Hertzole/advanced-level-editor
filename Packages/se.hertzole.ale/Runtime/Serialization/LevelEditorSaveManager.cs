@@ -21,6 +21,8 @@ namespace Hertzole.ALE
 #if ALE_JSON
         [SerializeField]
         private bool saveAsJson = false;
+        [SerializeField]
+        private bool prettyPrint = false;
 #endif
 
         private ILevelEditorObjectManager realObjectManager;
@@ -97,7 +99,7 @@ namespace Hertzole.ALE
 #if ALE_JSON
                 if (saveAsJson)
                 {
-                    string json = LevelEditorSerializer.SerializeJson(saveData, false);
+                    string json = LevelEditorSerializer.SerializeJson(saveData, prettyPrint);
                     File.WriteAllText(saveLocation, json);
                 }
                 else

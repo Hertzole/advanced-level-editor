@@ -1,5 +1,10 @@
-﻿using Hertzole.ALE;
+﻿#define temp
+
+using Hertzole.ALE;
 using UnityEngine;
+#if temp
+using System;
+#endif
 
 public class TestScript : MonoBehaviour
 {
@@ -71,8 +76,104 @@ public class TestScript : MonoBehaviour
     [SerializeField]
     [ExposeToLevelEditor(20)]
     private Transform otherObject = null;
-    //[SerializeField]
-    //[ExposeToLevelEditor(21)]
-    //private string[] messages = null;
+    [SerializeField]
+    [ExposeToLevelEditor(21)]
+    private string[] messages = null;
+
+    private int[] ints = null;
+    private Color32[] colors = null;
 #pragma warning restore CS0414
+
+#if temp
+    private void Test(int id, object value, bool notify)
+    {
+        bool changed = false;
+
+        if (id == 3)
+        {
+            if (otherObject != (Transform)value)
+            {
+                otherObject = (Transform)value;
+                changed = true;
+            }
+        }
+        else if (id == 4)
+        {
+            string[] newArray = Array.ConvertAll((object[])value, item => (string)item);
+            if (messages != newArray)
+            {
+                messages = newArray;
+                changed = true;
+            }
+        }
+        else if (id == 5)
+        {
+            int[] newArray = Array.ConvertAll((object[])value, item => (int)item);
+            if (ints != newArray)
+            {
+                ints = newArray;
+                changed = true;
+            }
+        }
+        else
+        {
+            throw new ArgumentException("lol");
+        }
+
+        if (changed)
+        {
+            Debug.Log("Changed!");
+        }
+    }
+
+    private void Test2(int id, object value, bool notify)
+    {
+        bool changed = false;
+
+        if (id == 0)
+        {
+            if (otherObject != (Transform)value)
+            {
+                otherObject = (Transform)value;
+                changed = true;
+            }
+        }
+        else if (id == 2)
+        {
+            Color32[] newArray = Array.ConvertAll((object[])value, item => (Color32)item);
+            if (colors != newArray)
+            {
+                colors = newArray;
+                changed = true;
+            }
+        }
+        else if (id == 1)
+        {
+            int[] newArray = Array.ConvertAll((object[])value, item => (int)item);
+            if (ints != newArray)
+            {
+                ints = newArray;
+                changed = true;
+            }
+        }
+        else if (id == 6)
+        {
+            int[] newArray = Array.ConvertAll((object[])value, item => (int)item);
+            if (ints != newArray)
+            {
+                ints = newArray;
+                changed = true;
+            }
+        }
+        else
+        {
+            throw new ArgumentException("lol");
+        }
+
+        if (changed)
+        {
+            Debug.Log("Changed!");
+        }
+    }
+#endif
 }
