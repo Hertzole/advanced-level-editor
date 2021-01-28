@@ -1,6 +1,6 @@
 # Advanced Level Editor (ALE)
 
-⚠ **ALE IS VERY MUCH IN EARLY DEVELOPMENT! EVERYTHING CAN CHANGE ALL OF A SUDDEN! USE AT YOUR OWN RISK** ⚠
+⚠ **ALE IS VERY MUCH IN EARLY DEVELOPMENT! ANYTHING CAN CHANGE SUDDENLY! USE AT YOUR OWN RISK** ⚠
 
 ## ❓ What is it?
 ALE is a runtime level editor for Unity that aims to be simple to use both for the user and the developer. It's built with performance and usability in mind. It should also be extendable so you can adapt it to fit just right for your game.
@@ -81,7 +81,7 @@ Currently, only the development package is available. It's updated with each com
 
 ## 🔨 Getting Started
 
-⚠ **DOCUMENTATION IS EXTREMELY SPARSE RIGHT NOW AND WILL PROBABLY REMAIN SO FOR QUITE A WHILE** ⚠
+⚠ **DOCUMENTATION IS VERY SPARSE RIGHT NOW AND WILL PROBABLY REMAIN SO FOR QUITE A WHILE** ⚠
 
 #### Setup a level editor
 If you've installed it through the package manager, I recommend importing the "Complete" sample and start modifying that.
