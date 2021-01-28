@@ -22,6 +22,24 @@ MonoBehaviour:
     asset: {fileID: 0}
     treeID: 0
     treeDepth: -1
+  - name: 2D
+    id: 
+    customIcon: 0
+    icon: {fileID: 0}
+    limit: 0
+    hidden: 0
+    asset: {fileID: 0}
+    treeID: 11
+    treeDepth: 0
+  - name: Friendo
+    id: friendo
+    customIcon: 0
+    icon: {fileID: 0}
+    limit: 0
+    hidden: 0
+    asset: {fileID: 8687398002300406031, guid: c54869c9f4812b04baa9ba429f502b57, type: 3}
+    treeID: 12
+    treeDepth: 1
   - name: Test Objects
     id: 
     customIcon: 0

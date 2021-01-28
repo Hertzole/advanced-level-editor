@@ -20,6 +20,8 @@ namespace Hertzole.ALE
         private RectTransform assetsContent = null;
         [SerializeField]
         private LevelEditorAssetButton assetButtonPrefab = null;
+        [SerializeField]
+        private bool displayFirstSpriteAsIcon = true;
 
         protected LevelEditorResource treeRoot;
         protected LevelEditorResource[] allAssets;
@@ -106,7 +108,19 @@ namespace Hertzole.ALE
 #if UNITY_EDITOR
                         if (resource.Children[i].Asset is GameObject go)
                         {
+
+                            if (displayFirstSpriteAsIcon)
+                            {
+                                SpriteRenderer goSprite = go.GetComponentInChildren<SpriteRenderer>();
+                                if (goSprite != null)
+                                {
+                                    activeButtons[i].Icon.sprite = goSprite.sprite;
+                                    activeButtons[i].Icon.color = goSprite.color;
+                                    continue;
+                                }
+                            }
                             Texture2D icon = RuntimePreviewGenerator.GenerateModelPreview(go.transform, 128, 128, true);
+                            activeButtons[i].Icon.color = Color.white;
                             activeButtons[i].Icon.sprite = Sprite.Create(icon, new Rect(0, 0, icon.width, icon.height), new Vector2(0.5f, 0.5f));
                         }
 #endif

@@ -3,8 +3,23 @@ using UnityEngine;
 
 namespace Hertzole.ALE
 {
+    [AddComponentMenu("")]
     public class TransformWrapper : MonoBehaviour, IExposedToLevelEditor
     {
+        private ILevelEditorObject levelEditorObject;
+        private ILevelEditorObject LevelEditorObject
+        {
+            get
+            {
+                if (levelEditorObject == null)
+                {
+                    levelEditorObject = GetComponent<LevelEditorObject>();
+                }
+
+                return levelEditorObject;
+            }
+        }
+
         string IExposedToLevelEditor.ComponentName { get { return "Transform"; } }
 
         string IExposedToLevelEditor.TypeName { get { return "UnityEngine.Transform"; } }
@@ -78,6 +93,11 @@ namespace Hertzole.ALE
                     {
                         transform.SetParent((Transform)value, true);
                         changed = true;
+                        if (transform.parent != null)
+                        {
+                            LevelEditorObject.Parent = transform.parent.GetComponent<ILevelEditorObject>();
+                            levelEditorObject.Parent.AddChild(levelEditorObject);
+                        }
                     }
                     break;
                 default:

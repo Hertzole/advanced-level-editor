@@ -1,6 +1,6 @@
 # Advanced Level Editor (ALE)
 
-⚠ **ALE IS VERY MUCH IN EARLY DEVELOPMENT! ANYTHING CAN CHANGE SUDDENLY! USE AT YOUR OWN RISK** ⚠
+⚠ **ALE IS IN VERY EARLY DEVELOPMENT! ANYTHING CAN CHANGE SUDDENLY! USE AT YOUR OWN RISK** ⚠
 
 ## ❓ What is it?
 ALE is a runtime level editor for Unity that aims to be simple to use both for the user and the developer. It's built with performance and usability in mind. It should also be extendable so you can adapt it to fit just right for your game.
@@ -41,6 +41,7 @@ What needs to be done before 1.0.0 verified.
 - [ ] Custom component wrappers
 - [x] Serialize arrays
 - [ ] Resource limit support
+- [ ] Generate resource icons at build time
 
 #### Optional
 What would be really nice to have before 1.0.0 verified.  
@@ -68,6 +69,7 @@ The supported inspector fields.
 - [x] Object reference field
 - [x] Color field
 - [ ] Arrays
+- [ ] Nested classes/structs
 
 ## 📦 Installation 
 #### Without package manager

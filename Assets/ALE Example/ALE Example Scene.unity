@@ -1600,6 +1600,7 @@ MonoBehaviour:
   rootName: Assets
   assetsContent: {fileID: 1483967390}
   assetButtonPrefab: {fileID: 1657355865, guid: 0400328013e88dd4cb8069a745f20d43, type: 3}
+  displayFirstSpriteAsIcon: 1
 --- !u!1001 &1015285062
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -3758,7 +3759,7 @@ MonoBehaviour:
   baseSaveLocation: 1
   saveSuffix: Saved Levels
   fileExtension: .bin
-  saveAsJson: 0
+  saveAsJson: 1
   prettyPrint: 1
 --- !u!114 &1918987441
 MonoBehaviour:
