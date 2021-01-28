@@ -55,6 +55,7 @@ What would be really nice to have before 1.0.0 verified.
 - [ ] More errors and visuals to tell when something is wrong
 - [ ] Custom component UGUI
 - [ ] Unity mathematics support
+- [ ] XML documentation in code
 
 #### Inspector fields
 The supported inspector fields.  
