@@ -10,6 +10,7 @@ namespace Hertzole.ALE
 
         private bool selectedThroughUI = false;
         private bool selectedThroughObjectManager = false;
+        private bool loadingLevel = false;
 
         private ILevelEditor levelEditor;
 
@@ -44,19 +45,51 @@ namespace Hertzole.ALE
         public void Initialize(ILevelEditor levelEditor)
         {
             this.levelEditor = levelEditor;
+            levelEditor.SaveManager.OnLevelLoading += OnLevelLoading;
+            levelEditor.SaveManager.OnLevelLoaded += OnLevelLoaded;
             levelEditor.ObjectManager.OnCreatedObject += OnObjectManagerCreatedObject;
             levelEditor.ObjectManager.OnDeletedObject += OnObjectManagerDeleteObject;
             levelEditor.Selection.OnSelectionChanged += OnSelectionChanged;
         }
 
+        private void OnLevelLoading(object sender, LevelSavingLoadingArgs e)
+        {
+            loadingLevel = true;
+        }
+
+        private void OnLevelLoaded(object sender, LevelEventArgs e)
+        {
+            loadingLevel = false;
+            List<ILevelEditorObject> allObjects = levelEditor.ObjectManager.GetAllObjects();
+            for (int i = 0; i < allObjects.Count; i++)
+            {
+                if (allObjects[i].MyGameObject.transform.parent == null)
+                {
+                    treeControl.AddItem(allObjects[i], false);
+                }
+            }
+
+            treeControl.UpdateList();
+        }
+
         private void OnObjectManagerCreatedObject(object sender, LevelEditorObjectEvent args)
         {
+            if (loadingLevel)
+            {
+                return;
+            }
+
             args.Object.OnStateChanged += OnObjectStateChanged;
             treeControl.AddItem(args.Object);
         }
 
         private void OnObjectManagerDeleteObject(object sender, LevelEditorObjectEvent args)
         {
+            if (loadingLevel)
+            {
+                return;
+            }
+
             args.Object.OnStateChanged -= OnObjectStateChanged;
             treeControl.RemoveItem(args.Object);
         }

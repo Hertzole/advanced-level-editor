@@ -184,29 +184,34 @@ namespace Hertzole.ALE
             }
         }
 
-        public void SetItems(IEnumerable<object> items)
+        public void UpdateList()
         {
-            listView.SetItems(items);
+            listView.UpdateList();
         }
 
-        public void AddItems(IEnumerable<object> items)
+        public void SetItems(IEnumerable<object> items, bool updateList = true)
         {
-            listView.AddItems(items);
+            listView.SetItems(items, updateList);
         }
 
-        public void AddItem(object item)
+        public void AddItems(IEnumerable<object> items, bool updateList = true)
         {
-            listView.AddItem(item);
+            listView.AddItems(items, updateList);
         }
 
-        public void RemoveItem(object item)
+        public void AddItem(object item, bool updateList = true)
+        {
+            listView.AddItem(item, updateList);
+        }
+
+        public void RemoveItem(object item, bool updateList = true)
         {
             if (selectedItem == item)
             {
                 SelectItemInternal(null);
             }
 
-            listView.RemoveItem(item);
+            listView.RemoveItem(item, updateList);
         }
 
         public void RebindItem(object item)

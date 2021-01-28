@@ -1,6 +1,6 @@
 {
   "name": "se.hertzole.ale",
-  "version": "0.1.0",
+  "version": "0.1.0-preview",
   "displayName": "Advanced Level Editor",
   "description": "Advanced Level Editor (ALE) is an advanced, but simple to use, level editor for Unity runtime. It's meant to work out of the box and allow developers to have full control.",
   "unity": "2019.4",
@@ -19,10 +19,10 @@
   },
   "type": "tool",
   "samples": [
-	{
-		"displayName": "Completed Scene",
-		"description": "A completed example scene with all the UI hooked up.",
-		"path": "Samples~/Completed"
-	}
+    {
+      "displayName": "Completed Scene",
+      "description": "A completed example scene with all the UI hooked up.",
+      "path": "Samples~/Completed"
+    }
   ]
 }

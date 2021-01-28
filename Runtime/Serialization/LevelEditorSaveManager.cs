@@ -25,7 +25,15 @@ namespace Hertzole.ALE
         private bool prettyPrint = false;
 #endif
 
+        private string loadLocation;
+
         private ILevelEditorObjectManager realObjectManager;
+
+        public event EventHandler<LevelSavingLoadingArgs> OnLevelSaving;
+        public event EventHandler<LevelSavingLoadingArgs> OnLevelLoading;
+
+        public event EventHandler<LevelEventArgs> OnLevelSaved;
+        public event EventHandler<LevelEventArgs> OnLevelLoaded;
 
         private void Awake()
         {
@@ -59,6 +67,7 @@ namespace Hertzole.ALE
 
         public virtual LevelEditorSaveData LoadLevel(string path)
         {
+            loadLocation = path;
             LevelEditorSaveData data;
 
 #if ALE_JSON
@@ -77,8 +86,19 @@ namespace Hertzole.ALE
 
         public virtual LevelEditorSaveData LoadLevel(LevelEditorSaveData data)
         {
+            LevelSavingLoadingArgs args = new LevelSavingLoadingArgs(data, loadLocation);
+            loadLocation = null;
+            OnLevelLoading?.Invoke(this, args);
+            if (args.Cancel)
+            {
+                LevelEditorLogger.Log("LevelEditorSaveManager loading was canceled.");
+                return new LevelEditorSaveData();
+            }
+
             realObjectManager.DeleteAllObjects();
             realObjectManager.CreateObjectsFromSaveData(data);
+
+            OnLevelLoaded?.Invoke(this, new LevelEventArgs());
 
             return data;
         }
@@ -94,6 +114,14 @@ namespace Hertzole.ALE
         {
             string saveLocation = BuildSaveLocation(baseSaveLocation, saveSuffix) + saveData.name + ToFileExtension(fileExtension);
 
+            LevelSavingLoadingArgs args = new LevelSavingLoadingArgs(saveData, saveLocation);
+            OnLevelSaving?.Invoke(this, args);
+            if (args.Cancel)
+            {
+                LevelEditorLogger.Log("LevelEditorSaveManager saving was canceled.");
+                return;
+            }
+
             try
             {
 #if ALE_JSON
@@ -108,6 +136,8 @@ namespace Hertzole.ALE
                     byte[] data = LevelEditorSerializer.SerializeBinary(saveData);
                     File.WriteAllBytes(saveLocation, data);
                 }
+
+                OnLevelSaved?.Invoke(this, new LevelEventArgs());
             }
             catch (Exception ex)
             {
