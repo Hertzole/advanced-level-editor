@@ -19,7 +19,6 @@ namespace Hertzole.ALE
             LevelEditorWriter<sbyte>.Write = (writer, value, name) => writer.Write(value, name);
             LevelEditorWriter<short>.Write = (writer, value, name) => writer.Write(value, name);
             LevelEditorWriter<ushort>.Write = (writer, value, name) => writer.Write(value, name);
-            LevelEditorWriter<short>.Write = (writer, value, name) => writer.Write(value, name);
             LevelEditorWriter<int>.Write = (writer, value, name) => writer.Write(value, name);
             LevelEditorWriter<uint>.Write = (writer, value, name) => writer.Write(value, name);
             LevelEditorWriter<long>.Write = (writer, value, name) => writer.Write(value, name);
@@ -41,9 +40,28 @@ namespace Hertzole.ALE
             LevelEditorWriter<Color32>.Write = (writer, value, name) => writer.Write(value, name);
 
             LevelEditorReader<byte>.Read = (reader) => reader.ReadByte();
+            LevelEditorReader<sbyte>.Read = (reader) => reader.ReadSByte();
+            LevelEditorReader<short>.Read = (reader) => reader.ReadShort();
+            LevelEditorReader<ushort>.Read = (reader) => reader.ReadUShort();
             LevelEditorReader<int>.Read = (reader) => reader.ReadInt();
+            LevelEditorReader<uint>.Read = (reader) => reader.ReadUInt();
+            LevelEditorReader<long>.Read = (reader) => reader.ReadLong();
+            LevelEditorReader<ulong>.Read = (reader) => reader.ReadULong();
+            LevelEditorReader<float>.Read = (reader) => reader.ReadFloat();
+            LevelEditorReader<double>.Read = (reader) => reader.ReadDouble();
+            LevelEditorReader<decimal>.Read = (reader) => reader.ReadDecimal();
             LevelEditorReader<string>.Read = (reader) => reader.ReadString();
+            LevelEditorReader<char>.Read = (reader) => reader.ReadChar();
             LevelEditorReader<bool>.Read = (reader) => reader.ReadBool();
+            LevelEditorReader<Vector2>.Read = (reader) => reader.ReadVector2();
+            LevelEditorReader<Vector2Int>.Read = (reader) => reader.ReadVector2Int();
+            LevelEditorReader<Vector3>.Read = (reader) => reader.ReadVector3();
+            LevelEditorReader<Vector3Int>.Read = (reader) => reader.ReadVector3Int();
+            LevelEditorReader<Vector4>.Read = (reader) => reader.ReadVector4();
+            LevelEditorReader<Quaternion>.Read = (reader) => reader.ReadQuaternion();
+            LevelEditorReader<Component>.Read = (reader) => reader.ReadComponent();
+            LevelEditorReader<Color>.Read = (reader) => reader.ReadColor();
+            LevelEditorReader<Color32>.Read = (reader) => reader.ReadColor32();
         }
 
         private static readonly Dictionary<string, Action<LevelEditorWriter, object, string>> writers = new Dictionary<string, Action<LevelEditorWriter, object, string>>()
