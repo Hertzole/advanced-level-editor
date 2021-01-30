@@ -13,7 +13,6 @@ using FieldAttributes = Mono.Cecil.FieldAttributes;
 using MethodAttributes = Mono.Cecil.MethodAttributes;
 using ParameterAttributes = Mono.Cecil.ParameterAttributes;
 using PropertyAttributes = Mono.Cecil.PropertyAttributes;
-using TypeAttributes = Mono.Cecil.TypeAttributes;
 
 namespace Hertzole.ALE.Editor
 {
@@ -672,7 +671,6 @@ namespace Hertzole.ALE.Editor
                     if (field.FieldType.Is<Color32>())
                     {
                         il.Emit(OpCodes.Call, module.ImportReference(typeof(Color).GetMethod("op_Inequality", new Type[] { typeof(Color), typeof(Color) })));
-                        Debug.Log(checkChanged);
                         il.Emit(OpCodes.Brfalse, checkChanged);
                     }
                     else if (field.FieldTypeDefinition.TryGetMethodInBaseType("op_Inequality", out MethodDefinition equalityMethod))
@@ -698,11 +696,17 @@ namespace Hertzole.ALE.Editor
                 {
                     if (converterType == null)
                     {
-                        converterType = LoadOrCreateConverterType(baseType, out converterInstanceField);
+                        converterType = WeaverHelpers.LoadOrCreateConverterType(baseType, out converterInstanceField);
                         baseType.NestedTypes.Add(converterType);
                     }
 
-                    CreateConverterField(baseType, converterType, field.FieldType.Resolve(), field.Name, "SetValue", out FieldDefinition converterField, out MethodDefinition converterMethod);
+                    WeaverHelpers.CreateConverterField(true, typeof(Converter<,>), new TypeReference[] { baseType.Module.ImportReference(typeof(object)), baseType.Module.ImportReference(field.FieldType.Resolve()) },
+                    baseType, converterType, field.FieldType.Resolve(), field.Name, "SetValue", out FieldDefinition converterField, out MethodDefinition converterMethod, (cIl) =>
+                    {
+                        cIl.Emit(OpCodes.Ldarg_1);
+                        cIl.Emit(field.FieldType.Resolve().IsValueType ? OpCodes.Unbox_Any : OpCodes.Castclass, baseType.Module.ImportReference(field.FieldType.Resolve()));
+                        cIl.Emit(OpCodes.Ret);
+                    }, field.FieldType.Resolve(), module.ImportReference(typeof(object)));
 
                     int localIndex = method.Body.Variables.Count;
                     method.Body.Variables.Add(new VariableDefinition(type));
@@ -775,7 +779,6 @@ namespace Hertzole.ALE.Editor
             firsts.Add(noExposedFields);
 
             il.Append(checkChanged);
-            Debug.Log("Added check changed");
             il.Emit(OpCodes.Ldloc_0);
             il.Emit(OpCodes.And);
             il.Emit(OpCodes.Brfalse_S, ret);
@@ -803,84 +806,6 @@ namespace Hertzole.ALE.Editor
             method.Body.Optimize();
 
             return method;
-        }
-
-        private static void CreateConverterField(TypeDefinition baseType, TypeDefinition converterType, TypeDefinition fieldType, string name, string methodName,
-                                                 out FieldDefinition converterField, out MethodDefinition converterMethod)
-        {
-            TypeReference convType = baseType.Module.ImportReference(typeof(Converter<,>));
-            GenericInstanceType genericConvType = convType.MakeGenericInstanceType(baseType.Module.ImportReference(typeof(object)), baseType.Module.ImportReference(fieldType));
-
-            converterField = new FieldDefinition($"<>_{name}__{converterIndex}", FieldAttributes.Public | FieldAttributes.Static, genericConvType);
-            FieldDefinition baseField = new FieldDefinition($"<>_{name}__{converterIndex}", FieldAttributes.Public | FieldAttributes.Static, genericConvType);
-
-            baseType.Fields.Add(baseField);
-            converterType.Fields.Add(converterField);
-
-            converterMethod = new MethodDefinition($"<{methodName}>_converter__{converterIndex}", MethodAttributes.Assembly | MethodAttributes.HideBySig,
-                                                    baseType.Module.ImportReference(fieldType));
-            converterMethod.Parameters.Add(new ParameterDefinition("item", ParameterAttributes.None, baseType.Module.ImportReference(typeof(object))));
-
-            ILProcessor il = converterMethod.Body.GetILProcessor();
-            il.Emit(OpCodes.Ldarg_1);
-            il.Emit(fieldType.IsValueType ? OpCodes.Unbox_Any : OpCodes.Castclass, baseType.Module.ImportReference(fieldType));
-            il.Emit(OpCodes.Ret);
-
-            MethodDefinition baseMethod = converterMethod.Duplicate();
-
-            baseType.Methods.Add(baseMethod);
-            converterType.Methods.Add(converterMethod);
-
-            converterIndex++;
-        }
-
-        private static TypeDefinition LoadOrCreateConverterType(TypeDefinition type, out FieldDefinition instanceField)
-        {
-            for (int i = 0; i < type.NestedTypes.Count; i++)
-            {
-                if (type.NestedTypes[i].Name == "<>c")
-                {
-                    instanceField = null;
-
-                    for (int j = 0; j < type.NestedTypes[i].Methods.Count; j++)
-                    {
-                        if (type.NestedTypes[i].Methods[j].Name == ".cctor")
-                        {
-                            instanceField = (FieldDefinition)type.NestedTypes[i].Methods[j].Body.Instructions[1].Operand;
-                        }
-                    }
-
-                    return type.NestedTypes[i];
-                }
-            }
-
-            TypeDefinition converter = new TypeDefinition("", "<>c", TypeAttributes.NestedPrivate | TypeAttributes.AutoClass | TypeAttributes.AnsiClass |
-                 TypeAttributes.Sealed | TypeAttributes.Serializable | TypeAttributes.BeforeFieldInit, type.Module.ImportReference(typeof(object)));
-            converter.CustomAttributes.Add(new CustomAttribute(type.Module.ImportReference(typeof(CompilerGeneratedAttribute).GetConstructor(Type.EmptyTypes))));
-
-            instanceField = new FieldDefinition("instance", FieldAttributes.Public | FieldAttributes.Static | FieldAttributes.InitOnly, converter);
-            converter.Fields.Add(instanceField);
-
-            MethodDefinition constructor = new MethodDefinition(".cctor", MethodAttributes.Private | MethodAttributes.HideBySig | MethodAttributes.SpecialName
-                | MethodAttributes.SpecialName | MethodAttributes.RTSpecialName | MethodAttributes.Static, type.Module.ImportReference(typeof(void)));
-
-            MethodDefinition converterConstructor = new MethodDefinition(".ctor", MethodAttributes.Public | MethodAttributes.HideBySig | MethodAttributes.SpecialName
-                | MethodAttributes.RTSpecialName, type.Module.ImportReference(typeof(void)));
-
-            ILProcessor il = constructor.Body.GetILProcessor();
-            il.Emit(OpCodes.Newobj, converterConstructor);
-            il.Emit(OpCodes.Stsfld, instanceField);
-            il.Emit(OpCodes.Ret);
-
-            il = converterConstructor.Body.GetILProcessor();
-            il.Emit(OpCodes.Ldarg_0);
-            il.Emit(OpCodes.Call, type.Module.ImportReference(typeof(object).GetConstructor(Type.EmptyTypes)));
-            il.Emit(OpCodes.Ret);
-
-            converter.Methods.Add(constructor);
-            converter.Methods.Add(converterConstructor);
-
-            return converter;
         }
 
         private static MethodDefinition CreateGetValueType(ModuleDefinition module, List<FieldOrProperty> exposedFields)

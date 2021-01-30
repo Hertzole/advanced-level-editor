@@ -10,7 +10,11 @@ namespace Hertzole.ALE
 {
     public static class LevelEditorReader<T>
     {
-        public static Action<LevelEditorReader, bool> Read { get; set; }
+        internal static Func<LevelEditorReader, bool, object> ReadAction { get; set; }
+        internal static T Read(LevelEditorReader reader, bool withName)
+        {
+            return (T)ReadAction.Invoke(reader, withName);
+        }
     }
 
     public class LevelEditorReader : IDisposable
@@ -53,35 +57,34 @@ namespace Hertzole.ALE
         }
 #endif
 
-        public void Read<T>(bool withName = true)
+        public T Read<T>(bool withName = true)
         {
-            if (LevelEditorReader<T>.Read == null)
+            if (LevelEditorReader<T>.ReadAction == null)
             {
                 Debug.LogWarning($"No reader for '{typeof(T)}'.");
-                return;
+                return default;
             }
 
-            LevelEditorReader<T>.Read(this, withName);
+            return LevelEditorReader<T>.Read(this, withName);
         }
 
-        [System.Diagnostics.Conditional("ALE_JSON")]
         public void ReadObjectStart(bool withName = false)
         {
 #if ALE_JSON
             if (IsJson)
             {
-                json.Read();
                 if (withName)
                 {
                     json.Read();
+                    Assert.AreEqual(json.TokenType, JsonToken.PropertyName);
                 }
+                json.Read();
                 Assert.AreEqual(json.TokenType, JsonToken.StartObject, json.Path);
             }
 #endif
         }
 
-        [System.Diagnostics.Conditional("ALE_JSON")]
-        public void ReadObjectEnd(bool withName = true)
+        public void ReadObjectEnd()
         {
 #if ALE_JSON
             if (IsJson)
@@ -408,6 +411,7 @@ namespace Hertzole.ALE
                 if (withName)
                 {
                     json.Read();
+                    Assert.AreEqual(json.TokenType, JsonToken.PropertyName);
                 }
 
                 return json.ReadAsString();

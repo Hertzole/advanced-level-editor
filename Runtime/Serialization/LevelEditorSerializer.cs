@@ -15,108 +15,42 @@ namespace Hertzole.ALE
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
         private static void InitializeWritersReaders()
         {
-            LevelEditorWriter<byte>.Write = (writer, value, name) => writer.Write(value, name);
-            LevelEditorWriter<sbyte>.Write = (writer, value, name) => writer.Write(value, name);
-            LevelEditorWriter<short>.Write = (writer, value, name) => writer.Write(value, name);
-            LevelEditorWriter<ushort>.Write = (writer, value, name) => writer.Write(value, name);
-            LevelEditorWriter<int>.Write = (writer, value, name) => writer.Write(value, name);
-            LevelEditorWriter<uint>.Write = (writer, value, name) => writer.Write(value, name);
-            LevelEditorWriter<long>.Write = (writer, value, name) => writer.Write(value, name);
-            LevelEditorWriter<ulong>.Write = (writer, value, name) => writer.Write(value, name);
-            LevelEditorWriter<float>.Write = (writer, value, name) => writer.Write(value, name);
-            LevelEditorWriter<double>.Write = (writer, value, name) => writer.Write(value, name);
-            LevelEditorWriter<decimal>.Write = (writer, value, name) => writer.Write(value, name);
-            LevelEditorWriter<string>.Write = (writer, value, name) => writer.Write(value, name);
-            LevelEditorWriter<char>.Write = (writer, value, name) => writer.Write(value, name);
-            LevelEditorWriter<bool>.Write = (writer, value, name) => writer.Write(value, name);
-            LevelEditorWriter<Vector2>.Write = (writer, value, name) => writer.Write(value, name);
-            LevelEditorWriter<Vector2Int>.Write = (writer, value, name) => writer.Write(value, name);
-            LevelEditorWriter<Vector3>.Write = (writer, value, name) => writer.Write(value, name);
-            LevelEditorWriter<Vector3Int>.Write = (writer, value, name) => writer.Write(value, name);
-            LevelEditorWriter<Vector4>.Write = (writer, value, name) => writer.Write(value, name);
-            LevelEditorWriter<Quaternion>.Write = (writer, value, name) => writer.Write(value, name);
-            LevelEditorWriter<Component>.Write = (writer, value, name) => writer.Write(value, name);
-            LevelEditorWriter<Color>.Write = (writer, value, name) => writer.Write(value, name);
-            LevelEditorWriter<Color32>.Write = (writer, value, name) => writer.Write(value, name);
-
-            LevelEditorReader<byte>.Read = (reader, withName) => reader.ReadByte(withName);
-            LevelEditorReader<sbyte>.Read = (reader, withName) => reader.ReadSByte(withName);
-            LevelEditorReader<short>.Read = (reader, withName) => reader.ReadShort(withName);
-            LevelEditorReader<ushort>.Read = (reader, withName) => reader.ReadUShort(withName);
-            LevelEditorReader<int>.Read = (reader, withName) => reader.ReadInt(withName);
-            LevelEditorReader<uint>.Read = (reader, withName) => reader.ReadUInt(withName);
-            LevelEditorReader<long>.Read = (reader, withName) => reader.ReadLong(withName);
-            LevelEditorReader<ulong>.Read = (reader, withName) => reader.ReadULong(withName);
-            LevelEditorReader<float>.Read = (reader, withName) => reader.ReadFloat(withName);
-            LevelEditorReader<double>.Read = (reader, withName) => reader.ReadDouble(withName);
-            LevelEditorReader<decimal>.Read = (reader, withName) => reader.ReadDecimal(withName);
-            LevelEditorReader<string>.Read = (reader, withName) => reader.ReadString(withName);
-            LevelEditorReader<char>.Read = (reader, withName) => reader.ReadChar(withName);
-            LevelEditorReader<bool>.Read = (reader, withName) => reader.ReadBool(withName);
-            LevelEditorReader<Vector2>.Read = (reader, withName) => reader.ReadVector2(withName);
-            LevelEditorReader<Vector2Int>.Read = (reader, withName) => reader.ReadVector2Int(withName);
-            LevelEditorReader<Vector3>.Read = (reader, withName) => reader.ReadVector3(withName);
-            LevelEditorReader<Vector3Int>.Read = (reader, withName) => reader.ReadVector3Int(withName);
-            LevelEditorReader<Vector4>.Read = (reader, withName) => reader.ReadVector4(withName);
-            LevelEditorReader<Quaternion>.Read = (reader, withName) => reader.ReadQuaternion(withName);
-            LevelEditorReader<Component>.Read = (reader, withName) => reader.ReadComponent(withName);
-            LevelEditorReader<Color>.Read = (reader, withName) => reader.ReadColor(withName);
-            LevelEditorReader<Color32>.Read = (reader, withName) => reader.ReadColor32(withName);
+            SetWriterReader<byte>((writer, value, name) => writer.Write((byte)value, name), (reader, withName) => reader.ReadByte(withName));
+            SetWriterReader<sbyte>((writer, value, name) => writer.Write((sbyte)value, name), (reader, withName) => reader.ReadSByte(withName));
+            SetWriterReader<short>((writer, value, name) => writer.Write((short)value, name), (reader, withName) => reader.ReadShort(withName));
+            SetWriterReader<ushort>((writer, value, name) => writer.Write((ushort)value, name), (reader, withName) => reader.ReadUShort(withName));
+            SetWriterReader<int>((writer, value, name) => writer.Write((int)value, name), (reader, withName) => reader.ReadInt(withName));
+            SetWriterReader<uint>((writer, value, name) => writer.Write((uint)value, name), (reader, withName) => reader.ReadUInt(withName));
+            SetWriterReader<long>((writer, value, name) => writer.Write((long)value, name), (reader, withName) => reader.ReadLong(withName));
+            SetWriterReader<ulong>((writer, value, name) => writer.Write((ulong)value, name), (reader, withName) => reader.ReadULong(withName));
+            SetWriterReader<float>((writer, value, name) => writer.Write((float)value, name), (reader, withName) => reader.ReadFloat(withName));
+            SetWriterReader<double>((writer, value, name) => writer.Write((double)value, name), (reader, withName) => reader.ReadDouble(withName));
+            SetWriterReader<decimal>((writer, value, name) => writer.Write((decimal)value, name), (reader, withName) => reader.ReadDecimal(withName));
+            SetWriterReader<string>((writer, value, name) => writer.Write((string)value, name), (reader, withName) => reader.ReadString(withName));
+            SetWriterReader<char>((writer, value, name) => writer.Write((char)value, name), (reader, withName) => reader.ReadChar(withName));
+            SetWriterReader<bool>((writer, value, name) => writer.Write((bool)value, name), (reader, withName) => reader.ReadBool(withName));
+            SetWriterReader<Vector2>((writer, value, name) => writer.Write((Vector2)value, name), (reader, withName) => reader.ReadVector2(withName));
+            SetWriterReader<Vector2Int>((writer, value, name) => writer.Write((Vector2Int)value, name), (reader, withName) => reader.ReadVector2Int(withName));
+            SetWriterReader<Vector3>((writer, value, name) => writer.Write((Vector3)value, name), (reader, withName) => reader.ReadVector3(withName));
+            SetWriterReader<Vector3Int>((writer, value, name) => writer.Write((Vector3Int)value, name), (reader, withName) => reader.ReadVector3Int(withName));
+            SetWriterReader<Vector4>((writer, value, name) => writer.Write((Vector4)value, name), (reader, withName) => reader.ReadVector4(withName));
+            SetWriterReader<Quaternion>((writer, value, name) => writer.Write((Quaternion)value, name), (reader, withName) => reader.ReadQuaternion(withName));
+            SetWriterReader<Color>((writer, value, name) => writer.Write((Color)value, name), (reader, withName) => reader.ReadColor(withName));
+            SetWriterReader<Color32>((writer, value, name) => writer.Write((Color32)value, name), (reader, withName) => reader.ReadColor32(withName));
+            SetWriterReader<Component>((writer, value, name) => writer.Write((Component)value, name), (reader, withName) => reader.ReadComponent(withName));
         }
 
-        private static readonly Dictionary<string, Action<LevelEditorWriter, object, string>> writers = new Dictionary<string, Action<LevelEditorWriter, object, string>>()
-        {
-            { "System.Byte", (writer, value, name) => writer.Write((byte)value, name) },
-            { "System.SByte", (writer, value, name) => writer.Write((sbyte)value, name) },
-            { "System.Int16", (writer, value, name) => writer.Write((short)value, name) },
-            { "System.UInt16", (writer, value, name) => writer.Write((ushort)value, name) },
-            { "System.Int32", (writer, value, name) => writer.Write((int)value, name) },
-            { "System.UInt32", (writer, value, name) => writer.Write((uint)value, name) },
-            { "System.Int64", (writer, value, name) => writer.Write((long)value, name) },
-            { "System.UInt64", (writer, value, name) => writer.Write((ulong)value, name) },
-            { "System.Single", (writer, value, name) => writer.Write((float)value, name) },
-            { "System.Double", (writer, value, name) => writer.Write((double)value, name) },
-            { "System.Decimal", (writer, value, name) => writer.Write((decimal)value, name) },
-            { "System.String", (writer, value, name) => writer.Write((string)value, name) },
-            { "System.Char", (writer, value, name) => writer.Write((char)value, name) },
-            { "System.Boolean", (writer, value, name) => writer.Write((bool)value, name) },
-            { "UnityEngine.Vector2", (writer, value, name) => writer.Write((Vector2)value, name) },
-            { "UnityEngine.Vector2Int", (writer, value, name) => writer.Write((Vector2Int)value, name) },
-            { "UnityEngine.Vector3", (writer, value, name) => writer.Write((Vector3)value, name) },
-            { "UnityEngine.Vector3Int", (writer, value, name) => writer.Write((Vector3Int)value, name) },
-            { "UnityEngine.Vector4", (writer, value, name) => writer.Write((Vector4)value, name) },
-            { "UnityEngine.Quaternion", (writer, value, name) => writer.Write((Quaternion)value, name) },
-            { "UnityEngine.Component", (writer, value, name) => writer.Write((Component)value, name) },
-            { "UnityEngine.Color", (writer, value, name) => writer.Write((Color)value, name) },
-            { "UnityEngine.Color32", (writer, value, name) => writer.Write((Color32)value, name) },
-        };
+        private static Dictionary<string, Action<LevelEditorWriter, object, string>> writers = new Dictionary<string, Action<LevelEditorWriter, object, string>>();
 
-        private static readonly Dictionary<string, Func<LevelEditorReader, bool, object>> readers = new Dictionary<string, Func<LevelEditorReader, bool, object>>()
+        private static Dictionary<string, Func<LevelEditorReader, bool, object>> readers = new Dictionary<string, Func<LevelEditorReader, bool, object>>();
+
+        public static void SetWriterReader<T>(Action<LevelEditorWriter, object, string> writer, Func<LevelEditorReader, bool, object> reader)
         {
-            { "System.Byte", (reader, withName) => reader.ReadByte(withName) },
-            { "System.SByte", (reader, withName) => reader.ReadSByte(withName) },
-            { "System.Int16", (reader, withName) => reader.ReadShort(withName) },
-            { "System.UInt16", (reader, withName) => reader.ReadUShort(withName) },
-            { "System.Int32", (reader, withName) => reader.ReadInt(withName) },
-            { "System.UInt32", (reader, withName) => reader.ReadUInt(withName) },
-            { "System.Int64", (reader, withName) => reader.ReadLong(withName) },
-            { "System.UInt64", (reader, withName) => reader.ReadULong(withName) },
-            { "System.Single", (reader, withName) => reader.ReadFloat(withName) },
-            { "System.Double", (reader, withName) => reader.ReadDouble(withName) },
-            { "System.Decimal", (reader, withName) => reader.ReadDecimal(withName) },
-            { "System.String", (reader, withName) => reader.ReadString(withName) },
-            { "System.Char", (reader, withName) => reader.ReadChar(withName) },
-            { "System.Boolean", (reader, withName) => reader.ReadBool(withName) },
-            { "UnityEngine.Vector2", (reader, withName) => reader.ReadVector2(withName) },
-            { "UnityEngine.Vector2Int", (reader, withName) => reader.ReadVector2Int(withName) },
-            { "UnityEngine.Vector3", (reader, withName) => reader.ReadVector3(withName) },
-            { "UnityEngine.Vector3Int", (reader, withName) => reader.ReadVector3Int(withName) },
-            { "UnityEngine.Vector4", (reader, withName) => reader.ReadVector4(withName) },
-            { "UnityEngine.Quaternion", (reader, withName) => reader.ReadQuaternion(withName) },
-            { "UnityEngine.Component", (reader, withName) => reader.ReadComponent(withName) },
-            { "UnityEngine.Color", (reader, withName) => reader.ReadColor(withName) },
-            { "UnityEngine.Color32", (reader, withName) => reader.ReadColor32(withName) },
-        };
+            writers[typeof(T).FullName] = writer;
+            readers[typeof(T).FullName] = reader;
+            LevelEditorWriter<T>.WriteAction = writer;
+            LevelEditorReader<T>.ReadAction = reader;
+        }
 
         public static byte[] SerializeBinary(LevelEditorSaveData data)
         {

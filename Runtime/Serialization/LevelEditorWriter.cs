@@ -9,7 +9,11 @@ namespace Hertzole.ALE
 {
     public static class LevelEditorWriter<T>
     {
-        public static Action<LevelEditorWriter, T, string> Write { get; set; }
+        internal static Action<LevelEditorWriter, object, string> WriteAction { get; set; }
+        internal static void Write(LevelEditorWriter writer, T value, string name)
+        {
+            WriteAction.Invoke(writer, value, name);
+        }
     }
 
     public class LevelEditorWriter : IDisposable
@@ -49,7 +53,7 @@ namespace Hertzole.ALE
 
         public void Write<T>(T value, string name = "value")
         {
-            if (LevelEditorWriter<T>.Write == null)
+            if (LevelEditorWriter<T>.WriteAction == null)
             {
                 Debug.LogWarning($"No writer for '{typeof(T)}'.");
                 return;

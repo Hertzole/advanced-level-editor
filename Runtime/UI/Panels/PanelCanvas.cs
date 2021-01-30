@@ -261,10 +261,10 @@ namespace Hertzole.ALE
             UnanchoredPanelGroup = new UnanchoredPanelGroup(this);
             RectTransform.ChangePivotWithoutAffectingPosition(new Vector2(0.5f, 0.5f));
 
-            if (!GetComponent<RectMask2D>())
-            {
-                gameObject.AddComponent<RectMask2D>();
-            }
+            //if (!GetComponent<RectMask2D>())
+            //{
+            //    gameObject.AddComponent<RectMask2D>();
+            //}
 
             Size = RectTransform.rect.size;
 
