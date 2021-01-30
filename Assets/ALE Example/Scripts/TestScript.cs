@@ -140,12 +140,224 @@ public class TestScript : MonoBehaviour
 #pragma warning restore CS0414
 
 #if temp
+    // TestScript
+    // Token: 0x0600001E RID: 30 RVA: 0x00002AE4 File Offset: 0x00000CE4
+    void Template(int id, object value, bool notify)
+    {
+        bool flag = false;
+        if (id == 16)
+        {
+            if (!charTest.Equals((char)value))
+            {
+                charTest = (char)value;
+                flag = true;
+            }
+        }
+        else if (id == 0)
+        {
+            if (!testString.Equals((string)value))
+            {
+                testString = (string)value;
+                flag = true;
+            }
+        }
+        else if (id == 1)
+        {
+            if (!testByte.Equals((byte)value))
+            {
+                testByte = (byte)value;
+                flag = true;
+            }
+        }
+        else if (id == 2)
+        {
+            if (!testSByte.Equals((sbyte)value))
+            {
+                testSByte = (sbyte)value;
+                flag = true;
+            }
+        }
+        else if (id == 3)
+        {
+            if (!testShort.Equals((short)value))
+            {
+                testShort = (short)value;
+                flag = true;
+            }
+        }
+        else if (id == 4)
+        {
+            if (!testUShort.Equals((ushort)value))
+            {
+                testUShort = (ushort)value;
+                flag = true;
+            }
+        }
+        else if (id == 5)
+        {
+            if (!testInt.Equals((int)value))
+            {
+                testInt = (int)value;
+                flag = true;
+            }
+        }
+        else if (id == 6)
+        {
+            if (!testUint.Equals((uint)value))
+            {
+                testUint = (uint)value;
+                flag = true;
+            }
+        }
+        else if (id == 7)
+        {
+            if (!testLong.Equals((long)value))
+            {
+                testLong = (long)value;
+                flag = true;
+            }
+        }
+        else if (id == 8)
+        {
+            if (!testULong.Equals((ulong)value))
+            {
+                testULong = (ulong)value;
+                flag = true;
+            }
+        }
+        else if (id == 9)
+        {
+            if (!floatTest.Equals((float)value))
+            {
+                floatTest = (float)value;
+                flag = true;
+            }
+        }
+        else if (id == 10)
+        {
+            if (!doubleTest.Equals((double)value))
+            {
+                doubleTest = (double)value;
+                flag = true;
+            }
+        }
+        else if (id == 11)
+        {
+            if (!decimalTest.Equals((decimal)value))
+            {
+                decimalTest = (decimal)value;
+                flag = true;
+            }
+        }
+        else if (id == 12)
+        {
+            if (!vector2Test.Equals((Vector2)value))
+            {
+                vector2Test = (Vector2)value;
+                flag = true;
+            }
+        }
+        else if (id == 13)
+        {
+            if (!vector2IntTest.Equals((Vector2Int)value))
+            {
+                vector2IntTest = (Vector2Int)value;
+                flag = true;
+            }
+        }
+        else if (id == 14)
+        {
+            if (!vector3Test.Equals((Vector3)value))
+            {
+                vector3Test = (Vector3)value;
+                flag = true;
+            }
+        }
+        else if (id == 15)
+        {
+            if (!vector3IntTest.Equals((Vector3Int)value))
+            {
+                vector3IntTest = (Vector3Int)value;
+                flag = true;
+            }
+        }
+        else if (id == 17)
+        {
+            if (!boolTest.Equals((bool)value))
+            {
+                boolTest = (bool)value;
+                flag = true;
+            }
+        }
+        else if (id == 18)
+        {
+            if (!colorField.Equals((Color)value))
+            {
+                colorField = (Color)value;
+                flag = true;
+            }
+        }
+        else if (id == 19)
+        {
+            if (color32Field != (Color)value)
+            {
+                color32Field = (Color)value;
+                flag = true;
+            }
+        }
+        else if (id == 20)
+        {
+            if (!otherObject.Equals((Transform)value))
+            {
+                otherObject = (Transform)value;
+                flag = true;
+            }
+        }
+        else if (id == 21)
+        {
+            string[] array = Array.ConvertAll<object, string>((object[])value, (object para0) => (string)para0);
+            if (messages != array)
+            {
+                messages = array;
+                flag = true;
+            }
+        }
+        else
+        {
+            if (id != 22)
+            {
+                throw new ArgumentException(string.Format("There's no exposed property with the ID '{0}'.", id));
+            }
+            if (!structTest.Equals((MyCustomStruct)value))
+            {
+                structTest = (MyCustomStruct)value;
+                flag = true;
+            }
+        }
+        if (notify && flag)
+        {
+            Debug.Log("Changed");
+            //Action<int, object> ale_ExposedToLevelEditor_OnValueChanged = this.ALE_ExposedToLevelEditor_OnValueChanged;
+            //if (ale_ExposedToLevelEditor_OnValueChanged == null)
+            //{
+            //    return;
+            //}
+            //ale_ExposedToLevelEditor_OnValueChanged(id, value);
+        }
+    }
+
+
     private void Test(int id, object value, bool notify)
     {
         bool changed = false;
 
         if (id == 0)
         {
+            if (!charTest.Equals((char)value))
+            {
+                charTest = (char)value;
+            }
+
             if (!vector3Test.Equals((Vector3)value))
             {
                 vector3Test = (Vector3)value;
@@ -154,9 +366,17 @@ public class TestScript : MonoBehaviour
         }
         else if (id == 1)
         {
-            if (!color32Field.Equals((Color32)value))
+            if (color32Field != (Color)value)
             {
-                color32Field = (Color32)value;
+                color32Field = (Color)value;
+                changed = true;
+            }
+        }
+        else if (id == 2)
+        {
+            if (!structTest.Equals((MyCustomStruct)value))
+            {
+                structTest = (MyCustomStruct)value;
                 changed = true;
             }
         }

@@ -101,8 +101,6 @@ namespace Hertzole.ALE.Editor
             }
         }
 
-        private static int converterIndex = 0;
-
         private static EventDefinition internalOnValueChanged;
         private static FieldDefinition lockField;
         private static FieldDefinition internalOnValueChangedField;
@@ -146,8 +144,6 @@ namespace Hertzole.ALE.Editor
 
         public override (bool success, bool dirty) ProcessClass(ModuleDefinition module, TypeDefinition type)
         {
-            converterIndex = 0;
-
             List<FieldOrProperty> exposedFields = new List<FieldOrProperty>();
             List<int> usedIds = new List<int>();
             if (type.HasFields)
@@ -638,13 +634,49 @@ namespace Hertzole.ALE.Editor
 
                 if (!field.IsArray)
                 {
+                    bool isInequalityCheck = false;
+                    bool isObjectEquals = false;
+                    MethodDefinition equalityMethod = null;
+                    if (field.FieldType.Is<Color32>())
+                    {
+                        equalityMethod = module.ImportReference(typeof(Color).GetMethod("op_Inequality", new Type[] { typeof(Color), typeof(Color) })).Resolve();
+                        isInequalityCheck = true;
+                    }
+                    else if (field.FieldType.Resolve().IsSubclassOf<UnityEngine.Object>())
+                    {
+                        equalityMethod = module.ImportReference(typeof(UnityEngine.Object).GetMethod("op_Inequality", new Type[] { typeof(UnityEngine.Object), typeof(UnityEngine.Object) })).Resolve();
+                        isInequalityCheck = true;
+                    }
+                    else
+                    {
+                        if (!field.FieldTypeDefinition.TryGetMethodInBaseType("Equals", out equalityMethod, field.FieldType))
+                        {
+                            if (field.FieldTypeDefinition.TryGetMethodInBaseType("op_Inequality", out equalityMethod, field.FieldType, field.FieldType))
+                            {
+                                isInequalityCheck = true;
+                            }
+                            else
+                            {
+                                equalityMethod = module.ImportReference(typeof(object).GetMethod("Equals", new Type[] { typeof(object) })).Resolve();
+                                isObjectEquals = true;
+                            }
+                        }
+                    }
+
                     if (field.IsProperty)
                     {
                         il.Emit(OpCodes.Call, field.property.GetMethod);
                     }
                     else
                     {
-                        il.Emit(OpCodes.Ldfld, field.field);
+                        if (!isInequalityCheck)
+                        {
+                            il.Emit(field.IsValueType ? OpCodes.Ldflda : OpCodes.Ldfld, field.field);
+                        }
+                        else
+                        {
+                            il.Emit(OpCodes.Ldfld, field.field);
+                        }
                     }
 
                     if (type.Is<Color32>())
@@ -668,15 +700,23 @@ namespace Hertzole.ALE.Editor
                         il.Emit(OpCodes.Castclass, type);
                     }
 
-                    if (field.FieldType.Is<Color32>())
+                    if (isObjectEquals)
                     {
-                        il.Emit(OpCodes.Call, module.ImportReference(typeof(Color).GetMethod("op_Inequality", new Type[] { typeof(Color), typeof(Color) })));
-                        il.Emit(OpCodes.Brfalse, checkChanged);
+                        il.Emit(OpCodes.Box, field.FieldType);
+                        il.Emit(OpCodes.Constrained, field.FieldType);
                     }
-                    else if (field.FieldTypeDefinition.TryGetMethodInBaseType("op_Inequality", out MethodDefinition equalityMethod))
+
+                    if (equalityMethod != null)
                     {
-                        il.Emit(OpCodes.Call, module.ImportReference(equalityMethod));
-                        il.Emit(OpCodes.Brfalse, checkChanged);
+                        il.Emit(isObjectEquals ? OpCodes.Callvirt : OpCodes.Call, module.ImportReference(equalityMethod));
+                        if (isInequalityCheck)
+                        {
+                            il.Emit(OpCodes.Brfalse, checkChanged);
+                        }
+                        else
+                        {
+                            il.Emit(OpCodes.Brtrue, checkChanged);
+                        }
                     }
                     else
                     {
@@ -803,7 +843,7 @@ namespace Hertzole.ALE.Editor
                 il.InsertAfter(nameCheckFalse[i], Instruction.Create(exposedFields[i].id == 0 ? OpCodes.Brtrue_S : OpCodes.Bne_Un_S, firsts[i]));
             }
 
-            method.Body.Optimize();
+            //method.Body.Optimize();
 
             return method;
         }
