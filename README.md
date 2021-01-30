@@ -36,7 +36,7 @@ What needs to be done before 1.0.0 verified.
 - [x] Save all exposed values in play mode
 - [ ] Auto serialize unknown types
 - [ ] Auto expose unknown types
-- [ ] Integrate custom serializers
+- [x] Integrate custom serializers
 - [ ] Menu items
 - [ ] Custom component wrappers
 - [x] Serialize arrays

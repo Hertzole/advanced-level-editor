@@ -16,8 +16,6 @@ namespace Hertzole.ALE.Editor
         {
             bool dirty = false;
 
-            TypeDefinition readerWritersType = null;
-
             foreach (ModuleDefinition module in assembly.Modules)
             {
                 IEnumerable<TypeDefinition> types = module.GetTypes();
@@ -37,15 +35,6 @@ namespace Hertzole.ALE.Editor
                             if (!processors[i].IsValidClass(type))
                             {
                                 continue;
-                            }
-
-                            if (i == 0 && readerWritersType == null) // Writer/Reader processor
-                            {
-                                readerWritersType = new TypeDefinition("Hertzole.ALE", "GeneratedLevelEditorCode", TypeAttributes.AutoClass |
-                                    TypeAttributes.Abstract | TypeAttributes.Sealed | TypeAttributes.BeforeFieldInit | TypeAttributes.Public);
-
-                                module.Types.Add(readerWritersType);
-                                LevelEditorReaderWriterProcessor.generatedClass = readerWritersType;
                             }
 
                             (bool success, bool dirtyClass) = processors[i].ProcessClass(module, type);

@@ -1,10 +1,62 @@
 ﻿#define temp
 
 using Hertzole.ALE;
-using UnityEngine;
-#if temp
 using System;
-#endif
+using UnityEngine;
+
+[Serializable]
+public struct MyCustomStruct : IExposedToLevelEditor
+{
+    public string str;
+
+    public string ComponentName { get { return "My Custom Struct"; } }
+
+    public string TypeName { get { return typeof(MyCustomStruct).FullName; } }
+
+    public int Order { get { return 0; } }
+
+    public event Action<int, object> OnValueChanged;
+
+    public ExposedProperty[] GetProperties()
+    {
+        return new ExposedProperty[1]
+        {
+            new ExposedProperty(0, typeof(string), "str", null, true, false)
+        };
+    }
+
+    public object GetValue(int id)
+    {
+        if (id == 0)
+        {
+            return str;
+        }
+        else
+        {
+            throw new ArgumentException("no");
+        }
+    }
+
+    public Type GetValueType(int id)
+    {
+        if (id == 0)
+        {
+            return typeof(string);
+        }
+        else
+        {
+            throw new ArgumentException("no");
+        }
+    }
+
+    public void SetValue(int id, object value, bool notify)
+    {
+        if (id == 0)
+        {
+            str = (string)value;
+        }
+    }
+}
 
 public class TestScript : MonoBehaviour
 {
@@ -79,6 +131,9 @@ public class TestScript : MonoBehaviour
     [SerializeField]
     [ExposeToLevelEditor(21)]
     private string[] messages = null;
+    [SerializeField]
+    [ExposeToLevelEditor(22)]
+    private MyCustomStruct structTest = new MyCustomStruct();
 
     private int[] ints = null;
     private Color32[] colors = null;
@@ -89,7 +144,23 @@ public class TestScript : MonoBehaviour
     {
         bool changed = false;
 
-        if (id == 3)
+        if (id == 0)
+        {
+            if (!vector3Test.Equals((Vector3)value))
+            {
+                vector3Test = (Vector3)value;
+                changed = true;
+            }
+        }
+        else if (id == 1)
+        {
+            if (!color32Field.Equals((Color32)value))
+            {
+                color32Field = (Color32)value;
+                changed = true;
+            }
+        }
+        else if (id == 3)
         {
             if (otherObject != (Transform)value)
             {
