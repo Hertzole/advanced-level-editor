@@ -70,6 +70,12 @@ namespace Hertzole.ALE
             loadLocation = path;
             LevelEditorSaveData data;
 
+            if (!File.Exists(path))
+            {
+                Debug.LogError($"There's no file with path '{path}'.");
+                return null;
+            }
+
 #if ALE_JSON
             if (saveAsJson)
             {
@@ -112,7 +118,13 @@ namespace Hertzole.ALE
 
         public virtual void SaveLevel(LevelEditorSaveData saveData)
         {
-            string saveLocation = BuildSaveLocation(baseSaveLocation, saveSuffix) + saveData.name + ToFileExtension(fileExtension);
+            string saveFolder = BuildSaveLocation(baseSaveLocation, saveSuffix);
+            string saveLocation = saveFolder + saveData.name + ToFileExtension(fileExtension);
+
+            if (!Directory.Exists(saveFolder))
+            {
+                Directory.CreateDirectory(saveFolder);
+            }
 
             LevelSavingLoadingArgs args = new LevelSavingLoadingArgs(saveData, saveLocation);
             OnLevelSaving?.Invoke(this, args);
