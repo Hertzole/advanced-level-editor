@@ -5,6 +5,7 @@ using UnityEngine.Assertions;
 
 namespace Hertzole.ALE
 {
+    //TODO: Add option to generate icons async.
     public class LevelEditorResourceView : MonoBehaviour, ILevelEditorResourceView
     {
         [Header("Folders")]
