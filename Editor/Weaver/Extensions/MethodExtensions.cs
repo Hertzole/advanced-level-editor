@@ -146,7 +146,7 @@ namespace Hertzole.ALE.Editor
             return false;
         }
 
-        public static bool TryGetMethodInBaseType(this TypeDefinition type, string methodName, out MethodDefinition method)
+        public static bool TryGetMethodInBaseType(this TypeDefinition type, string methodName, out MethodDefinition method, params TypeReference[] parameterTypes)
         {
             method = null;
             TypeDefinition typedef = type;
@@ -154,10 +154,23 @@ namespace Hertzole.ALE.Editor
             {
                 for (int i = 0; i < typedef.Methods.Count; i++)
                 {
-                    if (typedef.Methods[i].Name == methodName)
+                    if (typedef.Methods[i].Name == methodName && typedef.Methods[i].Parameters.Count == parameterTypes.Length)
                     {
-                        method = typedef.Methods[i];
-                        return true;
+                        bool validParameters = false;
+                        for (int j = 0; j < typedef.Methods[i].Parameters.Count; j++)
+                        {
+                            if (typedef.Methods[i].Parameters[j].ParameterType.FullName == parameterTypes[j].FullName)
+                            {
+                                validParameters = true;
+                                break;
+                            }
+                        }
+
+                        if (validParameters)
+                        {
+                            method = typedef.Methods[i];
+                            return true;
+                        }
                     }
                 }
 
