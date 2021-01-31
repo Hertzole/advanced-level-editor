@@ -2,18 +2,24 @@
 
 namespace Hertzole.ALE
 {
-    public class LevelEventArgs : EventArgs { }
+    public class LevelEventArgs : EventArgs
+    {
+        public LevelEditorSaveData Data { get; private set; }
+
+        public LevelEventArgs(LevelEditorSaveData data)
+        {
+            Data = data;
+        }
+    }
 
     public class LevelSavingLoadingArgs : LevelEventArgs
     {
-        public LevelEditorSaveData Data { get; private set; }
         public string Location { get; private set; }
 
         public bool Cancel { get; set; }
 
-        public LevelSavingLoadingArgs(LevelEditorSaveData data, string location)
+        public LevelSavingLoadingArgs(LevelEditorSaveData data, string location) : base(data)
         {
-            Data = data;
             Location = location;
         }
     }
