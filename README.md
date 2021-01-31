@@ -40,6 +40,8 @@ What needs to be done before 1.0.0 verified.
 - [ ] Menu items
 - [ ] Custom component wrappers
 - [x] Serialize arrays
+- [ ] Serialize lists
+- [ ] Serialize dictionary
 - [ ] Resource limit support
 - [ ] Generate resource icons at build time
 
@@ -110,7 +112,7 @@ To serialize values you need to have a writer and a reader that the serializer w
 // Writer extension needs to be first.
 // The type and value needs to be second.
 // String name needs to be third.
-public static void MyWriter(this NetworkWriter writer, MyStruct value, string name)
+public static void MyWriter(this LevelEditorWriter writer, MyStruct value, string name)
 {
 	writer.WriteStartObject(name);
 	writer.Write(value.MyValue);
@@ -120,7 +122,7 @@ public static void MyWriter(this NetworkWriter writer, MyStruct value, string na
 // Reader extension needs to be first.
 // withName needs to be second. It's used to read the property name if needed.
 // You need to return the type of the value you want to make a reader for.
-public static MyStruct MyReader(this NetworkReader reader, bool withName)
+public static MyStruct MyReader(this LevelEditorReader reader, bool withName)
 {
 	MyStruct myStruct = new MyStruct();
 	reader.ReadStartObject(withName);
