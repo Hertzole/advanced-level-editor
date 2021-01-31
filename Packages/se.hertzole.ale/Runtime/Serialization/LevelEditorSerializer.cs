@@ -244,28 +244,7 @@ namespace Hertzole.ALE
                         writer.Write(prop.id, "id"); // Write property name.
                         writer.Write(typePalette[prop.typeName], "type"); // Write type name.
                         writer.Write(prop.isArray, "isArray"); // Write if it's an array.
-                        if (writers.TryGetValue(prop.typeName, out Action<LevelEditorWriter, object, string> typeWriter))
-                        {
-                            if (prop.isArray)
-                            {
-                                object[] valueArray = (object[])prop.value;
-
-                                writer.WriteStartArray(valueArray.Length);
-                                for (int v = 0; v < valueArray.Length; v++)
-                                {
-                                    typeWriter.Invoke(writer, valueArray[v], string.Empty);
-                                }
-                                writer.WriteEndArray();
-                            }
-                            else
-                            {
-                                typeWriter.Invoke(writer, prop.value, "value");
-                            }
-                        }
-                        else
-                        {
-                            Debug.LogWarning($"No writer for type '{prop.typeName}'.");
-                        }
+                        WriteCustomType(writer, prop.typeName, prop.value, prop.isArray);
                         writer.WriteEndObject(); // Property
                     }
                     writer.WriteEndArray(); // Properties
@@ -275,14 +254,52 @@ namespace Hertzole.ALE
                 writer.WriteEndObject(); // Object
             }
 
-            writer.WriteEndArray();
+            writer.WriteEndArray(); // Objects
+
+            writer.WriteStartArray(data.customData.Count, "customData");
+
+            foreach (KeyValuePair<string, LevelEditorCustomData> cData in data.customData)
+            {
+                writer.WriteStartObject();
+                writer.Write(cData.Key, "key");
+                writer.Write(typePalette[cData.Value.type], "type");
+                writer.Write(cData.Value.isArray, "isArray");
+
+                WriteCustomType(writer, cData.Value.type, cData.Value.value, cData.Value.isArray);
+
+                writer.WriteEndObject();
+            }
+
+            writer.WriteEndArray(); // Custom data
 
             writer.WriteEndObject(); // Data
         }
 
+        private static void WriteCustomType(LevelEditorWriter writer, string type, object value, bool isArray)
+        {
+            if (TryGetWriter(type, out Action<LevelEditorWriter, object, string> typeWriter))
+            {
+                if (isArray)
+                {
+                    object[] valueArray = (object[])value;
+
+                    writer.WriteStartArray(valueArray.Length);
+                    for (int v = 0; v < valueArray.Length; v++)
+                    {
+                        typeWriter.Invoke(writer, valueArray[v], string.Empty);
+                    }
+                    writer.WriteEndArray();
+                }
+                else
+                {
+                    typeWriter.Invoke(writer, value, "value");
+                }
+            }
+        }
+
         private static LevelEditorSaveData Deserialize(LevelEditorReader reader)
         {
-            LevelEditorSaveData data = new LevelEditorSaveData();
+            LevelEditorSaveData data = new LevelEditorSaveData(null);
 
             reader.ReadObjectStart();
             data.name = reader.ReadString();
@@ -335,7 +352,7 @@ namespace Hertzole.ALE
                             isArray = isArray
                         };
 
-                        if (readers.TryGetValue(prop.typeName, out Func<LevelEditorReader, bool, object> typeReader))
+                        if (TryGetReader(prop.typeName, out Func<LevelEditorReader, bool, object> typeReader))
                         {
                             if (isArray)
                             {
@@ -364,10 +381,6 @@ namespace Hertzole.ALE
                                 prop.value = typeReader.Invoke(reader, true);
                             }
                         }
-                        else
-                        {
-                            Debug.LogWarning($"No reader for type '{prop.typeName}'.");
-                        }
 
                         properties.Add(prop);
 
@@ -386,9 +399,77 @@ namespace Hertzole.ALE
                 return true;
             });
 
+            reader.ReadArray(true, (i) =>
+            {
+                string key = reader.ReadString();
+                string type = typePalette[reader.ReadInt()];
+                bool isArray = reader.ReadBool();
+                object value = null;
+
+                if (TryGetReader(type, out Func<LevelEditorReader, bool, object> typeReader))
+                {
+                    if (isArray)
+                    {
+                        List<object> objectArray = new List<object>();
+
+                        reader.ReadArray(false, (x) =>
+                        {
+                            object value = typeReader.Invoke(reader, false);
+
+#if ALE_JSON
+                            if (reader.IsJson && reader.Json.TokenType == JsonToken.EndArray)
+                            {
+                                return false;
+                            }
+#endif
+
+                            objectArray.Add(value);
+
+                            return true;
+                        });
+
+                        value = objectArray.ToArray();
+                    }
+                    else
+                    {
+                        value = typeReader.Invoke(reader, true);
+                    }
+                }
+
+                data.customData.Add(key, new LevelEditorCustomData(type, isArray, value));
+
+                return true;
+            });
+
             reader.ReadObjectEnd(); // Data end
 
             return data;
+        }
+
+        private static bool TryGetWriter(string type, out Action<LevelEditorWriter, object, string> writer)
+        {
+            if (writers.TryGetValue(type, out writer))
+            {
+                return true;
+            }
+            else
+            {
+                Debug.LogWarning($"No writer for type '{type}'.");
+                return false;
+            }
+        }
+
+        private static bool TryGetReader(string type, out Func<LevelEditorReader, bool, object> reader)
+        {
+            if (readers.TryGetValue(type, out reader))
+            {
+                return true;
+            }
+            else
+            {
+                Debug.LogWarning($"No reader for type '{type}'.");
+                return false;
+            }
         }
 
         private static void ReadPalette(LevelEditorReader reader, Dictionary<int, string> palette)

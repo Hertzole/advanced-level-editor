@@ -69,6 +69,7 @@ The supported inspector fields.
 - [x] Vector3(int) field
 - [ ] Vector4 field
 - [x] Object reference field
+- [ ] Resource reference
 - [x] Color field
 - [ ] Arrays
 - [ ] Nested classes/structs

@@ -92,13 +92,13 @@ namespace Hertzole.ALE
             if (args.Cancel)
             {
                 LevelEditorLogger.Log("LevelEditorSaveManager loading was canceled.");
-                return new LevelEditorSaveData();
+                return new LevelEditorSaveData(null);
             }
 
             realObjectManager.DeleteAllObjects();
             realObjectManager.CreateObjectsFromSaveData(data);
 
-            OnLevelLoaded?.Invoke(this, new LevelEventArgs());
+            OnLevelLoaded?.Invoke(this, new LevelEventArgs(data));
 
             return data;
         }
@@ -122,22 +122,24 @@ namespace Hertzole.ALE
                 return;
             }
 
+#if ALE_JSON
+            if (saveAsJson)
+            {
+                string json = LevelEditorSerializer.SerializeJson(saveData, prettyPrint);
+                File.WriteAllText(saveLocation, json);
+            }
+            else
+#endif
+            {
+                byte[] data = LevelEditorSerializer.SerializeBinary(saveData);
+                File.WriteAllBytes(saveLocation, data);
+            }
+
+            OnLevelSaved?.Invoke(this, new LevelEventArgs(saveData));
+
             try
             {
-#if ALE_JSON
-                if (saveAsJson)
-                {
-                    string json = LevelEditorSerializer.SerializeJson(saveData, prettyPrint);
-                    File.WriteAllText(saveLocation, json);
-                }
-                else
-#endif
-                {
-                    byte[] data = LevelEditorSerializer.SerializeBinary(saveData);
-                    File.WriteAllBytes(saveLocation, data);
-                }
 
-                OnLevelSaved?.Invoke(this, new LevelEventArgs());
             }
             catch (Exception ex)
             {

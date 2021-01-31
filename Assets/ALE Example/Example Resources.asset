@@ -85,6 +85,15 @@ MonoBehaviour:
     asset: {fileID: 0}
     treeID: 1
     treeDepth: 0
+  - name: Plane
+    id: plane
+    customIcon: 0
+    icon: {fileID: 0}
+    limit: 0
+    hidden: 0
+    asset: {fileID: 2100341690240926575, guid: 6b832d86e794eae4a9baccc448024930, type: 3}
+    treeID: 13
+    treeDepth: 1
   - name: Cube
     id: cube
     customIcon: 0
