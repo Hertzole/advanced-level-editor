@@ -11,7 +11,7 @@ ALE also does some "magic" for you to simplify your life. It uses Mono.Cecil to 
 
 ## ✨ The magic
 As mentioned above, ALE does some "magic" for you. I've tried to avoid reflection as much as possible since it can be rather slow and instead opted to generate code during compile time, IL weaving if you will. The best example of this is the `ExposeToLevelEditor` attribute that injects `IExposeToLevelEditor` in your scripts.  
-In the future, the same will magic will be applied to serializers and much more. It's coming eventually™.
+In the future, the same will magic will be applied to much more. It's coming eventually™.
 
 ## ✅ TODO List
 ALE is still in EARLY development. There's still a lot to do and it's nowhere close to finish. But it should be useable now. Anyways, here are some things that I need to do and the things that are finished.
@@ -70,6 +70,7 @@ The supported inspector fields.
 - [x] Color field
 - [ ] Arrays
 - [ ] Nested classes/structs
+- [ ] Enum field
 
 ## 📦 Installation 
 #### Without package manager
@@ -101,6 +102,34 @@ public float myField;
 public string MyProperty { get; set; }
 ```
 **NOTICE! The IDs need to be unique and they are used for saving levels and fetching values! You should not change these after creating your exposed field!**
+
+#### Write custom writers and readers for serialization
+To serialize values you need to have a writer and a reader that the serializer will use. You can create them easily by creating extension methods for `LevelEditorWriter` and `LevelEditorReader`. If you're familiar with creating serializers in Json.Net you'll probably be familiar with how to create these. 
+
+```cs
+// Writer extension needs to be first.
+// The type and value needs to be second.
+// String name needs to be third.
+public static void MyWriter(this NetworkWriter writer, MyStruct value, string name)
+{
+	writer.WriteStartObject(name);
+	writer.Write(value.MyValue);
+	writer.WriteEndObject();
+}
+
+// Reader extension needs to be first.
+// withName needs to be second. It's used to read the property name if needed.
+// You need to return the type of the value you want to make a reader for.
+public static MyStruct MyReader(this NetworkReader reader, bool withName)
+{
+	MyStruct myStruct = new MyStruct();
+	reader.ReadStartObject(withName);
+	myStruct.MyValue = reader.ReadString();
+	reader.ReadEndObject();
+	
+	return myStruct;
+}
+```
 
 ## ❤ Credits
 [yasirkula](https://github.com/yasirkula) - [Dynamic Panels for Unity3D](https://github.com/yasirkula/UnityDynamicPanels) for panels  
