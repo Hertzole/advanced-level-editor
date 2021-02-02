@@ -1,7 +1,5 @@
 # Advanced Level Editor (ALE)
 
-## ❗ SERIALIZATION IS BEING REWRITTEN! USE AT YOUR OWN RISK! ❗
-
 ⚠ **ALE IS IN VERY EARLY DEVELOPMENT! ANYTHING CAN CHANGE SUDDENLY! USE AT YOUR OWN RISK** ⚠
 
 ## ❓ What is it?
@@ -110,7 +108,6 @@ public string MyProperty { get; set; }
 
 #### Write custom writers and readers for serialization
 TODO
-```
 
 ## ❤ Credits
 [yasirkula](https://github.com/yasirkula) - [Dynamic Panels for Unity3D](https://github.com/yasirkula/UnityDynamicPanels) for panels  
