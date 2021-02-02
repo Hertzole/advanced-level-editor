@@ -700,7 +700,7 @@ namespace Hertzole.ALE.Editor
                         il.Emit(OpCodes.Castclass, type);
                     }
 
-                    if (isObjectEquals)
+                    if (isObjectEquals && field.IsValueType)
                     {
                         il.Emit(OpCodes.Box, field.FieldType);
                         il.Emit(OpCodes.Constrained, field.FieldType);
@@ -787,10 +787,12 @@ namespace Hertzole.ALE.Editor
                         il.Emit(OpCodes.Ldfld, field.field);
                     }
                     il.Append(GetLdloc(localIndex));
-                    il.Emit(OpCodes.Beq_S, checkChanged);
+                    Debug.Log(baseType.Name + " " + checkChanged + " " + il.Body.Instructions[il.Body.Instructions.Count - 1]);
+                    //il.Emit(OpCodes.Beq_S, checkChanged);
+                    il.Append(Instruction.Create(OpCodes.Beq, checkChanged));
 
                     il.Emit(OpCodes.Ldarg_0);
-                    il.Emit(OpCodes.Ldloc_1);
+                    il.Append(GetLdloc(localIndex));
                 }
 
                 if (field.IsProperty)
@@ -819,6 +821,7 @@ namespace Hertzole.ALE.Editor
             firsts.Add(noExposedFields);
 
             il.Append(checkChanged);
+            Debug.Log(baseType.Name + " Added check changed");
             il.Emit(OpCodes.Ldloc_0);
             il.Emit(OpCodes.And);
             il.Emit(OpCodes.Brfalse_S, ret);
@@ -843,7 +846,7 @@ namespace Hertzole.ALE.Editor
                 il.InsertAfter(nameCheckFalse[i], Instruction.Create(exposedFields[i].id == 0 ? OpCodes.Brtrue_S : OpCodes.Bne_Un_S, firsts[i]));
             }
 
-            //method.Body.Optimize();
+            method.Body.Optimize();
 
             return method;
         }

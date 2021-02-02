@@ -52,6 +52,7 @@ namespace Hertzole.ALE
             LevelEditorReader<T>.ReadAction = reader;
         }
 
+        [System.Obsolete("Use LevelEditorBinarySerializer instead.")]
         public static byte[] SerializeBinary(LevelEditorSaveData data)
         {
             MemoryStream stream = new MemoryStream();
@@ -67,8 +68,9 @@ namespace Hertzole.ALE
         }
 
 #if !ALE_JSON
-        [Obsolete("SerializeJson can only be used with the Json.Net package. Install 'com.unity.nuget-newtonsoft-json' package to use Json.")]
+        [Obsolete("SerializeJson can only be used with the Json.Net package. Install 'com.unity.nuget.newtonsoft-json' package to use Json.")]
 #endif
+        [System.Obsolete("Use LevelEditorJsonSerializer instead.")]
         public static string SerializeJson(LevelEditorSaveData data, bool prettyPrint = false)
         {
 #if ALE_JSON
@@ -101,7 +103,7 @@ namespace Hertzole.ALE
         }
 
 #if !ALE_JSON
-        [Obsolete("SerializeJson can only be used with the Json.Net package. Install 'com.unity.nuget-newtonsoft-json' package to use Json.")]
+        [Obsolete("SerializeJson can only be used with the Json.Net package. Install 'com.unity.nuget.newtonsoft-json' package to use Json.")]
 #endif
         public static LevelEditorSaveData DeserializeJson(string json)
         {
@@ -281,6 +283,7 @@ namespace Hertzole.ALE
             {
                 if (isArray)
                 {
+                    Debug.Log(value);
                     object[] valueArray = (object[])value;
 
                     writer.WriteStartArray(valueArray.Length);
@@ -360,14 +363,20 @@ namespace Hertzole.ALE
 
                                 reader.ReadArray(false, (x) =>
                                 {
-                                    object value = typeReader.Invoke(reader, false);
-
 #if ALE_JSON
                                     if (reader.IsJson && reader.Json.TokenType == JsonToken.EndArray)
                                     {
                                         return false;
                                     }
 #endif
+                                    object value = typeReader.Invoke(reader, false);
+#if ALE_JSON
+                                    if (reader.IsJson && reader.Json.TokenType == JsonToken.EndArray)
+                                    {
+                                        return false;
+                                    }
+#endif
+
 
                                     objectArray.Add(value);
 
