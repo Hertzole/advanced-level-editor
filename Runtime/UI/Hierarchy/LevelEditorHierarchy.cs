@@ -14,6 +14,8 @@ namespace Hertzole.ALE
 
         private ILevelEditor levelEditor;
 
+        public HierarchyTree TreeControl { get { return treeControl; } set { treeControl = value; } }
+
         private void Awake()
         {
             treeControl.Initialize(
@@ -50,6 +52,8 @@ namespace Hertzole.ALE
             levelEditor.ObjectManager.OnCreatedObject += OnObjectManagerCreatedObject;
             levelEditor.ObjectManager.OnDeletedObject += OnObjectManagerDeleteObject;
             levelEditor.Selection.OnSelectionChanged += OnSelectionChanged;
+
+            treeControl.SetItems(levelEditor.ObjectManager.GetAllObjects());
         }
 
         private void OnLevelLoading(object sender, LevelSavingLoadingArgs e)
@@ -59,6 +63,8 @@ namespace Hertzole.ALE
 
         private void OnLevelLoaded(object sender, LevelEventArgs e)
         {
+            treeControl.ClearItems();
+
             loadingLevel = false;
             List<ILevelEditorObject> allObjects = levelEditor.ObjectManager.GetAllObjects();
             for (int i = 0; i < allObjects.Count; i++)

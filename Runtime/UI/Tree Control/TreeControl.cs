@@ -31,6 +31,7 @@ namespace Hertzole.ALE
         protected RecycledListView listView = null;
 
         private bool isDragging = false;
+        protected bool initialized = false;
 
         private float pointerLastYPos = 0f;
         private float nextPointerValidation = 0;
@@ -67,6 +68,17 @@ namespace Hertzole.ALE
             {
                 dragDropTargetVisual.gameObject.SetActive(false);
             }
+        }
+
+        protected virtual void InternalInitialize()
+        {
+            if (initialized)
+            {
+                Debug.LogWarning(gameObject.name + " has already been initialized.");
+                return;
+            }
+
+            initialized = true;
         }
 
         protected virtual float GetItemHeight() { return 0f; }
@@ -212,6 +224,12 @@ namespace Hertzole.ALE
             }
 
             listView.RemoveItem(item, updateList);
+        }
+
+        public void ClearItems()
+        {
+            SelectItemInternal(null, true);
+            listView.ClearItems();
         }
 
         public void RebindItem(object item)
@@ -483,10 +501,18 @@ namespace Hertzole.ALE
         {
             this.getParent = getParent;
             this.getChildren = getChildren;
+
+            InternalInitialize();
         }
 
         protected override void SelectItemInternal(object item, bool updateUI = true)
         {
+            if (!initialized)
+            {
+                Debug.LogError($"{gameObject.name} needs to be initialized first! Call the Initialize method.", gameObject);
+                return;
+            }
+
             if (selectedItem == item)
             {
                 return;
