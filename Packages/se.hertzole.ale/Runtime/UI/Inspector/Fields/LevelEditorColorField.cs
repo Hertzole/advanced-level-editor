@@ -66,7 +66,7 @@ namespace Hertzole.ALE
                 colorImage.color = new Color32(color32.r, color32.g, color32.b, 255);
                 if (alphaSlider != null)
                 {
-                    alphaSlider.value = color32.a / 1f;
+                    alphaSlider.SetValueWithoutNotify(color32.a / 255f);
                 }
             }
         }

@@ -634,31 +634,29 @@ namespace Hertzole.ALE.Editor
 
                 if (!field.IsArray)
                 {
-                    bool isInequalityCheck = false;
+                    bool isInequalityCheck = true;
                     bool isObjectEquals = false;
                     MethodDefinition equalityMethod = null;
                     if (field.FieldType.Is<Color32>())
                     {
                         equalityMethod = module.ImportReference(typeof(Color).GetMethod("op_Inequality", new Type[] { typeof(Color), typeof(Color) })).Resolve();
-                        isInequalityCheck = true;
                     }
                     else if (field.FieldType.Resolve().IsSubclassOf<UnityEngine.Object>())
                     {
                         equalityMethod = module.ImportReference(typeof(UnityEngine.Object).GetMethod("op_Inequality", new Type[] { typeof(UnityEngine.Object), typeof(UnityEngine.Object) })).Resolve();
-                        isInequalityCheck = true;
                     }
                     else
                     {
-                        if (!field.FieldTypeDefinition.TryGetMethodInBaseType("Equals", out equalityMethod, field.FieldType))
+                        if (!field.FieldTypeDefinition.TryGetMethodInBaseType("op_Inequality", out equalityMethod, field.FieldType, field.FieldType))
                         {
-                            if (field.FieldTypeDefinition.TryGetMethodInBaseType("op_Inequality", out equalityMethod, field.FieldType, field.FieldType))
+                            if (field.FieldTypeDefinition.TryGetMethodInBaseType("Equals", out equalityMethod, field.FieldType))
                             {
-                                isInequalityCheck = true;
+                                isInequalityCheck = false;
                             }
                             else
                             {
                                 equalityMethod = module.ImportReference(typeof(object).GetMethod("Equals", new Type[] { typeof(object) })).Resolve();
-                                isObjectEquals = true;
+                                isObjectEquals = false;
                             }
                         }
                     }
@@ -676,6 +674,19 @@ namespace Hertzole.ALE.Editor
                         else
                         {
                             il.Emit(OpCodes.Ldfld, field.field);
+                        }
+                    }
+
+                    int varLoc = method.Body.Variables.Count;
+
+                    if (field.IsProperty && field.IsValueType && !isInequalityCheck)
+                    {
+                        if (field.property.TryGetReturnField(out FieldDefinition propertyReturnField))
+                        {
+                            VariableDefinition propertyVar = new VariableDefinition(propertyReturnField.FieldType);
+                            method.Body.Variables.Add(propertyVar);
+                            il.Append(GetStloc(varLoc));
+                            il.Emit(OpCodes.Ldloca_S, propertyVar);
                         }
                     }
 
@@ -787,7 +798,6 @@ namespace Hertzole.ALE.Editor
                         il.Emit(OpCodes.Ldfld, field.field);
                     }
                     il.Append(GetLdloc(localIndex));
-                    Debug.Log(baseType.Name + " " + checkChanged + " " + il.Body.Instructions[il.Body.Instructions.Count - 1]);
                     //il.Emit(OpCodes.Beq_S, checkChanged);
                     il.Append(Instruction.Create(OpCodes.Beq, checkChanged));
 
@@ -821,7 +831,6 @@ namespace Hertzole.ALE.Editor
             firsts.Add(noExposedFields);
 
             il.Append(checkChanged);
-            Debug.Log(baseType.Name + " Added check changed");
             il.Emit(OpCodes.Ldloc_0);
             il.Emit(OpCodes.And);
             il.Emit(OpCodes.Brfalse_S, ret);

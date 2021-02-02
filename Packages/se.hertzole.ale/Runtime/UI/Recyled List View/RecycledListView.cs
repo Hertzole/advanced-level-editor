@@ -94,6 +94,12 @@ namespace Hertzole.ALE
             }
         }
 
+        public void ClearItems()
+        {
+            itemsSource.Clear();
+            UpdateList(true);
+        }
+
         public void MoveItem(object item, int index, bool updateList = true)
         {
             int oldIndex = itemsSource.IndexOf(item);
