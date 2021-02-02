@@ -6,6 +6,7 @@ public static class CustomWriters
     {
         writer.WriteStartObject(name);
         writer.Write(value.str, "str");
+        writer.Write(value.vec, "vec");
         writer.WriteEndObject();
     }
 
@@ -15,7 +16,8 @@ public static class CustomWriters
 
         MyCustomStruct val = new MyCustomStruct
         {
-            str = reader.ReadString()
+            str = reader.ReadString(),
+            vec = reader.ReadVector3()
         };
         reader.ReadObjectEnd();
 

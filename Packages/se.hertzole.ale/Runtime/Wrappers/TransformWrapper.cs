@@ -55,7 +55,7 @@ namespace Hertzole.ALE
                 case 2:
                     return transform.localScale;
                 case 3:
-                    return transform.parent;
+                    return transform.parent == null ? null : transform.parent;
                 default:
                     throw new ArgumentException($"No exposed property with the ID '{id}'.");
             }

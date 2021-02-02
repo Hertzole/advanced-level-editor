@@ -5,9 +5,16 @@ using System;
 using UnityEngine;
 
 [Serializable]
-public struct MyCustomStruct : IExposedToLevelEditor
+public class MyCustomStruct : IExposedToLevelEditor
 {
+    [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
+    private static void AddToJson()
+    {
+        LevelEditorJsonSerializer.AddType<MyCustomStruct>();
+    }
+
     public string str;
+    public Vector3 vec;
 
     public string ComponentName { get { return "My Custom Struct"; } }
 
@@ -131,6 +138,9 @@ public class TestScript : MonoBehaviour
     [SerializeField]
     [ExposeToLevelEditor(21)]
     private string[] messages = null;
+    [SerializeField]
+    [ExposeToLevelEditor(33)]
+    private MyCustomStruct[] structTestArray = null;
     [SerializeField]
     [ExposeToLevelEditor(22)]
     private MyCustomStruct structTest = new MyCustomStruct();
@@ -319,6 +329,15 @@ public class TestScript : MonoBehaviour
             if (messages != array)
             {
                 messages = array;
+                flag = true;
+            }
+        }
+        else if (id == 55)
+        {
+            MyCustomStruct[] array = Array.ConvertAll((object[])value, (object item) => (MyCustomStruct)item);
+            if (structTestArray != array)
+            {
+                structTestArray = array;
                 flag = true;
             }
         }

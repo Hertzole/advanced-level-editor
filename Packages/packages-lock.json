@@ -122,7 +122,8 @@
       "depth": 0,
       "source": "embedded",
       "dependencies": {
-        "nuget.mono-cecil": "0.1.6-preview"
+        "nuget.mono-cecil": "0.1.6-preview",
+        "com.unity.nuget.newtonsoft-json": "2.0.0"
       }
     },
     "com.unity.modules.ai": {

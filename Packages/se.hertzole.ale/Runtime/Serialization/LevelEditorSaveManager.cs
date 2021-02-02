@@ -17,10 +17,10 @@ namespace Hertzole.ALE
         [SerializeField]
         private string saveSuffix = "Saved Levels";
         [SerializeField]
-        private string fileExtension = ".bin";
+        private string fileExtension = ".json";
 #if ALE_JSON
         [SerializeField]
-        private bool saveAsJson = false;
+        private bool saveAsJson = true;
         [SerializeField]
         private bool prettyPrint = false;
 #endif
@@ -34,6 +34,11 @@ namespace Hertzole.ALE
 
         public event EventHandler<LevelEventArgs> OnLevelSaved;
         public event EventHandler<LevelEventArgs> OnLevelLoaded;
+
+        public struct Temp
+        {
+            public Vector3 value;
+        }
 
         private void Awake()
         {
@@ -79,12 +84,14 @@ namespace Hertzole.ALE
 #if ALE_JSON
             if (saveAsJson)
             {
-                data = LevelEditorSerializer.DeserializeJson(File.ReadAllText(path));
+                data = LevelEditorJsonSerializer.DeserializeJson(File.ReadAllText(path));
             }
             else
 #endif
             {
-                data = LevelEditorSerializer.DeserializeBinary(File.ReadAllBytes(path));
+                Debug.Log("Binary serialization is not yet supported. Please use JSON for now.");
+                return null;
+                //data = LevelEditorSerializer.DeserializeBinary(File.ReadAllBytes(path));
             }
 
             return LoadLevel(data);
@@ -137,14 +144,16 @@ namespace Hertzole.ALE
 #if ALE_JSON
             if (saveAsJson)
             {
-                string json = LevelEditorSerializer.SerializeJson(saveData, prettyPrint);
+                //string json = LevelEditorSerializer.SerializeJson(saveData, prettyPrint);
+                string json = LevelEditorJsonSerializer.SerializeJson(saveData, prettyPrint);
                 File.WriteAllText(saveLocation, json);
             }
             else
 #endif
             {
-                byte[] data = LevelEditorSerializer.SerializeBinary(saveData);
-                File.WriteAllBytes(saveLocation, data);
+                Debug.LogError("Serialize binary is not yet supported. Please use JSON serialization.");
+                //byte[] data = LevelEditorSerializer.SerializeBinary(saveData);
+                //File.WriteAllBytes(saveLocation, data);
             }
 
             OnLevelSaved?.Invoke(this, new LevelEventArgs(saveData));

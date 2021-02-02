@@ -131,3 +131,11 @@ MonoBehaviour:
     rgba: 4278255360
   otherObject: {fileID: 0}
   messages: []
+  structTest:
+    str: 
+    vec: {x: 0, y: 0, z: 0}
+  structTestArray:
+  - str: aaaaaa
+    vec: {x: 0, y: 1, z: 0}
+  - str: bbbbbbb
+    vec: {x: 0, y: 4, z: 0}

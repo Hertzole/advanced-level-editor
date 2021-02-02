@@ -19,9 +19,9 @@ In the future, the same will magic will be applied to much more. It's coming eve
 ALE is still in EARLY development. There's still a lot to do and it's nowhere close to finish. But it should be useable now. Anyways, here are some things that I need to do and the things that are finished.
 #### Required
 What needs to be done before 1.0.0 verified.  
-- [x] Binary serialization and deserialization
+- [ ] Binary serialization and deserialization
 - [x] JSON serialization and deserialization
-- [x] Unified serializer for binary and JSON
+- [ ] Unified serializer for binary and JSON
 - [x] Editor camera
 - [ ] Full 2D support
 - [ ] Full 3D support
@@ -109,31 +109,7 @@ public string MyProperty { get; set; }
 **NOTICE! The IDs need to be unique and they are used for saving levels and fetching values! You should not change these after creating your exposed field!**
 
 #### Write custom writers and readers for serialization
-To serialize values you need to have a writer and a reader that the serializer will use. You can create them easily by creating extension methods for `LevelEditorWriter` and `LevelEditorReader`. If you're familiar with creating serializers in Json.Net you'll probably be familiar with how to create these. 
-
-```cs
-// Writer extension needs to be first.
-// The type and value needs to be second.
-// String name needs to be third.
-public static void MyWriter(this LevelEditorWriter writer, MyStruct value, string name)
-{
-	writer.WriteStartObject(name);
-	writer.Write(value.MyValue);
-	writer.WriteEndObject();
-}
-
-// Reader extension needs to be first.
-// withName needs to be second. It's used to read the property name if needed.
-// You need to return the type of the value you want to make a reader for.
-public static MyStruct MyReader(this LevelEditorReader reader, bool withName)
-{
-	MyStruct myStruct = new MyStruct();
-	reader.ReadStartObject(withName);
-	myStruct.MyValue = reader.ReadString();
-	reader.ReadEndObject();
-	
-	return myStruct;
-}
+TODO
 ```
 
 ## ❤ Credits
