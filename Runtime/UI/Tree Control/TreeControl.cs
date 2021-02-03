@@ -331,22 +331,30 @@ namespace Hertzole.ALE
                     return;
                 }
 
-
                 int targetIndex = listView.IndexOf(target);
 
                 switch (insertDirection)
                 {
                     case 0:
-                        listView.RemoveItem(draggingItem);
-                        InvokeOnReparent(draggingItem, target, ItemDropAction.SetLastChild);
+                        if (InvokeOnReparenting(draggingItem, target, ItemDropAction.SetLastChild))
+                        {
+                            listView.RemoveItem(draggingItem);
+                            InvokeOnReparent(draggingItem, target, ItemDropAction.SetLastChild);
+                        }
                         break;
                     case -1:
-                        listView.MoveItem(draggingItem, targetIndex);
-                        InvokeOnReparent(draggingItem, target, ItemDropAction.SetPreviousSibling);
+                        if (InvokeOnReparenting(draggingItem, target, ItemDropAction.SetPreviousSibling))
+                        {
+                            listView.MoveItem(draggingItem, targetIndex);
+                            InvokeOnReparent(draggingItem, target, ItemDropAction.SetPreviousSibling);
+                        }
                         break;
                     case 1:
-                        listView.MoveItem(draggingItem, targetIndex + 1);
-                        InvokeOnReparent(draggingItem, target, ItemDropAction.SetNextSibling);
+                        if (InvokeOnReparenting(draggingItem, target, ItemDropAction.SetNextSibling))
+                        {
+                            listView.MoveItem(draggingItem, targetIndex + 1);
+                            InvokeOnReparent(draggingItem, target, ItemDropAction.SetNextSibling);
+                        }
                         break;
                 }
 
@@ -410,6 +418,11 @@ namespace Hertzole.ALE
             throw new NotImplementedException("Make sure to override InvokeOnReparent!");
         }
 
+        protected virtual bool InvokeOnReparenting(object draggingItem, object target, ItemDropAction action)
+        {
+            throw new NotImplementedException("Make sure to override InvokeOnReparenting!");
+        }
+
 #if UNITY_EDITOR
         private void OnValidate()
         {
@@ -464,6 +477,13 @@ namespace Hertzole.ALE
         }
     }
 
+    public class TreeReparentingEventArgs<T> : TreeReparentEventArgs<T>
+    {
+        public bool Cancel { get; set; }
+
+        public TreeReparentingEventArgs(T draggingItem, T target, ItemDropAction action) : base(draggingItem, target, action) { }
+    }
+
     public class TreeExpandingEventArgs<T> : EventArgs
     {
         public T Parent { get; private set; }
@@ -496,6 +516,7 @@ namespace Hertzole.ALE
         private TTreeItem itemPrefab = null;
 
         public event EventHandler<TreeBindItemEventArgs<TTreeItem, TItem>> OnBindItem;
+        public event EventHandler<TreeReparentingEventArgs<TItem>> OnReparenting;
         public event EventHandler<TreeReparentEventArgs<TItem>> OnReparent;
         public event EventHandler<TreeExpandingEventArgs<TItem>> OnItemExpandingCollapsing;
         public event EventHandler<TreeSelectionArgs<TItem>> OnSelectionChanged;
@@ -601,6 +622,19 @@ namespace Hertzole.ALE
                 }
                 args.TreeItem.SetIsExpandedWithoutNotify(expanded);
             }
+        }
+
+        protected override bool InvokeOnReparenting(object draggingItem, object target, ItemDropAction action)
+        {
+            if (target == null)
+            {
+                return true;
+            }
+
+            TreeReparentingEventArgs<TItem> args = new TreeReparentingEventArgs<TItem>((TItem)draggingItem, (TItem)target, action);
+            OnReparenting?.Invoke(this, args);
+
+            return !args.Cancel;
         }
 
         protected override void InvokeOnReparent(object draggingItem, object target, ItemDropAction action)
