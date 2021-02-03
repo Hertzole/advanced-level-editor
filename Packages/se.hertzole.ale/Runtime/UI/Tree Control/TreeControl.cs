@@ -9,7 +9,7 @@ namespace Hertzole.ALE
     public enum ItemDropAction { SetLastChild, SetPreviousSibling, SetNextSibling }
 
     [RequireComponent(typeof(ScrollRect), typeof(RecycledListView))]
-    public abstract class TreeControl : MonoBehaviour, IDropHandler, IPointerEnterHandler, IPointerExitHandler
+    public abstract class TreeControl : MonoBehaviour, IDropHandler, IPointerEnterHandler, IPointerExitHandler, IPointerClickHandler
     {
         [Header("Reorder")]
         [SerializeField]
@@ -22,6 +22,10 @@ namespace Hertzole.ALE
         private float siblingIndexModificationArea = 5f;
         [SerializeField]
         private float scrollableArea = 75f;
+
+        [Header("Selection")]
+        [SerializeField]
+        private bool canUnselect = true;
 
         [SerializeField]
         [HideInInspector]
@@ -235,6 +239,19 @@ namespace Hertzole.ALE
         public void RebindItem(object item)
         {
             listView.BindItem(item);
+        }
+
+        public void OnPointerClick(PointerEventData eventData)
+        {
+            if (!canUnselect)
+            {
+                return;
+            }
+
+            if (eventData.button == PointerEventData.InputButton.Left)
+            {
+                SelectItemInternal(null);
+            }
         }
 
         public void StartDragging(object item, PointerEventData eventData)

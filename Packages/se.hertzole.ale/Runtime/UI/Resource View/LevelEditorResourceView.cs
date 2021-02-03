@@ -128,6 +128,13 @@ namespace Hertzole.ALE
                     }
                 }
             }
+            else if (e.New == null)
+            {
+                for (int i = activeButtons.Count - 1; i >= 0; i--)
+                {
+                    PoolAssetButton(activeButtons[i]);
+                }
+            }
         }
 
         private void OnClickAssetButton(object sender, AssetButtonClickArgs args)

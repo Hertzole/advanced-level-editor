@@ -3381,6 +3381,7 @@ MonoBehaviour:
   dragItemReference: {fileID: 0}
   siblingIndexModificationArea: 5
   scrollableArea: 75
+  canUnselect: 1
   scroll: {fileID: 1770811261}
   listView: {fileID: 1770811262}
   itemPrefab: {fileID: 8400878893379105540, guid: ad268f322c3d2754c89540b23eb94a74, type: 3}
@@ -4437,6 +4438,7 @@ MonoBehaviour:
   dragItemReference: {fileID: 0}
   siblingIndexModificationArea: 5
   scrollableArea: 75
+  canUnselect: 0
   scroll: {fileID: 2060148256}
   listView: {fileID: 2060148258}
   itemPrefab: {fileID: 8697419597076669641, guid: e2ef1855a73cd9647b4b8f75c3746163, type: 3}
@@ -5023,10 +5025,6 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 2294600896098691929, guid: 4db609688c32a2e47a205ef6ddb8c57b, type: 3}
       propertyPath: m_LocalEulerAnglesHint.z
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 5167581015035043713, guid: 4db609688c32a2e47a205ef6ddb8c57b, type: 3}
-      propertyPath: m_Enabled
       value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 5622834343854385848, guid: 4db609688c32a2e47a205ef6ddb8c57b, type: 3}
