@@ -59,14 +59,14 @@ namespace Hertzole.ALE
             }
         }
 
-        public override bool SupportsType(ExposedProperty property)
+        public override bool SupportsType(Type type, bool isArray)
         {
-            if (property.IsArray || property.Type.IsArray)
+            if (isArray || type.IsArray)
             {
                 return false;
             }
 
-            return property.Type.IsSubclassOf(typeof(UnityObject));
+            return type.IsSubclassOf(typeof(UnityObject));
         }
 
         protected override void SetFieldValue(object value)

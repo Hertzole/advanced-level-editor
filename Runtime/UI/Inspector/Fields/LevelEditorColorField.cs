@@ -1,4 +1,5 @@
-﻿using UnityEngine;
+﻿using System;
+using UnityEngine;
 using UnityEngine.UI;
 
 namespace Hertzole.ALE
@@ -44,9 +45,9 @@ namespace Hertzole.ALE
             UI.ColorPickerWindow.OnWindowClose.RemoveListener(OnCloseColorPicker);
         }
 
-        public override bool SupportsType(ExposedProperty property)
+        public override bool SupportsType(Type type, bool isArray)
         {
-            return !property.IsArray && !property.Type.IsArray && (property.Type == typeof(Color) || property.Type == typeof(Color32));
+            return !isArray && !type.IsArray && (type == typeof(Color) || type == typeof(Color32));
         }
 
         protected override void SetFieldValue(object value)

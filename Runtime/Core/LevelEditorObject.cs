@@ -27,6 +27,7 @@ namespace Hertzole.ALE
 
         private IExposedToLevelEditor[] exposedComponents;
         private ILevelEditorPlayModeObject[] playModeObjects;
+        private ILevelEditorGizmos[] gizmos;
 
         private Dictionary<int, ValueInfo[]> savedValues = new Dictionary<int, ValueInfo[]>();
 
@@ -65,6 +66,27 @@ namespace Hertzole.ALE
         GameObject ILevelEditorObject.MyGameObject { get { return gameObject; } }
 
         public event EventHandler<LevelEditorObjectStateArgs> OnStateChanged;
+
+        private void Awake()
+        {
+            gizmos = GetComponentsInChildren<ILevelEditorGizmos>();
+        }
+
+        private void OnEnable()
+        {
+            for (int i = 0; i < gizmos.Length; i++)
+            {
+                LevelEditorGLRenderer.Add(gizmos[i]);
+            }
+        }
+
+        private void OnDisable()
+        {
+            for (int i = 0; i < gizmos.Length; i++)
+            {
+                LevelEditorGLRenderer.Remove(gizmos[i]);
+            }
+        }
 
         public IExposedToLevelEditor[] GetExposedComponents()
         {

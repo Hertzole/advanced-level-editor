@@ -7,6 +7,7 @@
 #endif
 
 #if !STRIP
+using System;
 using TMPro;
 using UnityEngine;
 
@@ -53,9 +54,9 @@ namespace Hertzole.ALE
             });
         }
 
-        public override bool SupportsType(ExposedProperty property)
+        public override bool SupportsType(Type type, bool isArray)
         {
-            return !property.IsArray && (property.Type == typeof(Vector2) || property.Type == typeof(Vector2Int));
+            return !isArray && (type == typeof(Vector2) || type == typeof(Vector2Int));
         }
 
         protected override void OnBound(ExposedProperty property, IExposedToLevelEditor exposed)

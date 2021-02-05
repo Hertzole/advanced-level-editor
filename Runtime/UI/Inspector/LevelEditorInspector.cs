@@ -30,10 +30,10 @@ namespace Hertzole.ALE
             public Type type;
             public bool isArray;
 
-            public TypeAndArray(ExposedProperty property)
+            public TypeAndArray(Type type, bool isArray)
             {
-                type = property.Type;
-                isArray = property.IsArray;
+                this.type = type;
+                this.isArray = isArray;
             }
 
             public override bool Equals(object obj)
@@ -150,12 +150,13 @@ namespace Hertzole.ALE
                             continue;
                         }
 
-                        if (!HasField(properties[j]))
+                        if (!HasField(properties[j].Type, properties[j].IsArray))
                         {
                             continue;
                         }
 
-                        LevelEditorInspectorField field = GetField(properties[j], compUI.FieldHolder);
+                        LevelEditorInspectorField field = GetField(properties[j].Type, properties[j].IsArray, compUI.FieldHolder);
+                        field.Depth = 0;
                         field.Bind(properties[j], components[i]);
                     }
                 }
@@ -174,11 +175,11 @@ namespace Hertzole.ALE
             return result;
         }
 
-        public LevelEditorInspectorField GetField(ExposedProperty property, Transform parent)
+        public LevelEditorInspectorField GetField(Type fieldType, bool isArray, Transform parent)
         {
             LevelEditorInspectorField result = null;
 
-            TypeAndArray type = new TypeAndArray(property);
+            TypeAndArray type = new TypeAndArray(fieldType, isArray);
 
             if (fields.TryGetValue(type, out int fieldIndex))
             {
@@ -198,7 +199,7 @@ namespace Hertzole.ALE
             {
                 for (int i = 0; i < fieldPrefabs.Length; i++)
                 {
-                    if (fieldPrefabs[i].SupportsType(property))
+                    if (fieldPrefabs[i].SupportsType(fieldType, isArray))
                     {
                         fields.Add(type, i);
                         if (!pooledFields.ContainsKey(i))
@@ -215,7 +216,7 @@ namespace Hertzole.ALE
 
             if (result == null)
             {
-                Debug.LogWarning("No field that supports " + property.Type.FullName + (property.IsArray ? "[]" : ""));
+                Debug.LogWarning("No field that supports " + fieldType.FullName + (isArray ? "[]" : ""));
                 return null;
             }
 
@@ -234,11 +235,11 @@ namespace Hertzole.ALE
             field.gameObject.SetActive(false);
         }
 
-        public bool HasField(ExposedProperty property)
+        public bool HasField(Type type, bool isArray)
         {
-            TypeAndArray type = new TypeAndArray(property);
+            TypeAndArray typeAndArray = new TypeAndArray(type, isArray);
 
-            if (fields.ContainsKey(type))
+            if (fields.ContainsKey(typeAndArray))
             {
                 return true;
             }
@@ -246,9 +247,9 @@ namespace Hertzole.ALE
             {
                 for (int i = 0; i < fieldPrefabs.Length; i++)
                 {
-                    if (fieldPrefabs[i].SupportsType(property))
+                    if (fieldPrefabs[i].SupportsType(type, isArray))
                     {
-                        fields.Add(type, i);
+                        fields.Add(typeAndArray, i);
                         if (!pooledFields.ContainsKey(i))
                         {
                             pooledFields.Add(i, new Stack<LevelEditorInspectorField>());
@@ -259,7 +260,7 @@ namespace Hertzole.ALE
                 }
             }
 
-            Debug.LogWarning("No field that supports " + property.Type.FullName + (property.IsArray ? "[]" : ""));
+            Debug.LogWarning("No field that supports " + type.FullName + (isArray ? "[]" : ""));
 
             return false;
         }

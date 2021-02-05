@@ -7,23 +7,41 @@
 #endif
 
 #if !STRIP
+using System;
 using TMPro;
 using UnityEngine;
 
 namespace Hertzole.ALE
 {
 #if OBSOLETE
-    [System.Obsolete("LevelEditorInspectorField has been will be stripped on build.", true)]
+    [System.Obsolete("LevelEditorInspectorField has been stripped and will be removed on build.", true)]
 #endif
     public abstract class LevelEditorInspectorField : MonoBehaviour
     {
         [SerializeField]
         private TextMeshProUGUI label = null;
+        //[SerializeField]
+        //private float indentAmount = 16f;
+
+        private int depth = 0;
 
         private ExposedProperty property;
         private IExposedToLevelEditor exposed;
 
         public int Index { get; set; }
+        public int Depth
+        {
+            get { return depth; }
+            set
+            {
+                if (depth != value)
+                {
+                    depth = value;
+                    //fullContent.sizeDelta = new Vector2(-indentAmount * depth, fullContent.sizeDelta.y);
+                    //TODO: Set indent.
+                }
+            }
+        }
 
         public string Label { get { return label.text; } set { label.text = value; } }
 
@@ -57,7 +75,12 @@ namespace Hertzole.ALE
 
         protected virtual void OnBound(ExposedProperty property, IExposedToLevelEditor exposed) { }
 
-        public virtual bool SupportsType(ExposedProperty property)
+        public bool SupportsType(ExposedProperty property)
+        {
+            return SupportsType(property.Type, property.IsArray);
+        }
+
+        public virtual bool SupportsType(Type type, bool isArray)
         {
             return false;
         }
@@ -84,17 +107,17 @@ namespace Hertzole.ALE
         {
             if (label == null)
             {
-                Transform labelTrasnsform = transform.Find("Label");
-                if (labelTrasnsform != null)
+                Transform labelTransform = transform.Find("Label");
+                if (labelTransform != null)
                 {
-                    label = labelTrasnsform.GetComponent<TextMeshProUGUI>();
+                    label = labelTransform.GetComponent<TextMeshProUGUI>();
                 }
                 if (label == null)
                 {
-                    labelTrasnsform = transform.Find("Level Editor Label");
-                    if (labelTrasnsform != null)
+                    labelTransform = transform.Find("Level Editor Label");
+                    if (labelTransform != null)
                     {
-                        label = labelTrasnsform.GetComponent<TextMeshProUGUI>();
+                        label = labelTransform.GetComponent<TextMeshProUGUI>();
                     }
                 }
             }
@@ -109,19 +132,19 @@ namespace Hertzole.ALE
     {
         public T Value { get { return (T)RawValue; } }
 
-        public override bool SupportsType(ExposedProperty property)
+        public override bool SupportsType(Type type, bool isArray)
         {
-            if (property.IsArray)
+            if (isArray)
             {
-                return property.Type.IsArray && property.Type == typeof(T);
+                return type.IsArray && type == typeof(T);
             }
-            else if (property.IsArray && !property.Type.IsArray)
+            else if (isArray && !type.IsArray)
             {
                 return false;
             }
             else
             {
-                return property.Type == typeof(T);
+                return type == typeof(T);
             }
         }
 
