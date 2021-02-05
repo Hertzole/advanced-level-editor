@@ -27,7 +27,7 @@ namespace Hertzole.ALE
         [SerializeField]
         private TextMeshProUGUI labelText = null;
         [SerializeField]
-        private TreeItemExpander expander = null;
+        private LevelEditorExpander expander = null;
         [SerializeField]
         private RectTransform content = null;
         [SerializeField]
@@ -68,7 +68,7 @@ namespace Hertzole.ALE
             }
         }
 
-        public TreeItemExpander.ExpandEvent OnExpandedChanged { get { return expander.OnValueChanged; } }
+        public LevelEditorExpander.ExpandEvent OnExpandedChanged { get { return expander.OnValueChanged; } }
         public event EventHandler<TreeItemSelectedEventArgs> OnSelected;
 
         public List<object> Children { get { return children; } }

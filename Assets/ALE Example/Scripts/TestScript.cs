@@ -65,7 +65,7 @@ public class MyCustomStruct : IExposedToLevelEditor
     }
 }
 
-public class TestScript : MonoBehaviour
+public class TestScript : MonoBehaviour, ILevelEditorGizmos
 {
 #pragma warning disable CS0414
     [SerializeField]
@@ -147,6 +147,18 @@ public class TestScript : MonoBehaviour
 
     private int[] ints = null;
     private Color32[] colors = null;
+
+    public void DrawLevelEditorGizmos()
+    {
+        LevelEditorGizmos.DrawWireCube(transform.position, Vector3.one, transform.rotation, Color.green);
+
+        LevelEditorGizmos.DrawSquare(transform.position + transform.forward * 2, Vector2.one, transform.rotation, Color.blue);
+
+        if (otherObject != null)
+        {
+            LevelEditorGizmos.DrawLine(transform.position, otherObject.position, Color.red);
+        }
+    }
 #pragma warning restore CS0414
 
 #if temp

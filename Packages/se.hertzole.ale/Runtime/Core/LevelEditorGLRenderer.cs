@@ -11,15 +11,21 @@ namespace Hertzole.ALE
     [AddComponentMenu("ALE/GL Renderer", 2)]
 #endif
     [DefaultExecutionOrder(-10000)]
-    public class LevelEditorGLRenderer : MonoBehaviour
+    public class LevelEditorGLRenderer : MonoBehaviour, ILevelEditorGL
     {
+        [SerializeField]
+        private Shader lineShader = null;
+
         [SerializeField]
         [HideInInspector]
         private Camera cam = null;
 
         private List<ILevelEditorGizmos> renderObjects = new List<ILevelEditorGizmos>();
+        private List<ILevelEditorSelectedGizmos> selectedRenderObjects = new List<ILevelEditorSelectedGizmos>();
 
         private static LevelEditorGLRenderer instance;
+
+        public Shader LineShader { get { return lineShader; } }
 
 #if UNITY_2019_3_OR_NEWER
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
@@ -34,6 +40,8 @@ namespace Hertzole.ALE
             if (instance == null)
             {
                 instance = this;
+
+                LevelEditorGizmos.Initialize(this);
             }
         }
 
@@ -64,11 +72,27 @@ namespace Hertzole.ALE
             }
         }
 
+        public static void Add(ILevelEditorSelectedGizmos gizmos)
+        {
+            if (instance != null)
+            {
+                instance.selectedRenderObjects.Add(gizmos);
+            }
+        }
+
         public static void Remove(ILevelEditorGizmos gizmos)
         {
             if (instance != null)
             {
                 instance.renderObjects.Remove(gizmos);
+            }
+        }
+
+        public static void Remove(ILevelEditorSelectedGizmos gizmos)
+        {
+            if (instance != null)
+            {
+                instance.selectedRenderObjects.Remove(gizmos);
             }
         }
 
@@ -100,6 +124,11 @@ namespace Hertzole.ALE
                 {
                     renderObjects[i].DrawLevelEditorGizmos();
                 }
+
+                for (int i = 0; i < selectedRenderObjects.Count; i++)
+                {
+                    selectedRenderObjects[i].DrawLevelEditorGizmosSelected();
+                }
             }
             finally { GL.PopMatrix(); }
         }
@@ -120,6 +149,16 @@ namespace Hertzole.ALE
             if (cam == null)
             {
                 cam = GetComponent<Camera>();
+            }
+
+            if (lineShader == null)
+            {
+                lineShader = Shader.Find("Hertzole/ALE/Unlit Line");
+            }
+
+            if (Application.isPlaying && LevelEditorGizmos.IsInitialized)
+            {
+                LevelEditorGizmos.Rebuild(this);
             }
         }
 #endif

@@ -24,9 +24,17 @@ PrefabInstance:
   m_Modification:
     m_TransformParent: {fileID: 0}
     m_Modifications:
+    - target: {fileID: 479470203086957572, guid: e2ef1855a73cd9647b4b8f75c3746163, type: 3}
+      propertyPath: m_IsActive
+      value: 1
+      objectReference: {fileID: 0}
     - target: {fileID: 704201416936231948, guid: e2ef1855a73cd9647b4b8f75c3746163, type: 3}
       propertyPath: m_Name
       value: Hierarchy Tree Item
+      objectReference: {fileID: 0}
+    - target: {fileID: 704562269206568070, guid: e2ef1855a73cd9647b4b8f75c3746163, type: 3}
+      propertyPath: m_IsActive
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 781948327443165616, guid: e2ef1855a73cd9647b4b8f75c3746163, type: 3}
       propertyPath: m_SizeDelta.x

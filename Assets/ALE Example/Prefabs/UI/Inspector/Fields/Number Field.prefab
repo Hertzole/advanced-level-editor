@@ -13,6 +13,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   label: {fileID: 890409795946290464}
+  indentAmount: 16
   textField: {fileID: 7138775313215994736}
   placeholderAsName: 1
 --- !u!1001 &2493502346725494988

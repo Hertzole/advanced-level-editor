@@ -41,16 +41,16 @@ namespace Hertzole.ALE
             textField.onEndEdit.AddListener(x => OnValueChanged(x, true));
         }
 
-        public override bool SupportsType(ExposedProperty property)
+        public override bool SupportsType(Type type, bool isArray)
         {
-            if (property.IsArray)
+            if (type.IsArray || isArray)
             {
                 return false;
             }
 
-            return property.Type == typeof(sbyte) || property.Type == typeof(byte) || property.Type == typeof(short) || property.Type == typeof(ushort) ||
-                   property.Type == typeof(int) || property.Type == typeof(uint) || property.Type == typeof(long) || property.Type == typeof(ulong) ||
-                   property.Type == typeof(float) || property.Type == typeof(double) || property.Type == typeof(decimal);
+            return type == typeof(sbyte) || type == typeof(byte) || type == typeof(short) || type == typeof(ushort) ||
+                   type == typeof(int) || type == typeof(uint) || type == typeof(long) || type == typeof(ulong) ||
+                   type == typeof(float) || type == typeof(double) || type == typeof(decimal);
         }
 
         protected override void OnBound(ExposedProperty property, IExposedToLevelEditor exposed)

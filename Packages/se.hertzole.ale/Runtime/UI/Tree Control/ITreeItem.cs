@@ -15,7 +15,7 @@ namespace Hertzole.ALE
 
         List<object> Children { get; }
 
-        TreeItemExpander.ExpandEvent OnExpandedChanged { get; }
+        LevelEditorExpander.ExpandEvent OnExpandedChanged { get; }
         event EventHandler<TreeItemSelectedEventArgs> OnSelected;
 
         void Initialize(TreeControl tree);

@@ -6,7 +6,7 @@ using UnityEngine.UI;
 
 namespace Hertzole.ALE
 {
-    public class TreeItemExpander : Selectable, IPointerClickHandler, ISubmitHandler, ICanvasElement
+    public class LevelEditorExpander : Selectable, IPointerClickHandler, ISubmitHandler, ICanvasElement
     {
         [Serializable]
         public class ExpandEvent : UnityEvent<bool> { }
@@ -36,7 +36,7 @@ namespace Hertzole.ALE
         [SerializeField]
         private ExpandEvent onValueChanged = new ExpandEvent();
 
-        private bool canExpand;
+        private bool canExpand = true;
 
         public bool CanExpand { get { return canExpand; } set { canExpand = value; UpdateState(); } }
         public bool IsExpanded { get { return isExpanded; } set { Set(value); } }
@@ -53,14 +53,28 @@ namespace Hertzole.ALE
             if (canExpand)
             {
                 interactable = true;
-                collapsedGraphic.gameObject.SetActive(true);
-                expandedGraphic.gameObject.SetActive(true);
+                if (collapsedGraphic != null)
+                {
+                    collapsedGraphic.gameObject.SetActive(true);
+                }
+
+                if (expandedGraphic != null)
+                {
+                    expandedGraphic.gameObject.SetActive(true);
+                }
             }
             else
             {
                 interactable = false;
-                collapsedGraphic.gameObject.SetActive(false);
-                expandedGraphic.gameObject.SetActive(false);
+                if (collapsedGraphic != null)
+                {
+                    collapsedGraphic.gameObject.SetActive(false);
+                }
+
+                if (expandedGraphic != null)
+                {
+                    expandedGraphic.gameObject.SetActive(false);
+                }
             }
         }
 
