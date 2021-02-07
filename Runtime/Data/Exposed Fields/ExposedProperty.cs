@@ -7,22 +7,18 @@ namespace Hertzole.ALE
     {
         public int ID { get; private set; }
 
-        public bool IsVisible { get; private set; }
         public bool IsArray { get; private set; }
 
-        public string Name { get; private set; }
         public string CustomName { get; private set; }
         public string TypeName { get { return Type.FullName; } }
 
         public Type Type { get; private set; }
 
-        public ExposedProperty(int id, Type type, string name, string customName, bool isVisible, bool isArray)
+        public ExposedProperty(int id, Type type, string name, string customName, bool isVisible, bool isArray) : base(name, isVisible)
         {
             ID = id;
             Type = type;
-            Name = name;
             CustomName = customName;
-            IsVisible = isVisible;
             IsArray = isArray;
         }
 

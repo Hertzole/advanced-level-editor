@@ -10,6 +10,17 @@ namespace Hertzole.ALE
         private bool twoDMode = false;
 
         [SerializeField]
+        private bool limitBounds = false;
+        [SerializeField]
+        private Vector3 bounds3DMin = new Vector3(0, 0, 0);
+        [SerializeField]
+        private Vector3 bounds3DMax = new Vector3(0, 0, 0);
+        [SerializeField]
+        private Vector2 bounds2DMin = new Vector2(0, 0);
+        [SerializeField]
+        private Vector2 bounds2DMax = new Vector2(0, 0);
+
+        [SerializeField]
         private float moveSpeed = 15f;
         [SerializeField]
         private float lookSpeed = 5f;
@@ -199,6 +210,24 @@ namespace Hertzole.ALE
             }
 
             previousMousePosition = realInput.MousePosition;
+
+            if (limitBounds)
+            {
+                if (twoDMode)
+                {
+                    transform.position = new Vector3(
+                        Mathf.Clamp(transform.position.x, bounds2DMin.x, bounds2DMax.x),
+                        Mathf.Clamp(transform.position.y, bounds2DMin.y, bounds2DMax.y),
+                        transform.position.z);
+                }
+                else
+                {
+                    transform.position = new Vector3(
+                       Mathf.Clamp(transform.position.x, bounds3DMin.x, bounds3DMax.x),
+                       Mathf.Clamp(transform.position.y, bounds3DMin.y, bounds3DMax.y),
+                       Mathf.Clamp(transform.position.z, bounds3DMin.z, bounds3DMax.z));
+                }
+            }
         }
 
         private void FlyMode()
@@ -297,6 +326,30 @@ namespace Hertzole.ALE
         }
 
 #if UNITY_EDITOR
+        private void OnDrawGizmosSelected()
+        {
+            Color oColor = Gizmos.color;
+
+            if (limitBounds)
+            {
+                Gizmos.color = Color.red;
+
+                Bounds bounds = new Bounds();
+
+                if (twoDMode)
+                {
+                    bounds.SetMinMax(new Vector3(bounds2DMin.x, bounds2DMin.y, transform.position.z), new Vector3(bounds2DMax.x, bounds2DMax.y, transform.position.z));
+                }
+                else
+                {
+                    bounds.SetMinMax(bounds3DMin, bounds3DMax);
+                }
+                Gizmos.DrawWireCube(bounds.center, bounds.size);
+            }
+
+            Gizmos.color = oColor;
+        }
+
         private void OnValidate()
         {
             GetStandardComponents();
