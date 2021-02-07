@@ -67,6 +67,7 @@ public class MyCustomStruct : IExposedToLevelEditor
 
 public class TestScript : MonoBehaviour, ILevelEditorGizmos
 {
+
 #pragma warning disable CS0414
     [SerializeField]
     [ExposeToLevelEditor(0)]
@@ -144,6 +145,7 @@ public class TestScript : MonoBehaviour, ILevelEditorGizmos
     [SerializeField]
     [ExposeToLevelEditor(22)]
     private MyCustomStruct structTest = new MyCustomStruct();
+
 
     private int[] ints = null;
     private Color32[] colors = null;

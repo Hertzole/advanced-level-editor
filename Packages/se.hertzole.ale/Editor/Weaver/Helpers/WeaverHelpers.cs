@@ -25,7 +25,6 @@ namespace Hertzole.ALE.Editor
                             instanceField = (FieldDefinition)type.NestedTypes[i].Methods[j].Body.Instructions[1].Operand;
                         }
                     }
-
                     return type.NestedTypes[i];
                 }
             }

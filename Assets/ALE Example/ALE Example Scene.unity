@@ -3126,6 +3126,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 5ec57d03a2afbd2468153fe7df7b4f86, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  lineShader: {fileID: 4800000, guid: e85e80bf90826d24a84e6feb76d1a8f8, type: 3}
   cam: {fileID: 1687258584}
 --- !u!20 &1687258584
 Camera:
@@ -3229,6 +3230,11 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   twoDMode: 0
+  limitBounds: 0
+  bounds3DMin: {x: -5, y: -5, z: -5}
+  bounds3DMax: {x: 5, y: 5, z: 5}
+  bounds2DMin: {x: -5, y: -5}
+  bounds2DMax: {x: 5, y: 5}
   moveSpeed: 15
   lookSpeed: 5
   orbitSpeed: 7

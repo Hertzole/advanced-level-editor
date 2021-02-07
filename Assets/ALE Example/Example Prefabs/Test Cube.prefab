@@ -14,6 +14,8 @@ GameObject:
   - component: {fileID: 446762255455591348}
   - component: {fileID: 6720483487702025507}
   - component: {fileID: 2650372705769027841}
+  - component: {fileID: -6335621383277151981}
+  - component: {fileID: -6872496502901782853}
   m_Layer: 0
   m_Name: Test Cube
   m_TagString: Untagged
@@ -154,3 +156,31 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 0378aa6421db63f44976e2def599b586, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+--- !u!114 &-6335621383277151981
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2837006266036230208}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 1635cc5f83217a046a7d847e00145c11, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  enumTest: 1
+  enumArrayTest: 
+--- !u!114 &-6872496502901782853
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2837006266036230208}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: cc72ff5d8e71c394d882425cd052e149, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  enumTest: 1
+  enumArrayTest: 

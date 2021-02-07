@@ -748,7 +748,6 @@ namespace Hertzole.ALE.Editor
                     if (converterType == null)
                     {
                         converterType = WeaverHelpers.LoadOrCreateConverterType(baseType, out converterInstanceField);
-                        baseType.NestedTypes.Add(converterType);
                     }
 
                     WeaverHelpers.CreateConverterField(true, typeof(Converter<,>), new TypeReference[] { baseType.Module.ImportReference(typeof(object)), baseType.Module.ImportReference(field.FieldType.Resolve()) },
