@@ -45,5 +45,10 @@ namespace Hertzole.ALE
         {
             return resources;
         }
+
+        public void AddResource(LevelEditorResource resource)
+        {
+            resources.Add(resource);
+        }
     }
 }

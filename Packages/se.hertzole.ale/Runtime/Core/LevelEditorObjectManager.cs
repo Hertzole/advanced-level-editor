@@ -25,6 +25,23 @@ namespace Hertzole.ALE
         private Dictionary<string, List<ILevelEditorObject>> activeObjects = new Dictionary<string, List<ILevelEditorObject>>();
         private Dictionary<string, int> objectCount = new Dictionary<string, int>();
 
+        public ScriptableObject ResourcesObject
+        {
+            get { return resources; }
+            set
+            {
+                if (value is ILevelEditorResources resources)
+                {
+                    this.resources = value;
+                    realResources = resources;
+                }
+                else
+                {
+                    Debug.LogError($"{value} does not implement ILevelEditorResources interface.");
+                }
+            }
+        }
+
         public ILevelEditorResources Resources
         {
             get
@@ -32,6 +49,7 @@ namespace Hertzole.ALE
                 if (realResources == null) { realResources = resources as ILevelEditorResources; }
                 return realResources;
             }
+            set { realResources = value; }
         }
 
         public event EventHandler<LevelEditorObjectEventSpawningEvent> OnCreatingObject;
@@ -40,9 +58,9 @@ namespace Hertzole.ALE
         public event EventHandler<LevelEditorObjectEvent> OnDeletedObject;
 
 #if !ALE_STRIP_SAFETY || UNITY_EDITOR
-        private void Awake()
+        private void Start()
         {
-            if (!resources.ExistsAndImplements<ILevelEditorResources>(nameof(resources), this))
+            if (realResources == null && !resources.ExistsAndImplements<ILevelEditorResources>(nameof(resources), this))
             {
                 return;
             }

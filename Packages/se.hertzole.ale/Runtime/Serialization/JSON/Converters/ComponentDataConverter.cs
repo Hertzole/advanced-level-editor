@@ -1,4 +1,5 @@
 ﻿using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
 
@@ -8,6 +9,9 @@ namespace Hertzole.ALE.Json
     {
         private Dictionary<string, int> typePalette;
         private Dictionary<int, string> invertedTypePalette;
+
+        private const string PROP_TYPE = "type";
+        private const string PROP_PROPERTIES = "properties";
 
         public ComponentDataConverter(Dictionary<string, int> typePalette)
         {
@@ -21,13 +25,10 @@ namespace Hertzole.ALE.Json
 
         public override LevelEditorComponentData ReadJson(JsonReader reader, Type objectType, LevelEditorComponentData existingValue, bool hasExistingValue, JsonSerializer serializer)
         {
-            reader.Read();
-            string type = invertedTypePalette[(int)reader.ReadAsInt32()];
-            reader.Read();
-            reader.Read();
-            LevelEditorPropertyData[] properties = serializer.Deserialize<LevelEditorPropertyData[]>(reader);
+            JToken token = JToken.Load(reader);
 
-            reader.Read();
+            string type = invertedTypePalette[token.GetValue(PROP_TYPE, 0)];
+            LevelEditorPropertyData[] properties = token.GetValue(PROP_PROPERTIES, Array.Empty<LevelEditorPropertyData>(), serializer);
 
             return new LevelEditorComponentData() { type = type, properties = properties };
         }
@@ -36,9 +37,9 @@ namespace Hertzole.ALE.Json
         {
             writer.WriteStartObject();
 
-            writer.WritePropertyName("type");
+            writer.WritePropertyName(PROP_TYPE);
             writer.WriteValue(typePalette[value.type]);
-            writer.WritePropertyName("properties");
+            writer.WritePropertyName(PROP_PROPERTIES);
             serializer.Serialize(writer, value.properties);
 
             writer.WriteEndObject();

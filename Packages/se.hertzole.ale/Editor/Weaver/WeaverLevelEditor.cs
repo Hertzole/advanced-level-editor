@@ -8,7 +8,7 @@ namespace Hertzole.ALE.Editor
     {
         private static readonly BaseProcessor[] processors = new BaseProcessor[]
         {
-            new LevelEditorReaderWriterProcessor(),
+            //new LevelEditorReaderWriterProcessor(),
             new ExposedClassProcessor(),
         };
 

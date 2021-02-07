@@ -42,12 +42,16 @@ namespace Hertzole.ALE
             AddType<Quaternion>();
             AddType<Color>();
             AddType<Color32>();
+            AddType<Rect>();
             AddType<Component>();
 
             AddConverter(new Vector2Converter());
             AddConverter(new Vector2IntConverter());
             AddConverter(new Vector3Converter());
             AddConverter(new Vector3IntConverter());
+            AddConverter(new Vector4Converter());
+            AddConverter(new QuaternionConverter());
+            AddConverter(new RectConverter());
             AddConverter(new ColorConverter());
             AddConverter(new Color32Converter());
             AddConverter(new ComponentConverter());
