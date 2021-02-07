@@ -1,4 +1,5 @@
 ﻿using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 using System;
 using UnityEngine;
 
@@ -13,7 +14,7 @@ namespace Hertzole.ALE
 
         public override object ReadJson(JsonReader reader, Type objectType, object existingValue, JsonSerializer serializer)
         {
-            int? value = reader.ReadAsInt32();
+            int? value = JToken.Load(reader).ToObject<int?>();
             return value == null ? 0 : (object)(int)value;
         }
 

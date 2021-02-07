@@ -2,7 +2,6 @@
 using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
-using UnityEngine;
 
 namespace Hertzole.ALE.Json
 {
@@ -10,6 +9,11 @@ namespace Hertzole.ALE.Json
     {
         private Dictionary<string, int> typePalette;
         private Dictionary<int, string> invertedTypePalette;
+
+        private const string PROP_ID = "id";
+        private const string PROP_TYPE = "type";
+        private const string PROP_ISARRAY = "isArray";
+        private const string PROP_VALUE = "value";
 
         public PropertyDataConverter(Dictionary<string, int> typePalette)
         {
@@ -25,24 +29,9 @@ namespace Hertzole.ALE.Json
         {
             JToken token = JToken.Load(reader);
 
-            int id = -1;
-            string type = null;
-            bool isArray = false;
-
-            if (token["id"] != null)
-            {
-                id = (int)token["id"];
-            }
-
-            if (token["type"] != null)
-            {
-                type = invertedTypePalette[(int)token["type"]];
-            }
-
-            if (token["isArray"] != null)
-            {
-                isArray = (bool)token["isArray"];
-            }
+            int id = token.GetValue(PROP_ID, -1);
+            string type = invertedTypePalette[token.GetValue(PROP_TYPE, 0)];
+            bool isArray = token.GetValue(PROP_ISARRAY, false);
 
             Type realType = LevelEditorJsonSerializer.GetTypeFromString(type);
             if (isArray && realType != null)
@@ -50,7 +39,7 @@ namespace Hertzole.ALE.Json
                 realType = realType.MakeArrayType();
             }
 
-            object value = token["value"] != null ? token["value"].ToObject(realType, serializer) : default;
+            object value = token.GetValue(realType, PROP_VALUE, default, serializer);
 
             return new LevelEditorPropertyData() { id = id, typeName = type, isArray = isArray, value = value };
         }
@@ -59,13 +48,13 @@ namespace Hertzole.ALE.Json
         {
             writer.WriteStartObject();
 
-            writer.WritePropertyName("id");
+            writer.WritePropertyName(PROP_ID);
             writer.WriteValue(value.id);
-            writer.WritePropertyName("type");
+            writer.WritePropertyName(PROP_TYPE);
             writer.WriteValue(typePalette[value.typeName]);
-            writer.WritePropertyName("isArray");
+            writer.WritePropertyName(PROP_ISARRAY);
             writer.WriteValue(value.isArray);
-            writer.WritePropertyName("value");
+            writer.WritePropertyName(PROP_VALUE);
 
             Type type = LevelEditorJsonSerializer.GetTypeFromString(value.typeName);
             if (value.isArray)
@@ -73,9 +62,7 @@ namespace Hertzole.ALE.Json
                 type = type.MakeArrayType();
             }
 
-            Debug.Log(value.value + " | " + type + " | " + value.typeName + " | " + value.type + " | " + (value.value == null).ToString());
-
-            serializer.Serialize(writer, value.value, value.type);
+            serializer.Serialize(writer, value.value, type);
 
             writer.WriteEndObject();
         }

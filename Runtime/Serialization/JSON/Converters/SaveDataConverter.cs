@@ -1,4 +1,5 @@
 ﻿using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
 
@@ -11,6 +12,12 @@ namespace Hertzole.ALE.Json
 
         private Dictionary<int, string> invertedObjectPalette;
         private Dictionary<int, string> invertedTypePalette;
+
+        private const string PROP_OBJECT_PALETTE = "objectPalette";
+        private const string PROP_TYPE_PALETTE = "typePalette";
+        private const string PROP_NAME = "name";
+        private const string PROP_OBJECTS = "objects";
+        private const string PROP_CUSTOM_DATA = "customData";
 
         public SaveDataConverter(Dictionary<string, int> objectPalette, Dictionary<string, int> typePalette)
         {
@@ -28,14 +35,10 @@ namespace Hertzole.ALE.Json
         {
             LevelEditorSaveData data = new LevelEditorSaveData(null);
 
-            reader.Read();
+            JToken token = JToken.Load(reader);
 
-            reader.Read();
-            objectPalette = serializer.Deserialize<Dictionary<string, int>>(reader);
-
-            reader.Read();
-            reader.Read();
-            typePalette = serializer.Deserialize<Dictionary<string, int>>(reader);
+            objectPalette = token.GetValue(PROP_OBJECT_PALETTE, new Dictionary<string, int>());
+            typePalette = token.GetValue(PROP_TYPE_PALETTE, new Dictionary<string, int>());
 
             foreach (KeyValuePair<string, int> o in objectPalette)
             {
@@ -47,17 +50,9 @@ namespace Hertzole.ALE.Json
                 invertedTypePalette.Add(t.Value, t.Key);
             }
 
-            reader.Read();
-            data.name = reader.ReadAsString();
-            reader.Read();
-            reader.Read();
-            data.objects = serializer.Deserialize<List<LevelEditorObjectData>>(reader);
-
-            reader.Read();
-            reader.Read();
-            data.customData = serializer.Deserialize<Dictionary<string, LevelEditorCustomData>>(reader);
-
-            reader.Read();
+            data.name = token.GetValue(PROP_NAME, string.Empty);
+            data.objects = token.GetValue(PROP_OBJECTS, new List<LevelEditorObjectData>(), serializer);
+            data.customData = token.GetValue(PROP_CUSTOM_DATA, new Dictionary<string, LevelEditorCustomData>(), serializer);
 
             return data;
         }
@@ -66,17 +61,17 @@ namespace Hertzole.ALE.Json
         {
             writer.WriteStartObject();
 
-            writer.WritePropertyName("objectPalette");
+            writer.WritePropertyName(PROP_OBJECT_PALETTE);
             serializer.Serialize(writer, objectPalette);
-            writer.WritePropertyName("typePalette");
+            writer.WritePropertyName(PROP_TYPE_PALETTE);
             serializer.Serialize(writer, typePalette);
 
-            writer.WritePropertyName("name");
+            writer.WritePropertyName(PROP_NAME);
             writer.WriteValue(value.name);
-            writer.WritePropertyName("objects");
+            writer.WritePropertyName(PROP_OBJECTS);
             serializer.Serialize(writer, value.objects);
 
-            writer.WritePropertyName("customData");
+            writer.WritePropertyName(PROP_CUSTOM_DATA);
             serializer.Serialize(writer, value.customData);
 
             writer.WriteEndObject();

@@ -29,20 +29,20 @@ namespace Hertzole.ALE
 
         private ILevelEditorObjectManager realObjectManager;
 
+        public ILevelEditorObjectManager ObjectManager { get { return realObjectManager; } set { realObjectManager = value; } }
+
         public event EventHandler<LevelSavingLoadingArgs> OnLevelSaving;
         public event EventHandler<LevelSavingLoadingArgs> OnLevelLoading;
 
         public event EventHandler<LevelEventArgs> OnLevelSaved;
         public event EventHandler<LevelEventArgs> OnLevelLoaded;
 
-        public struct Temp
+        private void Start()
         {
-            public Vector3 value;
-        }
-
-        private void Awake()
-        {
-            realObjectManager = objectManager.NeedComponent<ILevelEditorObjectManager>();
+            if (realObjectManager == null)
+            {
+                realObjectManager = objectManager.NeedComponent<ILevelEditorObjectManager>();
+            }
         }
 
         public virtual LevelEditorSaveData GetLevelData(string levelName)
@@ -120,20 +120,29 @@ namespace Hertzole.ALE
         {
             LevelEditorSaveData data = GetLevelData(levelName);
 
-            SaveLevel(data);
+            SaveLevel(data, BuildSaveLocation(baseSaveLocation, saveSuffix));
+        }
+
+        public virtual void SaveLevel(string levelName, string path)
+        {
+            SaveLevel(GetLevelData(levelName), path);
         }
 
         public virtual void SaveLevel(LevelEditorSaveData saveData)
         {
-            string saveFolder = BuildSaveLocation(baseSaveLocation, saveSuffix);
-            string saveLocation = saveFolder + saveData.name + ToFileExtension(fileExtension);
+            SaveLevel(saveData, BuildSaveLocation(baseSaveLocation, saveSuffix));
+        }
+
+        public virtual void SaveLevel(LevelEditorSaveData saveData, string path)
+        {
+            string saveFolder = Path.GetDirectoryName(path);
 
             if (!Directory.Exists(saveFolder))
             {
                 Directory.CreateDirectory(saveFolder);
             }
 
-            LevelSavingLoadingArgs args = new LevelSavingLoadingArgs(saveData, saveLocation);
+            LevelSavingLoadingArgs args = new LevelSavingLoadingArgs(saveData, path);
             OnLevelSaving?.Invoke(this, args);
             if (args.Cancel)
             {
@@ -146,7 +155,7 @@ namespace Hertzole.ALE
             {
                 //string json = LevelEditorSerializer.SerializeJson(saveData, prettyPrint);
                 string json = LevelEditorJsonSerializer.SerializeJson(saveData, prettyPrint);
-                File.WriteAllText(saveLocation, json);
+                File.WriteAllText(path, json);
             }
             else
 #endif
