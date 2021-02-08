@@ -95,11 +95,7 @@ namespace Hertzole.ALE
                     obj = objGo.GetOrAddComponent<LevelEditorObject>();
                     obj.ID = resource.ID;
 
-                    objGo.GetOrAddComponent<TransformWrapper>();
-                    if (objGo.TryGetComponent<Rigidbody>(out _))
-                    {
-                        objGo.GetOrAddComponent<RigidbodyWrapper>();
-                    }
+                    LevelEditorComponentWrapper.AddWrappers(objGo);
                 }
 
                 obj.MyGameObject.name = resource.Name;

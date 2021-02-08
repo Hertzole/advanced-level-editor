@@ -3,41 +3,27 @@ using UnityEngine;
 
 namespace Hertzole.ALE
 {
-    public class RigidbodyWrapper : MonoBehaviour, IExposedToLevelEditor, ILevelEditorPlayModeObject
+    public class RigidbodyWrapper : LevelEditorComponentWrapper<Rigidbody>, ILevelEditorPlayModeObject
     {
+        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
+        private static void RegisterRigidbodyWrapper()
+        {
+            RegisterWrapper<Rigidbody, RigidbodyWrapper>();
+        }
+
         private bool useGravity;
         private bool isKinematic;
 
-        private Rigidbody rb;
-        private Rigidbody Rb
-        {
-            get
-            {
-                if (rb == null)
-                {
-                    rb = GetComponent<Rigidbody>();
-                    useGravity = rb.useGravity;
-                    isKinematic = rb.isKinematic;
-                }
-                return rb;
-            }
-        }
-
-        string IExposedToLevelEditor.ComponentName { get { return "Rigidbody"; } }
-
-        string IExposedToLevelEditor.TypeName { get { return "UnityEngine.Rigidbody"; } }
-
-        int IExposedToLevelEditor.Order { get { return 0; } }
-
-        public event Action<int, object> OnValueChanged;
-
         private void Awake()
         {
-            Rb.useGravity = false;
-            Rb.isKinematic = true;
+            useGravity = Target.useGravity;
+            isKinematic = Target.isKinematic;
+
+            Target.useGravity = false;
+            Target.isKinematic = true;
         }
 
-        ExposedProperty[] IExposedToLevelEditor.GetProperties()
+        public override ExposedProperty[] GetProperties()
         {
             return new ExposedProperty[]
             {
@@ -49,16 +35,16 @@ namespace Hertzole.ALE
             };
         }
 
-        object IExposedToLevelEditor.GetValue(int id)
+        public override object GetValue(int id)
         {
             switch (id)
             {
                 case 0:
-                    return Rb.mass;
+                    return Target.mass;
                 case 1:
-                    return Rb.drag;
+                    return Target.drag;
                 case 2:
-                    return Rb.angularDrag;
+                    return Target.angularDrag;
                 case 3:
                     return useGravity;
                 case 4:
@@ -68,7 +54,7 @@ namespace Hertzole.ALE
             }
         }
 
-        Type IExposedToLevelEditor.GetValueType(int id)
+        public override Type GetValueType(int id)
         {
             switch (id)
             {
@@ -84,30 +70,30 @@ namespace Hertzole.ALE
             }
         }
 
-        void IExposedToLevelEditor.SetValue(int id, object value, bool notify)
+        public override void SetValue(int id, object value, bool notify)
         {
             bool changed = false;
 
             switch (id)
             {
                 case 0:
-                    if ((float)value != Rb.mass)
+                    if ((float)value != Target.mass)
                     {
-                        Rb.mass = (float)value;
+                        Target.mass = (float)value;
                         changed = true;
                     }
                     break;
                 case 1:
-                    if ((float)value != Rb.drag)
+                    if ((float)value != Target.drag)
                     {
-                        Rb.drag = (float)value;
+                        Target.drag = (float)value;
                         changed = true;
                     }
                     break;
                 case 2:
-                    if ((float)value != Rb.angularDrag)
+                    if ((float)value != Target.angularDrag)
                     {
-                        Rb.angularDrag = (float)value;
+                        Target.angularDrag = (float)value;
                         changed = true;
                     }
                     break;
@@ -131,20 +117,20 @@ namespace Hertzole.ALE
 
             if (notify && changed)
             {
-                OnValueChanged?.Invoke(id, value);
+                InvokeOnValueChanged(id, value);
             }
         }
 
         void ILevelEditorPlayModeObject.OnStartPlayMode()
         {
-            Rb.useGravity = useGravity;
-            Rb.isKinematic = isKinematic;
+            Target.useGravity = useGravity;
+            Target.isKinematic = isKinematic;
         }
 
         void ILevelEditorPlayModeObject.OnStopPlayMode()
         {
-            Rb.useGravity = false;
-            Rb.isKinematic = true;
+            Target.useGravity = false;
+            Target.isKinematic = true;
         }
     }
 }
