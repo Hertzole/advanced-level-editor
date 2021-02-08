@@ -4,36 +4,22 @@ using UnityEngine;
 namespace Hertzole.ALE
 {
     [AddComponentMenu("")]
-    public class TransformWrapper : MonoBehaviour, IExposedToLevelEditor
+    public class TransformWrapper : LevelEditorComponentWrapper<Transform>
     {
-        private ILevelEditorObject levelEditorObject;
-        private ILevelEditorObject LevelEditorObject
+        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
+        private static void RegisterTransformWrapper()
         {
-            get
-            {
-                if (levelEditorObject == null)
-                {
-                    levelEditorObject = GetComponent<LevelEditorObject>();
-                }
-
-                return levelEditorObject;
-            }
+            RegisterWrapper<Transform, TransformWrapper>();
         }
 
-        string IExposedToLevelEditor.ComponentName { get { return "Transform"; } }
-
-        string IExposedToLevelEditor.TypeName { get { return "UnityEngine.Transform"; } }
-
-        int IExposedToLevelEditor.Order { get { return -100000; } }
+        public override int Order { get { return -100000; } }
 
         private const string POSITION = "position";
         private const string ROTATION = "rotation";
         private const string SCALE = "scale";
         private const string PARENT = "parent";
 
-        public event Action<int, object> OnValueChanged;
-
-        ExposedProperty[] IExposedToLevelEditor.GetProperties()
+        public override ExposedProperty[] GetProperties()
         {
             return new ExposedProperty[4]
             {
@@ -44,7 +30,7 @@ namespace Hertzole.ALE
             };
         }
 
-        object IExposedToLevelEditor.GetValue(int id)
+        public override object GetValue(int id)
         {
             switch (id)
             {
@@ -61,7 +47,7 @@ namespace Hertzole.ALE
             }
         }
 
-        void IExposedToLevelEditor.SetValue(int id, object value, bool notify)
+        public override void SetValue(int id, object value, bool notify)
         {
             bool changed = false;
 
@@ -96,7 +82,7 @@ namespace Hertzole.ALE
                         if (transform.parent != null)
                         {
                             LevelEditorObject.Parent = transform.parent.GetComponent<ILevelEditorObject>();
-                            levelEditorObject.Parent.AddChild(levelEditorObject);
+                            LevelEditorObject.Parent.AddChild(LevelEditorObject);
                         }
                     }
                     break;
@@ -106,11 +92,11 @@ namespace Hertzole.ALE
 
             if (notify && changed)
             {
-                OnValueChanged?.Invoke(id, value);
+                InvokeOnValueChanged(id, value);
             }
         }
 
-        Type IExposedToLevelEditor.GetValueType(int id)
+        public override Type GetValueType(int id)
         {
             switch (id)
             {
