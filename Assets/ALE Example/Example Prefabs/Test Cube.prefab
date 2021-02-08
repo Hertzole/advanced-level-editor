@@ -133,14 +133,6 @@ MonoBehaviour:
     serializedVersion: 2
     rgba: 4278255360
   otherObject: {fileID: 0}
-  messages:
-  - hello
-  - there
-  structTestArray:
-  - str: aaaaaa
-    vec: {x: 0, y: 1, z: 0}
-  - str: bbbbbbb
-    vec: {x: 0, y: 4, z: 0}
   structTest:
     str: 
     vec: {x: 0, y: 0, z: 0}
@@ -168,7 +160,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 1635cc5f83217a046a7d847e00145c11, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  enumTest: 1
+  enumTest: 66
   enumArrayTest: 
 --- !u!114 &-6872496502901782853
 MonoBehaviour:

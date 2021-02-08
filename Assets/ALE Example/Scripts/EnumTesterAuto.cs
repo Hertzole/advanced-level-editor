@@ -9,6 +9,9 @@ public class EnumTesterAuto : MonoBehaviour
     [ExposeToLevelEditor(0)]
     private TestEnum enumTest = TestEnum.Test3;
     [SerializeField]
-    [ExposeToLevelEditor(1)]
+    //[ExposeToLevelEditor(1)]
     private TestEnum[] enumArrayTest = null;
+
+    [ExposeToLevelEditor(2)]
+    public TestEnum EnumProperty { get; set; }
 }

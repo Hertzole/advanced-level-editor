@@ -4,12 +4,14 @@ using UnityEngine;
 
 public class EnumTester : MonoBehaviour, IExposedToLevelEditor
 {
-    public enum TestEnum { Test1, Test3, Consistency, No }
+    public enum TestEnum { Test1 = -10, Test3 = 66, Consistency = 520, No = 1 }
 
     [SerializeField]
     private TestEnum enumTest = TestEnum.Test3;
     [SerializeField]
     private TestEnum[] enumArrayTest = null;
+
+    public TestEnum EnumProperty { get; set; }
 
     public event Action<int, object> OnValueChanged;
 
@@ -41,8 +43,8 @@ public class EnumTester : MonoBehaviour, IExposedToLevelEditor
     {
         return new ExposedProperty[]
         {
-            new ExposedEnum(0, typeof(TestEnum), "enumTest", null, true, false),
-            new ExposedEnum(1, typeof(TestEnum), "enumArrayTest", null, true, true)
+            new ExposedProperty(0, typeof(TestEnum), "enumTest", null, true),
+            //new ExposedEnum(1, typeof(TestEnum), "enumArrayTest", null, true)
         };
     }
 
@@ -74,15 +76,23 @@ public class EnumTester : MonoBehaviour, IExposedToLevelEditor
                 changed = true;
             }
         }
-        else if (id == 1)
+        else if (id == 2)
         {
-            TestEnum[] array = Array.ConvertAll((object[])value, (object para0) => (TestEnum)para0);
-            if (enumArrayTest != array)
+            if ((TestEnum)value != EnumProperty)
             {
-                enumArrayTest = array;
+                EnumProperty = (TestEnum)value;
                 changed = true;
             }
         }
+        //else if (id == 1)
+        //{
+        //    TestEnum[] array = Array.ConvertAll((object[])value, (object para0) => (TestEnum)para0);
+        //    if (enumArrayTest != array)
+        //    {
+        //        enumArrayTest = array;
+        //        changed = true;
+        //    }
+        //}
         else
         {
             throw new ArgumentException("No with " + id);

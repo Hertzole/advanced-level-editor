@@ -73,7 +73,7 @@ The supported inspector fields.
 - [x] Color field
 - [ ] Arrays
 - [ ] Nested classes/structs
-- [ ] Enum field
+- [x] Enum field
 
 ## 📦 Installation 
 #### Without package manager

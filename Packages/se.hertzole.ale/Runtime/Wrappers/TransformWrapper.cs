@@ -37,10 +37,10 @@ namespace Hertzole.ALE
         {
             return new ExposedProperty[4]
             {
-                new ExposedProperty(0, typeof(Vector3), POSITION, null, true, false),
-                new ExposedProperty(1, typeof(Vector3), ROTATION, null, true, false),
-                new ExposedProperty(2, typeof(Vector3), SCALE, null, true, false),
-                new ExposedProperty(3, typeof(Transform), PARENT, null, false, false),
+                new ExposedProperty(0, typeof(Vector3), POSITION, null, true),
+                new ExposedProperty(1, typeof(Vector3), ROTATION, null, true),
+                new ExposedProperty(2, typeof(Vector3), SCALE, null, true),
+                new ExposedProperty(3, typeof(Transform), PARENT, null, false),
             };
         }
 
