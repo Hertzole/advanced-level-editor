@@ -62,6 +62,11 @@ namespace Hertzole.ALE.Editor
                 }
             }
 
+            public bool IsEnum
+            {
+                get { return FieldTypeDefinition.IsSubclassOf<Enum>(); }
+            }
+
             public bool IsValueType
             {
                 get
@@ -493,7 +498,7 @@ namespace Hertzole.ALE.Editor
 
             MethodReference propertyConstructor = module.ImportReference(typeof(ExposedProperty).GetConstructor(new Type[]
             {
-                typeof(int), typeof(Type), typeof(string), typeof(string), typeof(bool), typeof(bool)
+                typeof(int), typeof(Type), typeof(string), typeof(string), typeof(bool)
             }));
             int index = 0;
 
@@ -517,7 +522,7 @@ namespace Hertzole.ALE.Editor
                     il.Emit(OpCodes.Ldstr, field.customName);
                 }
                 il.Emit(GetBoolOpCode(field.visible)); // Is visible
-                il.Emit(GetBoolOpCode(field.IsArray)); // Is array
+                //il.Emit(GetBoolOpCode(field.IsArray)); // Is array
 
                 il.Emit(OpCodes.Newobj, propertyConstructor); // Create the constructor.
                 il.Emit(OpCodes.Stelem_Any, module.ImportReference(typeof(ExposedProperty)));
@@ -630,35 +635,50 @@ namespace Hertzole.ALE.Editor
                 }
 
                 TypeReference type = field.FieldType;
-                il.Emit(field.IsArray ? OpCodes.Ldarg_2 : OpCodes.Ldarg_0);
+                if (field.IsEnum)
+                {
+                    il.Emit(OpCodes.Ldarg_2);
+                }
+                else
+                {
+                    il.Emit(field.IsArray ? OpCodes.Ldarg_2 : OpCodes.Ldarg_0);
+                }
 
                 if (!field.IsArray)
                 {
                     bool isInequalityCheck = true;
                     bool isObjectEquals = false;
                     MethodDefinition equalityMethod = null;
-                    if (field.FieldType.Is<Color32>())
+                    if (!field.IsEnum)
                     {
-                        equalityMethod = module.ImportReference(typeof(Color).GetMethod("op_Inequality", new Type[] { typeof(Color), typeof(Color) })).Resolve();
-                    }
-                    else if (field.FieldType.Resolve().IsSubclassOf<UnityEngine.Object>())
-                    {
-                        equalityMethod = module.ImportReference(typeof(UnityEngine.Object).GetMethod("op_Inequality", new Type[] { typeof(UnityEngine.Object), typeof(UnityEngine.Object) })).Resolve();
+                        if (field.FieldType.Is<Color32>())
+                        {
+                            equalityMethod = module.ImportReference(typeof(Color).GetMethod("op_Inequality", new Type[] { typeof(Color), typeof(Color) })).Resolve();
+                        }
+                        else if (field.FieldType.Resolve().IsSubclassOf<UnityEngine.Object>())
+                        {
+                            equalityMethod = module.ImportReference(typeof(UnityEngine.Object).GetMethod("op_Inequality", new Type[] { typeof(UnityEngine.Object), typeof(UnityEngine.Object) })).Resolve();
+                        }
+                        else
+                        {
+                            if (!field.FieldTypeDefinition.TryGetMethodInBaseType("op_Inequality", out equalityMethod, field.FieldType, field.FieldType))
+                            {
+                                if (field.FieldTypeDefinition.TryGetMethodInBaseType("Equals", out equalityMethod, field.FieldType))
+                                {
+                                    isInequalityCheck = false;
+                                }
+                                else
+                                {
+                                    equalityMethod = module.ImportReference(typeof(object).GetMethod("Equals", new Type[] { typeof(object) })).Resolve();
+                                    isObjectEquals = false;
+                                }
+                            }
+                        }
                     }
                     else
                     {
-                        if (!field.FieldTypeDefinition.TryGetMethodInBaseType("op_Inequality", out equalityMethod, field.FieldType, field.FieldType))
-                        {
-                            if (field.FieldTypeDefinition.TryGetMethodInBaseType("Equals", out equalityMethod, field.FieldType))
-                            {
-                                isInequalityCheck = false;
-                            }
-                            else
-                            {
-                                equalityMethod = module.ImportReference(typeof(object).GetMethod("Equals", new Type[] { typeof(object) })).Resolve();
-                                isObjectEquals = false;
-                            }
-                        }
+                        il.Emit(OpCodes.Unbox_Any, field.FieldType);
+                        il.Emit(OpCodes.Ldarg_0);
                     }
 
                     if (field.IsProperty)
@@ -677,44 +697,46 @@ namespace Hertzole.ALE.Editor
                         }
                     }
 
-                    int varLoc = method.Body.Variables.Count;
-
-                    if (field.IsProperty && field.IsValueType && !isInequalityCheck)
+                    if (!field.IsEnum)
                     {
-                        if (field.property.TryGetReturnField(out FieldDefinition propertyReturnField))
+                        int varLoc = method.Body.Variables.Count;
+                        if (field.IsProperty && field.IsValueType && !isInequalityCheck)
                         {
-                            VariableDefinition propertyVar = new VariableDefinition(propertyReturnField.FieldType);
-                            method.Body.Variables.Add(propertyVar);
-                            il.Append(GetStloc(varLoc));
-                            il.Emit(OpCodes.Ldloca_S, propertyVar);
+                            if (field.property.TryGetReturnField(out FieldDefinition propertyReturnField))
+                            {
+                                VariableDefinition propertyVar = new VariableDefinition(propertyReturnField.FieldType);
+                                method.Body.Variables.Add(propertyVar);
+                                il.Append(GetStloc(varLoc));
+                                il.Emit(OpCodes.Ldloca_S, propertyVar);
+                            }
                         }
-                    }
 
-                    if (type.Is<Color32>())
-                    {
-                        il.Emit(OpCodes.Call, module.ImportReference(typeof(Color32).GetMethod("op_Implicit", new Type[] { typeof(Color32) })));
-                    }
+                        if (type.Is<Color32>())
+                        {
+                            il.Emit(OpCodes.Call, module.ImportReference(typeof(Color32).GetMethod("op_Implicit", new Type[] { typeof(Color32) })));
+                        }
 
-                    il.Emit(OpCodes.Ldarg_2);
+                        il.Emit(OpCodes.Ldarg_2);
 
-                    if (type.Is<Color32>())
-                    {
-                        type = module.ImportReference(typeof(Color)); // Needs to convert to color because Color32 is being stupid with equals check.
-                    }
+                        if (type.Is<Color32>())
+                        {
+                            type = module.ImportReference(typeof(Color)); // Needs to convert to color because Color32 is being stupid with equals check.
+                        }
 
-                    if (field.IsValueType)
-                    {
-                        il.Emit(OpCodes.Unbox_Any, type);
-                    }
-                    else
-                    {
-                        il.Emit(OpCodes.Castclass, type);
-                    }
+                        if (field.IsValueType)
+                        {
+                            il.Emit(OpCodes.Unbox_Any, type);
+                        }
+                        else
+                        {
+                            il.Emit(OpCodes.Castclass, type);
+                        }
 
-                    if (isObjectEquals && field.IsValueType)
-                    {
-                        il.Emit(OpCodes.Box, field.FieldType);
-                        il.Emit(OpCodes.Constrained, field.FieldType);
+                        if (isObjectEquals && field.IsValueType)
+                        {
+                            il.Emit(OpCodes.Box, field.FieldType);
+                            il.Emit(OpCodes.Constrained, field.FieldType);
+                        }
                     }
 
                     if (equalityMethod != null)

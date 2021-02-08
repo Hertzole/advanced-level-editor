@@ -41,11 +41,11 @@ namespace Hertzole.ALE
         {
             return new ExposedProperty[]
             {
-                new ExposedProperty(0, typeof(float), "mass", null, true, false),
-                new ExposedProperty(1, typeof(float), "drag", null, true, false),
-                new ExposedProperty(2, typeof(float), "angularDrag", null, true, false),
-                new ExposedProperty(3, typeof(bool), "useGravity", null, true, false),
-                new ExposedProperty(4, typeof(bool), "isKinematic", null, true, false)
+                new ExposedProperty(0, typeof(float), "mass", null, true),
+                new ExposedProperty(1, typeof(float), "drag", null, true),
+                new ExposedProperty(2, typeof(float), "angularDrag", null, true),
+                new ExposedProperty(3, typeof(bool), "useGravity", null, true),
+                new ExposedProperty(4, typeof(bool), "isKinematic", null, true)
             };
         }
 

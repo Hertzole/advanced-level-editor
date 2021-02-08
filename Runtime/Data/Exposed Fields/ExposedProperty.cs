@@ -14,12 +14,11 @@ namespace Hertzole.ALE
 
         public Type Type { get; private set; }
 
-        public ExposedProperty(int id, Type type, string name, string customName, bool isVisible, bool isArray) : base(name, isVisible)
+        public ExposedProperty(int id, Type type, string name, string customName, bool isVisible) : base(name, isVisible)
         {
             ID = id;
             Type = type;
             CustomName = customName;
-            IsArray = isArray;
         }
 
         public override bool Equals(object obj)

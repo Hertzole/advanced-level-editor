@@ -50,8 +50,11 @@ namespace Hertzole.ALE
 
         public ILevelEditorUI UI { get; set; }
 
-        public object RawValue { get { return BoundComponent.GetValue(BoundProperty.ID); } }
-
+        public object RawValue
+        {
+            get { return exposed.GetValue(property.ID); }
+            set { exposed.SetValue(property.ID, value, true); }
+        }
         private void Awake()
         {
 #if OBSOLETE
@@ -75,7 +78,7 @@ namespace Hertzole.ALE
 
         protected virtual void OnBound(ExposedProperty property, IExposedToLevelEditor exposed) { }
 
-        public bool SupportsType(ExposedProperty property)
+        public virtual bool SupportsType(ExposedProperty property)
         {
             return SupportsType(property.Type, property.IsArray);
         }
@@ -130,7 +133,7 @@ namespace Hertzole.ALE
 #endif
     public abstract class LevelEditorInspectorField<T> : LevelEditorInspectorField
     {
-        public T Value { get { return (T)RawValue; } }
+        public T Value { get { return (T)RawValue; } set { RawValue = value; } }
 
         public override bool SupportsType(Type type, bool isArray)
         {
