@@ -58,27 +58,27 @@ namespace Hertzole.ALE
 
         public static Vector2 SnapPosition(this ILevelEditorSnapping snapping, Vector2 value)
         {
-            return snapping.EnableMoveSnap ? snapping.SnapVector2(value, snapping.MoveSnapX, snapping.MoveSnapY) : value;
+            return snapping.EnableMoveSnap ? snapping.SnapVector2(value, snapping.MoveSnap.x, snapping.MoveSnap.y) : value;
         }
 
         public static Vector3 SnapPosition(this ILevelEditorSnapping snapping, Vector3 value)
         {
-            return snapping.EnableMoveSnap ? snapping.SnapVector3(value, snapping.MoveSnapX, snapping.MoveSnapY, snapping.MoveSnapZ) : value;
+            return snapping.EnableMoveSnap ? snapping.SnapVector3(value, snapping.MoveSnap.x, snapping.MoveSnap.y, snapping.MoveSnap.z) : value;
         }
 
         public static Vector3 SnapRotation(this ILevelEditorSnapping snapping, Vector3 value)
         {
-            return snapping.EnableRotateSnap ? snapping.SnapVector3(value, snapping.RotateSnapX, snapping.RotateSnapY, snapping.RotateSnapZ) : value;
+            return snapping.EnableRotateSnap ? snapping.SnapVector3(value, snapping.RotateSnap.x, snapping.RotateSnap.y, snapping.RotateSnap.z) : value;
         }
 
         public static Quaternion SnapRotation(this ILevelEditorSnapping snapping, Quaternion value)
         {
-            return snapping.EnableRotateSnap ? snapping.SnapQuaternion(value, snapping.RotateSnapX, snapping.RotateSnapY, snapping.RotateSnapZ) : value;
+            return snapping.EnableRotateSnap ? snapping.SnapQuaternion(value, snapping.RotateSnap.x, snapping.RotateSnap.y, snapping.RotateSnap.z) : value;
         }
 
         public static Vector3 SnapScale(this ILevelEditorSnapping snapping, Vector3 value)
         {
-            return snapping.EnableScaleSnap ? snapping.SnapVector3(value, snapping.ScaleSnapX, snapping.ScaleSnapY, snapping.ScaleSnapZ) : value;
+            return snapping.EnableScaleSnap ? snapping.SnapVector3(value, snapping.ScaleSnap.x, snapping.ScaleSnap.y, snapping.ScaleSnap.z) : value;
         }
     }
 }

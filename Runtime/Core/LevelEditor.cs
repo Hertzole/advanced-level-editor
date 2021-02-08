@@ -32,7 +32,7 @@ namespace Hertzole.ALE
         [Space]
 
         [SerializeField]
-        private LevelEditorSnapping snapSettings = new LevelEditorSnapping(true, true, true);
+        private LevelEditorSnapping snapSettings = new LevelEditorSnapping();
 
         private bool isDirty = false;
 

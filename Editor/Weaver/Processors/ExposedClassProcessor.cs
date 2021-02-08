@@ -511,7 +511,6 @@ namespace Hertzole.ALE.Editor
                 il.Emit(OpCodes.Ldtoken, field.IsArray ? module.ImportReference(field.FieldType.Resolve()) : field.FieldType);
                 il.Emit(OpCodes.Call, getType);
 
-                //TODO: Implement custom names.
                 il.Emit(OpCodes.Ldstr, field.Name); // Field name
                 if (string.IsNullOrEmpty(field.customName))
                 {
