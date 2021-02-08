@@ -65,7 +65,11 @@ namespace Hertzole.ALE
             realSaveModal = saveModal.NeedComponent<ILevelEditorSaveModal>();
             realLoadModal = loadModal.NeedComponent<ILevelEditorLoadModal>();
             realNotificationModal = notificationModal.NeedComponent<ILevelEditorNotificationModal>();
-            realInspectorPanel = inspectorPanel.NeedComponent<ILevelEditorInspector>();
+            if (inspectorPanel != null)
+            {
+                realInspectorPanel = inspectorPanel.NeedComponent<ILevelEditorInspector>();
+            }
+
             realResourcePanel = resourcePanel.NeedComponent<ILevelEditorResourceView>();
             realHierarchy = hierarchyPanel.NeedComponent<ILevelEditorHierarchy>();
             realColorPickerWindow = colorPickerWindow.NeedComponent<ILevelEditorColorPickerWindow>();
@@ -100,7 +104,11 @@ namespace Hertzole.ALE
 
             levelEditor.Selection.OnSelectionChanged += OnSelectionChanged;
 
-            realInspectorPanel.Initialize(this);
+            if (realInspectorPanel != null)
+            {
+                realInspectorPanel.Initialize(this);
+            }
+
             realHierarchy.Initialize(levelEditor);
 
             realSaveModal.Initialize();
@@ -276,7 +284,10 @@ namespace Hertzole.ALE
 
         private void OnSelectionChanged(object sender, SelectionEvent e)
         {
-            InspectorPanel.BindObject(e.NewObject);
+            if (realInspectorPanel != null)
+            {
+                realInspectorPanel.BindObject(e.NewObject);
+            }
         }
     }
 }

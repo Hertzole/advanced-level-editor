@@ -35,8 +35,6 @@ namespace Hertzole.ALE
         [SerializeField]
         private float maxZoom = 20f;
 
-        [Space]
-
         [SerializeField]
         private bool canFly = true;
         [SerializeField]
@@ -50,7 +48,6 @@ namespace Hertzole.ALE
         [SerializeField]
         private bool canOrbit = true;
 
-        [Header("Input")]
         [SerializeField]
         private string altModifier = "Alt Modifier";
         [SerializeField]
@@ -68,7 +65,6 @@ namespace Hertzole.ALE
         [SerializeField]
         private string cameraPan = "Camera Pan";
 
-        [Header("References")]
         [SerializeField]
         [RequireType(typeof(ILevelEditorInput))]
         private GameObject input = null;

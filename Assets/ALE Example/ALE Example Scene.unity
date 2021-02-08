@@ -3714,18 +3714,12 @@ MonoBehaviour:
   selection: {fileID: 1918987434}
   playMode: {fileID: 0}
   snapSettings:
-    moveSnap: 1
-    moveSnapX: 1
-    moveSnapY: 1
-    moveSnapZ: 1
-    rotateSnap: 1
-    rotateSnapX: 45
-    rotateSnapY: 45
-    rotateSnapZ: 45
-    scaleSnap: 1
-    scaleSnapX: 0.1
-    scaleSnapY: 0.1
-    scaleSnapZ: 0.1
+    enableMoveSnap: 1
+    moveSnap: {x: 1, y: 1, z: 1}
+    enableRotateSnap: 1
+    rotateSnap: {x: 10, y: 10, z: 10}
+    enableScaleSnap: 0
+    scaleSnap: {x: 0.1, y: 0.1, z: 0.1}
 --- !u!4 &1918987436
 Transform:
   m_ObjectHideFlags: 0

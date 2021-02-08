@@ -67,7 +67,7 @@ The supported inspector fields.
 - [x] Toggle field
 - [x] Vector2(int) field
 - [x] Vector3(int) field
-- [ ] Vector4 field
+- [ ] Vector4/Quaternion field
 - [x] Object reference field
 - [ ] Resource reference
 - [x] Color field
