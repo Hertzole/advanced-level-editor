@@ -10,6 +10,7 @@
 using System;
 using TMPro;
 using UnityEngine;
+using UnityEngine.Events;
 
 namespace Hertzole.ALE
 {
@@ -23,26 +24,105 @@ namespace Hertzole.ALE
 #endif
     public class LevelEditorNumberField : LevelEditorInspectorField
     {
+        [Serializable]
+        public class SByteEvent : UnityEvent<sbyte> { }
+        [Serializable]
+        public class ByteEvent : UnityEvent<byte> { }
+        [Serializable]
+        public class ShortEvent : UnityEvent<short> { }
+        [Serializable]
+        public class UShortEvent : UnityEvent<ushort> { }
+        [Serializable]
+        public class IntEvent : UnityEvent<int> { }
+        [Serializable]
+        public class UIntEvent : UnityEvent<uint> { }
+        [Serializable]
+        public class LongEvent : UnityEvent<long> { }
+        [Serializable]
+        public class ULongEvent : UnityEvent<ulong> { }
+        [Serializable]
+        public class FloatEvent : UnityEvent<float> { }
+        [Serializable]
+        public class DoubleEvent : UnityEvent<double> { }
+        [Serializable]
+        public class DecimalEvent : UnityEvent<decimal> { }
+
         [SerializeField]
         private TMP_InputField textField = null;
         [SerializeField]
         private bool placeholderAsName = true;
+        [SerializeField]
+        private SByteEvent onSByteValueChanged = new SByteEvent();
+        [SerializeField]
+        private SByteEvent onSByteEndEdit = new SByteEvent();
+        [SerializeField]
+        private ByteEvent onByteValueChanged = new ByteEvent();
+        [SerializeField]
+        private ByteEvent onByteEndEdit = new ByteEvent();
+        [SerializeField]
+        private ShortEvent onShortValueChanged = new ShortEvent();
+        [SerializeField]
+        private ShortEvent onShortEndEdit = new ShortEvent();
+        [SerializeField]
+        private UShortEvent onUShortValueChanged = new UShortEvent();
+        [SerializeField]
+        private UShortEvent onUShortEndEdit = new UShortEvent();
+        [SerializeField]
+        private IntEvent onIntValueChanged = new IntEvent();
+        [SerializeField]
+        private IntEvent onIntEndEdit = new IntEvent();
+        [SerializeField]
+        private UIntEvent onUIntValueChanged = new UIntEvent();
+        [SerializeField]
+        private UIntEvent onUIntEndEdit = new UIntEvent();
+        [SerializeField]
+        private LongEvent onLongValueChanged = new LongEvent();
+        [SerializeField]
+        private LongEvent onLongEndEdit = new LongEvent();
+        [SerializeField]
+        private ULongEvent onULongValueChanged = new ULongEvent();
+        [SerializeField]
+        private ULongEvent onULongEndEdit = new ULongEvent();
+        [SerializeField]
+        private FloatEvent onFloatValueChanged = new FloatEvent();
+        [SerializeField]
+        private FloatEvent onFloatEndEdit = new FloatEvent();
+        [SerializeField]
+        private DoubleEvent onDoubleValueChanged = new DoubleEvent();
+        [SerializeField]
+        private DoubleEvent onDoubleEndEdit = new DoubleEvent();
+        [SerializeField]
+        private DecimalEvent onDecimalValueChanged = new DecimalEvent();
+        [SerializeField]
+        private DecimalEvent onDecimalEndEdit = new DecimalEvent();
 
         private enum NumberType : ushort { Sbyte, Byte, Short, UShort, Int, UInt, Long, ULong, Float, Double, Decimal }
 
         private NumberType currentType;
 
-        public event Action<sbyte> OnSByteValueChanged;
-        public event Action<byte> OnByteValueChanged;
-        public event Action<short> OnShortValueChanged;
-        public event Action<ushort> OnUShortValueChanged;
-        public event Action<int> OnIntValueChanged;
-        public event Action<uint> OnUIntValueChanged;
-        public event Action<long> OnLongValueChanged;
-        public event Action<ulong> OnULongValueChanged;
-        public event Action<float> OnFloatValueChanged;
-        public event Action<double> OnDoubleValueChanged;
-        public event Action<decimal> OnDecimalValueChanged;
+        public SByteEvent OnSByteValueChanged { get { return onSByteValueChanged; } }
+        public ByteEvent OnByteValueChanged { get { return onByteValueChanged; } }
+        public ShortEvent OnShortValueChanged { get { return onShortValueChanged; } }
+        public UShortEvent OnUShortValueChanged { get { return onUShortValueChanged; } }
+        public IntEvent OnIntValueChanged { get { return onIntValueChanged; } }
+        public UIntEvent OnUIntValueChanged { get { return onUIntValueChanged; } }
+        public LongEvent OnLongValueChanged { get { return onLongValueChanged; } }
+        public ULongEvent OnULongValueChanged { get { return onULongValueChanged; } }
+        public FloatEvent OnFloatValueChanged { get { return onFloatValueChanged; } }
+        public DoubleEvent OnDoubleValueChanged { get { return onDoubleValueChanged; } }
+        public DecimalEvent OnDecimalValueChanged { get { return onDecimalValueChanged; } }
+
+        public SByteEvent OnSByteEndEdit { get { return onSByteEndEdit; } }
+        public ByteEvent OnByteEndEdit { get { return onByteEndEdit; } }
+        public ShortEvent OnShortEndEdit { get { return onShortEndEdit; } }
+        public UShortEvent OnUShortEndEdit { get { return onUShortEndEdit; } }
+        public IntEvent OnIntEndEdit { get { return onIntEndEdit; } }
+        public UIntEvent OnUIntEndEdit { get { return onUIntEndEdit; } }
+        public LongEvent OnLongEndEdit { get { return onLongEndEdit; } }
+        public ULongEvent OnULongEndEdit { get { return onULongEndEdit; } }
+        public FloatEvent OnFloatEndEdit { get { return onFloatEndEdit; } }
+        public DoubleEvent OnDoubleEndEdit { get { return onDoubleEndEdit; } }
+        public DecimalEvent OnDecimalEndEdit { get { return onDecimalEndEdit; } }
 
         protected override void OnAwake()
         {
@@ -215,9 +295,12 @@ namespace Hertzole.ALE
                 if (modifyField)
                 {
                     textField.SetTextWithoutNotify("0");
+                    InvokeEndEdit(convertedValue);
                 }
-
-                InvokeValueChanged(convertedValue);
+                else
+                {
+                    InvokeValueChanged(convertedValue);
+                }
 
                 return;
             }
@@ -243,7 +326,14 @@ namespace Hertzole.ALE
 
                 T convertedValue = (T)Convert.ChangeType(result, typeof(T));
                 SetPropertyValue(convertedValue);
-                InvokeValueChanged(convertedValue);
+                if (modifyField)
+                {
+                    InvokeEndEdit(convertedValue);
+                }
+                else
+                {
+                    InvokeValueChanged(convertedValue);
+                }
             }
             else
             {
@@ -261,9 +351,12 @@ namespace Hertzole.ALE
                 if (modifyField)
                 {
                     textField.SetTextWithoutNotify("0");
+                    InvokeEndEdit(convertedValue);
                 }
-
-                InvokeValueChanged(convertedValue);
+                else
+                {
+                    InvokeValueChanged(convertedValue);
+                }
 
                 return;
             }
@@ -289,7 +382,14 @@ namespace Hertzole.ALE
 
                 T convertedValue = (T)Convert.ChangeType(result, typeof(T));
                 SetPropertyValue(convertedValue);
-                InvokeValueChanged(convertedValue);
+                if (modifyField)
+                {
+                    InvokeEndEdit(convertedValue);
+                }
+                else
+                {
+                    InvokeValueChanged(convertedValue);
+                }
             }
             else
             {
@@ -307,9 +407,12 @@ namespace Hertzole.ALE
                 if (modifyField)
                 {
                     textField.SetTextWithoutNotify("0");
+                    InvokeEndEdit(convertedValue);
                 }
-
-                InvokeValueChanged(convertedValue);
+                else
+                {
+                    InvokeValueChanged(convertedValue);
+                }
 
                 return;
             }
@@ -335,7 +438,14 @@ namespace Hertzole.ALE
 
                 T convertedValue = (T)Convert.ChangeType(result, typeof(T));
                 SetPropertyValue(convertedValue);
-                InvokeValueChanged(convertedValue);
+                if (modifyField)
+                {
+                    InvokeEndEdit(convertedValue);
+                }
+                else
+                {
+                    InvokeValueChanged(convertedValue);
+                }
             }
             else
             {
@@ -353,9 +463,12 @@ namespace Hertzole.ALE
                 if (modifyField)
                 {
                     textField.SetTextWithoutNotify("0");
+                    InvokeEndEdit(convertedValue);
                 }
-
-                InvokeValueChanged(convertedValue);
+                else
+                {
+                    InvokeValueChanged(convertedValue);
+                }
 
                 return;
             }
@@ -382,7 +495,14 @@ namespace Hertzole.ALE
                 T convertedValue = (T)Convert.ChangeType(result, typeof(T));
 
                 SetPropertyValue(convertedValue);
-                InvokeValueChanged(convertedValue);
+                if (modifyField)
+                {
+                    InvokeEndEdit(convertedValue);
+                }
+                else
+                {
+                    InvokeValueChanged(convertedValue);
+                }
             }
             else
             {
@@ -396,37 +516,79 @@ namespace Hertzole.ALE
             switch (currentType)
             {
                 case NumberType.Sbyte:
-                    OnSByteValueChanged?.Invoke((sbyte)value);
+                    onSByteValueChanged.Invoke((sbyte)value);
                     break;
                 case NumberType.Byte:
-                    OnByteValueChanged?.Invoke((byte)value);
+                    onByteValueChanged.Invoke((byte)value);
                     break;
                 case NumberType.Short:
-                    OnShortValueChanged?.Invoke((short)value);
+                    onShortValueChanged.Invoke((short)value);
                     break;
                 case NumberType.UShort:
-                    OnUShortValueChanged?.Invoke((ushort)value);
+                    onUShortValueChanged.Invoke((ushort)value);
                     break;
                 case NumberType.Int:
-                    OnIntValueChanged?.Invoke((int)value);
+                    onIntValueChanged.Invoke((int)value);
                     break;
                 case NumberType.UInt:
-                    OnUIntValueChanged?.Invoke((uint)value);
+                    onUIntValueChanged.Invoke((uint)value);
                     break;
                 case NumberType.Long:
-                    OnLongValueChanged?.Invoke((long)value);
+                    onLongValueChanged.Invoke((long)value);
                     break;
                 case NumberType.ULong:
-                    OnULongValueChanged?.Invoke((ulong)value);
+                    onULongValueChanged.Invoke((ulong)value);
                     break;
                 case NumberType.Float:
-                    OnFloatValueChanged?.Invoke((float)value);
+                    onFloatValueChanged.Invoke((float)value);
                     break;
                 case NumberType.Double:
-                    OnDoubleValueChanged?.Invoke((double)value);
+                    onDoubleValueChanged.Invoke((double)value);
                     break;
                 case NumberType.Decimal:
-                    OnDecimalValueChanged?.Invoke((decimal)value);
+                    onDecimalValueChanged.Invoke((decimal)value);
+                    break;
+                default:
+                    break;
+            }
+        }
+
+        private void InvokeEndEdit(object value)
+        {
+            switch (currentType)
+            {
+                case NumberType.Sbyte:
+                    onSByteEndEdit.Invoke((sbyte)value);
+                    break;
+                case NumberType.Byte:
+                    onByteEndEdit.Invoke((byte)value);
+                    break;
+                case NumberType.Short:
+                    onShortEndEdit.Invoke((short)value);
+                    break;
+                case NumberType.UShort:
+                    onUShortEndEdit.Invoke((ushort)value);
+                    break;
+                case NumberType.Int:
+                    onIntEndEdit.Invoke((int)value);
+                    break;
+                case NumberType.UInt:
+                    onUIntEndEdit.Invoke((uint)value);
+                    break;
+                case NumberType.Long:
+                    onLongEndEdit.Invoke((long)value);
+                    break;
+                case NumberType.ULong:
+                    onULongEndEdit.Invoke((ulong)value);
+                    break;
+                case NumberType.Float:
+                    onFloatEndEdit.Invoke((float)value);
+                    break;
+                case NumberType.Double:
+                    onDoubleEndEdit.Invoke((double)value);
+                    break;
+                case NumberType.Decimal:
+                    onDecimalEndEdit.Invoke((decimal)value);
                     break;
                 default:
                     break;

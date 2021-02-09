@@ -9,11 +9,13 @@ namespace Hertzole.ALE
     {
         [SerializeField]
         private TMP_Dropdown dropdown = null;
+        [SerializeField]
+        private TMP_Dropdown.DropdownEvent onValueChanged = new TMP_Dropdown.DropdownEvent();
 
         private List<string> enumNames = new List<string>();
         private List<object> enumValues = new List<object>();
 
-        public event Action<int> OnValueChanged;
+        public TMP_Dropdown.DropdownEvent OnValueChanged { get { return onValueChanged; } }
 
         protected override void OnAwake()
         {
@@ -58,7 +60,7 @@ namespace Hertzole.ALE
         private void OnDropdownChanged(int newIndex)
         {
             SetPropertyValue(enumValues[newIndex]);
-            OnValueChanged?.Invoke(newIndex);
+            onValueChanged.Invoke(newIndex);
         }
     }
 }

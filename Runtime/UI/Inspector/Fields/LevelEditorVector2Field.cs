@@ -10,6 +10,7 @@
 using System;
 using TMPro;
 using UnityEngine;
+using UnityEngine.Events;
 
 namespace Hertzole.ALE
 {
@@ -23,26 +24,42 @@ namespace Hertzole.ALE
 #endif
     public class LevelEditorVector2Field : LevelEditorInspectorField
     {
+        [Serializable]
+        public class Vector2Event : UnityEvent<Vector2> { }
+        [Serializable]
+        public class Vector2IntEvent : UnityEvent<Vector2Int> { }
+
         private enum VectorTypes { Vector2, Vector2Int, Vector3, Vector3Int, Vector4, Invalid }
 
         [SerializeField]
         private TMP_InputField xField = null;
         [SerializeField]
         private TMP_InputField yField = null;
+        [SerializeField]
+        private Vector2Event onValueChanged = new Vector2Event();
+        [SerializeField]
+        private Vector2Event onValueEndEdit = new Vector2Event();
+        [SerializeField]
+        private Vector2IntEvent onIntValueChanged = new Vector2IntEvent();
+        [SerializeField]
+        private Vector2IntEvent onIntEndEdit = new Vector2IntEvent();
 
         private VectorTypes type;
 
         private bool IsInt { get { return type == VectorTypes.Vector2Int || type == VectorTypes.Vector3Int; } }
 
-        public event Action<Vector2> OnVector2ValueChanged;
-        public event Action<Vector2Int> OnVector2IntValueChanged;
+        public Vector2Event OnValueChanged { get { return onValueChanged; } }
+        public Vector2IntEvent OnIntValueChanged { get { return onIntValueChanged; } }
+
+        public Vector2Event OnValueEndEdit { get { return onValueEndEdit; } }
+        public Vector2IntEvent OnIntEndEdit { get { return onIntEndEdit; } }
 
         protected override void OnAwake()
         {
             this.LogIfStripped();
 
-            xField.onValueChanged.AddListener(x => SetPropValue());
-            yField.onValueChanged.AddListener(x => SetPropValue());
+            xField.onValueChanged.AddListener(x => SetPropValue(false));
+            yField.onValueChanged.AddListener(x => SetPropValue(false));
 
             xField.onEndEdit.AddListener(x =>
             {
@@ -50,6 +67,8 @@ namespace Hertzole.ALE
                 {
                     xField.SetTextWithoutNotify("0");
                 }
+
+                SetPropValue(true);
             });
 
             yField.onEndEdit.AddListener(x =>
@@ -58,6 +77,8 @@ namespace Hertzole.ALE
                 {
                     yField.SetTextWithoutNotify("0");
                 }
+
+                SetPropValue(true);
             });
         }
 
@@ -126,7 +147,7 @@ namespace Hertzole.ALE
             }
         }
 
-        private void SetPropValue()
+        private void SetPropValue(bool endEdit)
         {
             string _x = string.IsNullOrWhiteSpace(xField.text) ? "0" : xField.text;
             string _y = string.IsNullOrWhiteSpace(yField.text) ? "0" : yField.text;
@@ -154,7 +175,14 @@ namespace Hertzole.ALE
                         break;
                 }
 
-                OnVector2IntValueChanged?.Invoke(value);
+                if (endEdit)
+                {
+                    onIntEndEdit.Invoke(value);
+                }
+                else
+                {
+                    onIntValueChanged.Invoke(value);
+                }
             }
             else
             {
@@ -181,7 +209,15 @@ namespace Hertzole.ALE
                         SetPropertyValue(value);
                         break;
                 }
-                OnVector2ValueChanged?.Invoke(value);
+
+                if (endEdit)
+                {
+                    onValueEndEdit.Invoke(value);
+                }
+                else
+                {
+                    onValueChanged.Invoke(value);
+                }
             }
         }
     }

@@ -10,6 +10,7 @@
 using System;
 using TMPro;
 using UnityEngine;
+using UnityEngine.Events;
 
 namespace Hertzole.ALE
 {
@@ -23,6 +24,11 @@ namespace Hertzole.ALE
 #endif
     public class LevelEditorVector3Field : LevelEditorInspectorField
     {
+        [Serializable]
+        public class Vector3Event : UnityEvent<Vector3> { }
+        [Serializable]
+        public class Vector3IntEvent : UnityEvent<Vector3Int> { }
+
         private enum VectorTypes { Vector2, Vector2Int, Vector3, Vector3Int, Vector4, Invalid }
 
         [SerializeField]
@@ -31,21 +37,32 @@ namespace Hertzole.ALE
         private TMP_InputField yField = null;
         [SerializeField]
         private TMP_InputField zField = null;
+        [SerializeField]
+        private Vector3Event onValueChanged = new Vector3Event();
+        [SerializeField]
+        private Vector3Event onValueEndEdit = new Vector3Event();
+        [SerializeField]
+        private Vector3IntEvent onIntValueChanged = new Vector3IntEvent();
+        [SerializeField]
+        private Vector3IntEvent onIntEndEdit = new Vector3IntEvent();
 
         private VectorTypes type;
 
         private bool IsInt { get { return type == VectorTypes.Vector2Int || type == VectorTypes.Vector3Int; } }
 
-        public event Action<Vector3Int> OnVector3IntValueChanged;
-        public event Action<Vector3> OnVector3ValueChanged;
+        public Vector3Event OnValueChanged { get { return onValueChanged; } }
+        public Vector3IntEvent OnIntValueChanged { get { return onIntValueChanged; } }
+
+        public Vector3Event OnValueEndEdit { get { return onValueEndEdit; } }
+        public Vector3IntEvent OnIntEndEdit { get { return onIntEndEdit; } }
 
         protected override void OnAwake()
         {
             this.LogIfStripped();
 
-            xField.onValueChanged.AddListener(x => SetPropValue());
-            yField.onValueChanged.AddListener(x => SetPropValue());
-            zField.onValueChanged.AddListener(x => SetPropValue());
+            xField.onValueChanged.AddListener(x => SetPropValue(false));
+            yField.onValueChanged.AddListener(x => SetPropValue(false));
+            zField.onValueChanged.AddListener(x => SetPropValue(false));
 
             xField.onEndEdit.AddListener(x =>
             {
@@ -53,6 +70,8 @@ namespace Hertzole.ALE
                 {
                     xField.SetTextWithoutNotify("0");
                 }
+
+                SetPropValue(true);
             });
 
             yField.onEndEdit.AddListener(x =>
@@ -61,6 +80,8 @@ namespace Hertzole.ALE
                 {
                     yField.SetTextWithoutNotify("0");
                 }
+
+                SetPropValue(true);
             });
 
             zField.onEndEdit.AddListener(x =>
@@ -69,6 +90,8 @@ namespace Hertzole.ALE
                 {
                     zField.SetTextWithoutNotify("0");
                 }
+
+                SetPropValue(true);
             });
         }
 
@@ -139,7 +162,7 @@ namespace Hertzole.ALE
             }
         }
 
-        private void SetPropValue()
+        private void SetPropValue(bool endEdit)
         {
             string _x = string.IsNullOrWhiteSpace(xField.text) ? "0" : xField.text;
             string _y = string.IsNullOrWhiteSpace(yField.text) ? "0" : yField.text;
@@ -172,7 +195,15 @@ namespace Hertzole.ALE
                         SetPropertyValue(value);
                         break;
                 }
-                OnVector3IntValueChanged?.Invoke(value);
+
+                if (endEdit)
+                {
+                    onIntEndEdit.Invoke(value);
+                }
+                else
+                {
+                    onIntValueChanged.Invoke(value);
+                }
             }
             else
             {
@@ -204,7 +235,15 @@ namespace Hertzole.ALE
                         SetPropertyValue(value);
                         break;
                 }
-                OnVector3ValueChanged?.Invoke(value);
+
+                if (endEdit)
+                {
+                    onValueEndEdit.Invoke(value);
+                }
+                else
+                {
+                    onValueChanged.Invoke(value);
+                }
             }
         }
     }
