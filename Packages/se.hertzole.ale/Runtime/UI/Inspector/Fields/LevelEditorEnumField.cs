@@ -13,6 +13,8 @@ namespace Hertzole.ALE
         private List<string> enumNames = new List<string>();
         private List<object> enumValues = new List<object>();
 
+        public event Action<int> OnValueChanged;
+
         protected override void OnAwake()
         {
             dropdown.onValueChanged.AddListener(OnDropdownChanged);
@@ -56,6 +58,7 @@ namespace Hertzole.ALE
         private void OnDropdownChanged(int newIndex)
         {
             SetPropertyValue(enumValues[newIndex]);
+            OnValueChanged?.Invoke(newIndex);
         }
     }
 }

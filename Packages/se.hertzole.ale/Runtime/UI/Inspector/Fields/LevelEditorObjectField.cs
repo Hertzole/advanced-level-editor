@@ -20,6 +20,8 @@ namespace Hertzole.ALE
 
         private bool isComponent = false;
 
+        public event Action<UnityObject> OnValueChanged;
+
         protected override void OnAwake()
         {
             objectButton.onClick.AddListener(OnClickObjectButton);
@@ -45,10 +47,13 @@ namespace Hertzole.ALE
                 if (obj == null)
                 {
                     SetPropertyValue(null);
+                    OnValueChanged?.Invoke(null);
                 }
                 else
                 {
-                    SetPropertyValue(((Component)obj).GetComponent(BoundProperty.Type));
+                    Component value = ((Component)obj).GetComponent(BoundProperty.Type);
+                    SetPropertyValue(value);
+                    OnValueChanged?.Invoke(value);
                 }
 
                 UpdateLabel((UnityObject)RawValue);

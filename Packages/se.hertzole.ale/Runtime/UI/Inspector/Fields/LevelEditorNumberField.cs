@@ -32,6 +32,18 @@ namespace Hertzole.ALE
 
         private NumberType currentType;
 
+        public event Action<sbyte> OnSByteValueChanged;
+        public event Action<byte> OnByteValueChanged;
+        public event Action<short> OnShortValueChanged;
+        public event Action<ushort> OnUShortValueChanged;
+        public event Action<int> OnIntValueChanged;
+        public event Action<uint> OnUIntValueChanged;
+        public event Action<long> OnLongValueChanged;
+        public event Action<ulong> OnULongValueChanged;
+        public event Action<float> OnFloatValueChanged;
+        public event Action<double> OnDoubleValueChanged;
+        public event Action<decimal> OnDecimalValueChanged;
+
         protected override void OnAwake()
         {
             this.LogIfStripped();
@@ -198,11 +210,14 @@ namespace Hertzole.ALE
         {
             if (string.IsNullOrWhiteSpace(value))
             {
-                SetPropertyValue((T)Convert.ChangeType(0, typeof(T)));
+                T convertedValue = (T)Convert.ChangeType(0, typeof(T));
+                SetPropertyValue(convertedValue);
                 if (modifyField)
                 {
                     textField.SetTextWithoutNotify("0");
                 }
+
+                InvokeValueChanged(convertedValue);
 
                 return;
             }
@@ -226,7 +241,14 @@ namespace Hertzole.ALE
                     }
                 }
 
-                SetPropertyValue((T)Convert.ChangeType(result, typeof(T)));
+                T convertedValue = (T)Convert.ChangeType(result, typeof(T));
+                SetPropertyValue(convertedValue);
+                InvokeValueChanged(convertedValue);
+            }
+            else
+            {
+                SetPropertyValue(0);
+                InvokeValueChanged(0);
             }
         }
 
@@ -234,11 +256,14 @@ namespace Hertzole.ALE
         {
             if (string.IsNullOrWhiteSpace(value))
             {
-                SetPropertyValue((T)Convert.ChangeType(0, typeof(T)));
+                T convertedValue = (T)Convert.ChangeType(0, typeof(T));
+                SetPropertyValue(convertedValue);
                 if (modifyField)
                 {
                     textField.SetTextWithoutNotify("0");
                 }
+
+                InvokeValueChanged(convertedValue);
 
                 return;
             }
@@ -262,11 +287,14 @@ namespace Hertzole.ALE
                     }
                 }
 
-                SetPropertyValue((T)Convert.ChangeType(result, typeof(T)));
+                T convertedValue = (T)Convert.ChangeType(result, typeof(T));
+                SetPropertyValue(convertedValue);
+                InvokeValueChanged(convertedValue);
             }
             else
             {
                 SetPropertyValue(0);
+                InvokeValueChanged(0);
             }
         }
 
@@ -274,11 +302,14 @@ namespace Hertzole.ALE
         {
             if (string.IsNullOrWhiteSpace(value))
             {
-                SetPropertyValue((T)Convert.ChangeType(0, typeof(T)));
+                T convertedValue = (T)Convert.ChangeType(0, typeof(T));
+                SetPropertyValue(convertedValue);
                 if (modifyField)
                 {
                     textField.SetTextWithoutNotify("0");
                 }
+
+                InvokeValueChanged(convertedValue);
 
                 return;
             }
@@ -302,7 +333,14 @@ namespace Hertzole.ALE
                     }
                 }
 
-                SetPropertyValue((T)Convert.ChangeType(result, typeof(T)));
+                T convertedValue = (T)Convert.ChangeType(result, typeof(T));
+                SetPropertyValue(convertedValue);
+                InvokeValueChanged(convertedValue);
+            }
+            else
+            {
+                SetPropertyValue(0);
+                InvokeValueChanged(0);
             }
         }
 
@@ -310,11 +348,14 @@ namespace Hertzole.ALE
         {
             if (string.IsNullOrWhiteSpace(value))
             {
-                SetPropertyValue((T)Convert.ChangeType(0, typeof(T)));
+                T convertedValue = (T)Convert.ChangeType(0, typeof(T));
+                SetPropertyValue(convertedValue);
                 if (modifyField)
                 {
                     textField.SetTextWithoutNotify("0");
                 }
+
+                InvokeValueChanged(convertedValue);
 
                 return;
             }
@@ -338,7 +379,57 @@ namespace Hertzole.ALE
                     }
                 }
 
-                SetPropertyValue((T)Convert.ChangeType(result, typeof(T)));
+                T convertedValue = (T)Convert.ChangeType(result, typeof(T));
+
+                SetPropertyValue(convertedValue);
+                InvokeValueChanged(convertedValue);
+            }
+            else
+            {
+                SetPropertyValue(0);
+                InvokeValueChanged(0);
+            }
+        }
+
+        private void InvokeValueChanged(object value)
+        {
+            switch (currentType)
+            {
+                case NumberType.Sbyte:
+                    OnSByteValueChanged?.Invoke((sbyte)value);
+                    break;
+                case NumberType.Byte:
+                    OnByteValueChanged?.Invoke((byte)value);
+                    break;
+                case NumberType.Short:
+                    OnShortValueChanged?.Invoke((short)value);
+                    break;
+                case NumberType.UShort:
+                    OnUShortValueChanged?.Invoke((ushort)value);
+                    break;
+                case NumberType.Int:
+                    OnIntValueChanged?.Invoke((int)value);
+                    break;
+                case NumberType.UInt:
+                    OnUIntValueChanged?.Invoke((uint)value);
+                    break;
+                case NumberType.Long:
+                    OnLongValueChanged?.Invoke((long)value);
+                    break;
+                case NumberType.ULong:
+                    OnULongValueChanged?.Invoke((ulong)value);
+                    break;
+                case NumberType.Float:
+                    OnFloatValueChanged?.Invoke((float)value);
+                    break;
+                case NumberType.Double:
+                    OnDoubleValueChanged?.Invoke((double)value);
+                    break;
+                case NumberType.Decimal:
+                    OnDecimalValueChanged?.Invoke((decimal)value);
+                    break;
+                default:
+                    break;
             }
         }
 

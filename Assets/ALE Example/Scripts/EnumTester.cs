@@ -39,6 +39,8 @@ public class EnumTester : MonoBehaviour, IExposedToLevelEditor
         }
     }
 
+    public Type ComponentType { get { return typeof(EnumTester); } }
+
     public ExposedProperty[] GetProperties()
     {
         return new ExposedProperty[]

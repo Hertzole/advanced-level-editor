@@ -15,6 +15,8 @@ namespace Hertzole.ALE
 
         private Color color;
 
+        public event Action<Color> OnValueChanged;
+
         protected override void OnAwake()
         {
             colorButton.onClick.AddListener(() =>
@@ -28,15 +30,19 @@ namespace Hertzole.ALE
 
         private void OnColorChanged(Color color)
         {
-            this.color = color;
-
-            colorImage.color = new Color(color.r, color.g, color.b, 1f);
-            if (alphaSlider != null)
+            if (this.color != color)
             {
-                alphaSlider.value = color.a;
-            }
+                this.color = color;
 
-            SetPropertyValue(color);
+                colorImage.color = new Color(color.r, color.g, color.b, 1f);
+                if (alphaSlider != null)
+                {
+                    alphaSlider.value = color.a;
+                }
+
+                SetPropertyValue(color);
+                OnValueChanged?.Invoke(color);
+            }
         }
 
         private void OnCloseColorPicker()

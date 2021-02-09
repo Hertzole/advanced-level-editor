@@ -30,6 +30,9 @@ namespace Hertzole.ALE
 
         private bool isChar;
 
+        public event Action<string> OnStringValueChanged;
+        public event Action<char> OnCharValueChanged;
+
         protected override void OnAwake()
         {
             this.LogIfStripped();
@@ -43,11 +46,15 @@ namespace Hertzole.ALE
                         x = "\0";
                     }
 
-                    SetPropertyValue(char.Parse(x));
+                    char charValue = char.Parse(x);
+
+                    SetPropertyValue(charValue);
+                    OnCharValueChanged?.Invoke(charValue);
                 }
                 else
                 {
                     SetPropertyValue(x);
+                    OnStringValueChanged?.Invoke(x);
                 }
             });
         }

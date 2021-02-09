@@ -22,6 +22,8 @@ public class MyCustomStruct : IExposedToLevelEditor
 
     public int Order { get { return 0; } }
 
+    public Type ComponentType { get { return typeof(MyCustomStruct); } }
+
     public event Action<int, object> OnValueChanged;
 
     public ExposedProperty[] GetProperties()

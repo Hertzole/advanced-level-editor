@@ -38,6 +38,7 @@ namespace Hertzole.ALE
         public virtual string ComponentName { get { throw new NotImplementedException(); } }
         public virtual string TypeName { get { throw new NotImplementedException(); } }
         public virtual int Order { get { return 0; } }
+        public virtual Type ComponentType { get { return null; } }
 
         public event Action<int, object> OnValueChanged;
 
@@ -82,14 +83,8 @@ namespace Hertzole.ALE
             }
         }
 
-        public override string ComponentName
-        {
-            get { return typeof(T).Name; }
-        }
-
-        public override string TypeName
-        {
-            get { return typeof(T).FullName; }
-        }
+        public override string ComponentName { get { return typeof(T).Name; } }
+        public override string TypeName { get { return typeof(T).FullName; } }
+        public override Type ComponentType { get { return typeof(T); } }
     }
 }

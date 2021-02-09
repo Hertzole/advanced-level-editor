@@ -6,6 +6,7 @@ namespace Hertzole.ALE
     {
         string ComponentName { get; }
         string TypeName { get; }
+        Type ComponentType { get; }
 
         int Order { get; }
 

@@ -142,22 +142,30 @@ namespace Hertzole.ALE
                     LevelEditorComponentUI compUI = GetComponentUI();
                     compUI.Title = components[i].ComponentName;
 
-                    ExposedProperty[] properties = components[i].GetProperties();
-                    for (int j = 0; j < properties.Length; j++)
+                    if (LevelEditorComponentEditor.TryGetEditor(components[i].ComponentType, out LevelEditorComponentEditor editor))
                     {
-                        if (!properties[j].IsVisible)
+                        editor.Initialize(this, (Component)components[i], components[i], compUI.FieldHolder);
+                        editor.BuildUI();
+                    }
+                    else
+                    {
+                        ExposedProperty[] properties = components[i].GetProperties();
+                        for (int j = 0; j < properties.Length; j++)
                         {
-                            continue;
-                        }
+                            if (!properties[j].IsVisible)
+                            {
+                                continue;
+                            }
 
-                        if (!HasField(properties[j].Type, properties[j].IsArray))
-                        {
-                            continue;
-                        }
+                            if (!HasField(properties[j].Type, properties[j].IsArray))
+                            {
+                                continue;
+                            }
 
-                        LevelEditorInspectorField field = GetField(properties[j].Type, properties[j].IsArray, compUI.FieldHolder);
-                        field.Depth = 0;
-                        field.Bind(properties[j], components[i]);
+                            LevelEditorInspectorField field = GetField(properties[j].Type, properties[j].IsArray, compUI.FieldHolder);
+                            field.Depth = 0;
+                            field.Bind(properties[j], components[i]);
+                        }
                     }
                 }
             }

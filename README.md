@@ -28,7 +28,7 @@ What needs to be done before 1.0.0 verified.
 - [x] Hierarchy
 - [ ] Hierarchy customization
 - [x] Inspector
-- [ ] Custom component fields
+- [x] Custom component fields
 - [x] Resource browser
 - [ ] Resource browser customization
 - [ ] Level editor gizmos
@@ -38,7 +38,7 @@ What needs to be done before 1.0.0 verified.
 - [ ] Auto expose unknown types
 - [x] Integrate custom serializers
 - [ ] Menu items
-- [ ] Custom component wrappers
+- [x] Custom component wrappers
 - [x] Serialize arrays
 - [ ] Serialize lists
 - [ ] Serialize dictionary
