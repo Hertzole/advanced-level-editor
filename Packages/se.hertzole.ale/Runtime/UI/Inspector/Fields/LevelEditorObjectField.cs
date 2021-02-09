@@ -1,6 +1,7 @@
 ﻿using System;
 using TMPro;
 using UnityEngine;
+using UnityEngine.Events;
 using UnityEngine.UI;
 using UnityObject = UnityEngine.Object;
 
@@ -9,6 +10,9 @@ namespace Hertzole.ALE
     //TODO: Implement drop support
     public class LevelEditorObjectField : LevelEditorInspectorField
     {
+        [Serializable]
+        public class ObjectEvent : UnityEvent<UnityObject> { }
+
         [SerializeField]
         private Button objectButton = null;
         [SerializeField]
@@ -17,10 +21,12 @@ namespace Hertzole.ALE
         private string labelFormat = "{0} ({1})";
         [SerializeField]
         private string nullValueText = "None";
+        [SerializeField]
+        private ObjectEvent onValueChanged = new ObjectEvent();
 
         private bool isComponent = false;
 
-        public event Action<UnityObject> OnValueChanged;
+        public ObjectEvent OnValueChanged { get { return onValueChanged; } }
 
         protected override void OnAwake()
         {
@@ -47,13 +53,13 @@ namespace Hertzole.ALE
                 if (obj == null)
                 {
                     SetPropertyValue(null);
-                    OnValueChanged?.Invoke(null);
+                    onValueChanged.Invoke(null);
                 }
                 else
                 {
                     Component value = ((Component)obj).GetComponent(BoundProperty.Type);
                     SetPropertyValue(value);
-                    OnValueChanged?.Invoke(value);
+                    onValueChanged.Invoke(value);
                 }
 
                 UpdateLabel((UnityObject)RawValue);

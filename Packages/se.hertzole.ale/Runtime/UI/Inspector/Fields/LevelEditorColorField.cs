@@ -12,10 +12,12 @@ namespace Hertzole.ALE
         private Image colorImage = null;
         [SerializeField]
         private Slider alphaSlider = null;
+        [SerializeField]
+        private ColorChangedEvent onValueChanged = new ColorChangedEvent();
 
         private Color color;
 
-        public event Action<Color> OnValueChanged;
+        public ColorChangedEvent OnValueChanged { get { return onValueChanged; } }
 
         protected override void OnAwake()
         {
@@ -41,7 +43,7 @@ namespace Hertzole.ALE
                 }
 
                 SetPropertyValue(color);
-                OnValueChanged?.Invoke(color);
+                onValueChanged.Invoke(color);
             }
         }
 

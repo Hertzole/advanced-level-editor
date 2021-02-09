@@ -10,6 +10,7 @@
 using System;
 using TMPro;
 using UnityEngine;
+using UnityEngine.Events;
 
 namespace Hertzole.ALE
 {
@@ -23,40 +24,71 @@ namespace Hertzole.ALE
 #endif
     public class LevelEditorTextField : LevelEditorInspectorField
     {
+        [Serializable]
+        public class CharEvent : UnityEvent<char> { }
+
         [SerializeField]
         private TMP_InputField textField = null;
         [SerializeField]
         private bool placeholderAsName = true;
+        [SerializeField]
+        private TMP_InputField.OnChangeEvent onStringValueChanged = new TMP_InputField.OnChangeEvent();
+        [SerializeField]
+        private TMP_InputField.OnChangeEvent onStringEndEdit = new TMP_InputField.OnChangeEvent();
+        [SerializeField]
+        private CharEvent onCharValueChanged = new CharEvent();
+        [SerializeField]
+        private CharEvent onCharEndEdit = new CharEvent();
 
         private bool isChar;
 
-        public event Action<string> OnStringValueChanged;
-        public event Action<char> OnCharValueChanged;
+        public TMP_InputField.OnChangeEvent OnStringValueChanged { get { return onStringValueChanged; } }
+        public CharEvent OnCharValueChanged { get { return onCharValueChanged; } }
+
+        public TMP_InputField.OnChangeEvent OnStringEndEdit { get { return onStringEndEdit; } }
+        public CharEvent OnCharEndEdit { get { return onCharEndEdit; } }
 
         protected override void OnAwake()
         {
             this.LogIfStripped();
 
-            textField.onValueChanged.AddListener(x =>
+            textField.onValueChanged.AddListener(x => ValueChanged(x, false));
+            textField.onEndEdit.AddListener(x => ValueChanged(x, true));
+        }
+
+        private void ValueChanged(string value, bool endEdit)
+        {
+            if (isChar)
             {
-                if (isChar)
+                if (string.IsNullOrEmpty(value))
                 {
-                    if (string.IsNullOrEmpty(x))
-                    {
-                        x = "\0";
-                    }
+                    value = "\0";
+                }
 
-                    char charValue = char.Parse(x);
+                char charValue = char.Parse(value);
 
-                    SetPropertyValue(charValue);
-                    OnCharValueChanged?.Invoke(charValue);
+                SetPropertyValue(charValue);
+                if (endEdit)
+                {
+                    onCharEndEdit.Invoke(charValue);
                 }
                 else
                 {
-                    SetPropertyValue(x);
-                    OnStringValueChanged?.Invoke(x);
+                    onCharValueChanged.Invoke(charValue);
                 }
-            });
+            }
+            else
+            {
+                SetPropertyValue(value);
+                if (endEdit)
+                {
+                    onStringEndEdit.Invoke(value);
+                }
+                else
+                {
+                    onStringValueChanged.Invoke(value);
+                }
+            }
         }
 
         public override bool SupportsType(Type type, bool isArray)

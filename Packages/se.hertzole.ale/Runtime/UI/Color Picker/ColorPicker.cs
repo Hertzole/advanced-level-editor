@@ -5,7 +5,9 @@ namespace Hertzole.ALE
 {
     public enum ColorValues { R, G, B, A, Hue, Saturation, Value }
 
+    [System.Serializable]
     public class ColorChangedEvent : UnityEvent<Color> { }
+    [System.Serializable]
     public class HSVChangedEvent : UnityEvent<float, float, float> { }
 
     public class ColorPicker : MonoBehaviour
