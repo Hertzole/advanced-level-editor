@@ -264,10 +264,12 @@ namespace Hertzole.ALE.Editor
             PropertyDefinition componentName = CreateProperty("ComponentName", type.Name, typeof(string), module, type);
             PropertyDefinition typeName = CreateProperty("TypeName", type.FullName, typeof(string), module, type);
             PropertyDefinition order = CreateProperty("Order", 0, typeof(int), module, type);
+            PropertyDefinition componentType = CreateProperty("ComponentType", type, typeof(Type), module, type);
 
             type.Properties.Add(componentName);
             type.Properties.Add(typeName);
             type.Properties.Add(order);
+            type.Properties.Add(componentType);
 
             MethodDefinition getPropertiesMethod = CreateGetProperties(module, exposedFields);
             MethodDefinition getValueMethod = CreateGetValue(module, exposedFields);
@@ -475,6 +477,11 @@ namespace Hertzole.ALE.Editor
             else if (returnType == typeof(int))
             {
                 il.Append(GetIntInstruction((int)value));
+            }
+            else if (returnType == typeof(Type))
+            {
+                il.Emit(OpCodes.Ldtoken, (TypeReference)value);
+                il.Emit(OpCodes.Call, module.ImportReference(typeof(Type).GetMethod("GetTypeFromHandle", new Type[] { typeof(RuntimeTypeHandle) })));
             }
             il.Emit(OpCodes.Ret);
             type.Methods.Add(propGet);

@@ -7,6 +7,7 @@
 #endif
 
 #if !STRIP
+using System;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -25,11 +26,17 @@ namespace Hertzole.ALE
         [SerializeField]
         private Toggle toggle = null;
 
+        public event Action<bool> OnValueChanged;
+
         protected override void OnAwake()
         {
             this.LogIfStripped();
 
-            toggle.onValueChanged.AddListener(x => SetPropertyValue(x));
+            toggle.onValueChanged.AddListener(x =>
+            {
+                SetPropertyValue(x);
+                OnValueChanged?.Invoke(x);
+            });
         }
 
         public override void SetFieldValue(bool value)

@@ -23,12 +23,19 @@ namespace Hertzole.ALE
 #endif
     public class LevelEditorVector2Field : LevelEditorInspectorField
     {
+        private enum VectorTypes { Vector2, Vector2Int, Vector3, Vector3Int, Vector4, Invalid }
+
         [SerializeField]
         private TMP_InputField xField = null;
         [SerializeField]
         private TMP_InputField yField = null;
 
-        private bool isInt;
+        private VectorTypes type;
+
+        private bool IsInt { get { return type == VectorTypes.Vector2Int || type == VectorTypes.Vector3Int; } }
+
+        public event Action<Vector2> OnVector2ValueChanged;
+        public event Action<Vector2Int> OnVector2IntValueChanged;
 
         protected override void OnAwake()
         {
@@ -61,23 +68,59 @@ namespace Hertzole.ALE
 
         protected override void OnBound(ExposedProperty property, IExposedToLevelEditor exposed)
         {
-            isInt = property.Type == typeof(Vector2Int);
+            if (property.Type == typeof(Vector2))
+            {
+                type = VectorTypes.Vector2;
+            }
+            else if (property.Type == typeof(Vector2Int))
+            {
+                type = VectorTypes.Vector2Int;
+            }
+            else if (property.Type == typeof(Vector3))
+            {
+                type = VectorTypes.Vector3;
+            }
+            else if (property.Type == typeof(Vector3Int))
+            {
+                type = VectorTypes.Vector3Int;
+            }
+            else if (property.Type == typeof(Vector4))
+            {
+                type = VectorTypes.Vector4;
+            }
+            else
+            {
+                type = VectorTypes.Invalid;
+            }
 
-            xField.contentType = isInt ? TMP_InputField.ContentType.IntegerNumber : TMP_InputField.ContentType.DecimalNumber;
-            yField.contentType = isInt ? TMP_InputField.ContentType.IntegerNumber : TMP_InputField.ContentType.DecimalNumber;
+            xField.contentType = IsInt ? TMP_InputField.ContentType.IntegerNumber : TMP_InputField.ContentType.DecimalNumber;
+            yField.contentType = IsInt ? TMP_InputField.ContentType.IntegerNumber : TMP_InputField.ContentType.DecimalNumber;
         }
 
         protected override void SetFieldValue(object value)
         {
-            if (isInt)
+            if (IsInt)
             {
-                Vector2Int v = (Vector2Int)value;
+                Vector2Int v = value is Vector3Int v3 ? new Vector2Int(v3.x, v3.y) : (Vector2Int)value;
                 xField.SetTextWithoutNotify(v.x.ToString());
                 yField.SetTextWithoutNotify(v.y.ToString());
             }
             else
             {
-                Vector2 v = (Vector2)value;
+                Vector2 v;
+                switch (value)
+                {
+                    case Vector3 v3:
+                        v = new Vector2(v3.x, v3.y);
+                        break;
+                    case Vector4 v4:
+                        v = new Vector2(v4.x, v4.y);
+                        break;
+                    default:
+                        v = (Vector2)value;
+                        break;
+                }
+
                 xField.SetTextWithoutNotify(v.x.ToString());
                 yField.SetTextWithoutNotify(v.y.ToString());
             }
@@ -88,7 +131,7 @@ namespace Hertzole.ALE
             string _x = string.IsNullOrWhiteSpace(xField.text) ? "0" : xField.text;
             string _y = string.IsNullOrWhiteSpace(yField.text) ? "0" : yField.text;
 
-            if (isInt)
+            if (IsInt)
             {
                 if (!int.TryParse(_x, out int x))
                 {
@@ -100,7 +143,18 @@ namespace Hertzole.ALE
                     y = 0;
                 }
 
-                SetPropertyValue(new Vector2Int(x, y));
+                Vector2Int value = new Vector2Int(x, y);
+                switch (type)
+                {
+                    case VectorTypes.Vector3Int:
+                        SetPropertyValue(new Vector3Int(value.x, value.y, 0));
+                        break;
+                    default:
+                        SetPropertyValue(value);
+                        break;
+                }
+
+                OnVector2IntValueChanged?.Invoke(value);
             }
             else
             {
@@ -114,7 +168,20 @@ namespace Hertzole.ALE
                     y = 0;
                 }
 
-                SetPropertyValue(new Vector2(x, y));
+                Vector2 value = new Vector2(x, y);
+                switch (type)
+                {
+                    case VectorTypes.Vector3:
+                        SetPropertyValue(new Vector3(value.x, value.y, 0));
+                        break;
+                    case VectorTypes.Vector4:
+                        SetPropertyValue(new Vector4(value.x, value.y, 0, 0));
+                        break;
+                    default:
+                        SetPropertyValue(value);
+                        break;
+                }
+                OnVector2ValueChanged?.Invoke(value);
             }
         }
     }
