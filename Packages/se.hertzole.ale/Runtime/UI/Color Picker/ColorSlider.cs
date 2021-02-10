@@ -9,17 +9,17 @@ namespace Hertzole.ALE
     public class ColorSlider : MonoBehaviour
     {
         [SerializeField]
-        private ColorPicker colorPicker;
+        private ColorPicker colorPicker = null;
 
         /// <summary>
         /// Which value this slider can edit.
         /// </summary>
         [SerializeField]
-        private ColorValues type;
+        private ColorValues type = ColorValues.R;
 
         [SerializeField]
         [HideInInspector]
-        private Slider slider;
+        private Slider slider = null;
 
         private bool listen = true;
 

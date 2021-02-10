@@ -17,7 +17,7 @@ namespace Hertzole.ALE
 
         [Header("Setup")]
         [SerializeField]
-        private ColorPickerSetup setup;
+        private ColorPickerSetup setup = null;
 
         [Header("Event")]
         [SerializeField]

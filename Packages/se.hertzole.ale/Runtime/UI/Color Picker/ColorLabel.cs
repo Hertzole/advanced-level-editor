@@ -7,10 +7,10 @@ namespace Hertzole.ALE
     public class ColorLabel : MonoBehaviour
     {
         [SerializeField]
-        private ColorPicker colorPicker;
+        private ColorPicker colorPicker = null;
 
         [SerializeField]
-        private ColorValues type;
+        private ColorValues type = ColorValues.R;
 
         [SerializeField]
         private string prefix = "R: ";
@@ -24,7 +24,7 @@ namespace Hertzole.ALE
 
         [SerializeField]
         [HideInInspector]
-        private TMP_Text label;
+        private TMP_Text label = null;
 
         private void Awake()
         {
