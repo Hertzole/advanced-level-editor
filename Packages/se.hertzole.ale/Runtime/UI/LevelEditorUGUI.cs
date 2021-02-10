@@ -62,59 +62,95 @@ namespace Hertzole.ALE
 
         protected virtual void Awake()
         {
-            realSaveModal = saveModal.NeedComponent<ILevelEditorSaveModal>();
-            realLoadModal = loadModal.NeedComponent<ILevelEditorLoadModal>();
-            realNotificationModal = notificationModal.NeedComponent<ILevelEditorNotificationModal>();
+            if (saveModal != null)
+            {
+                realSaveModal = saveModal.NeedComponent<ILevelEditorSaveModal>();
+            }
+
+            if (loadModal != null)
+            {
+                realLoadModal = loadModal.NeedComponent<ILevelEditorLoadModal>();
+            }
+
+            if (notificationModal != null)
+            {
+                realNotificationModal = notificationModal.NeedComponent<ILevelEditorNotificationModal>();
+            }
+
             if (inspectorPanel != null)
             {
                 realInspectorPanel = inspectorPanel.NeedComponent<ILevelEditorInspector>();
             }
 
-            realResourcePanel = resourcePanel.NeedComponent<ILevelEditorResourceView>();
-            realHierarchy = hierarchyPanel.NeedComponent<ILevelEditorHierarchy>();
-            realColorPickerWindow = colorPickerWindow.NeedComponent<ILevelEditorColorPickerWindow>();
-            realObjectPickerWindow = objectPickerWindow.NeedComponent<ILevelEditorObjectPickerWindow>();
+            if (resourcePanel != null)
+            {
+                realResourcePanel = resourcePanel.NeedComponent<ILevelEditorResourceView>();
+            }
+            if (hierarchyPanel != null)
+            {
+                realHierarchy = hierarchyPanel.NeedComponent<ILevelEditorHierarchy>();
+            }
+            if (colorPickerWindow != null)
+            {
+                realColorPickerWindow = colorPickerWindow.NeedComponent<ILevelEditorColorPickerWindow>();
+            }
+            if (objectPickerWindow != null)
+            {
+                realObjectPickerWindow = objectPickerWindow.NeedComponent<ILevelEditorObjectPickerWindow>();
+            }
 
             ToggleSaveModal(false);
             ToggleLoadModal(false);
 
-            notificationModal.IfExists(x => x.gameObject.SetActive(false));
+            if (!ReferenceEquals(notificationModal, null))
+            {
+                notificationModal.SetActive(false);
+            }
 
-            colorPickerWindow.SetActive(false);
-            objectPickerWindow.SetActive(false);
+            if (!ReferenceEquals(colorPickerWindow, null))
+            {
+                colorPickerWindow.SetActive(false);
+            }
+
+            if (!ReferenceEquals(objectPickerWindow, null))
+            {
+                objectPickerWindow.SetActive(false);
+            }
         }
 
         public void Initialize(ILevelEditor levelEditor)
         {
-#if !ALE_STRIP_SAFETY || UNITY_EDITOR
-            if (realSaveModal == null)
-            {
-                LevelEditorLogger.LogWarning("Stopped LevelEditorUGUI Initialize because no save modal.");
-                return;
-            }
-
-            if (realLoadModal == null)
-            {
-                LevelEditorLogger.LogWarning("Stopped LevelEditorUGUI Initialize because no load modal.");
-                return;
-            }
-#endif
-
             this.levelEditor = levelEditor;
 
-            levelEditor.Selection.OnSelectionChanged += OnSelectionChanged;
+            if (!ReferenceEquals(levelEditor.Selection, null))
+            {
+                levelEditor.Selection.OnSelectionChanged += OnSelectionChanged;
+            }
 
-            if (realInspectorPanel != null)
+            if (!ReferenceEquals(realInspectorPanel, null))
             {
                 realInspectorPanel.Initialize(this);
             }
 
-            realHierarchy.Initialize(levelEditor);
+            if (!ReferenceEquals(realHierarchy, null))
+            {
+                realHierarchy.Initialize(levelEditor);
+            }
 
-            realSaveModal.Initialize();
-            realLoadModal.Initialize();
+            if (!ReferenceEquals(realSaveModal, null))
+            {
+                realSaveModal.Initialize();
+            }
 
-            realObjectPickerWindow.Initialize(levelEditor);
+            if (!ReferenceEquals(realLoadModal, null))
+            {
+                realLoadModal.Initialize();
+            }
+
+            if (!ReferenceEquals(realObjectPickerWindow, null))
+            {
+                realObjectPickerWindow.Initialize(levelEditor);
+            }
         }
 
         private void OnDestroy()
@@ -127,12 +163,10 @@ namespace Hertzole.ALE
 
         public virtual void InitializeResources(ILevelEditorResource[] resources)
         {
-#if !ALE_STRIP_SAFETY || UNITY_EDITOR
-            if (realResourcePanel == null)
+            if (ReferenceEquals(null, realResourcePanel))
             {
-                throw new NullReferenceException("InitializeResources failed. No project panel. Did you call this in Start? Did Awake on LevelEditorGUI complete?");
+                return;
             }
-#endif
 
             realResourcePanel.Initialize(resources);
         }
@@ -153,11 +187,17 @@ namespace Hertzole.ALE
             }
 #endif
 
-            realSaveModal.OnClickSave += OnSavePanelClickSave;
-            realSaveModal.OnClickClose += OnSavePanelClickClose;
+            if (!ReferenceEquals(null, realSaveModal))
+            {
+                realSaveModal.OnClickSave += OnSavePanelClickSave;
+                realSaveModal.OnClickClose += OnSavePanelClickClose;
+            }
 
-            realLoadModal.OnClickLoadLevel += OnLoadPanelClickLoadLevel;
-            realLoadModal.OnClickClose += OnLoadPanelClickClose;
+            if (!ReferenceEquals(null, realLoadModal))
+            {
+                realLoadModal.OnClickLoadLevel += OnLoadPanelClickLoadLevel;
+                realLoadModal.OnClickClose += OnLoadPanelClickClose;
+            }
         }
 
         protected virtual void OnDisable()
@@ -176,11 +216,17 @@ namespace Hertzole.ALE
             }
 #endif
 
-            realSaveModal.OnClickSave -= OnSavePanelClickSave;
-            realSaveModal.OnClickClose -= OnSavePanelClickClose;
+            if (!ReferenceEquals(null, realSaveModal))
+            {
+                realSaveModal.OnClickSave -= OnSavePanelClickSave;
+                realSaveModal.OnClickClose -= OnSavePanelClickClose;
+            }
 
-            realLoadModal.OnClickLoadLevel -= OnLoadPanelClickLoadLevel;
-            realLoadModal.OnClickClose -= OnLoadPanelClickClose;
+            if (!ReferenceEquals(null, realLoadModal))
+            {
+                realLoadModal.OnClickLoadLevel -= OnLoadPanelClickLoadLevel;
+                realLoadModal.OnClickClose -= OnLoadPanelClickClose;
+            }
         }
 
         private void OnSavePanelClickSave(string levelName)
@@ -235,12 +281,22 @@ namespace Hertzole.ALE
 
         public virtual void ToggleSaveModal(bool toggle)
         {
+            if (ReferenceEquals(null, saveModal))
+            {
+                return;
+            }
+
             saveModal.SetActive(toggle);
             UpdateModalBackground();
         }
 
         public virtual void ToggleLoadModal(bool toggle)
         {
+            if (ReferenceEquals(null, loadModal))
+            {
+                return;
+            }
+
             if (toggle)
             {
                 realLoadModal.PopulateLevels(levelEditor.SaveManager.GetLevels());
