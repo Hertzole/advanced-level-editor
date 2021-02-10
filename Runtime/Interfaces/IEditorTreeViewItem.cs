@@ -4,11 +4,11 @@ namespace Hertzole.ALE
 {
     public interface IEditorTreeViewItem<T>
     {
-        public int TreeID { get; set; }
-        public int TreeDepth { get; set; }
-        public string Name { get; set; }
+        int TreeID { get; set; }
+        int TreeDepth { get; set; }
+        string Name { get; set; }
 
-        public T Parent { get; set; }
-        public List<T> Children { get; set; }
+        T Parent { get; set; }
+        List<T> Children { get; set; }
     }
 }
