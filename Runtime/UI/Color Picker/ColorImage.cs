@@ -7,7 +7,7 @@ namespace Hertzole.ALE
     public class ColorImage : MonoBehaviour
     {
         [SerializeField]
-        private ColorPicker colorPicker;
+        private ColorPicker colorPicker = null;
 
         [SerializeField]
         [HideInInspector]

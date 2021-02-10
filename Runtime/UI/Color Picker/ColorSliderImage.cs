@@ -6,16 +6,16 @@ namespace Hertzole.ALE
     public class ColorSliderImage : MonoBehaviour
     {
         [SerializeField]
-        private ColorPicker colorPicker;
+        private ColorPicker colorPicker = null;
 
         /// <summary>
         /// Which value this slider can edit.
         /// </summary>
         [SerializeField]
-        private ColorValues type;
+        private ColorValues type = ColorValues.R;
 
         [SerializeField]
-        private Slider.Direction direction;
+        private Slider.Direction direction = Slider.Direction.LeftToRight;
 
         [SerializeField]
         [HideInInspector]

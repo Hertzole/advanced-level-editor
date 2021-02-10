@@ -7,14 +7,14 @@ namespace Hertzole.ALE
     public class SVBoxSlider : MonoBehaviour
     {
         [SerializeField]
-        private ColorPicker colorPicker;
+        private ColorPicker colorPicker = null;
 
         [SerializeField]
         [HideInInspector]
-        private BoxSlider slider;
+        private BoxSlider slider = null;
         [SerializeField]
         [HideInInspector]
-        private RawImage image;
+        private RawImage image = null;
 
         private int textureWidth = 128;
         private int textureHeight = 128;

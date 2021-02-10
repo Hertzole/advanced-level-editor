@@ -566,7 +566,7 @@ namespace Hertzole.ALE
                 }
                 else
                 {
-                    listView.ForEachListItem((i, item) => ((ITreeItem)item).SetSelectedWithoutNotify(false));
+                    listView.ForEachListItem((i, listItem) => ((ITreeItem)listItem).SetSelectedWithoutNotify(false));
                 }
             }
 

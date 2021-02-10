@@ -6,10 +6,10 @@ namespace Hertzole.ALE
     public class HexColorField : MonoBehaviour
     {
         [SerializeField]
-        private ColorPicker colorPicker;
+        private ColorPicker colorPicker = null;
 
         [SerializeField]
-        private bool displayAlpha;
+        private bool displayAlpha = false;
 
         [SerializeField]
         [HideInInspector]
