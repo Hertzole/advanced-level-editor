@@ -120,7 +120,7 @@ namespace Hertzole.ALE
         {
             LevelEditorSaveData data = GetLevelData(levelName);
 
-            SaveLevel(data, BuildSaveLocation(baseSaveLocation, saveSuffix));
+            SaveLevel(data, BuildSavePath(baseSaveLocation, saveSuffix, levelName, fileExtension));
         }
 
         public virtual void SaveLevel(string levelName, string path)
@@ -130,7 +130,7 @@ namespace Hertzole.ALE
 
         public virtual void SaveLevel(LevelEditorSaveData saveData)
         {
-            SaveLevel(saveData, BuildSaveLocation(baseSaveLocation, saveSuffix));
+            SaveLevel(saveData, BuildSavePath(baseSaveLocation, saveSuffix, saveData.name, fileExtension));
         }
 
         public virtual void SaveLevel(LevelEditorSaveData saveData, string path)
@@ -194,6 +194,11 @@ namespace Hertzole.ALE
                 default:
                     throw new NotImplementedException(baseLocation + " is not supported.");
             }
+        }
+
+        protected virtual string BuildSavePath(SaveLocation baseLocation, string suffix, string levelName, string fileExtension)
+        {
+            return $"{BuildSaveLocation(baseLocation, suffix)}/{levelName}{ToFileExtension(fileExtension)}";
         }
 
         public static string ToFileExtension(string value)

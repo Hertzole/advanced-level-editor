@@ -269,7 +269,6 @@ namespace Hertzole.ALE
             Draw2DGrid(center, size, spacing, Quaternion.Euler(rotation), color);
         }
 
-        // FIX: Origin is wrong.
         public static void Draw2DGrid(Vector3 center, Vector2Int size, Vector2 spacing, Quaternion rotation, Color color)
         {
             linesMaterial.SetPass(0);
@@ -282,7 +281,7 @@ namespace Hertzole.ALE
 
             int index = 0;
 
-            Vector3 origin = new Vector3(center.x - (size.x / 2f) * spacing.x, center.y - (size.y / 2f) * spacing.y, center.z);
+            Vector3 origin = new Vector3(-(size.x / 2f) * spacing.x, -(size.y / 2f) * spacing.y, 0);
 
             for (int x = 0; x < size.x; x++)
             {
