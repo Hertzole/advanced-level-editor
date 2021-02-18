@@ -1,4 +1,5 @@
-﻿using UnityEngine;
+﻿using System;
+using UnityEngine;
 
 namespace Hertzole.ALE
 {
@@ -235,6 +236,40 @@ namespace Hertzole.ALE
 
             selectedMode = newMode;
             editorModes[selectedMode].OnModeEnable();
+        }
+
+        public void SetMode<T>() where T : ILevelEditorMode
+        {
+            for (int i = 0; i < editorModes.Length; i++)
+            {
+                if (editorModes[i] is T)
+                {
+                    SetMode(i);
+                    return;
+                }
+            }
+
+            throw new ArgumentException($"There's no editor mode on {gameObject.name} with the type {typeof(T)}.");
+        }
+
+        public bool TryGetEditorMode<T>(out T mode) where T : ILevelEditorMode
+        {
+            mode = default;
+            if (editorModes == null || editorModes.Length == 0)
+            {
+                return false;
+            }
+
+            for (int i = 0; i < editorModes.Length; i++)
+            {
+                if (editorModes[i] is T foundMode)
+                {
+                    mode = foundMode;
+                    return true;
+                }
+            }
+
+            return false;
         }
 
         public void NewLevel()

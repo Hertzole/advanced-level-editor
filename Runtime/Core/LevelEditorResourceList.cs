@@ -46,9 +46,27 @@ namespace Hertzole.ALE
             return resources;
         }
 
+        /// <summary>
+        /// Adds a resource to the list.
+        /// </summary>
+        /// <param name="resource">The new resource you want to add.</param>
+        /// <exception cref="DuplicateIDException">If a resource with the same ID already exists.</exception>
         public void AddResource(LevelEditorResource resource)
         {
+            for (int i = 0; i < resources.Count; i++)
+            {
+                if (resources[i].ID == resource.ID)
+                {
+                    throw new DuplicateIDException($"There's already a resource in the list with the ID '{resource.ID}'.");
+                }
+            }
+
             resources.Add(resource);
+        }
+
+        public bool RemoveResource(LevelEditorResource resource)
+        {
+            return resources.Remove(resource);
         }
     }
 }

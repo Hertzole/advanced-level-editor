@@ -54,7 +54,9 @@ namespace Hertzole.ALE
 
         public event EventHandler<LevelEditorObjectEventSpawningEvent> OnCreatingObject;
         public event EventHandler<LevelEditorObjectEventDeletingEvent> OnDeletingObject;
+
         public event EventHandler<LevelEditorObjectEvent> OnCreatedObject;
+        public event EventHandler<LevelEditorObjectEvent> OnCreatedObjectFromSaveData;
         public event EventHandler<LevelEditorObjectEvent> OnDeletedObject;
 
 #if !ALE_STRIP_SAFETY || UNITY_EDITOR
@@ -173,6 +175,7 @@ namespace Hertzole.ALE
                     }
 
                     allObjects[i].ApplyExposedData(components);
+                    OnCreatedObjectFromSaveData?.Invoke(this, new LevelEditorObjectEvent(allObjects[i]));
                 }
             }
         }

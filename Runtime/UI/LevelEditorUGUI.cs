@@ -151,7 +151,11 @@ namespace Hertzole.ALE
             {
                 realObjectPickerWindow.Initialize(levelEditor);
             }
+
+            OnInitialize();
         }
+
+        protected virtual void OnInitialize() { }
 
         private void OnDestroy()
         {
@@ -338,7 +342,7 @@ namespace Hertzole.ALE
             playModeRoot.IfExists(x => x.SetActive(false));
         }
 
-        private void OnSelectionChanged(object sender, SelectionEvent e)
+        protected virtual void OnSelectionChanged(object sender, SelectionEvent e)
         {
             if (realInspectorPanel != null)
             {

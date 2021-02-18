@@ -16,6 +16,10 @@
 
         void SetMode(int newMode, bool returnOnOutOfRange = true);
 
+        void SetMode<T>() where T : ILevelEditorMode;
+
+        bool TryGetEditorMode<T>(out T mode) where T : ILevelEditorMode;
+
         void NewLevel();
 
         void MarkDirty();
