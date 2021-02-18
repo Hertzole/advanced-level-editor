@@ -27,7 +27,7 @@ namespace Hertzole.ALE
         [SerializeField]
         private RectTransform fieldsHolder = null;
 
-        public string Title { get { return titleLabel.text; } set { titleLabel.text = value; } }
+        public string Title { get { return titleLabel == null ? string.Empty : titleLabel.text; } set { if (titleLabel != null) { titleLabel.text = value; } } }
 
         public RectTransform FieldHolder { get { if (fieldsHolder == null) { fieldsHolder = (RectTransform)transform; } return fieldsHolder; } }
 

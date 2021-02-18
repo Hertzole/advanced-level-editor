@@ -44,6 +44,7 @@ namespace Hertzole.ALE
         event EventHandler<LevelEditorObjectEventDeletingEvent> OnDeletingObject;
 
         event EventHandler<LevelEditorObjectEvent> OnCreatedObject;
+        event EventHandler<LevelEditorObjectEvent> OnCreatedObjectFromSaveData;
         event EventHandler<LevelEditorObjectEvent> OnDeletedObject;
 
         ILevelEditorResources Resources { get; }

@@ -71,6 +71,10 @@ namespace Hertzole.ALE
         [SerializeField]
         private LevelEditorInspectorField[] fieldPrefabs = null;
 
+        [Header("Settings")]
+        [SerializeField]
+        private bool includeTransform = true;
+
         private ILevelEditorObject boundItem;
         private ILevelEditorUI ui;
 
@@ -87,9 +91,20 @@ namespace Hertzole.ALE
 #if OBSOLETE
             Debug.LogError($"{gameObject.name} is still using {nameof(LevelEditorInspector)} and it will be stripped on build. Remove it.");
 #endif
-            objectNameField.onValueChanged.AddListener(OnObjectNameFieldChanged);
-            objectActiveToggle.onValueChanged.AddListener(OnObjectActiveToggleChanged);
-            objectInfoHolder.SetActive(false);
+            if (objectNameField != null)
+            {
+                objectNameField.onValueChanged.AddListener(OnObjectNameFieldChanged);
+            }
+
+            if (objectActiveToggle != null)
+            {
+                objectActiveToggle.onValueChanged.AddListener(OnObjectActiveToggleChanged);
+            }
+
+            if (objectInfoHolder != null)
+            {
+                objectInfoHolder.SetActive(false);
+            }
         }
 
         public void Initialize(ILevelEditorUI ui)
@@ -130,15 +145,29 @@ namespace Hertzole.ALE
 
             activeComponents.Clear();
 
-            objectInfoHolder.SetActive(target != null);
+            if (objectInfoHolder != null)
+            {
+                objectInfoHolder.SetActive(target != null);
+            }
 
             if (target != null)
             {
-                objectActiveToggle.SetIsOnWithoutNotify(target.MyGameObject.activeSelf);
-                objectNameField.SetTextWithoutNotify(target.MyGameObject.name);
+                if (objectActiveToggle != null)
+                {
+                    objectActiveToggle.SetIsOnWithoutNotify(target.MyGameObject.activeSelf);
+                }
+                if (objectNameField != null)
+                {
+                    objectNameField.SetTextWithoutNotify(target.MyGameObject.name);
+                }
                 IExposedToLevelEditor[] components = target.GetExposedComponents();
                 for (int i = 0; i < components.Length; i++)
                 {
+                    if (!includeTransform && components[i].ComponentType == typeof(Transform))
+                    {
+                        continue;
+                    }
+
                     LevelEditorComponentUI compUI = GetComponentUI();
                     compUI.Title = components[i].ComponentName;
 
