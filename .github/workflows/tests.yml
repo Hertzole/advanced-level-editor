@@ -29,4 +29,4 @@ jobs:
     - name: Run tests
       uses: webbertakken/unity-test-runner@v2.0-alpha-2
       with:
-        unityVersion: 2020.2.2f1
+        unityVersion: 2020.2.4f1
