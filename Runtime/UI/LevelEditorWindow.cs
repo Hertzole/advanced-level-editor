@@ -12,6 +12,7 @@ namespace Hertzole.ALE
         private RectTransform dragArea;
 
         private bool dragging = false;
+        private bool showing = false;
 
         private Vector2 dragDelta;
 
@@ -22,6 +23,7 @@ namespace Hertzole.ALE
         private LevelEditorWindowEvent onWindowOpen = new LevelEditorWindowEvent();
         private LevelEditorWindowEvent onWindowClose = new LevelEditorWindowEvent();
 
+        public bool Showing { get { return showing; } }
         public bool CanDrag { get { return canDrag; } set { canDrag = value; } }
         public RectTransform DragArea { get { return dragArea; } set { dragArea = value; } }
         public RectTransform RectTransform { get { if (!rectTransform) { rectTransform = (RectTransform)transform; } return rectTransform; } }
@@ -42,6 +44,7 @@ namespace Hertzole.ALE
 
         public virtual void Show()
         {
+            showing = true;
             gameObject.SetActive(true);
             OnShow();
             OnWindowOpen.Invoke();
@@ -83,6 +86,12 @@ namespace Hertzole.ALE
 
         public virtual void Dismiss()
         {
+            if (!showing)
+            {
+                return;
+            }
+
+            showing = false;
             DestroyBlocker();
             gameObject.SetActive(false);
 

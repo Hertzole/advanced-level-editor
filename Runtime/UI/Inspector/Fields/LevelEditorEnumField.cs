@@ -35,6 +35,15 @@ namespace Hertzole.ALE
             {
                 enumValues.Add(values.GetValue(i));
             }
+
+            dropdown.ClearOptions();
+
+            for (int i = 0; i < enumNames.Count; i++)
+            {
+                dropdown.options.Add(new TMP_Dropdown.OptionData(enumNames[i]));
+            }
+
+            dropdown.RefreshShownValue();
         }
 
         public override bool SupportsType(Type type, bool isArray)
@@ -44,22 +53,14 @@ namespace Hertzole.ALE
 
         protected override void SetFieldValue(object value)
         {
-            dropdown.ClearOptions();
-
-            for (int i = 0; i < enumNames.Count; i++)
-            {
-                dropdown.options.Add(new TMP_Dropdown.OptionData(enumNames[i]));
-            }
-
-            dropdown.RefreshShownValue();
-
             int index = enumNames.IndexOf(value.ToString());
             dropdown.SetValueWithoutNotify(index);
         }
 
         private void OnDropdownChanged(int newIndex)
         {
-            SetPropertyValue(enumValues[newIndex]);
+            BeginEdit();
+            SetPropertyValue(enumValues[newIndex], true);
             onValueChanged.Invoke(newIndex);
         }
     }

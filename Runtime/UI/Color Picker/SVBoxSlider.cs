@@ -43,6 +43,7 @@ namespace Hertzole.ALE
             if (Application.isPlaying && colorPicker != null)
             {
                 slider.OnValueChanged.AddListener(SliderChanged);
+                slider.OnEndEdit.AddListener(SliderEndEdit);
                 colorPicker.OnHSVChanged.AddListener(HSVChanged);
             }
         }
@@ -52,6 +53,7 @@ namespace Hertzole.ALE
             if (colorPicker != null)
             {
                 slider.OnValueChanged.RemoveListener(SliderChanged);
+                slider.OnEndEdit.RemoveListener(SliderEndEdit);
                 colorPicker.OnHSVChanged.RemoveListener(HSVChanged);
             }
         }
@@ -66,10 +68,20 @@ namespace Hertzole.ALE
 
         private void SliderChanged(float saturation, float value)
         {
+            AssignColor(saturation, value, false);
+        }
+
+        private void SliderEndEdit(float saturation, float value)
+        {
+            AssignColor(saturation, value, true);
+        }
+
+        private void AssignColor(float saturation, float value, bool endEdit)
+        {
             if (listen)
             {
-                colorPicker.AssignColor(ColorValues.Saturation, saturation);
-                colorPicker.AssignColor(ColorValues.Value, value);
+                colorPicker.AssignColor(ColorValues.Saturation, saturation, endEdit);
+                colorPicker.AssignColor(ColorValues.Value, value, endEdit);
             }
             listen = true;
         }

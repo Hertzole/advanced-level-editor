@@ -24,6 +24,10 @@ namespace Hertzole.ALE
         private ColorChangedEvent onValueChanged = new ColorChangedEvent();
         [SerializeField]
         private HSVChangedEvent onHSVChanged = new HSVChangedEvent();
+        [SerializeField]
+        private ColorChangedEvent onValueEndEdit = new ColorChangedEvent();
+        [SerializeField]
+        private HSVChangedEvent onHSVEndEdit = new HSVChangedEvent();
 
         private float hue = 0;
         private float saturation = 0;
@@ -31,6 +35,8 @@ namespace Hertzole.ALE
 
         public ColorChangedEvent OnValueChanged { get { return onValueChanged; } }
         public HSVChangedEvent OnHSVChanged { get { return onHSVChanged; } }
+        public ColorChangedEvent OnValueEndEdit { get { return onValueEndEdit; } }
+        public HSVChangedEvent OnHSVEndEdit { get { return onHSVEndEdit; } }
 
         public Color Color
         {
@@ -41,7 +47,7 @@ namespace Hertzole.ALE
                 {
                     color = value;
                     RGBChanged();
-                    SendChangedEvent();
+                    SendChangedEvent(false);
                 }
             }
         }
@@ -51,12 +57,7 @@ namespace Hertzole.ALE
             get { return hue; }
             set
             {
-                if (hue != value)
-                {
-                    hue = value;
-                    HSVChanged();
-                    SendChangedEvent();
-                }
+                AssignColor(ColorValues.Hue, value);
             }
         }
 
@@ -65,12 +66,7 @@ namespace Hertzole.ALE
             get { return saturation; }
             set
             {
-                if (saturation != value)
-                {
-                    saturation = value;
-                    HSVChanged();
-                    SendChangedEvent();
-                }
+                AssignColor(ColorValues.Saturation, value);
             }
         }
 
@@ -79,12 +75,7 @@ namespace Hertzole.ALE
             get { return brightness; }
             set
             {
-                if (brightness != value)
-                {
-                    brightness = value;
-                    HSVChanged();
-                    SendChangedEvent();
-                }
+                AssignColor(ColorValues.Value, value);
             }
         }
 
@@ -93,12 +84,7 @@ namespace Hertzole.ALE
             get { return color.r; }
             set
             {
-                if (color.r != value)
-                {
-                    color.r = value;
-                    RGBChanged();
-                    SendChangedEvent();
-                }
+                AssignColor(ColorValues.R, value);
             }
         }
 
@@ -107,12 +93,7 @@ namespace Hertzole.ALE
             get { return color.g; }
             set
             {
-                if (color.g != value)
-                {
-                    color.g = value;
-                    RGBChanged();
-                    SendChangedEvent();
-                }
+                AssignColor(ColorValues.G, value);
             }
         }
 
@@ -121,12 +102,7 @@ namespace Hertzole.ALE
             get { return color.b; }
             set
             {
-                if (color.b != value)
-                {
-                    color.b = value;
-                    RGBChanged();
-                    SendChangedEvent();
-                }
+                AssignColor(ColorValues.B, value);
             }
         }
 
@@ -135,11 +111,7 @@ namespace Hertzole.ALE
             get { return color.a; }
             set
             {
-                if (color.a != value)
-                {
-                    color.a = value;
-                    SendChangedEvent();
-                }
+                AssignColor(ColorValues.A, value);
             }
         }
 
@@ -154,7 +126,7 @@ namespace Hertzole.ALE
             HandleHeaderSetting(setup.ShowHeader);
 
             RGBChanged();
-            SendChangedEvent();
+            SendChangedEvent(false);
         }
 
         private void RGBChanged()
@@ -173,36 +145,78 @@ namespace Hertzole.ALE
             this.color = color;
         }
 
-        private void SendChangedEvent()
+        private void SendChangedEvent(bool endEdit)
         {
-            onValueChanged.Invoke(Color);
-            onHSVChanged.Invoke(hue, saturation, brightness);
+            if (endEdit)
+            {
+                onValueEndEdit.Invoke(Color);
+                onHSVEndEdit.Invoke(hue, saturation, brightness);
+            }
+            else
+            {
+                onValueChanged.Invoke(Color);
+                onHSVChanged.Invoke(hue, saturation, brightness);
+            }
         }
 
-        public void AssignColor(ColorValues type, float value)
+        public void AssignColor(ColorValues type, float value, bool endEdit = false)
         {
             switch (type)
             {
                 case ColorValues.R:
-                    R = value;
+                    if (color.r != value)
+                    {
+                        color.r = value;
+                        RGBChanged();
+                        SendChangedEvent(endEdit);
+                    }
                     break;
                 case ColorValues.G:
-                    G = value;
+                    if (color.g != value)
+                    {
+                        color.g = value;
+                        RGBChanged();
+                        SendChangedEvent(endEdit);
+                    }
                     break;
                 case ColorValues.B:
-                    B = value;
+                    if (color.b != value)
+                    {
+                        color.b = value;
+                        RGBChanged();
+                        SendChangedEvent(endEdit);
+                    }
                     break;
                 case ColorValues.A:
-                    A = value;
+                    if (color.a != value)
+                    {
+                        color.a = value;
+                        SendChangedEvent(endEdit);
+                    }
                     break;
                 case ColorValues.Hue:
-                    H = value;
+                    if (hue != value)
+                    {
+                        hue = value;
+                        HSVChanged();
+                        SendChangedEvent(endEdit);
+                    }
                     break;
                 case ColorValues.Saturation:
-                    S = value;
+                    if (saturation != value)
+                    {
+                        saturation = value;
+                        HSVChanged();
+                        SendChangedEvent(endEdit);
+                    }
                     break;
                 case ColorValues.Value:
-                    V = value;
+                    if (brightness != value)
+                    {
+                        brightness = value;
+                        HSVChanged();
+                        SendChangedEvent(endEdit);
+                    }
                     break;
                 default:
                     break;

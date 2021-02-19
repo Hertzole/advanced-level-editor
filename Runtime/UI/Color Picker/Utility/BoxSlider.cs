@@ -117,8 +117,14 @@ namespace Hertzole.ALE
         [SerializeField]
         private BoxSliderEvent onValueChanged = new BoxSliderEvent();
         public BoxSliderEvent OnValueChanged { get { return onValueChanged; } set { onValueChanged = value; } }
+        [SerializeField]
+        private BoxSliderEvent onEndEdit = new BoxSliderEvent();
+        public BoxSliderEvent OnEndEdit { get { return onEndEdit; } set { onEndEdit = value; } }
 
         // Private fields
+
+        private float startDragX;
+        private float startDragY;
 
         //private Image m_FillImage;
         //private Transform m_FillTransform;
@@ -353,8 +359,7 @@ namespace Hertzole.ALE
             RectTransform clickRect = m_HandleContainerRect;
             if (clickRect != null && clickRect.rect.size[0] > 0)
             {
-                Vector2 localCursor;
-                if (!RectTransformUtility.ScreenPointToLocalPointInRectangle(clickRect, eventData.position, cam, out localCursor))
+                if (!RectTransformUtility.ScreenPointToLocalPointInRectangle(clickRect, eventData.position, cam, out Vector2 localCursor))
                 {
                     return;
                 }
@@ -384,11 +389,13 @@ namespace Hertzole.ALE
 
             base.OnPointerDown(eventData);
 
+            startDragX = Value;
+            startDragY = ValueY;
+
             m_Offset = Vector2.zero;
             if (m_HandleContainerRect != null && RectTransformUtility.RectangleContainsScreenPoint(handleRect, eventData.position, eventData.enterEventCamera))
             {
-                Vector2 localMousePos;
-                if (RectTransformUtility.ScreenPointToLocalPointInRectangle(handleRect, eventData.position, eventData.pressEventCamera, out localMousePos))
+                if (RectTransformUtility.ScreenPointToLocalPointInRectangle(handleRect, eventData.position, eventData.pressEventCamera, out Vector2 localMousePos))
                 {
                     m_Offset = localMousePos;
                 }
@@ -399,6 +406,16 @@ namespace Hertzole.ALE
             {
                 // Outside the slider handle - jump to this point instead
                 UpdateDrag(eventData, eventData.pressEventCamera);
+            }
+        }
+
+        public override void OnPointerUp(PointerEventData eventData)
+        {
+            base.OnPointerUp(eventData);
+
+            if (startDragX != Value || startDragY != ValueY)
+            {
+                onEndEdit.Invoke(Value, ValueY);
             }
         }
 

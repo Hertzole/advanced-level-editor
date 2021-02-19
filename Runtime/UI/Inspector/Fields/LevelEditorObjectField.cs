@@ -33,8 +33,9 @@ namespace Hertzole.ALE
             objectButton.onClick.AddListener(OnClickObjectButton);
         }
 
-        private void OnClickObjectButton()
+        protected virtual void OnClickObjectButton()
         {
+            BeginEdit();
             UI.ObjectPickerWindow.Show(BoundProperty.Type, isComponent);
             UI.ObjectPickerWindow.OnWindowClose.AddListener(OnPickerWindowClose);
             UI.ObjectPickerWindow.OnObjectSelected += OnPickerObjectSelected;
@@ -44,6 +45,8 @@ namespace Hertzole.ALE
         {
             UI.ObjectPickerWindow.OnWindowClose.RemoveListener(OnPickerWindowClose);
             UI.ObjectPickerWindow.OnObjectSelected -= OnPickerObjectSelected;
+
+            SetPropertyValue(RawValue, true);
         }
 
         private void OnPickerObjectSelected(UnityObject obj)

@@ -27,6 +27,8 @@ namespace Hertzole.ALE
         private GameObject input = null;
         [SerializeField, RequireType(typeof(ILevelEditorSelection))]
         private GameObject selection = null;
+        [SerializeField, RequireType(typeof(ILevelEditorUndo))]
+        private GameObject undo = null;
         [SerializeField, RequireType(typeof(ILevelEditorPlayMode))]
         private GameObject playMode = null;
 
@@ -49,6 +51,7 @@ namespace Hertzole.ALE
         private ILevelEditorPlayMode playModeComp;
         private ILevelEditorInput inputComp;
         private ILevelEditorSelection selectionComp;
+        private ILevelEditorUndo undoComp;
 
         public ILevelEditorSnapping Snapping { get { return snapSettings; } }
         public ILevelEditorCamera LevelEditorCamera { get { return editorCameraComp; } }
@@ -58,6 +61,7 @@ namespace Hertzole.ALE
         public ILevelEditorPlayMode PlayMode { get { return playModeComp; } }
         public ILevelEditorInput Input { get { return inputComp; } }
         public ILevelEditorSelection Selection { get { return selectionComp; } }
+        public ILevelEditorUndo Undo { get { return undoComp; } }
 
         public bool IsDirty { get { return isDirty; } }
 
@@ -77,6 +81,11 @@ namespace Hertzole.ALE
             objectManagerComp = objectManager.NeedComponent<ILevelEditorObjectManager>();
             inputComp = input.NeedComponent<ILevelEditorInput>();
             selectionComp = selection.NeedComponent<ILevelEditorSelection>();
+            if (undo != null)
+            {
+                undoComp = undo.NeedComponent<ILevelEditorUndo>();
+            }
+
             if (playMode != null) // Play mode is not required.
             {
                 playModeComp = playMode.NeedComponent<ILevelEditorPlayMode>();

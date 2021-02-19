@@ -11,6 +11,7 @@
         ILevelEditorInput Input { get; }
         ILevelEditorSelection Selection { get; }
         ILevelEditorPlayMode PlayMode { get; }
+        ILevelEditorUndo Undo { get; }
 
         bool IsDirty { get; }
 
