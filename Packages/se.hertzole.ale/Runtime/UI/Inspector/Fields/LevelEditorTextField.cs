@@ -52,12 +52,15 @@ namespace Hertzole.ALE
         {
             this.LogIfStripped();
 
+            textField.onSelect.AddListener(x => BeginEdit());
             textField.onValueChanged.AddListener(x => ValueChanged(x, false));
             textField.onEndEdit.AddListener(x => ValueChanged(x, true));
         }
 
         private void ValueChanged(string value, bool endEdit)
         {
+            //TODO: Investigate duplicate undo action.
+
             if (isChar)
             {
                 if (string.IsNullOrEmpty(value))
@@ -67,7 +70,7 @@ namespace Hertzole.ALE
 
                 char charValue = char.Parse(value);
 
-                SetPropertyValue(charValue);
+                SetPropertyValue(charValue, endEdit);
                 if (endEdit)
                 {
                     onCharEndEdit.Invoke(charValue);
@@ -79,7 +82,7 @@ namespace Hertzole.ALE
             }
             else
             {
-                SetPropertyValue(value);
+                SetPropertyValue(value, endEdit);
                 if (endEdit)
                 {
                     onStringEndEdit.Invoke(value);

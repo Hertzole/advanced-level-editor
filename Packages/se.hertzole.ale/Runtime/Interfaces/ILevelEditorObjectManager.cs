@@ -49,7 +49,7 @@ namespace Hertzole.ALE
 
         ILevelEditorResources Resources { get; }
 
-        ILevelEditorObject CreateObject(ILevelEditorResource resource, Vector3 position, Quaternion rotation, Transform parent, int instanceID);
+        ILevelEditorObject CreateObject(ILevelEditorResource resource, Vector3 position, Quaternion rotation, Transform parent, int instanceID, bool registerUndo = true);
 
         void CreateObjectsFromSaveData(LevelEditorSaveData data);
 

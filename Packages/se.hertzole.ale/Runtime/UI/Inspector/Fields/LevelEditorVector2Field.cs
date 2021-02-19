@@ -58,6 +58,9 @@ namespace Hertzole.ALE
         {
             this.LogIfStripped();
 
+            xField.onSelect.AddListener(x => BeginEdit());
+            yField.onSelect.AddListener(x => BeginEdit());
+
             xField.onValueChanged.AddListener(x => SetPropValue(false));
             yField.onValueChanged.AddListener(x => SetPropValue(false));
 
@@ -168,10 +171,10 @@ namespace Hertzole.ALE
                 switch (type)
                 {
                     case VectorTypes.Vector3Int:
-                        SetPropertyValue(new Vector3Int(value.x, value.y, 0));
+                        SetPropertyValue(new Vector3Int(value.x, value.y, 0), endEdit);
                         break;
                     default:
-                        SetPropertyValue(value);
+                        SetPropertyValue(value, endEdit);
                         break;
                 }
 
@@ -200,13 +203,13 @@ namespace Hertzole.ALE
                 switch (type)
                 {
                     case VectorTypes.Vector3:
-                        SetPropertyValue(new Vector3(value.x, value.y, 0));
+                        SetPropertyValue(new Vector3(value.x, value.y, 0), endEdit);
                         break;
                     case VectorTypes.Vector4:
-                        SetPropertyValue(new Vector4(value.x, value.y, 0, 0));
+                        SetPropertyValue(new Vector4(value.x, value.y, 0, 0), endEdit);
                         break;
                     default:
-                        SetPropertyValue(value);
+                        SetPropertyValue(value, endEdit);
                         break;
                 }
 

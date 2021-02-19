@@ -50,11 +50,14 @@ namespace Hertzole.ALE
 
         public ILevelEditorUI UI { get; set; }
 
+        public object BeginEditValue { get; set; }
+
         public object RawValue
         {
             get { return exposed.GetValue(property.ID); }
             set { exposed.SetValue(property.ID, value, true); }
         }
+
         private void Awake()
         {
 #if OBSOLETE
@@ -68,6 +71,8 @@ namespace Hertzole.ALE
 
         public void Bind(ExposedProperty property, IExposedToLevelEditor exposed)
         {
+            exposed.OnValueChanged += OnExposedValueChanged;
+
             this.property = property;
             Label = string.IsNullOrEmpty(property.CustomName) ? TextUtility.FormatVariableLabel(property.Name) : property.CustomName;
             this.exposed = exposed;
@@ -77,6 +82,23 @@ namespace Hertzole.ALE
         }
 
         protected virtual void OnBound(ExposedProperty property, IExposedToLevelEditor exposed) { }
+
+        public void Unbind()
+        {
+            exposed.OnValueChanged -= OnExposedValueChanged;
+
+            OnUnbound();
+        }
+
+        protected virtual void OnUnbound() { }
+
+        private void OnExposedValueChanged(int id, object value)
+        {
+            if (id == property.ID)
+            {
+                SetFieldValue(value);
+            }
+        }
 
         public virtual bool SupportsType(ExposedProperty property)
         {
@@ -90,9 +112,19 @@ namespace Hertzole.ALE
 
         protected virtual void SetFieldValue(object value) { }
 
-        protected void SetPropertyValue(object value)
+        protected void SetPropertyValue(object value, bool undo = false)
         {
+            if (undo && UI.LevelEditor.Undo != null)
+            {
+                UI.LevelEditor.Undo.AddAction(new SetValueUndoAction(exposed, property.ID, BeginEditValue, value), false);
+            }
+
             exposed.SetValue(property.ID, value, true);
+        }
+
+        protected virtual void BeginEdit()
+        {
+            BeginEditValue = RawValue;
         }
 
 #if UNITY_EDITOR
@@ -158,9 +190,9 @@ namespace Hertzole.ALE
 
         public abstract void SetFieldValue(T value);
 
-        protected void SetPropertyValue(T value)
+        protected void SetPropertyValue(T value, bool undo = false)
         {
-            SetPropertyValue((object)value);
+            SetPropertyValue((object)value, undo);
         }
     }
 }

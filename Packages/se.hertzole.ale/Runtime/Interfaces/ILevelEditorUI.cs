@@ -4,6 +4,7 @@ namespace Hertzole.ALE
 {
     public interface ILevelEditorUI
     {
+        ILevelEditor LevelEditor { get; }
         ILevelEditorSaveModal SaveModal { get; }
         ILevelEditorLoadModal LoadModal { get; }
         ILevelEditorInspector InspectorPanel { get; }

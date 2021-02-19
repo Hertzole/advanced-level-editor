@@ -14,10 +14,13 @@ namespace Hertzole.ALE
     {
         [SerializeField]
         private ScriptableObject resources = null;
+        [SerializeField, RequireType(typeof(ILevelEditorUndo))]
+        private GameObject undo = null;
 
         private int instanceID;
 
         private ILevelEditorResources realResources;
+        private ILevelEditorUndo undoComp;
 
         private List<ILevelEditorObject> allObjects = new List<ILevelEditorObject>();
 
@@ -59,6 +62,14 @@ namespace Hertzole.ALE
         public event EventHandler<LevelEditorObjectEvent> OnCreatedObjectFromSaveData;
         public event EventHandler<LevelEditorObjectEvent> OnDeletedObject;
 
+        private void Awake()
+        {
+            if (undo != null)
+            {
+                undoComp = undo.GetComponent<ILevelEditorUndo>();
+            }
+        }
+
 #if !ALE_STRIP_SAFETY || UNITY_EDITOR
         private void Start()
         {
@@ -69,7 +80,7 @@ namespace Hertzole.ALE
         }
 #endif
 
-        public ILevelEditorObject CreateObject(ILevelEditorResource resource, Vector3 position, Quaternion rotation, Transform parent, int instanceID)
+        public ILevelEditorObject CreateObject(ILevelEditorResource resource, Vector3 position, Quaternion rotation, Transform parent, int instanceID, bool registerUndo = true)
         {
             if (resource.Asset is GameObject go)
             {
@@ -128,12 +139,12 @@ namespace Hertzole.ALE
                     poolable.OnLevelEditorUnpooled();
                 }
 
-                if (obj.MyGameObject.TryGetComponent(out ILevelEditorGizmos gizmos))
-                {
-                    LevelEditorGLRenderer.Add(gizmos);
-                }
-
                 OnCreatedObject?.Invoke(this, new LevelEditorObjectEvent(obj));
+
+                if (registerUndo && undoComp != null)
+                {
+                    undoComp.AddAction(new CreateObjectUndoAction(resource, position, rotation, parent, instanceID, obj), false);
+                }
 
                 return obj;
             }

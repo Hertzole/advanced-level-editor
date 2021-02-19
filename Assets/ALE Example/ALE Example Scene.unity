@@ -1763,6 +1763,7 @@ MonoBehaviour:
   - {fileID: 3440167333983775487, guid: 05bafe17659e12e44b6fe64f0453ce1e, type: 3}
   - {fileID: 832480442964059171, guid: c98dc8d643433824ba8c49912df4e4b9, type: 3}
   - {fileID: 9039197262415645972, guid: 41e023088ee7eba47b728cf200306946, type: 3}
+  includeTransform: 1
 --- !u!1 &1049410937
 GameObject:
   m_ObjectHideFlags: 0
@@ -3685,6 +3686,7 @@ GameObject:
   - component: {fileID: 1918987437}
   - component: {fileID: 1918987439}
   - component: {fileID: 1918987440}
+  - component: {fileID: 1918987442}
   - component: {fileID: 1918987441}
   m_Layer: 0
   m_Name: Level Editor
@@ -3712,6 +3714,7 @@ MonoBehaviour:
   objectManager: {fileID: 1918987434}
   input: {fileID: 1918987434}
   selection: {fileID: 1918987434}
+  undo: {fileID: 1918987434}
   playMode: {fileID: 0}
   snapSettings:
     enableMoveSnap: 1
@@ -3779,6 +3782,18 @@ MonoBehaviour:
     type: 0
     action: Middle Mouse
     action2: 
+  - name: Ctrl Modifier
+    type: 0
+    action: Ctrl Modifier
+    action2: 
+  - name: Undo
+    type: 0
+    action: Undo
+    action2: 
+  - name: Redo
+    type: 0
+    action: Redo
+    action2: 
 --- !u!114 &1918987438
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -3792,6 +3807,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   resources: {fileID: 11400000, guid: f8e6803bd4fa1ce41bbcc408fab2cb53, type: 2}
+  undo: {fileID: 1918987434}
 --- !u!114 &1918987439
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -3835,6 +3851,24 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   resourcePanel: {fileID: 970688937}
+--- !u!114 &1918987442
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1918987434}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 6bbf7295baea3544a934866eed7c064f, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  objectManager: {fileID: 1918987434}
+  input: {fileID: 1918987434}
+  handleUndoRedoInput: 1
+  modifierAction: Ctrl Modifier
+  undoAction: Undo
+  redoAction: Redo
 --- !u!224 &1922205037 stripped
 RectTransform:
   m_CorrespondingSourceObject: {fileID: 7876597587132607473, guid: b710a2d7ade41714298e4e67eef18342, type: 3}

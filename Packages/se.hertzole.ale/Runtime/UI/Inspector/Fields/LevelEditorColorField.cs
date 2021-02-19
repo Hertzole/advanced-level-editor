@@ -15,6 +15,7 @@ namespace Hertzole.ALE
         [SerializeField]
         private ColorChangedEvent onValueChanged = new ColorChangedEvent();
 
+        private bool is32;
         private Color color;
 
         public ColorChangedEvent OnValueChanged { get { return onValueChanged; } }
@@ -23,11 +24,17 @@ namespace Hertzole.ALE
         {
             colorButton.onClick.AddListener(() =>
             {
+                BeginEdit();
                 UI.ColorPickerWindow.Show(true);
                 UI.ColorPickerWindow.ColorPicker.Color = color;
                 UI.ColorPickerWindow.ColorPicker.OnValueChanged.AddListener(OnColorChanged);
                 UI.ColorPickerWindow.OnWindowClose.AddListener(OnCloseColorPicker);
             });
+        }
+
+        protected override void BeginEdit()
+        {
+            BeginEditValue = color;
         }
 
         private void OnColorChanged(Color color)
@@ -51,6 +58,15 @@ namespace Hertzole.ALE
         {
             UI.ColorPickerWindow.ColorPicker.OnValueChanged.RemoveListener(OnColorChanged);
             UI.ColorPickerWindow.OnWindowClose.RemoveListener(OnCloseColorPicker);
+
+            if (is32)
+            {
+                SetPropertyValue((Color32)color, true);
+            }
+            else
+            {
+                SetPropertyValue(color, true);
+            }
         }
 
         public override bool SupportsType(Type type, bool isArray)
@@ -62,6 +78,7 @@ namespace Hertzole.ALE
         {
             if (value is Color color)
             {
+                is32 = false;
                 this.color = color;
                 colorImage.color = new Color(color.r, color.g, color.b, 1);
                 if (alphaSlider != null)
@@ -71,6 +88,7 @@ namespace Hertzole.ALE
             }
             else if (value is Color32 color32)
             {
+                is32 = true;
                 this.color = color32;
                 colorImage.color = new Color32(color32.r, color32.g, color32.b, 255);
                 if (alphaSlider != null)

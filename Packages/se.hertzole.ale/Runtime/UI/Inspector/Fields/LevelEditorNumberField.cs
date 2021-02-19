@@ -129,6 +129,7 @@ namespace Hertzole.ALE
             this.LogIfStripped();
 
             textField.contentType = TMP_InputField.ContentType.IntegerNumber;
+            textField.onSelect.AddListener(x => BeginEdit());
             textField.onValueChanged.AddListener(x => OnValueChanged(x, false));
             textField.onEndEdit.AddListener(x => OnValueChanged(x, true));
         }
@@ -281,7 +282,7 @@ namespace Hertzole.ALE
                     ParseValue<decimal>(stringValue, decimal.MinValue, decimal.MaxValue, modifyField);
                     break;
                 default:
-                    SetPropertyValue(0);
+                    SetPropertyValue(0, true);
                     break;
             }
         }
@@ -291,7 +292,7 @@ namespace Hertzole.ALE
             if (string.IsNullOrWhiteSpace(value))
             {
                 T convertedValue = (T)Convert.ChangeType(0, typeof(T));
-                SetPropertyValue(convertedValue);
+                SetPropertyValue(convertedValue, modifyField);
                 if (modifyField)
                 {
                     textField.SetTextWithoutNotify("0");
@@ -325,7 +326,7 @@ namespace Hertzole.ALE
                 }
 
                 T convertedValue = (T)Convert.ChangeType(result, typeof(T));
-                SetPropertyValue(convertedValue);
+                SetPropertyValue(convertedValue, modifyField);
                 if (modifyField)
                 {
                     InvokeEndEdit(convertedValue);
@@ -337,7 +338,7 @@ namespace Hertzole.ALE
             }
             else
             {
-                SetPropertyValue(0);
+                SetPropertyValue(0, modifyField);
                 InvokeValueChanged(0);
             }
         }
@@ -347,7 +348,7 @@ namespace Hertzole.ALE
             if (string.IsNullOrWhiteSpace(value))
             {
                 T convertedValue = (T)Convert.ChangeType(0, typeof(T));
-                SetPropertyValue(convertedValue);
+                SetPropertyValue(convertedValue, modifyField);
                 if (modifyField)
                 {
                     textField.SetTextWithoutNotify("0");
@@ -381,7 +382,7 @@ namespace Hertzole.ALE
                 }
 
                 T convertedValue = (T)Convert.ChangeType(result, typeof(T));
-                SetPropertyValue(convertedValue);
+                SetPropertyValue(convertedValue, modifyField);
                 if (modifyField)
                 {
                     InvokeEndEdit(convertedValue);
@@ -393,7 +394,7 @@ namespace Hertzole.ALE
             }
             else
             {
-                SetPropertyValue(0);
+                SetPropertyValue(0, modifyField);
                 InvokeValueChanged(0);
             }
         }
@@ -403,7 +404,7 @@ namespace Hertzole.ALE
             if (string.IsNullOrWhiteSpace(value))
             {
                 T convertedValue = (T)Convert.ChangeType(0, typeof(T));
-                SetPropertyValue(convertedValue);
+                SetPropertyValue(convertedValue, modifyField);
                 if (modifyField)
                 {
                     textField.SetTextWithoutNotify("0");
@@ -437,7 +438,7 @@ namespace Hertzole.ALE
                 }
 
                 T convertedValue = (T)Convert.ChangeType(result, typeof(T));
-                SetPropertyValue(convertedValue);
+                SetPropertyValue(convertedValue, modifyField);
                 if (modifyField)
                 {
                     InvokeEndEdit(convertedValue);
@@ -449,7 +450,7 @@ namespace Hertzole.ALE
             }
             else
             {
-                SetPropertyValue(0);
+                SetPropertyValue(0, modifyField);
                 InvokeValueChanged(0);
             }
         }
@@ -459,7 +460,7 @@ namespace Hertzole.ALE
             if (string.IsNullOrWhiteSpace(value))
             {
                 T convertedValue = (T)Convert.ChangeType(0, typeof(T));
-                SetPropertyValue(convertedValue);
+                SetPropertyValue(convertedValue, modifyField);
                 if (modifyField)
                 {
                     textField.SetTextWithoutNotify("0");
@@ -494,7 +495,7 @@ namespace Hertzole.ALE
 
                 T convertedValue = (T)Convert.ChangeType(result, typeof(T));
 
-                SetPropertyValue(convertedValue);
+                SetPropertyValue(convertedValue, modifyField);
                 if (modifyField)
                 {
                     InvokeEndEdit(convertedValue);
@@ -506,7 +507,7 @@ namespace Hertzole.ALE
             }
             else
             {
-                SetPropertyValue(0);
+                SetPropertyValue(0, modifyField);
                 InvokeValueChanged(0);
             }
         }

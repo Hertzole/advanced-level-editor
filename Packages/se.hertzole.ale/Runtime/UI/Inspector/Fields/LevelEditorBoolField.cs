@@ -36,7 +36,8 @@ namespace Hertzole.ALE
 
             toggle.onValueChanged.AddListener(x =>
             {
-                SetPropertyValue(x);
+                BeginEdit();
+                SetPropertyValue(x, true);
                 onValueChanged.Invoke(x);
             });
         }
