@@ -109,6 +109,9 @@ public string MyProperty { get; set; }
 #### Write custom writers and readers for serialization
 TODO
 
+## 📃 License
+ALE itself is licensed under MIT. However, it contains some code that is under Unity's own license. As long as you use ALE within Unity, you're good to go.
+
 ## ❤ Credits
 [yasirkula](https://github.com/yasirkula) - [Dynamic Panels for Unity3D](https://github.com/yasirkula/UnityDynamicPanels) for panels  
 [yasirkula](https://github.com/yasirkula) - [Runtime Inspector & Hierarchy for Unity 3D](https://github.com/yasirkula/UnityRuntimeInspector) for tree control  
