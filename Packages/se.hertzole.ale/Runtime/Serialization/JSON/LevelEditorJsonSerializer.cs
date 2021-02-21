@@ -84,51 +84,15 @@ namespace Hertzole.ALE
 
         public static string SerializeJson(LevelEditorSaveData data, bool prettyPrint = false)
         {
-            Dictionary<string, int> objectPalette = new Dictionary<string, int>();
-            int nextID = 0;
-            for (int i = 0; i < data.objects.Count; i++)
+            Dictionary<string, int> objectPalette = SerializationHelper.GetObjectPalette(data);
+            Dictionary<string, int> typePalette = SerializationHelper.GetTypePalette(data);
+
+            SerializedLevelData levelData = new SerializedLevelData
             {
-                if (!objectPalette.ContainsKey(data.objects[i].id))
-                {
-                    objectPalette.Add(data.objects[i].id, nextID);
-                    nextID++;
-                }
-            }
-
-            Dictionary<string, int> typePalette = new Dictionary<string, int>();
-            nextID = 0;
-            for (int i = 0; i < data.objects.Count; i++)
-            {
-                for (int j = 0; j < data.objects[i].components.Length; j++)
-                {
-                    LevelEditorComponentData comp = data.objects[i].components[j];
-
-                    if (!typePalette.ContainsKey(comp.type))
-                    {
-                        typePalette.Add(comp.type, nextID);
-                        nextID++;
-                    }
-
-                    for (int k = 0; k < comp.properties.Length; k++)
-                    {
-                        LevelEditorPropertyData prop = comp.properties[k];
-                        if (!typePalette.ContainsKey(prop.typeName))
-                        {
-                            typePalette.Add(prop.typeName, nextID);
-                            nextID++;
-                        }
-                    }
-                }
-            }
-
-            foreach (KeyValuePair<string, LevelEditorCustomData> customData in data.customData)
-            {
-                if (!typePalette.ContainsKey(customData.Value.type))
-                {
-                    typePalette.Add(customData.Value.type, nextID);
-                    nextID++;
-                }
-            }
+                ObjectPalette = objectPalette,
+                TypePalette = typePalette,
+                Data = data
+            };
 
             List<JsonConverter> newConverters = new List<JsonConverter>
             {
@@ -140,7 +104,7 @@ namespace Hertzole.ALE
             };
             newConverters.AddRange(converters);
 
-            return JsonConvert.SerializeObject(data, new JsonSerializerSettings()
+            return JsonConvert.SerializeObject(levelData, new JsonSerializerSettings()
             {
                 NullValueHandling = NullValueHandling.Ignore,
                 Converters = newConverters,
@@ -163,12 +127,14 @@ namespace Hertzole.ALE
             };
             newConverters.AddRange(converters);
 
-            return JsonConvert.DeserializeObject<LevelEditorSaveData>(json, new JsonSerializerSettings()
+            SerializedLevelData levelData = JsonConvert.DeserializeObject<SerializedLevelData>(json, new JsonSerializerSettings()
             {
                 NullValueHandling = NullValueHandling.Ignore,
                 Converters = newConverters,
                 Formatting = Formatting.Indented
             });
+
+            return levelData.Data;
         }
     }
 }
