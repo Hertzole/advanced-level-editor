@@ -14,7 +14,7 @@ using MethodAttributes = Mono.Cecil.MethodAttributes;
 using ParameterAttributes = Mono.Cecil.ParameterAttributes;
 using PropertyAttributes = Mono.Cecil.PropertyAttributes;
 
-namespace Hertzole.ALE.Editor
+namespace Hertzole.ALE.CodeGen
 {
     public class ExposedClassProcessor : BaseProcessor
     {
@@ -120,6 +120,8 @@ namespace Hertzole.ALE.Editor
 
         private const string NO_EXPOSED_FIELDS = "There's no exposed property with the ID '{0}'.";
 
+        public ExposedClassProcessor(WeaverLogger logger) : base(logger) { }
+
         public override bool IsValidClass(TypeDefinition type)
         {
             if (type.HasFields)
@@ -147,141 +149,140 @@ namespace Hertzole.ALE.Editor
             return false;
         }
 
-        public override (bool success, bool dirty) ProcessClass(ModuleDefinition module, TypeDefinition type)
+        public override void ProcessClass(ModuleDefinition module, TypeDefinition type)
         {
-            List<FieldOrProperty> exposedFields = new List<FieldOrProperty>();
-            List<int> usedIds = new List<int>();
-            if (type.HasFields)
-            {
-                for (int i = 0; i < type.Fields.Count; i++)
-                {
-                    if (type.Fields[i].TryGetAttribute<ExposeToLevelEditorAttribute>(out CustomAttribute attribute))
-                    {
-                        int id = attribute.GetConstructorArgument(0, 0);
-                        if (usedIds.Contains(id))
-                        {
-                            Debug.LogError($"The ID {id} is already in use in {type.FullName}. The IDs need to be unique!");
-                            return (false, false);
-                        }
-                        else
-                        {
-                            usedIds.Add(id);
-                        }
+            //List<FieldOrProperty> exposedFields = new List<FieldOrProperty>();
+            //List<int> usedIds = new List<int>();
+            //if (type.HasFields)
+            //{
+            //    for (int i = 0; i < type.Fields.Count; i++)
+            //    {
+            //        if (type.Fields[i].TryGetAttribute<ExposeToLevelEditorAttribute>(out CustomAttribute attribute))
+            //        {
+            //            int id = attribute.GetConstructorArgument(0, 0);
+            //            if (usedIds.Contains(id))
+            //            {
+            //                logger.LogError($"The ID {id} is already in use in {type.FullName}. The IDs need to be unique!");
+            //                Debug.Log("Continued");
+            //                return;
+            //            }
+            //            else
+            //            {
+            //                usedIds.Add(id);
+            //            }
 
-                        int customOrder = attribute.GetField("order", 0);
-                        if (customOrder > 0)
-                        {
-                            customOrder += type.Fields.Count + type.Properties.Count;
-                        }
-                        else if (customOrder < 0)
-                        {
-                            customOrder -= type.Fields.Count + type.Properties.Count;
-                        }
-                        else
-                        {
-                            customOrder = i;
-                        }
+            //            int customOrder = attribute.GetField("order", 0);
+            //            if (customOrder > 0)
+            //            {
+            //                customOrder += type.Fields.Count + type.Properties.Count;
+            //            }
+            //            else if (customOrder < 0)
+            //            {
+            //                customOrder -= type.Fields.Count + type.Properties.Count;
+            //            }
+            //            else
+            //            {
+            //                customOrder = i;
+            //            }
 
-                        exposedFields.Add(new FieldOrProperty(attribute) { field = type.Fields[i], order = customOrder });
-                    }
-                }
-            }
+            //            exposedFields.Add(new FieldOrProperty(attribute) { field = type.Fields[i], order = customOrder });
+            //        }
+            //    }
+            //}
 
-            if (type.HasProperties)
-            {
-                for (int i = 0; i < type.Properties.Count; i++)
-                {
-                    if (type.Properties[i].TryGetAttribute<ExposeToLevelEditorAttribute>(out CustomAttribute attribute))
-                    {
-                        if (type.Properties[i].GetMethod == null)
-                        {
-                            Debug.LogError(type.FullName + "." + type.Properties[i].Name + " does not have a get method. Exposed properties need to have both a getter and setter.");
-                            return (false, false);
-                        }
+            //if (type.HasProperties)
+            //{
+            //    for (int i = 0; i < type.Properties.Count; i++)
+            //    {
+            //        if (type.Properties[i].TryGetAttribute<ExposeToLevelEditorAttribute>(out CustomAttribute attribute))
+            //        {
+            //            if (type.Properties[i].GetMethod == null)
+            //            {
+            //                logger.LogError($"{type.FullName}.{type.Properties[i].Name} does not have a get method. Exposed properties need to have both a getter and setter.");
+            //                return;
+            //            }
 
-                        if (type.Properties[i].SetMethod == null)
-                        {
-                            Debug.LogError(type.FullName + "." + type.Properties[i].Name + " does not have a set method. Exposed properties need to have both a getter and setter.");
-                            return (false, false);
-                        }
+            //            if (type.Properties[i].SetMethod == null)
+            //            {
+            //                logger.LogError($"{type.FullName}.{type.Properties[i].Name} does not have a set method. Exposed properties need to have both a getter and setter.");
+            //                return;
+            //            }
 
-                        int id = attribute.GetConstructorArgument(0, 0);
-                        if (usedIds.Contains(id))
-                        {
-                            Debug.LogError($"The ID {id} is already in use in {type.FullName}. The IDs need to be unique!");
-                            return (false, false);
-                        }
-                        else
-                        {
-                            usedIds.Add(id);
-                        }
+            //            int id = attribute.GetConstructorArgument(0, 0);
+            //            if (usedIds.Contains(id))
+            //            {
+            //                logger.LogError($"The ID {id} is already in use in {type.FullName}. The IDs need to be unique!");
+            //                return;
+            //            }
+            //            else
+            //            {
+            //                usedIds.Add(id);
+            //            }
 
-                        int customOrder = attribute.GetField("order", 0);
-                        if (customOrder > 0)
-                        {
-                            customOrder += type.Fields.Count + type.Properties.Count;
-                        }
-                        else if (customOrder < 0)
-                        {
-                            customOrder -= type.Fields.Count + type.Properties.Count;
-                        }
-                        else
-                        {
-                            customOrder = type.Fields.Count + i;
-                        }
+            //            int customOrder = attribute.GetField("order", 0);
+            //            if (customOrder > 0)
+            //            {
+            //                customOrder += type.Fields.Count + type.Properties.Count;
+            //            }
+            //            else if (customOrder < 0)
+            //            {
+            //                customOrder -= type.Fields.Count + type.Properties.Count;
+            //            }
+            //            else
+            //            {
+            //                customOrder = type.Fields.Count + i;
+            //            }
 
-                        exposedFields.Add(new FieldOrProperty(attribute) { property = type.Properties[i], order = customOrder });
-                    }
-                }
-            }
+            //            exposedFields.Add(new FieldOrProperty(attribute) { property = type.Properties[i], order = customOrder });
+            //        }
+            //    }
+            //}
 
-            // There were no exposed fields so there's no reason to continue.
-            if (exposedFields.Count == 0)
-            {
-                return (true, false);
-            }
+            //// There were no exposed fields so there's no reason to continue.
+            //if (exposedFields.Count == 0)
+            //{
+            //    return;
+            //}
 
-            stringFormat = module.ImportReference(typeof(string).GetMethod("Format", new Type[] { typeof(string), typeof(object) }));
-            stringEquality = module.ImportReference(typeof(string).GetMethod("op_Equality", new Type[] { typeof(string), typeof(string) }));
-            argumentException = module.ImportReference(typeof(ArgumentException).GetConstructor(new Type[] { typeof(string) }));
-            getType = module.ImportReference(typeof(Type).GetMethod("GetTypeFromHandle", new Type[] { typeof(RuntimeTypeHandle) }));
+            //stringFormat = module.ImportReference(typeof(string).GetMethod("Format", new Type[] { typeof(string), typeof(object) }));
+            //stringEquality = module.ImportReference(typeof(string).GetMethod("op_Equality", new Type[] { typeof(string), typeof(string) }));
+            //argumentException = module.ImportReference(typeof(ArgumentException).GetConstructor(new Type[] { typeof(string) }));
+            //getType = module.ImportReference(typeof(Type).GetMethod("GetTypeFromHandle", new Type[] { typeof(RuntimeTypeHandle) }));
 
-            exposedFields.Sort((x, y) => x.order.CompareTo(y.order));
+            //exposedFields.Sort((x, y) => x.order.CompareTo(y.order));
 
-            InterfaceImplementation exposedInterface = new InterfaceImplementation(module.ImportReference(typeof(IExposedToLevelEditor)));
+            //InterfaceImplementation exposedInterface = new InterfaceImplementation(module.ImportReference(typeof(IExposedToLevelEditor)));
 
-            // It already implements the interface.
-            if (type.ImplementsInterface(exposedInterface))
-            {
-                return (true, false);
-            }
+            //// It already implements the interface.
+            //if (type.ImplementsInterface(exposedInterface))
+            //{
+            //    return;
+            //}
 
-            type.Interfaces.Add(exposedInterface);
+            //type.Interfaces.Add(exposedInterface);
 
-            CreateLockObject(type);
-            CreateValueChangedEvent(type);
+            //CreateLockObject(type);
+            //CreateValueChangedEvent(type);
 
-            PropertyDefinition componentName = CreateProperty("ComponentName", type.Name, typeof(string), module, type);
-            PropertyDefinition typeName = CreateProperty("TypeName", type.FullName, typeof(string), module, type);
-            PropertyDefinition order = CreateProperty("Order", 0, typeof(int), module, type);
-            PropertyDefinition componentType = CreateProperty("ComponentType", type, typeof(Type), module, type);
+            //PropertyDefinition componentName = CreateProperty("ComponentName", type.Name, typeof(string), module, type);
+            //PropertyDefinition typeName = CreateProperty("TypeName", type.FullName, typeof(string), module, type);
+            //PropertyDefinition order = CreateProperty("Order", 0, typeof(int), module, type);
+            //PropertyDefinition componentType = CreateProperty("ComponentType", type, typeof(Type), module, type);
 
-            type.Properties.Add(componentName);
-            type.Properties.Add(typeName);
-            type.Properties.Add(order);
-            type.Properties.Add(componentType);
+            //type.Properties.Add(componentName);
+            //type.Properties.Add(typeName);
+            //type.Properties.Add(order);
+            //type.Properties.Add(componentType);
 
-            MethodDefinition getPropertiesMethod = CreateGetProperties(module, exposedFields);
-            MethodDefinition getValueMethod = CreateGetValue(module, exposedFields);
-            MethodDefinition setValueMethod = CreateSetValue(type, module, exposedFields);
-            MethodDefinition getValueTypeMethod = CreateGetValueType(module, exposedFields);
+            //MethodDefinition getPropertiesMethod = CreateGetProperties(module, exposedFields);
+            //MethodDefinition getValueMethod = CreateGetValue(module, exposedFields);
+            //MethodDefinition setValueMethod = CreateSetValue(type, module, exposedFields);
+            //MethodDefinition getValueTypeMethod = CreateGetValueType(module, exposedFields);
 
-            type.Methods.Add(getPropertiesMethod);
-            type.Methods.Add(getValueMethod);
-            type.Methods.Add(setValueMethod);
-            type.Methods.Add(getValueTypeMethod);
-
-            return (true, true);
+            //type.Methods.Add(getPropertiesMethod);
+            //type.Methods.Add(getValueMethod);
+            //type.Methods.Add(setValueMethod);
+            //type.Methods.Add(getValueTypeMethod);
         }
 
         private static void CreateLockObject(TypeDefinition type)
