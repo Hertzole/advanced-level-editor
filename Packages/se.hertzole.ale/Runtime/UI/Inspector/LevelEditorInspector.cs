@@ -234,20 +234,32 @@ namespace Hertzole.ALE
             }
             else
             {
+                int selectedIndex = -1;
+
                 for (int i = 0; i < fieldPrefabs.Length; i++)
                 {
-                    if (fieldPrefabs[i].SupportsType(fieldType, isArray))
+                    if (fieldPrefabs[i].SupportsTypeDirect(fieldType))
                     {
-                        fields.Add(type, i);
-                        if (!pooledFields.ContainsKey(i))
-                        {
-                            pooledFields.Add(i, new Stack<LevelEditorInspectorField>());
-                        }
-
-                        result = Instantiate(fieldPrefabs[i], parent);
-                        result.Index = i;
+                        selectedIndex = i;
                         break;
                     }
+
+                    if (fieldPrefabs[i].SupportsType(fieldType, isArray))
+                    {
+                        selectedIndex = i;
+                    }
+                }
+
+                if (selectedIndex >= 0)
+                {
+                    fields.Add(type, selectedIndex);
+                    if (!pooledFields.ContainsKey(selectedIndex))
+                    {
+                        pooledFields.Add(selectedIndex, new Stack<LevelEditorInspectorField>());
+                    }
+
+                    result = Instantiate(fieldPrefabs[selectedIndex], parent);
+                    result.Index = selectedIndex;
                 }
             }
 
@@ -282,18 +294,31 @@ namespace Hertzole.ALE
             }
             else
             {
+                int foundIndex = -1;
+
                 for (int i = 0; i < fieldPrefabs.Length; i++)
                 {
+                    if (fieldPrefabs[i].SupportsTypeDirect(type))
+                    {
+                        foundIndex = i;
+                        break;
+                    }
+
                     if (fieldPrefabs[i].SupportsType(type, isArray))
                     {
-                        fields.Add(typeAndArray, i);
-                        if (!pooledFields.ContainsKey(i))
-                        {
-                            pooledFields.Add(i, new Stack<LevelEditorInspectorField>());
-                        }
-
-                        return true;
+                        foundIndex = i;
                     }
+                }
+
+                if (foundIndex >= 0)
+                {
+                    fields.Add(typeAndArray, foundIndex);
+                    if (!pooledFields.ContainsKey(foundIndex))
+                    {
+                        pooledFields.Add(foundIndex, new Stack<LevelEditorInspectorField>());
+                    }
+
+                    return true;
                 }
             }
 

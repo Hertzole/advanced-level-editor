@@ -110,6 +110,11 @@ namespace Hertzole.ALE
             return false;
         }
 
+        public virtual bool SupportsTypeDirect(Type type)
+        {
+            return false;
+        }
+
         protected virtual void SetFieldValue(object value) { }
 
         protected void SetPropertyValue(object value, bool undo = false)
@@ -181,6 +186,11 @@ namespace Hertzole.ALE
             {
                 return type == typeof(T);
             }
+        }
+
+        public override bool SupportsTypeDirect(Type type)
+        {
+            return type == typeof(T);
         }
 
         protected override void SetFieldValue(object value)
