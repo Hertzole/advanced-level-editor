@@ -53,9 +53,9 @@ namespace Hertzole.ALE
 
         void CreateObjectsFromSaveData(LevelEditorSaveData data);
 
-        bool DeleteObject(ILevelEditorObject target);
+        bool DeleteObject(ILevelEditorObject target, bool registerUndo = true);
 
-        void DeleteAllObjects();
+        void DeleteAllObjects(bool registerUndo = true);
 
         void ResetInstanceID();
 
