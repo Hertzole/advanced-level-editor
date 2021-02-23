@@ -17,7 +17,7 @@ namespace Hertzole.ALE
         [SerializeField, RequireType(typeof(ILevelEditorUndo))]
         private GameObject undo = null;
 
-        private int instanceID;
+        private int instanceID = 0;
 
         private ILevelEditorResources realResources;
         private ILevelEditorUndo undoComp;
@@ -27,6 +27,7 @@ namespace Hertzole.ALE
         private Dictionary<string, Stack<ILevelEditorObject>> pooledObjects = new Dictionary<string, Stack<ILevelEditorObject>>();
         private Dictionary<string, List<ILevelEditorObject>> activeObjects = new Dictionary<string, List<ILevelEditorObject>>();
         private Dictionary<string, int> objectCount = new Dictionary<string, int>();
+        private Dictionary<int, ILevelEditorObject> objectsWithId = new Dictionary<int, ILevelEditorObject>();
 
         public ScriptableObject ResourcesObject
         {
@@ -84,6 +85,11 @@ namespace Hertzole.ALE
         {
             if (resource.Asset is GameObject go)
             {
+                if (objectsWithId.ContainsKey(instanceID))
+                {
+                    throw new DuplicateIDException($"There already is an object with the instance ID {instanceID}.");
+                }
+
                 LevelEditorObjectEventSpawningEvent args = new LevelEditorObjectEventSpawningEvent(resource);
 
                 OnCreatingObject?.Invoke(this, args);
@@ -117,7 +123,7 @@ namespace Hertzole.ALE
 
                 if (instanceID >= this.instanceID)
                 {
-                    this.instanceID = instanceID + 1;
+                    this.instanceID = instanceID;
                 }
 
                 if (!activeObjects.ContainsKey(resource.ID))
@@ -138,6 +144,8 @@ namespace Hertzole.ALE
                 {
                     poolable.OnLevelEditorUnpooled();
                 }
+
+                objectsWithId[obj.InstanceID] = obj;
 
                 OnCreatedObject?.Invoke(this, new LevelEditorObjectEvent(obj));
 
@@ -191,7 +199,7 @@ namespace Hertzole.ALE
             }
         }
 
-        public bool DeleteObject(ILevelEditorObject target)
+        public bool DeleteObject(ILevelEditorObject target, bool registerUndo = true)
         {
             if (target == null)
             {
@@ -208,29 +216,31 @@ namespace Hertzole.ALE
                 return false;
             }
 
-            DeleteObjectInternal(target);
+            DeleteObjectInternal(target, registerUndo);
 
             allObjects.Remove(target);
 
             return true;
         }
 
-        public void DeleteAllObjects()
+        public void DeleteAllObjects(bool registerUndo = true)
         {
             for (int i = 0; i < allObjects.Count; i++)
             {
-                DeleteObjectInternal(allObjects[i]);
+                DeleteObjectInternal(allObjects[i], false);
             }
 
             allObjects.Clear();
         }
 
-        private void DeleteObjectInternal(ILevelEditorObject target)
+        private void DeleteObjectInternal(ILevelEditorObject target, bool registerUndo)
         {
             if (!pooledObjects.ContainsKey(target.ID))
             {
                 pooledObjects.Add(target.ID, new Stack<ILevelEditorObject>());
             }
+
+            objectsWithId.Remove(target.InstanceID);
 
             pooledObjects[target.ID].Push(target);
             activeObjects[target.ID].Remove(target);
@@ -248,6 +258,8 @@ namespace Hertzole.ALE
 
             target.MyGameObject.SetActive(false);
 
+            //TODO: Apply undo.
+
             OnDeletedObject?.Invoke(this, new LevelEditorObjectEvent(target));
         }
 
@@ -263,15 +275,7 @@ namespace Hertzole.ALE
 
         public ILevelEditorObject GetObject(int instanceID)
         {
-            for (int i = 0; i < allObjects.Count; i++)
-            {
-                if (allObjects[i].InstanceID == instanceID)
-                {
-                    return allObjects[i];
-                }
-            }
-
-            return null;
+            return objectsWithId.TryGetValue(instanceID, out ILevelEditorObject obj) ? obj : null;
         }
 
         public int GetObjectCount(string id)
