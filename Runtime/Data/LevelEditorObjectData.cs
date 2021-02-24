@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Linq;
 
 namespace Hertzole.ALE
 {
@@ -29,17 +30,12 @@ namespace Hertzole.ALE
 
         public override bool Equals(object obj)
         {
-            if (obj != null && obj is LevelEditorObjectData data)
-            {
-                return Equals(data);
-            }
-
-            return false;
+            return obj is LevelEditorObjectData data && Equals(data);
         }
 
         public bool Equals(LevelEditorObjectData data)
         {
-            return data.name == name && data.id == id && data.instanceId == instanceId;
+            return data.active == active && data.instanceId == instanceId && data.id == id && data.name == name && data.components.SequenceEqual(components);
         }
 
         public override int GetHashCode()
@@ -47,9 +43,11 @@ namespace Hertzole.ALE
             unchecked
             {
                 int hash = 23;
-                hash = hash * 17 * name.GetHashCode();
-                hash = hash * 17 * id.GetHashCode();
+                hash = hash * 17 * active.GetHashCode();
                 hash = hash * 17 * instanceId.GetHashCode();
+                hash = hash * 17 * id.GetHashCode();
+                hash = hash * 17 * name.GetHashCode();
+                hash = hash * 17 * components.GetHashCode();
 
                 return hash;
             }

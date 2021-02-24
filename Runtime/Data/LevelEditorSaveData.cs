@@ -1,10 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
-using UnityEngine;
+using System.Linq;
 
 namespace Hertzole.ALE
 {
-    public class LevelEditorSaveData
+    public struct LevelEditorSaveData : IEquatable<LevelEditorSaveData>
     {
         public string name;
         public List<LevelEditorObjectData> objects;
@@ -18,63 +18,44 @@ namespace Hertzole.ALE
             customData = new Dictionary<string, LevelEditorCustomData>();
         }
 
-        public void AddCustomData(string key, object value)
-        {
-            Type valueType = value.GetType();
-            string type = valueType.IsArray ? valueType.GetElementType().FullName : valueType.FullName;
-            customData.Add(key, new LevelEditorCustomData(type, valueType.IsArray, value));
-        }
-
-        public bool TryGetCustomData<T>(string key, out T value)
-        {
-            if (customData.TryGetValue(key, out LevelEditorCustomData data))
-            {
-                if (data.isArray)
-                {
-                    Debug.LogError("This function is only used for single values.");
-                    value = default;
-                    return false;
-                }
-                else
-                {
-                    value = (T)data.value;
-                    return true;
-                }
-            }
-            else
-            {
-                value = default;
-                return false;
-            }
-        }
-
-        public bool TryGetCustomData<T>(string key, out T[] value)
-        {
-            if (customData.TryGetValue(key, out LevelEditorCustomData data))
-            {
-                if (data.isArray)
-                {
-                    value = Array.ConvertAll((object[])data.value, item => (T)item);
-                }
-                else
-                {
-                    Debug.LogError("This function is only used for getting arrays.");
-                    value = null;
-                    return false;
-                }
-
-                return true;
-            }
-            else
-            {
-                value = default;
-                return false;
-            }
-        }
-
         public override string ToString()
         {
             return $"ALE Save Data ({name}, {objects.Count} objects, {customData.Count} custom data)";
+        }
+
+        public override bool Equals(object obj)
+        {
+            return obj is LevelEditorSaveData data && Equals(data);
+        }
+
+        public bool Equals(LevelEditorSaveData other)
+        {
+            return other != null && name == other.name &&
+                   ((other.objects == null && objects == null) || (objects != null && objects.SequenceEqual(other.objects))) &&
+                   ((other.customData == null && customData == null) || (customData != null && customData.DictionaryEquals(other.customData)));
+        }
+
+        public override int GetHashCode()
+        {
+            unchecked
+            {
+                int hashCode = 23;
+                hashCode = hashCode * 17 * name.GetHashCode();
+                hashCode = hashCode * 17 * objects.GetHashCode();
+                hashCode = hashCode * 17 * customData.GetHashCode();
+
+                return hashCode;
+            }
+        }
+
+        public static bool operator ==(LevelEditorSaveData left, LevelEditorSaveData right)
+        {
+            return EqualityComparer<LevelEditorSaveData>.Default.Equals(left, right);
+        }
+
+        public static bool operator !=(LevelEditorSaveData left, LevelEditorSaveData right)
+        {
+            return !(left == right);
         }
     }
 }

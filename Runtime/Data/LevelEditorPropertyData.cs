@@ -3,8 +3,7 @@ using UnityEngine;
 
 namespace Hertzole.ALE
 {
-    //TODO: IEquatable
-    public struct LevelEditorPropertyData
+    public struct LevelEditorPropertyData : IEquatable<LevelEditorPropertyData>
     {
         public int id;
         public string typeName;
@@ -20,6 +19,40 @@ namespace Hertzole.ALE
             isArray = property.IsArray;
             // Used for Unity references. They need to be converted to a simple component.
             typeName = type.IsSubclassOf(typeof(Component)) ? typeof(Component).FullName : property.Type.FullName;
+        }
+
+        public override bool Equals(object obj)
+        {
+            return obj is LevelEditorPropertyData data && Equals(data);
+        }
+
+        public bool Equals(LevelEditorPropertyData other)
+        {
+            return isArray == other.isArray && id == other.id && typeName == other.typeName && value.Equals(other.value) && type.Equals(other.type);
+        }
+
+        public override int GetHashCode()
+        {
+            unchecked
+            {
+                int hashCode = 23;
+                hashCode = hashCode * 17 * isArray.GetHashCode();
+                hashCode = hashCode * 17 * id.GetHashCode();
+                hashCode = hashCode * 17 * typeName.GetHashCode();
+                hashCode = hashCode * 17 * value.GetHashCode();
+                hashCode = hashCode * 17 * type.GetHashCode();
+                return hashCode;
+            }
+        }
+
+        public static bool operator ==(LevelEditorPropertyData left, LevelEditorPropertyData right)
+        {
+            return left.Equals(right);
+        }
+
+        public static bool operator !=(LevelEditorPropertyData left, LevelEditorPropertyData right)
+        {
+            return !(left == right);
         }
     }
 }
