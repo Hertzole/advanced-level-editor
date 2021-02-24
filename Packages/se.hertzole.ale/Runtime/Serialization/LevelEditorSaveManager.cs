@@ -59,7 +59,7 @@ namespace Hertzole.ALE
             return data;
         }
 
-        public string[] GetLevels()
+        public virtual string[] GetLevels()
         {
             string location = BuildSaveLocation(baseSaveLocation, saveSuffix);
             if (!Directory.Exists(location))
@@ -78,7 +78,7 @@ namespace Hertzole.ALE
             if (!File.Exists(path))
             {
                 Debug.LogError($"There's no file with path '{path}'.");
-                return null;
+                return new LevelEditorSaveData();
             }
 
 #if ALE_JSON
@@ -90,7 +90,7 @@ namespace Hertzole.ALE
 #endif
             {
                 Debug.Log("Binary serialization is not yet supported. Please use JSON for now.");
-                return null;
+                return new LevelEditorSaveData();
                 //data = LevelEditorSerializer.DeserializeBinary(File.ReadAllBytes(path));
             }
 
@@ -149,6 +149,8 @@ namespace Hertzole.ALE
                 LevelEditorLogger.Log("LevelEditorSaveManager saving was canceled.");
                 return;
             }
+
+            saveData.customData = args.GetAllCustomData();
 
 #if ALE_JSON
             if (saveAsJson)
