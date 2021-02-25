@@ -5,13 +5,15 @@ namespace Hertzole.ALE
 {
     public struct LevelEditorCustomData : IEquatable<LevelEditorCustomData>
     {
-        public string type;
+        public string typeName;
         public bool isArray;
         public object value;
+        public Type type;
 
-        public LevelEditorCustomData(string type, bool isArray, object value)
+        public LevelEditorCustomData(Type type, bool isArray, object value)
         {
-            this.type = type;
+            typeName = type.IsArray ? type.GetElementType().FullName : type.FullName;
+            this.type = type.IsArray ? type.GetElementType() : type;
             this.isArray = isArray;
             this.value = value;
         }
@@ -23,13 +25,13 @@ namespace Hertzole.ALE
 
         public bool Equals(LevelEditorCustomData other)
         {
-            return type == other.type && isArray == other.isArray && EqualityComparer<object>.Default.Equals(value, other.value);
+            return typeName == other.typeName && isArray == other.isArray && EqualityComparer<object>.Default.Equals(value, other.value);
         }
 
         public override int GetHashCode()
         {
             int hashCode = 1148455455;
-            hashCode = hashCode * -1521134295 + EqualityComparer<string>.Default.GetHashCode(type);
+            hashCode = hashCode * -1521134295 + EqualityComparer<string>.Default.GetHashCode(typeName);
             hashCode = hashCode * -1521134295 + isArray.GetHashCode();
             hashCode = hashCode * -1521134295 + EqualityComparer<object>.Default.GetHashCode(value);
             return hashCode;

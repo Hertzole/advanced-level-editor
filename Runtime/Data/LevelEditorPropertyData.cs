@@ -19,7 +19,6 @@ namespace Hertzole.ALE
             isArray = property.IsArray;
             // Used for Unity references. They need to be converted to a simple component.
             typeName = property.Type.IsSubclassOf(typeof(Component)) ? typeof(Component).FullName : property.Type.FullName;
-            Debug.Log(property.Type + " | " + typeName);
         }
 
         public override bool Equals(object obj)

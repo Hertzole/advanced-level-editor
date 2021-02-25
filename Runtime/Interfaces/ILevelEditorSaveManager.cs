@@ -19,8 +19,7 @@ namespace Hertzole.ALE
         public void AddCustomData(string key, object value)
         {
             Type valueType = value.GetType();
-            string type = valueType.IsArray ? valueType.GetElementType().FullName : valueType.FullName;
-            customData.Add(key, new LevelEditorCustomData(type, valueType.IsArray, value));
+            customData.Add(key, new LevelEditorCustomData(valueType, valueType.IsArray, value));
         }
 
         public bool TryGetCustomData<T>(string key, out T value)

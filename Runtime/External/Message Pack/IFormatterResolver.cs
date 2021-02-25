@@ -1,13 +1,12 @@
 ﻿// Copyright (c) All contributors. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using MessagePack.Formatters;
 using System;
 using System.Linq.Expressions;
 using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Runtime.ExceptionServices;
-using MessagePack.Formatters;
-using MessagePack.Internal;
 
 namespace MessagePack
 {
@@ -21,20 +20,20 @@ namespace MessagePack
         /// </summary>
         /// <typeparam name="T">The type of value to be serialized or deserialized.</typeparam>
         /// <returns>A formatter, if this resolver supplies one for type <typeparamref name="T"/>; otherwise <c>null</c>.</returns>
-        IMessagePackFormatter<T> GetFormatter<T>();
+        MessagePackFormatter<T> GetFormatter<T>();
     }
 
     public static class FormatterResolverExtensions
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static IMessagePackFormatter<T> GetFormatterWithVerify<T>(this IFormatterResolver resolver)
+        public static MessagePackFormatter<T> GetFormatterWithVerify<T>(this IFormatterResolver resolver)
         {
             if (resolver is null)
             {
                 throw new ArgumentNullException(nameof(resolver));
             }
 
-            IMessagePackFormatter<T> formatter;
+            MessagePackFormatter<T> formatter;
             try
             {
                 formatter = resolver.GetFormatter<T>();
@@ -66,12 +65,12 @@ namespace MessagePack
             throw new FormatterNotRegisteredException(t.FullName + " is not registered in resolver: " + resolver.GetType());
         }
 
-        private static readonly ThreadsafeTypeKeyHashTable<Func<IFormatterResolver, IMessagePackFormatter>> FormatterGetters =
-            new ThreadsafeTypeKeyHashTable<Func<IFormatterResolver, IMessagePackFormatter>>();
+        private static readonly ThreadsafeTypeKeyHashTable<Func<IFormatterResolver, MessagePackFormatter>> FormatterGetters =
+            new ThreadsafeTypeKeyHashTable<Func<IFormatterResolver, MessagePackFormatter>>();
 
         private static readonly MethodInfo GetFormatterRuntimeMethod = typeof(IFormatterResolver).GetRuntimeMethod(nameof(IFormatterResolver.GetFormatter), Type.EmptyTypes);
 
-        public static object GetFormatterDynamic(this IFormatterResolver resolver, Type type)
+        public static MessagePackFormatter GetFormatterDynamic(this IFormatterResolver resolver, Type type)
         {
             if (resolver is null)
             {
@@ -83,11 +82,11 @@ namespace MessagePack
                 throw new ArgumentNullException(nameof(type));
             }
 
-            if (!FormatterGetters.TryGetValue(type, out var formatterGetter))
+            if (!FormatterGetters.TryGetValue(type, out Func<IFormatterResolver, MessagePackFormatter> formatterGetter))
             {
-                var genericMethod = GetFormatterRuntimeMethod.MakeGenericMethod(type);
-                var inputResolver = Expression.Parameter(typeof(IFormatterResolver), "inputResolver");
-                formatterGetter = Expression.Lambda<Func<IFormatterResolver, IMessagePackFormatter>>(
+                MethodInfo genericMethod = GetFormatterRuntimeMethod.MakeGenericMethod(type);
+                ParameterExpression inputResolver = Expression.Parameter(typeof(IFormatterResolver), "inputResolver");
+                formatterGetter = Expression.Lambda<Func<IFormatterResolver, MessagePackFormatter>>(
                     Expression.Call(inputResolver, genericMethod), inputResolver).Compile();
                 FormatterGetters.TryAdd(type, formatterGetter);
             }
@@ -97,7 +96,7 @@ namespace MessagePack
 
         internal static object GetFormatterDynamicWithVerify(this IFormatterResolver resolver, Type type)
         {
-            var result = GetFormatterDynamic(resolver, type);
+            object result = GetFormatterDynamic(resolver, type);
             if (result == null)
             {
                 Throw(type, resolver);

@@ -1,12 +1,11 @@
 ﻿// Copyright (c) All contributors. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using MessagePack.Formatters;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
-using MessagePack.Formatters;
-using MessagePack.Internal;
 
 namespace MessagePack.Resolvers
 {
@@ -18,13 +17,13 @@ namespace MessagePack.Resolvers
     /// </remarks>
     public static class CompositeResolver
     {
-        private static readonly ReadOnlyDictionary<Type, IMessagePackFormatter> EmptyFormattersByType = new ReadOnlyDictionary<Type, IMessagePackFormatter>(new Dictionary<Type, IMessagePackFormatter>());
+        private static readonly ReadOnlyDictionary<Type, MessagePackFormatter> EmptyFormattersByType = new ReadOnlyDictionary<Type, MessagePackFormatter>(new Dictionary<Type, MessagePackFormatter>());
 
         /// <summary>
         /// Initializes a new instance of an <see cref="IFormatterResolver"/> with the specified formatters and sub-resolvers.
         /// </summary>
         /// <param name="formatters">
-        /// A list of instances of <see cref="IMessagePackFormatter{T}"/> to prefer (above the <paramref name="resolvers"/>).
+        /// A list of instances of <see cref="MessagePackFormatter{T}"/> to prefer (above the <paramref name="resolvers"/>).
         /// The formatters are searched in the order given, so if two formatters support serializing the same type, the first one is used.
         /// May not be null, but may be <see cref="Array.Empty{T}"/>.
         /// </param>
@@ -36,7 +35,7 @@ namespace MessagePack.Resolvers
         /// <returns>
         /// An instance of <see cref="IFormatterResolver"/>.
         /// </returns>
-        public static IFormatterResolver Create(IReadOnlyList<IMessagePackFormatter> formatters, IReadOnlyList<IFormatterResolver> resolvers)
+        public static IFormatterResolver Create(IReadOnlyList<MessagePackFormatter> formatters, IReadOnlyList<IFormatterResolver> resolvers)
         {
             if (formatters is null)
             {
@@ -49,45 +48,51 @@ namespace MessagePack.Resolvers
             }
 
             // Make a copy of the resolvers list provided by the caller to guard against them changing it later.
-            var immutableFormatters = formatters.ToArray();
-            var immutableResolvers = resolvers.ToArray();
+            MessagePackFormatter[] immutableFormatters = formatters.ToArray();
+            IFormatterResolver[] immutableResolvers = resolvers.ToArray();
 
             return new CachingResolver(immutableFormatters, immutableResolvers);
         }
 
-        public static IFormatterResolver Create(params IFormatterResolver[] resolvers) => Create(Array.Empty<IMessagePackFormatter>(), resolvers);
+        public static IFormatterResolver Create(params IFormatterResolver[] resolvers)
+        {
+            return Create(Array.Empty<MessagePackFormatter>(), resolvers);
+        }
 
-        public static IFormatterResolver Create(params IMessagePackFormatter[] formatters) => Create(formatters, Array.Empty<IFormatterResolver>());
+        public static IFormatterResolver Create(params MessagePackFormatter[] formatters)
+        {
+            return Create(formatters, Array.Empty<IFormatterResolver>());
+        }
 
         private class CachingResolver : IFormatterResolver
         {
-            private readonly ThreadsafeTypeKeyHashTable<IMessagePackFormatter> formattersCache = new ThreadsafeTypeKeyHashTable<IMessagePackFormatter>();
-            private readonly IMessagePackFormatter[] subFormatters;
+            private readonly ThreadsafeTypeKeyHashTable<MessagePackFormatter> formattersCache = new ThreadsafeTypeKeyHashTable<MessagePackFormatter>();
+            private readonly MessagePackFormatter[] subFormatters;
             private readonly IFormatterResolver[] subResolvers;
 
             /// <summary>
             /// Initializes a new instance of the <see cref="CachingResolver"/> class.
             /// </summary>
-            internal CachingResolver(IMessagePackFormatter[] subFormatters, IFormatterResolver[] subResolvers)
+            internal CachingResolver(MessagePackFormatter[] subFormatters, IFormatterResolver[] subResolvers)
             {
                 this.subFormatters = subFormatters ?? throw new ArgumentNullException(nameof(subFormatters));
                 this.subResolvers = subResolvers ?? throw new ArgumentNullException(nameof(subResolvers));
             }
 
-            public IMessagePackFormatter<T> GetFormatter<T>()
+            public MessagePackFormatter<T> GetFormatter<T>()
             {
-                if (!this.formattersCache.TryGetValue(typeof(T), out IMessagePackFormatter formatter))
+                if (!formattersCache.TryGetValue(typeof(T), out MessagePackFormatter formatter))
                 {
-                    foreach (var subFormatter in this.subFormatters)
+                    foreach (MessagePackFormatter subFormatter in subFormatters)
                     {
-                        if (subFormatter is IMessagePackFormatter<T>)
+                        if (subFormatter is MessagePackFormatter<T>)
                         {
                             formatter = subFormatter;
                             goto CACHE;
                         }
                     }
 
-                    foreach (IFormatterResolver resolver in this.subResolvers)
+                    foreach (IFormatterResolver resolver in subResolvers)
                     {
                         formatter = resolver.GetFormatter<T>();
                         if (formatter != null)
@@ -96,12 +101,12 @@ namespace MessagePack.Resolvers
                         }
                     }
 
-// when not found, cache null.
-CACHE:
-                    this.formattersCache.TryAdd(typeof(T), formatter);
+                    // when not found, cache null.
+                    CACHE:
+                    formattersCache.TryAdd(typeof(T), formatter);
                 }
 
-                return (IMessagePackFormatter<T>)formatter;
+                return (MessagePackFormatter<T>)formatter;
             }
         }
     }

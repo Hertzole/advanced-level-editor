@@ -15,9 +15,9 @@ using UnityEngine.Scripting;
 [assembly: Preserve]
 namespace MessagePack.Formatters
 {
-    public sealed class ArrayFormatter<T> : IMessagePackFormatter<T[]>
+    public sealed class ArrayFormatter<T> : MessagePackFormatter<T[]>
     {
-        public void Serialize(ref MessagePackWriter writer, T[] value, MessagePackSerializerOptions options)
+        public override void Serialize(ref MessagePackWriter writer, T[] value, MessagePackSerializerOptions options)
         {
             if (value == null)
             {
@@ -25,7 +25,7 @@ namespace MessagePack.Formatters
             }
             else
             {
-                IMessagePackFormatter<T> formatter = options.Resolver.GetFormatterWithVerify<T>();
+                MessagePackFormatter<T> formatter = options.Resolver.GetFormatterWithVerify<T>();
 
                 writer.WriteArrayHeader(value.Length);
 
@@ -37,7 +37,7 @@ namespace MessagePack.Formatters
             }
         }
 
-        public T[] Deserialize(ref MessagePackReader reader, MessagePackSerializerOptions options)
+        public override T[] Deserialize(ref MessagePackReader reader, MessagePackSerializerOptions options)
         {
             if (reader.TryReadNil())
             {
@@ -50,7 +50,7 @@ namespace MessagePack.Formatters
                 return Array.Empty<T>();
             }
 
-            IMessagePackFormatter<T> formatter = options.Resolver.GetFormatterWithVerify<T>();
+            MessagePackFormatter<T> formatter = options.Resolver.GetFormatterWithVerify<T>();
             T[] array = new T[len];
             options.Security.DepthStep(ref reader);
             try
@@ -70,7 +70,7 @@ namespace MessagePack.Formatters
         }
     }
 
-    public sealed class ByteMemoryFormatter : IMessagePackFormatter<Memory<byte>>
+    public sealed class ByteMemoryFormatter : MessagePackFormatter<Memory<byte>>
     {
         public static readonly ByteMemoryFormatter Instance = new ByteMemoryFormatter();
 
@@ -78,18 +78,18 @@ namespace MessagePack.Formatters
         {
         }
 
-        public void Serialize(ref MessagePackWriter writer, Memory<byte> value, MessagePackSerializerOptions options)
+        public override void Serialize(ref MessagePackWriter writer, Memory<byte> value, MessagePackSerializerOptions options)
         {
             writer.Write(value.Span);
         }
 
-        public Memory<byte> Deserialize(ref MessagePackReader reader, MessagePackSerializerOptions options)
+        public override Memory<byte> Deserialize(ref MessagePackReader reader, MessagePackSerializerOptions options)
         {
             return reader.ReadBytes() is ReadOnlySequence<byte> bytes ? new Memory<byte>(bytes.ToArray()) : default;
         }
     }
 
-    public sealed class ByteReadOnlyMemoryFormatter : IMessagePackFormatter<ReadOnlyMemory<byte>>
+    public sealed class ByteReadOnlyMemoryFormatter : MessagePackFormatter<ReadOnlyMemory<byte>>
     {
         public static readonly ByteReadOnlyMemoryFormatter Instance = new ByteReadOnlyMemoryFormatter();
 
@@ -97,18 +97,18 @@ namespace MessagePack.Formatters
         {
         }
 
-        public void Serialize(ref MessagePackWriter writer, ReadOnlyMemory<byte> value, MessagePackSerializerOptions options)
+        public override void Serialize(ref MessagePackWriter writer, ReadOnlyMemory<byte> value, MessagePackSerializerOptions options)
         {
             writer.Write(value.Span);
         }
 
-        public ReadOnlyMemory<byte> Deserialize(ref MessagePackReader reader, MessagePackSerializerOptions options)
+        public override ReadOnlyMemory<byte> Deserialize(ref MessagePackReader reader, MessagePackSerializerOptions options)
         {
             return reader.ReadBytes() is ReadOnlySequence<byte> bytes ? new ReadOnlyMemory<byte>(bytes.ToArray()) : default;
         }
     }
 
-    public sealed class ByteReadOnlySequenceFormatter : IMessagePackFormatter<ReadOnlySequence<byte>>
+    public sealed class ByteReadOnlySequenceFormatter : MessagePackFormatter<ReadOnlySequence<byte>>
     {
         public static readonly ByteReadOnlySequenceFormatter Instance = new ByteReadOnlySequenceFormatter();
 
@@ -116,7 +116,7 @@ namespace MessagePack.Formatters
         {
         }
 
-        public void Serialize(ref MessagePackWriter writer, ReadOnlySequence<byte> value, MessagePackSerializerOptions options)
+        public override void Serialize(ref MessagePackWriter writer, ReadOnlySequence<byte> value, MessagePackSerializerOptions options)
         {
             writer.WriteBinHeader(checked((int)value.Length));
             foreach (ReadOnlyMemory<byte> segment in value)
@@ -125,13 +125,13 @@ namespace MessagePack.Formatters
             }
         }
 
-        public ReadOnlySequence<byte> Deserialize(ref MessagePackReader reader, MessagePackSerializerOptions options)
+        public override ReadOnlySequence<byte> Deserialize(ref MessagePackReader reader, MessagePackSerializerOptions options)
         {
             return reader.ReadBytes() is ReadOnlySequence<byte> bytes ? new ReadOnlySequence<byte>(bytes.ToArray()) : default;
         }
     }
 
-    public sealed class ByteArraySegmentFormatter : IMessagePackFormatter<ArraySegment<byte>>
+    public sealed class ByteArraySegmentFormatter : MessagePackFormatter<ArraySegment<byte>>
     {
         public static readonly ByteArraySegmentFormatter Instance = new ByteArraySegmentFormatter();
 
@@ -139,7 +139,7 @@ namespace MessagePack.Formatters
         {
         }
 
-        public void Serialize(ref MessagePackWriter writer, ArraySegment<byte> value, MessagePackSerializerOptions options)
+        public override void Serialize(ref MessagePackWriter writer, ArraySegment<byte> value, MessagePackSerializerOptions options)
         {
             if (value.Array == null)
             {
@@ -151,31 +151,31 @@ namespace MessagePack.Formatters
             }
         }
 
-        public ArraySegment<byte> Deserialize(ref MessagePackReader reader, MessagePackSerializerOptions options)
+        public override ArraySegment<byte> Deserialize(ref MessagePackReader reader, MessagePackSerializerOptions options)
         {
             return reader.ReadBytes() is ReadOnlySequence<byte> bytes ? new ArraySegment<byte>(bytes.ToArray()) : default;
         }
     }
 
-    public sealed class MemoryFormatter<T> : IMessagePackFormatter<Memory<T>>
+    public sealed class MemoryFormatter<T> : MessagePackFormatter<Memory<T>>
     {
-        public void Serialize(ref MessagePackWriter writer, Memory<T> value, MessagePackSerializerOptions options)
+        public override void Serialize(ref MessagePackWriter writer, Memory<T> value, MessagePackSerializerOptions options)
         {
-            IMessagePackFormatter<ReadOnlyMemory<T>> formatter = options.Resolver.GetFormatterWithVerify<ReadOnlyMemory<T>>();
+            MessagePackFormatter<ReadOnlyMemory<T>> formatter = options.Resolver.GetFormatterWithVerify<ReadOnlyMemory<T>>();
             formatter.Serialize(ref writer, value, options);
         }
 
-        public Memory<T> Deserialize(ref MessagePackReader reader, MessagePackSerializerOptions options)
+        public override Memory<T> Deserialize(ref MessagePackReader reader, MessagePackSerializerOptions options)
         {
             return options.Resolver.GetFormatterWithVerify<T[]>().Deserialize(ref reader, options);
         }
     }
 
-    public sealed class ReadOnlyMemoryFormatter<T> : IMessagePackFormatter<ReadOnlyMemory<T>>
+    public sealed class ReadOnlyMemoryFormatter<T> : MessagePackFormatter<ReadOnlyMemory<T>>
     {
-        public void Serialize(ref MessagePackWriter writer, ReadOnlyMemory<T> value, MessagePackSerializerOptions options)
+        public override void Serialize(ref MessagePackWriter writer, ReadOnlyMemory<T> value, MessagePackSerializerOptions options)
         {
-            IMessagePackFormatter<T> formatter = options.Resolver.GetFormatterWithVerify<T>();
+            MessagePackFormatter<T> formatter = options.Resolver.GetFormatterWithVerify<T>();
 
             ReadOnlySpan<T> span = value.Span;
             writer.WriteArrayHeader(span.Length);
@@ -187,17 +187,17 @@ namespace MessagePack.Formatters
             }
         }
 
-        public ReadOnlyMemory<T> Deserialize(ref MessagePackReader reader, MessagePackSerializerOptions options)
+        public override ReadOnlyMemory<T> Deserialize(ref MessagePackReader reader, MessagePackSerializerOptions options)
         {
             return options.Resolver.GetFormatterWithVerify<T[]>().Deserialize(ref reader, options);
         }
     }
 
-    public sealed class ReadOnlySequenceFormatter<T> : IMessagePackFormatter<ReadOnlySequence<T>>
+    public sealed class ReadOnlySequenceFormatter<T> : MessagePackFormatter<ReadOnlySequence<T>>
     {
-        public void Serialize(ref MessagePackWriter writer, ReadOnlySequence<T> value, MessagePackSerializerOptions options)
+        public override void Serialize(ref MessagePackWriter writer, ReadOnlySequence<T> value, MessagePackSerializerOptions options)
         {
-            IMessagePackFormatter<T> formatter = options.Resolver.GetFormatterWithVerify<T>();
+            MessagePackFormatter<T> formatter = options.Resolver.GetFormatterWithVerify<T>();
 
             writer.WriteArrayHeader(checked((int)value.Length));
             foreach (ReadOnlyMemory<T> segment in value)
@@ -211,15 +211,15 @@ namespace MessagePack.Formatters
             }
         }
 
-        public ReadOnlySequence<T> Deserialize(ref MessagePackReader reader, MessagePackSerializerOptions options)
+        public override ReadOnlySequence<T> Deserialize(ref MessagePackReader reader, MessagePackSerializerOptions options)
         {
             return new ReadOnlySequence<T>(options.Resolver.GetFormatterWithVerify<T[]>().Deserialize(ref reader, options));
         }
     }
 
-    public sealed class ArraySegmentFormatter<T> : IMessagePackFormatter<ArraySegment<T>>
+    public sealed class ArraySegmentFormatter<T> : MessagePackFormatter<ArraySegment<T>>
     {
-        public void Serialize(ref MessagePackWriter writer, ArraySegment<T> value, MessagePackSerializerOptions options)
+        public override void Serialize(ref MessagePackWriter writer, ArraySegment<T> value, MessagePackSerializerOptions options)
         {
             if (value.Array == null)
             {
@@ -227,12 +227,12 @@ namespace MessagePack.Formatters
             }
             else
             {
-                IMessagePackFormatter<Memory<T>> formatter = options.Resolver.GetFormatterWithVerify<Memory<T>>();
+                MessagePackFormatter<Memory<T>> formatter = options.Resolver.GetFormatterWithVerify<Memory<T>>();
                 formatter.Serialize(ref writer, value, options);
             }
         }
 
-        public ArraySegment<T> Deserialize(ref MessagePackReader reader, MessagePackSerializerOptions options)
+        public override ArraySegment<T> Deserialize(ref MessagePackReader reader, MessagePackSerializerOptions options)
         {
             if (reader.TryReadNil())
             {
@@ -247,9 +247,9 @@ namespace MessagePack.Formatters
     }
 
     // List<T> is popular format, should avoid abstraction.
-    public sealed class ListFormatter<T> : IMessagePackFormatter<List<T>>
+    public sealed class ListFormatter<T> : MessagePackFormatter<List<T>>
     {
-        public void Serialize(ref MessagePackWriter writer, List<T> value, MessagePackSerializerOptions options)
+        public override void Serialize(ref MessagePackWriter writer, List<T> value, MessagePackSerializerOptions options)
         {
             if (value == null)
             {
@@ -257,7 +257,7 @@ namespace MessagePack.Formatters
             }
             else
             {
-                IMessagePackFormatter<T> formatter = options.Resolver.GetFormatterWithVerify<T>();
+                MessagePackFormatter<T> formatter = options.Resolver.GetFormatterWithVerify<T>();
 
                 int c = value.Count;
                 writer.WriteArrayHeader(c);
@@ -270,7 +270,7 @@ namespace MessagePack.Formatters
             }
         }
 
-        public List<T> Deserialize(ref MessagePackReader reader, MessagePackSerializerOptions options)
+        public override List<T> Deserialize(ref MessagePackReader reader, MessagePackSerializerOptions options)
         {
             if (reader.TryReadNil())
             {
@@ -278,7 +278,7 @@ namespace MessagePack.Formatters
             }
             else
             {
-                IMessagePackFormatter<T> formatter = options.Resolver.GetFormatterWithVerify<T>();
+                MessagePackFormatter<T> formatter = options.Resolver.GetFormatterWithVerify<T>();
 
                 int len = reader.ReadArrayHeader();
                 List<T> list = new List<T>(len);
@@ -301,11 +301,11 @@ namespace MessagePack.Formatters
         }
     }
 
-    public abstract class CollectionFormatterBase<TElement, TIntermediate, TEnumerator, TCollection> : IMessagePackFormatter<TCollection>
+    public abstract class CollectionFormatterBase<TElement, TIntermediate, TEnumerator, TCollection> : MessagePackFormatter<TCollection>
         where TCollection : IEnumerable<TElement>
         where TEnumerator : IEnumerator<TElement>
     {
-        public void Serialize(ref MessagePackWriter writer, TCollection value, MessagePackSerializerOptions options)
+        public override void Serialize(ref MessagePackWriter writer, TCollection value, MessagePackSerializerOptions options)
         {
             if (value == null)
             {
@@ -313,7 +313,7 @@ namespace MessagePack.Formatters
             }
             else
             {
-                IMessagePackFormatter<TElement> formatter = options.Resolver.GetFormatterWithVerify<TElement>();
+                MessagePackFormatter<TElement> formatter = options.Resolver.GetFormatterWithVerify<TElement>();
 
                 // Optimize iteration(array is fastest)
                 if (value is TElement[] array)
@@ -370,7 +370,7 @@ namespace MessagePack.Formatters
             }
         }
 
-        public TCollection Deserialize(ref MessagePackReader reader, MessagePackSerializerOptions options)
+        public override TCollection Deserialize(ref MessagePackReader reader, MessagePackSerializerOptions options)
         {
             if (reader.TryReadNil())
             {
@@ -378,7 +378,7 @@ namespace MessagePack.Formatters
             }
             else
             {
-                IMessagePackFormatter<TElement> formatter = options.Resolver.GetFormatterWithVerify<TElement>();
+                MessagePackFormatter<TElement> formatter = options.Resolver.GetFormatterWithVerify<TElement>();
 
                 int len = reader.ReadArrayHeader();
 
@@ -684,9 +684,9 @@ namespace MessagePack.Formatters
     }
 
     // [Key, [Array]]
-    public sealed class InterfaceGroupingFormatter<TKey, TElement> : IMessagePackFormatter<IGrouping<TKey, TElement>>
+    public sealed class InterfaceGroupingFormatter<TKey, TElement> : MessagePackFormatter<IGrouping<TKey, TElement>>
     {
-        public void Serialize(ref MessagePackWriter writer, IGrouping<TKey, TElement> value, MessagePackSerializerOptions options)
+        public override void Serialize(ref MessagePackWriter writer, IGrouping<TKey, TElement> value, MessagePackSerializerOptions options)
         {
             if (value == null)
             {
@@ -700,7 +700,7 @@ namespace MessagePack.Formatters
             }
         }
 
-        public IGrouping<TKey, TElement> Deserialize(ref MessagePackReader reader, MessagePackSerializerOptions options)
+        public override IGrouping<TKey, TElement> Deserialize(ref MessagePackReader reader, MessagePackSerializerOptions options)
         {
             if (reader.TryReadNil())
             {
@@ -821,10 +821,10 @@ namespace MessagePack.Formatters
 
     /* NonGenerics */
 
-    public sealed class NonGenericListFormatter<T> : IMessagePackFormatter<T>
+    public sealed class NonGenericListFormatter<T> : MessagePackFormatter<T>
         where T : class, IList, new()
     {
-        public void Serialize(ref MessagePackWriter writer, T value, MessagePackSerializerOptions options)
+        public override void Serialize(ref MessagePackWriter writer, T value, MessagePackSerializerOptions options)
         {
             if (value == null)
             {
@@ -832,7 +832,7 @@ namespace MessagePack.Formatters
                 return;
             }
 
-            IMessagePackFormatter<object> formatter = options.Resolver.GetFormatterWithVerify<object>();
+            MessagePackFormatter<object> formatter = options.Resolver.GetFormatterWithVerify<object>();
 
             writer.WriteArrayHeader(value.Count);
             foreach (object item in value)
@@ -842,14 +842,14 @@ namespace MessagePack.Formatters
             }
         }
 
-        public T Deserialize(ref MessagePackReader reader, MessagePackSerializerOptions options)
+        public override T Deserialize(ref MessagePackReader reader, MessagePackSerializerOptions options)
         {
             if (reader.TryReadNil())
             {
                 return default(T);
             }
 
-            IMessagePackFormatter<object> formatter = options.Resolver.GetFormatterWithVerify<object>();
+            MessagePackFormatter<object> formatter = options.Resolver.GetFormatterWithVerify<object>();
 
             int count = reader.ReadArrayHeader();
 
@@ -872,15 +872,15 @@ namespace MessagePack.Formatters
         }
     }
 
-    public sealed class NonGenericInterfaceCollectionFormatter : IMessagePackFormatter<ICollection>
+    public sealed class NonGenericInterfaceCollectionFormatter : MessagePackFormatter<ICollection>
     {
-        public static readonly IMessagePackFormatter<ICollection> Instance = new NonGenericInterfaceCollectionFormatter();
+        public static readonly MessagePackFormatter<ICollection> Instance = new NonGenericInterfaceCollectionFormatter();
 
         private NonGenericInterfaceCollectionFormatter()
         {
         }
 
-        public void Serialize(ref MessagePackWriter writer, ICollection value, MessagePackSerializerOptions options)
+        public override void Serialize(ref MessagePackWriter writer, ICollection value, MessagePackSerializerOptions options)
         {
             if (value == null)
             {
@@ -888,7 +888,7 @@ namespace MessagePack.Formatters
                 return;
             }
 
-            IMessagePackFormatter<object> formatter = options.Resolver.GetFormatterWithVerify<object>();
+            MessagePackFormatter<object> formatter = options.Resolver.GetFormatterWithVerify<object>();
 
             writer.WriteArrayHeader(value.Count);
             foreach (object item in value)
@@ -898,7 +898,7 @@ namespace MessagePack.Formatters
             }
         }
 
-        public ICollection Deserialize(ref MessagePackReader reader, MessagePackSerializerOptions options)
+        public override ICollection Deserialize(ref MessagePackReader reader, MessagePackSerializerOptions options)
         {
             if (reader.TryReadNil())
             {
@@ -911,7 +911,7 @@ namespace MessagePack.Formatters
                 return Array.Empty<object>();
             }
 
-            IMessagePackFormatter<object> formatter = options.Resolver.GetFormatterWithVerify<object>();
+            MessagePackFormatter<object> formatter = options.Resolver.GetFormatterWithVerify<object>();
 
             object[] list = new object[count];
             options.Security.DepthStep(ref reader);
@@ -932,15 +932,15 @@ namespace MessagePack.Formatters
         }
     }
 
-    public sealed class NonGenericInterfaceEnumerableFormatter : IMessagePackFormatter<IEnumerable>
+    public sealed class NonGenericInterfaceEnumerableFormatter : MessagePackFormatter<IEnumerable>
     {
-        public static readonly IMessagePackFormatter<IEnumerable> Instance = new NonGenericInterfaceEnumerableFormatter();
+        public static readonly MessagePackFormatter<IEnumerable> Instance = new NonGenericInterfaceEnumerableFormatter();
 
         private NonGenericInterfaceEnumerableFormatter()
         {
         }
 
-        public void Serialize(ref MessagePackWriter writer, IEnumerable value, MessagePackSerializerOptions options)
+        public override void Serialize(ref MessagePackWriter writer, IEnumerable value, MessagePackSerializerOptions options)
         {
             if (value == null)
             {
@@ -948,7 +948,7 @@ namespace MessagePack.Formatters
                 return;
             }
 
-            IMessagePackFormatter<object> formatter = options.Resolver.GetFormatterWithVerify<object>();
+            MessagePackFormatter<object> formatter = options.Resolver.GetFormatterWithVerify<object>();
 
             using (SequencePool.Rental scratchRental = SequencePool.Shared.Rent())
             {
@@ -979,7 +979,7 @@ namespace MessagePack.Formatters
             }
         }
 
-        public IEnumerable Deserialize(ref MessagePackReader reader, MessagePackSerializerOptions options)
+        public override IEnumerable Deserialize(ref MessagePackReader reader, MessagePackSerializerOptions options)
         {
             if (reader.TryReadNil())
             {
@@ -992,7 +992,7 @@ namespace MessagePack.Formatters
                 return Array.Empty<object>();
             }
 
-            IMessagePackFormatter<object> formatter = options.Resolver.GetFormatterWithVerify<object>();
+            MessagePackFormatter<object> formatter = options.Resolver.GetFormatterWithVerify<object>();
 
             object[] list = new object[count];
             options.Security.DepthStep(ref reader);
@@ -1013,15 +1013,15 @@ namespace MessagePack.Formatters
         }
     }
 
-    public sealed class NonGenericInterfaceListFormatter : IMessagePackFormatter<IList>
+    public sealed class NonGenericInterfaceListFormatter : MessagePackFormatter<IList>
     {
-        public static readonly IMessagePackFormatter<IList> Instance = new NonGenericInterfaceListFormatter();
+        public static readonly MessagePackFormatter<IList> Instance = new NonGenericInterfaceListFormatter();
 
         private NonGenericInterfaceListFormatter()
         {
         }
 
-        public void Serialize(ref MessagePackWriter writer, IList value, MessagePackSerializerOptions options)
+        public override void Serialize(ref MessagePackWriter writer, IList value, MessagePackSerializerOptions options)
         {
             if (value == null)
             {
@@ -1029,7 +1029,7 @@ namespace MessagePack.Formatters
                 return;
             }
 
-            IMessagePackFormatter<object> formatter = options.Resolver.GetFormatterWithVerify<object>();
+            MessagePackFormatter<object> formatter = options.Resolver.GetFormatterWithVerify<object>();
 
             writer.WriteArrayHeader(value.Count);
             foreach (object item in value)
@@ -1039,7 +1039,7 @@ namespace MessagePack.Formatters
             }
         }
 
-        public IList Deserialize(ref MessagePackReader reader, MessagePackSerializerOptions options)
+        public override IList Deserialize(ref MessagePackReader reader, MessagePackSerializerOptions options)
         {
             if (reader.TryReadNil())
             {
@@ -1052,7 +1052,7 @@ namespace MessagePack.Formatters
                 return Array.Empty<object>();
             }
 
-            IMessagePackFormatter<object> formatter = options.Resolver.GetFormatterWithVerify<object>();
+            MessagePackFormatter<object> formatter = options.Resolver.GetFormatterWithVerify<object>();
 
             object[] list = new object[count];
             options.Security.DepthStep(ref reader);
@@ -1073,10 +1073,10 @@ namespace MessagePack.Formatters
         }
     }
 
-    public sealed class NonGenericDictionaryFormatter<T> : IMessagePackFormatter<T>
+    public sealed class NonGenericDictionaryFormatter<T> : MessagePackFormatter<T>
         where T : class, IDictionary, new()
     {
-        public void Serialize(ref MessagePackWriter writer, T value, MessagePackSerializerOptions options)
+        public override void Serialize(ref MessagePackWriter writer, T value, MessagePackSerializerOptions options)
         {
             if (value == null)
             {
@@ -1084,7 +1084,7 @@ namespace MessagePack.Formatters
                 return;
             }
 
-            IMessagePackFormatter<object> formatter = options.Resolver.GetFormatterWithVerify<object>();
+            MessagePackFormatter<object> formatter = options.Resolver.GetFormatterWithVerify<object>();
 
             writer.WriteMapHeader(value.Count);
             foreach (DictionaryEntry item in value)
@@ -1095,14 +1095,14 @@ namespace MessagePack.Formatters
             }
         }
 
-        public T Deserialize(ref MessagePackReader reader, MessagePackSerializerOptions options)
+        public override T Deserialize(ref MessagePackReader reader, MessagePackSerializerOptions options)
         {
             if (reader.TryReadNil())
             {
                 return null;
             }
 
-            IMessagePackFormatter<object> formatter = options.Resolver.GetFormatterWithVerify<object>();
+            MessagePackFormatter<object> formatter = options.Resolver.GetFormatterWithVerify<object>();
 
             int count = reader.ReadMapHeader();
 
@@ -1127,15 +1127,15 @@ namespace MessagePack.Formatters
         }
     }
 
-    public sealed class NonGenericInterfaceDictionaryFormatter : IMessagePackFormatter<IDictionary>
+    public sealed class NonGenericInterfaceDictionaryFormatter : MessagePackFormatter<IDictionary>
     {
-        public static readonly IMessagePackFormatter<IDictionary> Instance = new NonGenericInterfaceDictionaryFormatter();
+        public static readonly MessagePackFormatter<IDictionary> Instance = new NonGenericInterfaceDictionaryFormatter();
 
         private NonGenericInterfaceDictionaryFormatter()
         {
         }
 
-        public void Serialize(ref MessagePackWriter writer, IDictionary value, MessagePackSerializerOptions options)
+        public override void Serialize(ref MessagePackWriter writer, IDictionary value, MessagePackSerializerOptions options)
         {
             if (value == null)
             {
@@ -1143,7 +1143,7 @@ namespace MessagePack.Formatters
                 return;
             }
 
-            IMessagePackFormatter<object> formatter = options.Resolver.GetFormatterWithVerify<object>();
+            MessagePackFormatter<object> formatter = options.Resolver.GetFormatterWithVerify<object>();
 
             writer.WriteMapHeader(value.Count);
             foreach (DictionaryEntry item in value)
@@ -1154,14 +1154,14 @@ namespace MessagePack.Formatters
             }
         }
 
-        public IDictionary Deserialize(ref MessagePackReader reader, MessagePackSerializerOptions options)
+        public override IDictionary Deserialize(ref MessagePackReader reader, MessagePackSerializerOptions options)
         {
             if (reader.TryReadNil())
             {
                 return null;
             }
 
-            IMessagePackFormatter<object> formatter = options.Resolver.GetFormatterWithVerify<object>();
+            MessagePackFormatter<object> formatter = options.Resolver.GetFormatterWithVerify<object>();
 
             int count = reader.ReadMapHeader();
 

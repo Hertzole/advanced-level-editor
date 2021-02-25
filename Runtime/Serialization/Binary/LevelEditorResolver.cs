@@ -2,6 +2,7 @@
 using MessagePack.Formatters;
 using System;
 using System.Collections.Generic;
+using UnityEngine;
 
 namespace Hertzole.ALE.Binary
 {
@@ -11,21 +12,21 @@ namespace Hertzole.ALE.Binary
 
         private LevelEditorResolver() { }
 
-        public IMessagePackFormatter<T> GetFormatter<T>()
+        public MessagePackFormatter<T> GetFormatter<T>()
         {
             return FormatterCache<T>.Formatter;
         }
 
         private static class FormatterCache<T>
         {
-            internal static readonly IMessagePackFormatter<T> Formatter;
+            internal static readonly MessagePackFormatter<T> Formatter;
 
             static FormatterCache()
             {
                 object f = LevelEditorResolverGetFormatterHelper.GetFormatter(typeof(T));
                 if (f != null)
                 {
-                    Formatter = (IMessagePackFormatter<T>)f;
+                    Formatter = (MessagePackFormatter<T>)f;
                 }
             }
         }
@@ -36,13 +37,18 @@ namespace Hertzole.ALE.Binary
 
             static LevelEditorResolverGetFormatterHelper()
             {
-                lookup = new Dictionary<Type, int>(0)
+                lookup = new Dictionary<Type, int>(8)
                 {
                     { typeof(LevelEditorSaveData), 0 },
                     { typeof(LevelEditorObjectData), 1 },
                     { typeof(LevelEditorComponentData), 2 },
                     { typeof(LevelEditorPropertyData), 3 },
                     { typeof(LevelEditorCustomData), 4 },
+                    { typeof(List<LevelEditorObjectData>), 5 },
+                    { typeof(LevelEditorComponentData[]), 6 },
+                    { typeof(LevelEditorPropertyData[]), 7 },
+                    { typeof(Dictionary<string, LevelEditorCustomData>), 8 },
+                    { typeof(Component), 9 },
                 };
             }
 
@@ -65,6 +71,16 @@ namespace Hertzole.ALE.Binary
                         return new LevelEditorPropertyDataFormatter();
                     case 4:
                         return new LevelEditorCustomDataFormatter();
+                    case 5:
+                        return new ListFormatter<LevelEditorObjectData>();
+                    case 6:
+                        return new ArrayFormatter<LevelEditorComponentData>();
+                    case 7:
+                        return new ArrayFormatter<LevelEditorPropertyData>();
+                    case 8:
+                        return new DictionaryFormatter<string, LevelEditorPropertyData>();
+                    case 9:
+                        return new ComponentFormatter();
                     default:
                         return null;
                 }

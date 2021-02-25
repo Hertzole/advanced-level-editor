@@ -44,9 +44,9 @@ namespace Hertzole.ALE
             {
                 foreach (KeyValuePair<string, LevelEditorCustomData> customData in data.customData)
                 {
-                    if (!palette.ContainsKey(customData.Value.type))
+                    if (!palette.ContainsKey(customData.Value.typeName))
                     {
-                        palette.Add(customData.Value.type, nextID);
+                        palette.Add(customData.Value.typeName, nextID);
                         nextID++;
                     }
                 }

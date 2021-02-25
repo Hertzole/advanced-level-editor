@@ -1,22 +1,20 @@
 ﻿// Copyright (c) All contributors. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
-using System.Reflection;
 
 #pragma warning disable SA1649 // File name should match first type name
 
 namespace MessagePack.Formatters
 {
     // unfortunately, can't use IDictionary<KVP> because supports IReadOnlyDictionary.
-    public abstract class DictionaryFormatterBase<TKey, TValue, TIntermediate, TEnumerator, TDictionary> : IMessagePackFormatter<TDictionary>
+    public abstract class DictionaryFormatterBase<TKey, TValue, TIntermediate, TEnumerator, TDictionary> : MessagePackFormatter<TDictionary>
         where TDictionary : IEnumerable<KeyValuePair<TKey, TValue>>
         where TEnumerator : IEnumerator<KeyValuePair<TKey, TValue>>
     {
-        public void Serialize(ref MessagePackWriter writer, TDictionary value, MessagePackSerializerOptions options)
+        public override void Serialize(ref MessagePackWriter writer, TDictionary value, MessagePackSerializerOptions options)
         {
             if (value == null)
             {
@@ -25,19 +23,19 @@ namespace MessagePack.Formatters
             else
             {
                 IFormatterResolver resolver = options.Resolver;
-                IMessagePackFormatter<TKey> keyFormatter = resolver.GetFormatterWithVerify<TKey>();
-                IMessagePackFormatter<TValue> valueFormatter = resolver.GetFormatterWithVerify<TValue>();
+                MessagePackFormatter<TKey> keyFormatter = resolver.GetFormatterWithVerify<TKey>();
+                MessagePackFormatter<TValue> valueFormatter = resolver.GetFormatterWithVerify<TValue>();
 
                 int count;
                 {
-                    var col = value as ICollection<KeyValuePair<TKey, TValue>>;
+                    ICollection<KeyValuePair<TKey, TValue>> col = value as ICollection<KeyValuePair<TKey, TValue>>;
                     if (col != null)
                     {
                         count = col.Count;
                     }
                     else
                     {
-                        var col2 = value as IReadOnlyCollection<KeyValuePair<TKey, TValue>>;
+                        IReadOnlyCollection<KeyValuePair<TKey, TValue>> col2 = value as IReadOnlyCollection<KeyValuePair<TKey, TValue>>;
                         if (col2 != null)
                         {
                             count = col2.Count;
@@ -51,7 +49,7 @@ namespace MessagePack.Formatters
 
                 writer.WriteMapHeader(count);
 
-                TEnumerator e = this.GetSourceEnumerator(value);
+                TEnumerator e = GetSourceEnumerator(value);
                 try
                 {
                     while (e.MoveNext())
@@ -69,7 +67,7 @@ namespace MessagePack.Formatters
             }
         }
 
-        public TDictionary Deserialize(ref MessagePackReader reader, MessagePackSerializerOptions options)
+        public override TDictionary Deserialize(ref MessagePackReader reader, MessagePackSerializerOptions options)
         {
             if (reader.TryReadNil())
             {
@@ -78,12 +76,12 @@ namespace MessagePack.Formatters
             else
             {
                 IFormatterResolver resolver = options.Resolver;
-                IMessagePackFormatter<TKey> keyFormatter = resolver.GetFormatterWithVerify<TKey>();
-                IMessagePackFormatter<TValue> valueFormatter = resolver.GetFormatterWithVerify<TValue>();
+                MessagePackFormatter<TKey> keyFormatter = resolver.GetFormatterWithVerify<TKey>();
+                MessagePackFormatter<TValue> valueFormatter = resolver.GetFormatterWithVerify<TValue>();
 
-                var len = reader.ReadMapHeader();
+                int len = reader.ReadMapHeader();
 
-                TIntermediate dict = this.Create(len, options);
+                TIntermediate dict = Create(len, options);
                 options.Security.DepthStep(ref reader);
                 try
                 {
@@ -94,7 +92,7 @@ namespace MessagePack.Formatters
 
                         TValue value = valueFormatter.Deserialize(ref reader, options);
 
-                        this.Add(dict, i, key, value, options);
+                        Add(dict, i, key, value, options);
                     }
                 }
                 finally
@@ -102,7 +100,7 @@ namespace MessagePack.Formatters
                     reader.Depth--;
                 }
 
-                return this.Complete(dict);
+                return Complete(dict);
             }
         }
 

@@ -11,6 +11,7 @@ namespace MessagePack.Formatters
     /// can be detected by a common base type.
     /// </summary>
     [EditorBrowsable(EditorBrowsableState.Never)]
+    [System.Obsolete]
     public interface IMessagePackFormatter
     {
     }
@@ -20,6 +21,7 @@ namespace MessagePack.Formatters
     /// The contract for serialization of some specific type.
     /// </summary>
     /// <typeparam name="T">The type to be serialized or deserialized.</typeparam>
+    [System.Obsolete]
     public interface IMessagePackFormatter<T> : IMessagePackFormatter
     {
         /// <summary>

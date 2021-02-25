@@ -2,7 +2,6 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using MessagePack.Formatters;
-using MessagePack.Internal;
 
 namespace MessagePack.Resolvers
 {
@@ -14,18 +13,18 @@ namespace MessagePack.Resolvers
         /// <summary>
         /// The cache of types to their formatters.
         /// </summary>
-        private readonly ThreadsafeTypeKeyHashTable<IMessagePackFormatter> formatters = new ThreadsafeTypeKeyHashTable<IMessagePackFormatter>();
+        private readonly ThreadsafeTypeKeyHashTable<MessagePackFormatter> formatters = new ThreadsafeTypeKeyHashTable<MessagePackFormatter>();
 
         /// <inheritdoc />
-        public IMessagePackFormatter<T> GetFormatter<T>()
+        public MessagePackFormatter<T> GetFormatter<T>()
         {
-            if (!this.formatters.TryGetValue(typeof(T), out IMessagePackFormatter formatter))
+            if (!formatters.TryGetValue(typeof(T), out MessagePackFormatter formatter))
             {
-                formatter = this.GetFormatterCore<T>();
-                this.formatters.TryAdd(typeof(T), formatter);
+                formatter = GetFormatterCore<T>();
+                formatters.TryAdd(typeof(T), formatter);
             }
 
-            return (IMessagePackFormatter<T>)formatter;
+            return (MessagePackFormatter<T>)formatter;
         }
 
         /// <summary>
@@ -33,6 +32,6 @@ namespace MessagePack.Resolvers
         /// </summary>
         /// <typeparam name="T">The type to be formatted.</typeparam>
         /// <returns>The formatter to use, or <c>null</c> if none found.</returns>
-        protected abstract IMessagePackFormatter<T> GetFormatterCore<T>();
+        protected abstract MessagePackFormatter<T> GetFormatterCore<T>();
     }
 }

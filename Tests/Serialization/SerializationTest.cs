@@ -92,22 +92,18 @@ namespace Hertzole.ALE.Tests
             {
                 name = "Test Level",
                 objects = new List<LevelEditorObjectData>() { BuildObjectData(), BuildObjectData() },
-                customData = new Dictionary<string, LevelEditorCustomData>()
-                {
-                    { "data1", new LevelEditorCustomData(typeof(string).FullName, false, "Hello world") },
-                    { "data2", new LevelEditorCustomData(typeof(int).FullName, false, 42) }
-                }
+                //customData = new Dictionary<string, LevelEditorCustomData>()
+                //{
+                //    { "data1", new LevelEditorCustomData(typeof(string), false, "Hello world") },
+                //    { "data2", new LevelEditorCustomData(typeof(int), false, 42) }
+                //}
+                customData = null
             };
         }
 
         public static LevelEditorCustomData BuildCustomData()
         {
-            return new LevelEditorCustomData()
-            {
-                isArray = false,
-                type = typeof(string).FullName,
-                value = "Hello world"
-            };
+            return new LevelEditorCustomData(typeof(string), false, "Hello world");
         }
 
         public static LevelEditorObjectData BuildObjectData()
