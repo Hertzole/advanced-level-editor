@@ -108,6 +108,11 @@ namespace Hertzole.ALE
                         LevelEditorPropertyData[] properties = components[i].properties;
                         for (int k = 0; k < properties.Length; k++)
                         {
+                            if (properties[k].type == null)
+                            {
+                                continue;
+                            }
+
                             object value = properties[k].value;
 
                             // Required to get the proper component that it needs.
@@ -125,6 +130,7 @@ namespace Hertzole.ALE
                                 value = (Color)col;
                             }
 
+                            Debug.Log(exposedComponents[j] + " | " + properties[k].id + " | " + properties[k].type + " | " + properties[k].value);
                             exposedComponents[j].SetValue(properties[k].id, value, false);
                         }
                     }

@@ -116,15 +116,5 @@ namespace Hertzole.ALE.Tests
             Assert.AreEqual(30, value.width);
             Assert.AreEqual(40, value.height);
         }
-
-        //[Test]
-        //public void TestInt()
-        //{
-        //    int value = 42;
-        //    byte[] bytes = MessagePackSerializer.Serialize(value);
-
-        //    value = MessagePackSerializer.Deserialize<int>(bytes);
-        //    Assert.AreEqual(42, value);
-        //}
     }
 }

@@ -18,7 +18,7 @@ namespace MessagePack.Formatters
 
         private delegate void SerializeMethod(object dynamicFormatter, ref MessagePackWriter writer, object value, MessagePackSerializerOptions options);
 
-        private static readonly Internal.ThreadsafeTypeKeyHashTable<SerializeMethod> SerializerDelegates = new Internal.ThreadsafeTypeKeyHashTable<SerializeMethod>();
+        private static readonly ThreadsafeTypeKeyHashTable<SerializeMethod> SerializerDelegates = new ThreadsafeTypeKeyHashTable<SerializeMethod>();
 
         private DynamicObjectTypeFallbackFormatter()
         {

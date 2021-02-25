@@ -84,57 +84,59 @@ namespace Hertzole.ALE
 
         public static string SerializeJson(LevelEditorSaveData data, bool prettyPrint = false)
         {
-            Dictionary<string, int> objectPalette = SerializationHelper.GetObjectPalette(data);
-            Dictionary<string, int> typePalette = SerializationHelper.GetTypePalette(data);
+            //Dictionary<string, int> objectPalette = SerializationHelper.GetObjectPalette(data);
+            //Dictionary<string, int> typePalette = SerializationHelper.GetTypePalette(data);
 
-            SerializedLevelData levelData = new SerializedLevelData
-            {
-                ObjectPalette = objectPalette,
-                TypePalette = typePalette,
-                Data = data
-            };
+            //SerializedLevelData levelData = new SerializedLevelData
+            //{
+            //    ObjectPalette = objectPalette,
+            //    TypePalette = typePalette,
+            //    Data = data
+            //};
 
-            List<JsonConverter> newConverters = new List<JsonConverter>
-            {
-                new SaveDataConverter(objectPalette, typePalette),
-                new ObjectDataConverter(objectPalette),
-                new ComponentDataConverter(typePalette),
-                new PropertyDataConverter(typePalette),
-                new CustomDataConverter(typePalette)
-            };
-            newConverters.AddRange(converters);
+            //List<JsonConverter> newConverters = new List<JsonConverter>
+            //{
+            //    new SaveDataConverter(objectPalette, typePalette),
+            //    new ObjectDataConverter(objectPalette),
+            //    new ComponentDataConverter(typePalette),
+            //    new PropertyDataConverter(typePalette),
+            //    new CustomDataConverter(typePalette)
+            //};
+            //newConverters.AddRange(converters);
 
-            return JsonConvert.SerializeObject(levelData, new JsonSerializerSettings()
-            {
-                NullValueHandling = NullValueHandling.Ignore,
-                Converters = newConverters,
-                Formatting = prettyPrint ? Formatting.Indented : Formatting.None
-            });
+            //return JsonConvert.SerializeObject(levelData, new JsonSerializerSettings()
+            //{
+            //    NullValueHandling = NullValueHandling.Ignore,
+            //    Converters = newConverters,
+            //    Formatting = prettyPrint ? Formatting.Indented : Formatting.None
+            //});
+            return "";
         }
 
         public static LevelEditorSaveData DeserializeJson(string json)
         {
-            Dictionary<int, string> typePalette = new Dictionary<int, string>();
-            Dictionary<int, string> objectPalette = new Dictionary<int, string>();
+            //Dictionary<int, string> typePalette = new Dictionary<int, string>();
+            //Dictionary<int, string> objectPalette = new Dictionary<int, string>();
 
-            List<JsonConverter> newConverters = new List<JsonConverter>
-            {
-                new SaveDataConverter(objectPalette, typePalette),
-                new ObjectDataConverter(objectPalette),
-                new ComponentDataConverter(typePalette),
-                new PropertyDataConverter(typePalette),
-                new CustomDataConverter(typePalette)
-            };
-            newConverters.AddRange(converters);
+            //List<JsonConverter> newConverters = new List<JsonConverter>
+            //{
+            //    new SaveDataConverter(objectPalette, typePalette),
+            //    new ObjectDataConverter(objectPalette),
+            //    new ComponentDataConverter(typePalette),
+            //    new PropertyDataConverter(typePalette),
+            //    new CustomDataConverter(typePalette)
+            //};
+            //newConverters.AddRange(converters);
 
-            SerializedLevelData levelData = JsonConvert.DeserializeObject<SerializedLevelData>(json, new JsonSerializerSettings()
-            {
-                NullValueHandling = NullValueHandling.Ignore,
-                Converters = newConverters,
-                Formatting = Formatting.Indented
-            });
+            //SerializedLevelData levelData = JsonConvert.DeserializeObject<SerializedLevelData>(json, new JsonSerializerSettings()
+            //{
+            //    NullValueHandling = NullValueHandling.Ignore,
+            //    Converters = newConverters,
+            //    Formatting = Formatting.Indented
+            //});
 
-            return levelData.Data;
+            //return levelData.Data;
+            return default;
         }
     }
 }
