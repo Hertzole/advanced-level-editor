@@ -6,14 +6,14 @@ using System.Runtime.CompilerServices;
 
 #pragma warning disable SA1649 // File name should match first type name
 
-namespace MessagePack.Internal
+namespace MessagePack
 {
     /// <summary>
     /// A dictionary where <see cref="Type"/> is the key, and a configurable <typeparamref name="TValue"/> type
     /// that is thread-safe to read and write, allowing concurrent reads and exclusive writes.
     /// </summary>
     /// <typeparam name="TValue">The type of value stored in the dictionary.</typeparam>
-    internal class ThreadsafeTypeKeyHashTable<TValue>
+    public class ThreadsafeTypeKeyHashTable<TValue>
     {
         private Entry[] buckets;
         private int size; // only use in writer lock
@@ -26,51 +26,51 @@ namespace MessagePack.Internal
 
         public ThreadsafeTypeKeyHashTable(int capacity = 4, float loadFactor = 0.75f)
         {
-            var tableSize = CalculateCapacity(capacity, loadFactor);
-            this.buckets = new Entry[tableSize];
+            int tableSize = CalculateCapacity(capacity, loadFactor);
+            buckets = new Entry[tableSize];
             this.loadFactor = loadFactor;
         }
 
         public bool TryAdd(Type key, TValue value)
         {
-            return this.TryAdd(key, _ => value); // create lambda capture
+            return TryAdd(key, _ => value); // create lambda capture
         }
 
         public bool TryAdd(Type key, Func<Type, TValue> valueFactory)
         {
-            return this.TryAddInternal(key, valueFactory, out TValue _);
+            return TryAddInternal(key, valueFactory, out TValue _);
         }
 
         private bool TryAddInternal(Type key, Func<Type, TValue> valueFactory, out TValue resultingValue)
         {
-            lock (this.writerLock)
+            lock (writerLock)
             {
-                var nextCapacity = CalculateCapacity(this.size + 1, this.loadFactor);
+                int nextCapacity = CalculateCapacity(size + 1, loadFactor);
 
-                if (this.buckets.Length < nextCapacity)
+                if (buckets.Length < nextCapacity)
                 {
                     // rehash
-                    var nextBucket = new Entry[nextCapacity];
-                    for (int i = 0; i < this.buckets.Length; i++)
+                    Entry[] nextBucket = new Entry[nextCapacity];
+                    for (int i = 0; i < buckets.Length; i++)
                     {
-                        Entry e = this.buckets[i];
+                        Entry e = buckets[i];
                         while (e != null)
                         {
-                            var newEntry = new Entry { Key = e.Key, Value = e.Value, Hash = e.Hash };
-                            this.AddToBuckets(nextBucket, key, newEntry, null, out resultingValue);
+                            Entry newEntry = new Entry { Key = e.Key, Value = e.Value, Hash = e.Hash };
+                            AddToBuckets(nextBucket, key, newEntry, null, out resultingValue);
                             e = e.Next;
                         }
                     }
 
                     // add entry(if failed to add, only do resize)
-                    var successAdd = this.AddToBuckets(nextBucket, key, null, valueFactory, out resultingValue);
+                    bool successAdd = AddToBuckets(nextBucket, key, null, valueFactory, out resultingValue);
 
                     // replace field(threadsafe for read)
-                    VolatileWrite(ref this.buckets, nextBucket);
+                    VolatileWrite(ref buckets, nextBucket);
 
                     if (successAdd)
                     {
-                        this.size++;
+                        size++;
                     }
 
                     return successAdd;
@@ -78,10 +78,10 @@ namespace MessagePack.Internal
                 else
                 {
                     // add entry(insert last is thread safe for read)
-                    var successAdd = this.AddToBuckets(this.buckets, key, null, valueFactory, out resultingValue);
+                    bool successAdd = AddToBuckets(buckets, key, null, valueFactory, out resultingValue);
                     if (successAdd)
                     {
-                        this.size++;
+                        size++;
                     }
 
                     return successAdd;
@@ -91,7 +91,7 @@ namespace MessagePack.Internal
 
         private bool AddToBuckets(Entry[] buckets, Type newKey, Entry newEntryOrNull, Func<Type, TValue> valueFactory, out TValue resultingValue)
         {
-            var h = (newEntryOrNull != null) ? newEntryOrNull.Hash : newKey.GetHashCode();
+            int h = (newEntryOrNull != null) ? newEntryOrNull.Hash : newKey.GetHashCode();
             if (buckets[h & (buckets.Length - 1)] == null)
             {
                 if (newEntryOrNull != null)
@@ -142,8 +142,8 @@ namespace MessagePack.Internal
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public bool TryGetValue(Type key, out TValue value)
         {
-            Entry[] table = this.buckets;
-            var hash = key.GetHashCode();
+            Entry[] table = buckets;
+            int hash = key.GetHashCode();
             Entry entry = table[hash & table.Length - 1];
 
             while (entry != null)
@@ -164,19 +164,19 @@ namespace MessagePack.Internal
         public TValue GetOrAdd(Type key, Func<Type, TValue> valueFactory)
         {
             TValue v;
-            if (this.TryGetValue(key, out v))
+            if (TryGetValue(key, out v))
             {
                 return v;
             }
 
-            this.TryAddInternal(key, valueFactory, out v);
+            TryAddInternal(key, valueFactory, out v);
             return v;
         }
 
         private static int CalculateCapacity(int collectionSize, float loadFactor)
         {
-            var initialCapacity = (int)(((float)collectionSize) / loadFactor);
-            var capacity = 1;
+            int initialCapacity = (int)(collectionSize / loadFactor);
+            int capacity = 1;
             while (capacity < initialCapacity)
             {
                 capacity <<= 1;
@@ -226,12 +226,12 @@ namespace MessagePack.Internal
             // debug only
             public override string ToString()
             {
-                return this.Key + "(" + this.Count() + ")";
+                return Key + "(" + Count() + ")";
             }
 
             private int Count()
             {
-                var count = 1;
+                int count = 1;
                 Entry n = this;
                 while (n.Next != null)
                 {

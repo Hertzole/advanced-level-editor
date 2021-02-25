@@ -6,38 +6,49 @@ namespace Hertzole.ALE
     {
         public static Dictionary<string, int> GetTypePalette(LevelEditorSaveData data)
         {
+            if (data.objects == null && data.customData == null)
+            {
+                return new Dictionary<string, int>();
+            }
+
             Dictionary<string, int> palette = new Dictionary<string, int>();
             int nextID = 0;
-            for (int i = 0; i < data.objects.Count; i++)
+            if (data.objects != null)
             {
-                for (int j = 0; j < data.objects[i].components.Length; j++)
+                for (int i = 0; i < data.objects.Count; i++)
                 {
-                    LevelEditorComponentData comp = data.objects[i].components[j];
-
-                    if (!palette.ContainsKey(comp.type))
+                    for (int j = 0; j < data.objects[i].components.Length; j++)
                     {
-                        palette.Add(comp.type, nextID);
-                        nextID++;
-                    }
+                        LevelEditorComponentData comp = data.objects[i].components[j];
 
-                    for (int k = 0; k < comp.properties.Length; k++)
-                    {
-                        LevelEditorPropertyData prop = comp.properties[k];
-                        if (!palette.ContainsKey(prop.typeName))
+                        if (!palette.ContainsKey(comp.type))
                         {
-                            palette.Add(prop.typeName, nextID);
+                            palette.Add(comp.type, nextID);
                             nextID++;
+                        }
+
+                        for (int k = 0; k < comp.properties.Length; k++)
+                        {
+                            LevelEditorPropertyData prop = comp.properties[k];
+                            if (!palette.ContainsKey(prop.typeName))
+                            {
+                                palette.Add(prop.typeName, nextID);
+                                nextID++;
+                            }
                         }
                     }
                 }
             }
 
-            foreach (KeyValuePair<string, LevelEditorCustomData> customData in data.customData)
+            if (data.customData != null)
             {
-                if (!palette.ContainsKey(customData.Value.type))
+                foreach (KeyValuePair<string, LevelEditorCustomData> customData in data.customData)
                 {
-                    palette.Add(customData.Value.type, nextID);
-                    nextID++;
+                    if (!palette.ContainsKey(customData.Value.type))
+                    {
+                        palette.Add(customData.Value.type, nextID);
+                        nextID++;
+                    }
                 }
             }
 
@@ -46,6 +57,11 @@ namespace Hertzole.ALE
 
         public static Dictionary<string, int> GetObjectPalette(LevelEditorSaveData data)
         {
+            if (data.objects == null)
+            {
+                return new Dictionary<string, int>();
+            }
+
             Dictionary<string, int> palette = new Dictionary<string, int>();
             int nextID = 0;
             for (int i = 0; i < data.objects.Count; i++)

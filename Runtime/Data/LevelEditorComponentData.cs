@@ -49,5 +49,10 @@ namespace Hertzole.ALE
         {
             return !(left == right);
         }
+
+        public override string ToString()
+        {
+            return $"LevelEditorComponentData (Type: {type}, Property Count: {(properties == null ? "Null" : properties.Length.ToString())})";
+        }
     }
 }

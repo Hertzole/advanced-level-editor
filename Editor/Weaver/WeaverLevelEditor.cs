@@ -10,6 +10,7 @@ namespace Hertzole.ALE.Editor
         {
             //new LevelEditorReaderWriterProcessor(),
             new ExposedClassProcessor(),
+            new ALEMessagePackProcessor(),
         };
 
         public static (bool success, bool dirty) ProcessAssembly(AssemblyDefinition assembly)

@@ -1,23 +1,17 @@
 ﻿using MessagePack;
-using System.Collections.Generic;
 
 namespace Hertzole.ALE
 {
     public static class LevelEditorBinarySerializer
     {
-        public static byte[] Serialize(LevelEditorSaveData data)
+        public static byte[] Serialize<T>(T data)
         {
-            Dictionary<string, int> objectPalette = SerializationHelper.GetObjectPalette(data);
-            Dictionary<string, int> typePalette = SerializationHelper.GetTypePalette(data);
+            return MessagePackSerializer.Serialize(data);
+        }
 
-            SerializedLevelData levelData = new SerializedLevelData()
-            {
-                ObjectPalette = objectPalette,
-                TypePalette = typePalette,
-                Data = data
-            };
-
-            return MessagePackSerializer.Serialize(levelData);
+        public static T Deserialize<T>(byte[] bytes)
+        {
+            return MessagePackSerializer.Deserialize<T>(bytes);
         }
     }
 }

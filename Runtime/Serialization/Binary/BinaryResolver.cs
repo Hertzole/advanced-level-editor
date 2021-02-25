@@ -4,7 +4,7 @@ using MessagePack.Unity;
 using MessagePack.Unity.Extension;
 using UnityEngine;
 
-namespace Hertzole.ALE
+namespace Hertzole.ALE.Binary
 {
     public static class BinaryResolver
     {
@@ -18,7 +18,10 @@ namespace Hertzole.ALE
                 return;
             }
 
-            StaticCompositeResolver.Instance.Register(UnityResolver.Instance, UnityBlitResolver.Instance, StandardResolver.Instance);
+            StaticCompositeResolver.Instance.Register(UnityResolver.Instance,
+                                                      UnityBlitResolver.Instance,
+                                                      StandardResolver.Instance,
+                                                      LevelEditorResolver.Instance);
             MessagePackSerializer.DefaultOptions = MessagePackSerializerOptions.Standard.WithResolver(StaticCompositeResolver.Instance);
 
             serializerRegistered = true;

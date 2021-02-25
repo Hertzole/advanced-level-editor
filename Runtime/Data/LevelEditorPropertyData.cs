@@ -15,10 +15,11 @@ namespace Hertzole.ALE
         {
             id = property.ID;
             value = exposedComponent.GetValue(property.ID);
-            type = property.Type;
+            type = property.Type.IsSubclassOf(typeof(Component)) ? typeof(Component) : property.Type;
             isArray = property.IsArray;
             // Used for Unity references. They need to be converted to a simple component.
-            typeName = type.IsSubclassOf(typeof(Component)) ? typeof(Component).FullName : property.Type.FullName;
+            typeName = property.Type.IsSubclassOf(typeof(Component)) ? typeof(Component).FullName : property.Type.FullName;
+            Debug.Log(property.Type + " | " + typeName);
         }
 
         public override bool Equals(object obj)
@@ -28,7 +29,7 @@ namespace Hertzole.ALE
 
         public bool Equals(LevelEditorPropertyData other)
         {
-            return isArray == other.isArray && id == other.id && typeName == other.typeName && value.Equals(other.value) && type.Equals(other.type);
+            return isArray == other.isArray && id == other.id && typeName == other.typeName && value.Equals(other.value);
         }
 
         public override int GetHashCode()
@@ -40,7 +41,6 @@ namespace Hertzole.ALE
                 hashCode = hashCode * 17 * id.GetHashCode();
                 hashCode = hashCode * 17 * typeName.GetHashCode();
                 hashCode = hashCode * 17 * value.GetHashCode();
-                hashCode = hashCode * 17 * type.GetHashCode();
                 return hashCode;
             }
         }
@@ -53,6 +53,11 @@ namespace Hertzole.ALE
         public static bool operator !=(LevelEditorPropertyData left, LevelEditorPropertyData right)
         {
             return !(left == right);
+        }
+
+        public override string ToString()
+        {
+            return $"LevelEditorPropertyData (ID: {id}, Type Name: {typeName}, Is Array: {isArray}, Value: {value})";
         }
     }
 }
