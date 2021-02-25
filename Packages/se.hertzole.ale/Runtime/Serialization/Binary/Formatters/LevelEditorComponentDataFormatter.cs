@@ -3,16 +3,16 @@ using MessagePack.Formatters;
 
 namespace Hertzole.ALE
 {
-    public class LevelEditorComponentDataFormatter : IMessagePackFormatter<LevelEditorComponentData>
+    public class LevelEditorComponentDataFormatter : MessagePackFormatter<LevelEditorComponentData>
     {
-        public void Serialize(ref MessagePackWriter writer, LevelEditorComponentData value, MessagePackSerializerOptions options)
+        public override void Serialize(ref MessagePackWriter writer, LevelEditorComponentData value, MessagePackSerializerOptions options)
         {
             writer.WriteArrayHeader(2);
             options.Resolver.GetFormatterWithVerify<string>().Serialize(ref writer, value.type, options);
             options.Resolver.GetFormatterWithVerify<LevelEditorPropertyData[]>().Serialize(ref writer, value.properties, options);
         }
 
-        public LevelEditorComponentData Deserialize(ref MessagePackReader reader, MessagePackSerializerOptions options)
+        public override LevelEditorComponentData Deserialize(ref MessagePackReader reader, MessagePackSerializerOptions options)
         {
             options.Security.DepthStep(ref reader);
 

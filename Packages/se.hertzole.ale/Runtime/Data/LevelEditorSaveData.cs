@@ -20,7 +20,7 @@ namespace Hertzole.ALE
 
         public override string ToString()
         {
-            return $"ALE Save Data ({name}, {objects.Count} objects, {customData.Count} custom data)";
+            return $"ALE Save Data ({name}, {objects.Count} objects, {(customData == null ? "null" : customData.Count.ToString())} custom data)";
         }
 
         public override bool Equals(object obj)

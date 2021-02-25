@@ -1,10 +1,10 @@
 ﻿// Copyright (c) All contributors. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using System.Linq;
 using MessagePack.Formatters;
 using MessagePack.Internal;
 using MessagePack.Resolvers;
+using System.Linq;
 
 #pragma warning disable SA1403 // File may only contain a single namespace
 
@@ -42,14 +42,14 @@ namespace MessagePack.Resolvers
         {
         }
 
-        public IMessagePackFormatter<T> GetFormatter<T>()
+        public MessagePackFormatter<T> GetFormatter<T>()
         {
             return FormatterCache<T>.Formatter;
         }
 
         private static class FormatterCache<T>
         {
-            public static readonly IMessagePackFormatter<T> Formatter;
+            public static readonly MessagePackFormatter<T> Formatter;
 
             static FormatterCache()
             {
@@ -57,7 +57,8 @@ namespace MessagePack.Resolvers
                 {
                     // final fallback
 #if !ENABLE_IL2CPP
-                    Formatter = (IMessagePackFormatter<T>)DynamicObjectTypeFallbackFormatter.Instance;
+                    //TOOD: Investigate
+                    //Formatter = (MessagePackFormatter<T>)DynamicObjectTypeFallbackFormatter.Instance;
 #else
                     Formatter = PrimitiveObjectResolver.Instance.GetFormatter<T>();
 #endif
@@ -66,7 +67,7 @@ namespace MessagePack.Resolvers
                 {
                     foreach (IFormatterResolver item in Resolvers)
                     {
-                        IMessagePackFormatter<T> f = item.GetFormatter<T>();
+                        MessagePackFormatter<T> f = item.GetFormatter<T>();
                         if (f != null)
                         {
                             Formatter = f;
@@ -108,14 +109,14 @@ namespace MessagePack.Resolvers
         {
         }
 
-        public IMessagePackFormatter<T> GetFormatter<T>()
+        public MessagePackFormatter<T> GetFormatter<T>()
         {
             return FormatterCache<T>.Formatter;
         }
 
         private static class FormatterCache<T>
         {
-            public static readonly IMessagePackFormatter<T> Formatter;
+            public static readonly MessagePackFormatter<T> Formatter;
 
             static FormatterCache()
             {
@@ -123,7 +124,8 @@ namespace MessagePack.Resolvers
                 {
                     // final fallback
 #if !ENABLE_IL2CPP
-                    Formatter = (IMessagePackFormatter<T>)DynamicObjectTypeFallbackFormatter.Instance;
+                    //TOOD: Investigate
+                    //Formatter = (MessagePackFormatter<T>)DynamicObjectTypeFallbackFormatter.Instance;
 #else
                     Formatter = PrimitiveObjectResolver.Instance.GetFormatter<T>();
 #endif
@@ -132,7 +134,7 @@ namespace MessagePack.Resolvers
                 {
                     foreach (IFormatterResolver item in Resolvers)
                     {
-                        IMessagePackFormatter<T> f = item.GetFormatter<T>();
+                        MessagePackFormatter<T> f = item.GetFormatter<T>();
                         if (f != null)
                         {
                             Formatter = f;
@@ -173,14 +175,14 @@ namespace MessagePack.Resolvers
         {
         }
 
-        public IMessagePackFormatter<T> GetFormatter<T>()
+        public MessagePackFormatter<T> GetFormatter<T>()
         {
             return FormatterCache<T>.Formatter;
         }
 
         private static class FormatterCache<T>
         {
-            public static readonly IMessagePackFormatter<T> Formatter;
+            public static readonly MessagePackFormatter<T> Formatter;
 
             static FormatterCache()
             {
@@ -188,7 +190,8 @@ namespace MessagePack.Resolvers
                 {
                     // final fallback
 #if !ENABLE_IL2CPP
-                    Formatter = (IMessagePackFormatter<T>)DynamicObjectTypeFallbackFormatter.Instance;
+                    //TOOD: Investigate
+                    //Formatter = (MessagePackFormatter<T>)DynamicObjectTypeFallbackFormatter.Instance;
 #else
                     Formatter = PrimitiveObjectResolver.Instance.GetFormatter<T>();
 #endif
@@ -197,7 +200,7 @@ namespace MessagePack.Resolvers
                 {
                     foreach (IFormatterResolver item in Resolvers)
                     {
-                        IMessagePackFormatter<T> f = item.GetFormatter<T>();
+                        MessagePackFormatter<T> f = item.GetFormatter<T>();
                         if (f != null)
                         {
                             Formatter = f;
@@ -239,14 +242,14 @@ namespace MessagePack.Resolvers
         {
         }
 
-        public IMessagePackFormatter<T> GetFormatter<T>()
+        public MessagePackFormatter<T> GetFormatter<T>()
         {
             return FormatterCache<T>.Formatter;
         }
 
         private static class FormatterCache<T>
         {
-            public static readonly IMessagePackFormatter<T> Formatter;
+            public static readonly MessagePackFormatter<T> Formatter;
 
             static FormatterCache()
             {
@@ -254,7 +257,8 @@ namespace MessagePack.Resolvers
                 {
                     // final fallback
 #if !ENABLE_IL2CPP
-                    Formatter = (IMessagePackFormatter<T>)DynamicObjectTypeFallbackFormatter.Instance;
+                    //TOOD: Investigate
+                    //Formatter = (MessagePackFormatter<T>)DynamicObjectTypeFallbackFormatter.Instance;
 #else
                     Formatter = PrimitiveObjectResolver.Instance.GetFormatter<T>();
 #endif
@@ -263,7 +267,7 @@ namespace MessagePack.Resolvers
                 {
                     foreach (IFormatterResolver item in Resolvers)
                     {
-                        IMessagePackFormatter<T> f = item.GetFormatter<T>();
+                        MessagePackFormatter<T> f = item.GetFormatter<T>();
                         if (f != null)
                         {
                             Formatter = f;

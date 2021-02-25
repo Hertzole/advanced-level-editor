@@ -4,17 +4,17 @@ using System.Collections.Generic;
 
 namespace Hertzole.ALE
 {
-    public sealed class LevelEditorSaveDataFormatter : IMessagePackFormatter<LevelEditorSaveData>
+    public sealed class LevelEditorSaveDataFormatter : MessagePackFormatter<LevelEditorSaveData>
     {
-        public void Serialize(ref MessagePackWriter writer, LevelEditorSaveData value, MessagePackSerializerOptions options)
+        public override void Serialize(ref MessagePackWriter writer, LevelEditorSaveData value, MessagePackSerializerOptions options)
         {
-            writer.WriteArrayHeader(3);
+            writer.WriteArrayHeader(2);
             options.Resolver.GetFormatterWithVerify<string>().Serialize(ref writer, value.name, options);
             options.Resolver.GetFormatterWithVerify<List<LevelEditorObjectData>>().Serialize(ref writer, value.objects, options);
-            options.Resolver.GetFormatterWithVerify<Dictionary<string, LevelEditorCustomData>>().Serialize(ref writer, value.customData, options);
+            //options.Resolver.GetFormatterWithVerify<Dictionary<string, LevelEditorCustomData>>().Serialize(ref writer, value.customData, options);
         }
 
-        public LevelEditorSaveData Deserialize(ref MessagePackReader reader, MessagePackSerializerOptions options)
+        public override LevelEditorSaveData Deserialize(ref MessagePackReader reader, MessagePackSerializerOptions options)
         {
             options.Security.DepthStep(ref reader);
 
@@ -33,9 +33,9 @@ namespace Hertzole.ALE
                     case 1:
                         objects = options.Resolver.GetFormatterWithVerify<List<LevelEditorObjectData>>().Deserialize(ref reader, options);
                         break;
-                    case 2:
-                        customData = options.Resolver.GetFormatterWithVerify<Dictionary<string, LevelEditorCustomData>>().Deserialize(ref reader, options);
-                        break;
+                    //case 2:
+                    //    customData = options.Resolver.GetFormatterWithVerify<Dictionary<string, LevelEditorCustomData>>().Deserialize(ref reader, options);
+                    //    break;
                     default:
                         reader.Skip();
                         break;

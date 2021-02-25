@@ -4,13 +4,12 @@ using MessagePack.Formatters;
 using MessagePack.Unity;
 using System;
 using System.Collections.Generic;
-using System.Reflection;
 using UnityEngine;
 
 public static class LevelEditorSerializer
 {
     private static readonly Dictionary<string, Type> typeMap = new Dictionary<string, Type>();
-    private static readonly Dictionary<Type, object> formatters = new Dictionary<Type, object>();
+    private static readonly Dictionary<Type, MessagePackFormatter> formatters = new Dictionary<Type, MessagePackFormatter>();
 
     private static bool registeredTypes = false;
 
@@ -50,7 +49,7 @@ public static class LevelEditorSerializer
         registeredTypes = true;
     }
 
-    public static void RegisterType<T>(IMessagePackFormatter<T> formatter)
+    public static void RegisterType<T>(MessagePackFormatter formatter)
     {
         typeMap[typeof(T).FullName] = typeof(T);
         formatters[typeof(T)] = formatter;
@@ -76,29 +75,21 @@ public static class LevelEditorSerializer
         return HasType(type.FullName);
     }
 
-    private delegate void SerializeMethod(ref MessagePackWriter writer, object value, MessagePackSerializerOptions options);
-    public static void Serialize(ref MessagePackWriter writer, Type type, object value, MessagePackSerializerOptions options)
+    public static void Serialize(ref MessagePackWriter writer, Type type, object value, bool isArray, MessagePackSerializerOptions options)
     {
-        object formatter = formatters[type];
-        //if (formatter is IMessagePackFormatter f)
-        //{
-        //    //f.Serialize(ref writer, (T)value, options);
-        //}
-
-        //object[] temp = new object[]
-        //{
-        //    writer
-        //};
-
-        MethodInfo serializeMethod = formatter.GetType().GetMethod(nameof(IMessagePackFormatter<int>.Serialize));
-        Debug.Log(serializeMethod);
-        Delegate sm = Delegate.CreateDelegate(typeof(SerializeMethod), formatter, serializeMethod);
-        Debug.Log(sm);
-        //sm.Invoke(ref writer, Convert.ChangeType(value, type), options);
+        if (formatters.TryGetValue(type, out MessagePackFormatter formatter))
+        {
+            formatter.SerializeObject(ref writer, value, options);
+        }
     }
 
-    //public static object Deserialize(Type type)
-    //{
-    //    //var formatter = 
-    //}
+    public static object Deserialize(ref MessagePackReader reader, Type type, bool isArray, MessagePackSerializerOptions options)
+    {
+        if (!formatters.TryGetValue(type, out MessagePackFormatter formatter))
+        {
+            return null;
+        }
+
+        return formatter.DeserializeObject(ref reader, options);
+    }
 }

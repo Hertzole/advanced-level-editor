@@ -1,15 +1,13 @@
 ﻿// Copyright (c) All contributors. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using MessagePack.Formatters;
+using MessagePack.Internal;
 using System;
 using System.Buffers;
 using System.Collections;
 using System.Collections.Generic;
-using System.Reflection;
 using System.Text;
-using MessagePack.Formatters;
-using MessagePack.Internal;
-using MessagePack.Resolvers;
 
 #pragma warning disable SA1403 // File may only contain a single namespace
 #pragma warning disable SA1509 // Opening braces should not be preceded by blank line
@@ -27,19 +25,19 @@ namespace MessagePack.Resolvers
         {
         }
 
-        public IMessagePackFormatter<T> GetFormatter<T>()
+        public MessagePackFormatter<T> GetFormatter<T>()
         {
             return FormatterCache<T>.Formatter;
         }
 
         private static class FormatterCache<T>
         {
-            public static readonly IMessagePackFormatter<T> Formatter;
+            public static readonly MessagePackFormatter<T> Formatter;
 
             static FormatterCache()
             {
                 // Reduce IL2CPP code generate size(don't write long code in <T>)
-                Formatter = (IMessagePackFormatter<T>)BuiltinResolverGetFormatterHelper.GetFormatter(typeof(T));
+                Formatter = (MessagePackFormatter<T>)BuiltinResolverGetFormatterHelper.GetFormatter(typeof(T));
             }
         }
     }

@@ -1,8 +1,8 @@
 ﻿// Copyright (c) All contributors. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using System;
 using MessagePack.Formatters;
+using System;
 
 namespace MessagePack.Resolvers
 {
@@ -17,7 +17,7 @@ namespace MessagePack.Resolvers
         {
         }
 
-        public IMessagePackFormatter<T> GetFormatter<T>()
+        public MessagePackFormatter<T> GetFormatter<T>()
         {
             return FormatterCache<T>.Formatter;
         }
@@ -38,11 +38,11 @@ namespace MessagePack.Resolvers
 
         private static class FormatterCache<T>
         {
-            public static readonly IMessagePackFormatter<T> Formatter;
+            public static readonly MessagePackFormatter<T> Formatter;
 
             static FormatterCache()
             {
-                Formatter = (IMessagePackFormatter<T>)GetFormatterHelper(typeof(T));
+                Formatter = (MessagePackFormatter<T>)GetFormatterHelper(typeof(T));
             }
         }
     }

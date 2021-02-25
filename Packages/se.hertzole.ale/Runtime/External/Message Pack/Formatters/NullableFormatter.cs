@@ -1,16 +1,15 @@
 ﻿// Copyright (c) All contributors. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using System.Buffers;
 
 #pragma warning disable SA1649 // File name should match first type name
 
 namespace MessagePack.Formatters
 {
-    public sealed class NullableFormatter<T> : IMessagePackFormatter<T?>
+    public sealed class NullableFormatter<T> : MessagePackFormatter<T?>
         where T : struct
     {
-        public void Serialize(ref MessagePackWriter writer, T? value, MessagePackSerializerOptions options)
+        public override void Serialize(ref MessagePackWriter writer, T? value, MessagePackSerializerOptions options)
         {
             if (value == null)
             {
@@ -22,7 +21,7 @@ namespace MessagePack.Formatters
             }
         }
 
-        public T? Deserialize(ref MessagePackReader reader, MessagePackSerializerOptions options)
+        public override T? Deserialize(ref MessagePackReader reader, MessagePackSerializerOptions options)
         {
             if (reader.IsNil)
             {
@@ -36,17 +35,17 @@ namespace MessagePack.Formatters
         }
     }
 
-    public sealed class StaticNullableFormatter<T> : IMessagePackFormatter<T?>
+    public sealed class StaticNullableFormatter<T> : MessagePackFormatter<T?>
         where T : struct
     {
-        private readonly IMessagePackFormatter<T> underlyingFormatter;
+        private readonly MessagePackFormatter<T> underlyingFormatter;
 
-        public StaticNullableFormatter(IMessagePackFormatter<T> underlyingFormatter)
+        public StaticNullableFormatter(MessagePackFormatter<T> underlyingFormatter)
         {
             this.underlyingFormatter = underlyingFormatter;
         }
 
-        public void Serialize(ref MessagePackWriter writer, T? value, MessagePackSerializerOptions options)
+        public override void Serialize(ref MessagePackWriter writer, T? value, MessagePackSerializerOptions options)
         {
             if (value == null)
             {
@@ -54,11 +53,11 @@ namespace MessagePack.Formatters
             }
             else
             {
-                this.underlyingFormatter.Serialize(ref writer, value.Value, options);
+                underlyingFormatter.Serialize(ref writer, value.Value, options);
             }
         }
 
-        public T? Deserialize(ref MessagePackReader reader, MessagePackSerializerOptions options)
+        public override T? Deserialize(ref MessagePackReader reader, MessagePackSerializerOptions options)
         {
             if (reader.TryReadNil())
             {
@@ -66,7 +65,7 @@ namespace MessagePack.Formatters
             }
             else
             {
-                return this.underlyingFormatter.Deserialize(ref reader, options);
+                return underlyingFormatter.Deserialize(ref reader, options);
             }
         }
     }

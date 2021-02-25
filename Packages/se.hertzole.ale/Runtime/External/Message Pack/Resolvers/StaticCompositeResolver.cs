@@ -1,9 +1,9 @@
 ﻿// Copyright (c) All contributors. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using MessagePack.Formatters;
 using System;
 using System.Collections.Generic;
-using MessagePack.Formatters;
 
 namespace MessagePack.Resolvers
 {
@@ -15,12 +15,12 @@ namespace MessagePack.Resolvers
         public static readonly StaticCompositeResolver Instance = new StaticCompositeResolver();
 
         private bool freezed;
-        private IReadOnlyList<IMessagePackFormatter> formatters;
+        private IReadOnlyList<MessagePackFormatter> formatters;
         private IReadOnlyList<IFormatterResolver> resolvers;
 
         private StaticCompositeResolver()
         {
-            formatters = Array.Empty<IMessagePackFormatter>();
+            formatters = Array.Empty<MessagePackFormatter>();
             resolvers = Array.Empty<IFormatterResolver>();
         }
 
@@ -30,12 +30,12 @@ namespace MessagePack.Resolvers
         /// If call twice in the Register methods, registered formatters and resolvers will be overridden.
         /// </summary>
         /// <param name="formatters">
-        /// A list of instances of <see cref="IMessagePackFormatter{T}"/>.
+        /// A list of instances of <see cref="MessagePackFormatter{T}"/>.
         /// The formatters are searched in the order given, so if two formatters support serializing the same type, the first one is used.
         /// </param>
-        public void Register(params IMessagePackFormatter[] formatters)
+        public void Register(params MessagePackFormatter[] formatters)
         {
-            if (this.freezed)
+            if (freezed)
             {
                 throw new InvalidOperationException("Register must call on startup(before use GetFormatter<T>).");
             }
@@ -46,7 +46,7 @@ namespace MessagePack.Resolvers
             }
 
             this.formatters = formatters;
-            this.resolvers = Array.Empty<IFormatterResolver>();
+            resolvers = Array.Empty<IFormatterResolver>();
         }
 
         /// <summary>
@@ -60,7 +60,7 @@ namespace MessagePack.Resolvers
         /// </param>
         public void Register(params IFormatterResolver[] resolvers)
         {
-            if (this.freezed)
+            if (freezed)
             {
                 throw new InvalidOperationException("Register must call on startup(before use GetFormatter<T>).");
             }
@@ -70,7 +70,7 @@ namespace MessagePack.Resolvers
                 throw new ArgumentNullException(nameof(resolvers));
             }
 
-            this.formatters = Array.Empty<IMessagePackFormatter>();
+            formatters = Array.Empty<MessagePackFormatter>();
             this.resolvers = resolvers;
         }
 
@@ -80,16 +80,16 @@ namespace MessagePack.Resolvers
         /// If call twice in the Register methods, registered formatters and resolvers will be overridden.
         /// </summary>
         /// <param name="formatters">
-        /// A list of instances of <see cref="IMessagePackFormatter{T}"/>.
+        /// A list of instances of <see cref="MessagePackFormatter{T}"/>.
         /// The formatters are searched in the order given, so if two formatters support serializing the same type, the first one is used.
         /// </param>
         /// <param name="resolvers">
         /// A list of resolvers to use for serializing types for which <paramref name="formatters"/> does not include a formatter.
         /// The resolvers are searched in the order given, so if two resolvers support serializing the same type, the first one is used.
         /// </param>
-        public void Register(IReadOnlyList<IMessagePackFormatter> formatters, IReadOnlyList<IFormatterResolver> resolvers)
+        public void Register(IReadOnlyList<MessagePackFormatter> formatters, IReadOnlyList<IFormatterResolver> resolvers)
         {
-            if (this.freezed)
+            if (freezed)
             {
                 throw new InvalidOperationException("Register must call on startup(before use GetFormatter<T>).");
             }
@@ -109,34 +109,34 @@ namespace MessagePack.Resolvers
         }
 
         /// <summary>
-        /// Gets an <see cref="IMessagePackFormatter{T}"/> instance that can serialize or deserialize some type <typeparamref name="T"/>.
+        /// Gets an <see cref="MessagePackFormatter{T}"/> instance that can serialize or deserialize some type <typeparamref name="T"/>.
         /// </summary>
         /// <typeparam name="T">The type of value to be serialized or deserialized.</typeparam>
         /// <returns>A formatter, if this resolver supplies one for type <typeparamref name="T"/>; otherwise <c>null</c>.</returns>
-        public IMessagePackFormatter<T> GetFormatter<T>()
+        public MessagePackFormatter<T> GetFormatter<T>()
         {
             return Cache<T>.Formatter;
         }
 
         private static class Cache<T>
         {
-            public static readonly IMessagePackFormatter<T> Formatter;
+            public static readonly MessagePackFormatter<T> Formatter;
 
             static Cache()
             {
                 Instance.freezed = true;
-                foreach (var item in Instance.formatters)
+                foreach (MessagePackFormatter item in Instance.formatters)
                 {
-                    if (item is IMessagePackFormatter<T> f)
+                    if (item is MessagePackFormatter<T> f)
                     {
                         Formatter = f;
                         return;
                     }
                 }
 
-                foreach (var item in Instance.resolvers)
+                foreach (IFormatterResolver item in Instance.resolvers)
                 {
-                    var f = item.GetFormatter<T>();
+                    MessagePackFormatter<T> f = item.GetFormatter<T>();
                     if (f != null)
                     {
                         Formatter = f;

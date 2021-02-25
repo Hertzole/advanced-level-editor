@@ -3,12 +3,12 @@ using MessagePack.Formatters;
 
 namespace Hertzole.ALE.Binary
 {
-    public sealed class LevelEditorObjectDataFormatter : IMessagePackFormatter<LevelEditorObjectData>
+    public sealed class LevelEditorObjectDataFormatter : MessagePackFormatter<LevelEditorObjectData>
     {
-        public void Serialize(ref MessagePackWriter writer, LevelEditorObjectData value, MessagePackSerializerOptions options)
+        public override void Serialize(ref MessagePackWriter writer, LevelEditorObjectData value, MessagePackSerializerOptions options)
         {
             writer.WriteArrayHeader(5);
-            IMessagePackFormatter<string> stringFormatter = options.Resolver.GetFormatterWithVerify<string>();
+            MessagePackFormatter<string> stringFormatter = options.Resolver.GetFormatterWithVerify<string>();
             stringFormatter.Serialize(ref writer, value.name, options);
             options.Resolver.GetFormatterWithVerify<bool>().Serialize(ref writer, value.active, options);
             stringFormatter.Serialize(ref writer, value.id, options);
@@ -16,7 +16,7 @@ namespace Hertzole.ALE.Binary
             options.Resolver.GetFormatterWithVerify<LevelEditorComponentData[]>().Serialize(ref writer, value.components, options);
         }
 
-        public LevelEditorObjectData Deserialize(ref MessagePackReader reader, MessagePackSerializerOptions options)
+        public override LevelEditorObjectData Deserialize(ref MessagePackReader reader, MessagePackSerializerOptions options)
         {
             options.Security.DepthStep(ref reader);
 
@@ -26,7 +26,7 @@ namespace Hertzole.ALE.Binary
             int instanceId = -1;
             LevelEditorComponentData[] components = null;
 
-            IMessagePackFormatter<string> stringFormatter = options.Resolver.GetFormatterWithVerify<string>();
+            MessagePackFormatter<string> stringFormatter = options.Resolver.GetFormatterWithVerify<string>();
             int count = reader.ReadArrayHeader();
             for (int i = 0; i < count; i++)
             {

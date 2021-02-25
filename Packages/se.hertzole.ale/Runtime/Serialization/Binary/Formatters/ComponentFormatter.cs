@@ -1,15 +1,14 @@
 ﻿using MessagePack;
 using MessagePack.Formatters;
-using System;
 using UnityEngine;
 
 namespace Hertzole.ALE
 {
-    public class ComponentFormatter : IMessagePackFormatter<Component>
+    public class ComponentFormatter : MessagePackFormatter
     {
-        public void Serialize(ref MessagePackWriter writer, Component value, MessagePackSerializerOptions options)
+        public override void SerializeObject(ref MessagePackWriter writer, object value, MessagePackSerializerOptions options)
         {
-            if (value != null && value.TryGetComponent(out ILevelEditorObject obj))
+            if (value != null && value is Component comp && comp != null && comp.TryGetComponent(out ILevelEditorObject obj))
             {
                 writer.WriteInt32(obj.InstanceID);
             }
@@ -19,7 +18,7 @@ namespace Hertzole.ALE
             }
         }
 
-        public object DeserializeObject(ref MessagePackReader reader)
+        public override object DeserializeObject(ref MessagePackReader reader, MessagePackSerializerOptions options)
         {
             if (reader.TryReadNil())
             {
@@ -27,11 +26,6 @@ namespace Hertzole.ALE
             }
 
             return reader.ReadInt32();
-        }
-
-        public Component Deserialize(ref MessagePackReader reader, MessagePackSerializerOptions options)
-        {
-            throw new NotSupportedException("Use DeserializeObject instead.");
         }
     }
 }

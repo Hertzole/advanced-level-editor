@@ -70,22 +70,22 @@ public class EnumTester : MonoBehaviour, IExposedToLevelEditor
     {
         bool changed = false;
 
-        if (id == 0)
-        {
-            if ((TestEnum)value != enumTest)
-            {
-                enumTest = (TestEnum)value;
-                changed = true;
-            }
-        }
-        else if (id == 2)
-        {
-            if ((TestEnum)value != EnumProperty)
-            {
-                EnumProperty = (TestEnum)value;
-                changed = true;
-            }
-        }
+        //if (id == 0)
+        //{
+        //    if ((TestEnum)value != enumTest)
+        //    {
+        //        enumTest = (TestEnum)value;
+        //        changed = true;
+        //    }
+        //}
+        //else if (id == 2)
+        //{
+        //    if ((TestEnum)value != EnumProperty)
+        //    {
+        //        EnumProperty = (TestEnum)value;
+        //        changed = true;
+        //    }
+        //}
         //else if (id == 1)
         //{
         //    TestEnum[] array = Array.ConvertAll((object[])value, (object para0) => (TestEnum)para0);
@@ -95,15 +95,15 @@ public class EnumTester : MonoBehaviour, IExposedToLevelEditor
         //        changed = true;
         //    }
         //}
-        else
-        {
-            throw new ArgumentException("No with " + id);
-        }
+        //else
+        //{
+        //    throw new ArgumentException("No with " + id);
+        //}
 
-        if (notify && changed)
-        {
-            OnValueChanged?.Invoke(id, value);
-        }
+        //if (notify && changed)
+        //{
+        //    OnValueChanged?.Invoke(id, value);
+        //}
     }
 
     public Type GetValueType(int id)

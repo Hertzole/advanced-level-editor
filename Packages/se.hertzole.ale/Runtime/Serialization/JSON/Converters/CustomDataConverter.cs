@@ -39,7 +39,7 @@ namespace Hertzole.ALE.Json
 
             object value = token.GetValue(realType, PROP_VALUE, default, serializer);
 
-            return new LevelEditorCustomData() { type = type, isArray = isArray, value = value };
+            return new LevelEditorCustomData() { typeName = type, isArray = isArray, value = value };
         }
 
         public override void WriteJson(JsonWriter writer, LevelEditorCustomData value, JsonSerializer serializer)
@@ -47,7 +47,7 @@ namespace Hertzole.ALE.Json
             writer.WriteStartObject();
 
             writer.WritePropertyName(PROP_TYPE);
-            writer.WriteValue(typePalette[value.type]);
+            writer.WriteValue(typePalette[value.typeName]);
             writer.WritePropertyName(PROP_ISARRAY);
             writer.WriteValue(value.isArray);
             writer.WritePropertyName(PROP_VALUE);

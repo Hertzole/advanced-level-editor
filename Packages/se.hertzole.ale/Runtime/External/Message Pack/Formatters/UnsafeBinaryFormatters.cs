@@ -8,12 +8,12 @@ using System.Buffers;
 
 namespace MessagePack.Formatters
 {
-    public sealed class NativeGuidFormatter : IMessagePackFormatter<Guid>
+    public sealed class NativeGuidFormatter : MessagePackFormatter<Guid>
     {
         /// <summary>
         /// Unsafe binary Guid formatter. this is only allowed on LittleEndian environment.
         /// </summary>
-        public static readonly IMessagePackFormatter<Guid> Instance = new NativeGuidFormatter();
+        public static readonly MessagePackFormatter<Guid> Instance = new NativeGuidFormatter();
 
         private NativeGuidFormatter()
         {
@@ -22,18 +22,18 @@ namespace MessagePack.Formatters
         /* Guid's underlying _a,...,_k field is sequential and same layout as .NET Framework and Mono(Unity).
          * But target machines must be same endian so restrict only for little endian. */
 
-        public unsafe void Serialize(ref MessagePackWriter writer, Guid value, MessagePackSerializerOptions options)
+        public override unsafe void Serialize(ref MessagePackWriter writer, Guid value, MessagePackSerializerOptions options)
         {
             if (!BitConverter.IsLittleEndian)
             {
                 throw new InvalidOperationException("NativeGuidFormatter only allows on little endian env.");
             }
 
-            var valueSpan = new ReadOnlySpan<byte>(&value, sizeof(Guid));
+            ReadOnlySpan<byte> valueSpan = new ReadOnlySpan<byte>(&value, sizeof(Guid));
             writer.Write(valueSpan);
         }
 
-        public unsafe Guid Deserialize(ref MessagePackReader reader, MessagePackSerializerOptions options)
+        public override unsafe Guid Deserialize(ref MessagePackReader reader, MessagePackSerializerOptions options)
         {
             if (!BitConverter.IsLittleEndian)
             {
@@ -47,18 +47,18 @@ namespace MessagePack.Formatters
             }
 
             Guid result;
-            var resultSpan = new Span<byte>(&result, sizeof(Guid));
+            Span<byte> resultSpan = new Span<byte>(&result, sizeof(Guid));
             valueSequence.CopyTo(resultSpan);
             return result;
         }
     }
 
-    public sealed class NativeDecimalFormatter : IMessagePackFormatter<Decimal>
+    public sealed class NativeDecimalFormatter : MessagePackFormatter<Decimal>
     {
         /// <summary>
         /// Unsafe binary Decimal formatter. this is only allows on LittleEndian environment.
         /// </summary>
-        public static readonly IMessagePackFormatter<Decimal> Instance = new NativeDecimalFormatter();
+        public static readonly MessagePackFormatter<Decimal> Instance = new NativeDecimalFormatter();
 
         private NativeDecimalFormatter()
         {
@@ -67,18 +67,18 @@ namespace MessagePack.Formatters
         /* decimal underlying "flags, hi, lo, mid" fields are sequential and same layuout with .NET Framework and Mono(Unity)
          * But target machines must be same endian so restrict only for little endian. */
 
-        public unsafe void Serialize(ref MessagePackWriter writer, Decimal value, MessagePackSerializerOptions options)
+        public override unsafe void Serialize(ref MessagePackWriter writer, Decimal value, MessagePackSerializerOptions options)
         {
             if (!BitConverter.IsLittleEndian)
             {
                 throw new InvalidOperationException("NativeDecimalFormatter only allows on little endian env.");
             }
 
-            var valueSpan = new ReadOnlySpan<byte>(&value, sizeof(Decimal));
+            ReadOnlySpan<byte> valueSpan = new ReadOnlySpan<byte>(&value, sizeof(Decimal));
             writer.Write(valueSpan);
         }
 
-        public unsafe Decimal Deserialize(ref MessagePackReader reader, MessagePackSerializerOptions options)
+        public override unsafe Decimal Deserialize(ref MessagePackReader reader, MessagePackSerializerOptions options)
         {
             if (!BitConverter.IsLittleEndian)
             {
@@ -92,7 +92,7 @@ namespace MessagePack.Formatters
             }
 
             decimal result;
-            var resultSpan = new Span<byte>(&result, sizeof(decimal));
+            Span<byte> resultSpan = new Span<byte>(&result, sizeof(decimal));
             valueSequence.CopyTo(resultSpan);
             return result;
         }
