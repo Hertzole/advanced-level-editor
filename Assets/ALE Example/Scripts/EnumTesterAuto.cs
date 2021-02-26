@@ -1,4 +1,5 @@
-﻿using UnityEngine;
+﻿#pragma warning disable CS0414
+using UnityEngine;
 
 public class EnumTesterAuto : MonoBehaviour
 {
@@ -14,3 +15,4 @@ public class EnumTesterAuto : MonoBehaviour
     //[ExposeToLevelEditor(2)]
     public TestEnum EnumProperty { get; set; }
 }
+#pragma warning restore CS0414

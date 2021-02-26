@@ -9,16 +9,14 @@ namespace Hertzole.ALE
         public string typeName;
         public object value;
         public Type type;
-        public bool isArray;
 
         public LevelEditorPropertyData(ExposedProperty property, IExposedToLevelEditor exposedComponent)
         {
             id = property.ID;
             value = exposedComponent.GetValue(property.ID);
-            type = property.Type.IsSubclassOf(typeof(Component)) ? typeof(Component) : property.Type;
-            isArray = property.IsArray;
             // Used for Unity references. They need to be converted to a simple component.
-            typeName = property.Type.IsSubclassOf(typeof(Component)) ? typeof(Component).FullName : property.Type.FullName;
+            type = property.Type.IsSubclassOf(typeof(Component)) ? typeof(Component) : property.Type;
+            typeName = type.FullName;
         }
 
         public override bool Equals(object obj)
@@ -28,7 +26,7 @@ namespace Hertzole.ALE
 
         public bool Equals(LevelEditorPropertyData other)
         {
-            return isArray == other.isArray && id == other.id && typeName == other.typeName && value.AdvancedEquals(other.value);
+            return id == other.id && typeName == other.typeName && value.AdvancedEquals(other.value);
         }
 
         public override int GetHashCode()
@@ -36,7 +34,6 @@ namespace Hertzole.ALE
             unchecked
             {
                 int hashCode = 23;
-                hashCode = hashCode * 17 * isArray.GetHashCode();
                 hashCode = hashCode * 17 * id.GetHashCode();
                 hashCode = hashCode * 17 * typeName.GetHashCode();
                 hashCode = hashCode * 17 * value.GetHashCode();
@@ -56,7 +53,7 @@ namespace Hertzole.ALE
 
         public override string ToString()
         {
-            return $"LevelEditorPropertyData (ID: {id}, Type Name: {typeName}, Is Array: {isArray}, Value: {value})";
+            return $"LevelEditorPropertyData (ID: {id}, Type Name: {typeName}, Value: {value})";
         }
     }
 }

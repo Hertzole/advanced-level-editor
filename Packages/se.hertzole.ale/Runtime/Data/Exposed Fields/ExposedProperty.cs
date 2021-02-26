@@ -7,8 +7,6 @@ namespace Hertzole.ALE
     {
         public int ID { get; private set; }
 
-        public bool IsArray { get; private set; }
-
         public string CustomName { get; private set; }
         public string TypeName { get { return Type.FullName; } }
 
@@ -28,7 +26,7 @@ namespace Hertzole.ALE
 
         public bool Equals(ExposedProperty other)
         {
-            return other != null && ID == other.ID && IsVisible == other.IsVisible && IsArray == other.IsArray && Name == other.Name && CustomName == other.CustomName && TypeName == other.TypeName;
+            return other != null && ID == other.ID && IsVisible == other.IsVisible && Name == other.Name && CustomName == other.CustomName && TypeName == other.TypeName;
         }
 
         public override int GetHashCode()
@@ -36,7 +34,6 @@ namespace Hertzole.ALE
             int hashCode = 312150486;
             hashCode = hashCode * -1521134295 + ID.GetHashCode();
             hashCode = hashCode * -1521134295 + IsVisible.GetHashCode();
-            hashCode = hashCode * -1521134295 + IsArray.GetHashCode();
             hashCode = hashCode * -1521134295 + EqualityComparer<string>.Default.GetHashCode(Name);
             hashCode = hashCode * -1521134295 + EqualityComparer<string>.Default.GetHashCode(CustomName);
             hashCode = hashCode * -1521134295 + EqualityComparer<string>.Default.GetHashCode(TypeName);

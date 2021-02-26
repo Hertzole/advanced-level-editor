@@ -186,12 +186,12 @@ namespace Hertzole.ALE
                                 continue;
                             }
 
-                            if (!HasField(properties[j].Type, properties[j].IsArray))
+                            if (!HasField(properties[j].Type))
                             {
                                 continue;
                             }
 
-                            LevelEditorInspectorField field = GetField(properties[j].Type, properties[j].IsArray, compUI.FieldHolder);
+                            LevelEditorInspectorField field = GetField(properties[j].Type, compUI.FieldHolder);
                             field.Depth = 0;
                             field.Bind(properties[j], components[i]);
                         }
@@ -212,11 +212,11 @@ namespace Hertzole.ALE
             return result;
         }
 
-        public LevelEditorInspectorField GetField(Type fieldType, bool isArray, Transform parent)
+        public LevelEditorInspectorField GetField(Type fieldType, Transform parent)
         {
             LevelEditorInspectorField result = null;
 
-            TypeAndArray type = new TypeAndArray(fieldType, isArray);
+            TypeAndArray type = new TypeAndArray(fieldType, fieldType.IsArray);
 
             if (fields.TryGetValue(type, out int fieldIndex))
             {
@@ -244,7 +244,7 @@ namespace Hertzole.ALE
                         break;
                     }
 
-                    if (fieldPrefabs[i].SupportsType(fieldType, isArray))
+                    if (fieldPrefabs[i].SupportsType(fieldType, fieldType.IsArray))
                     {
                         selectedIndex = i;
                     }
@@ -265,7 +265,7 @@ namespace Hertzole.ALE
 
             if (result == null)
             {
-                Debug.LogWarning("No field that supports " + fieldType.FullName + (isArray ? "[]" : ""));
+                Debug.LogWarning("No field that supports " + fieldType.FullName);
                 return null;
             }
 
@@ -284,9 +284,9 @@ namespace Hertzole.ALE
             field.gameObject.SetActive(false);
         }
 
-        public bool HasField(Type type, bool isArray)
+        public bool HasField(Type type)
         {
-            TypeAndArray typeAndArray = new TypeAndArray(type, isArray);
+            TypeAndArray typeAndArray = new TypeAndArray(type, type.IsArray);
 
             if (fields.ContainsKey(typeAndArray))
             {
@@ -304,7 +304,7 @@ namespace Hertzole.ALE
                         break;
                     }
 
-                    if (fieldPrefabs[i].SupportsType(type, isArray))
+                    if (fieldPrefabs[i].SupportsType(type, type.IsArray))
                     {
                         foundIndex = i;
                     }
@@ -322,7 +322,7 @@ namespace Hertzole.ALE
                 }
             }
 
-            Debug.LogWarning("No field that supports " + type.FullName + (isArray ? "[]" : ""));
+            Debug.LogWarning("No field that supports " + type.FullName);
 
             return false;
         }

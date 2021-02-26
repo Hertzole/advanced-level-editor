@@ -1,4 +1,6 @@
-﻿using Hertzole.ALE;
+﻿#pragma warning disable CS0414
+#pragma warning disable CS0067
+using Hertzole.ALE;
 using System;
 using UnityEngine;
 
@@ -67,10 +69,7 @@ public class EnumTester : MonoBehaviour, IExposedToLevelEditor
     }
 
     public void SetValue(int id, object value, bool notify)
-    {
-        bool changed = false;
-
-        //if (id == 0)
+    {        //if (id == 0)
         //{
         //    if ((TestEnum)value != enumTest)
         //    {
@@ -122,3 +121,5 @@ public class EnumTester : MonoBehaviour, IExposedToLevelEditor
         }
     }
 }
+#pragma warning restore CS0414
+#pragma warning restore CS0067

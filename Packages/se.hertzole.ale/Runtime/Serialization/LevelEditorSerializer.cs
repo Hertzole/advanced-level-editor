@@ -86,13 +86,8 @@ public static class LevelEditorSerializer
         return typeMap.ContainsKey(typeName);
     }
 
-    public static bool HasType(Type type, bool isArray)
+    public static bool HasType(Type type)
     {
-        if (isArray)
-        {
-            type = type.GetElementType();
-        }
-
         return HasType(type.FullName);
     }
 }

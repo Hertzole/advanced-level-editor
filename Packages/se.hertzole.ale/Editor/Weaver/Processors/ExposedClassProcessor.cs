@@ -47,20 +47,9 @@ namespace Hertzole.ALE.Editor
                 }
             }
             public bool IsProperty { get { return field == null && property != null; } }
-            public bool IsArray
-            {
-                get
-                {
-                    if (field != null)
-                    {
-                        return field.FieldType.IsArray;
-                    }
-                    else
-                    {
-                        return property.PropertyType.IsArray;
-                    }
-                }
-            }
+            public bool IsArrayList { get { return FieldType.IsArray || IsList; } }
+            public bool IsArrayOnly { get { return FieldType.IsArray; } }
+            public bool IsList { get { return FieldType.Is(typeof(List<>)); } }
 
             public bool IsEnum
             {
@@ -503,41 +492,89 @@ namespace Hertzole.ALE.Editor
             il.Append(GetIntInstruction(exposedFields.Count));
             il.Emit(OpCodes.Newarr, module.ImportReference(typeof(ExposedProperty)));
 
-            MethodReference propertyConstructor = module.ImportReference(typeof(ExposedProperty).GetConstructor(new Type[]
+            MethodReference exposedPropertyCctr = module.ImportReference(typeof(ExposedProperty).GetConstructor(new Type[]
             {
                 typeof(int), typeof(Type), typeof(string), typeof(string), typeof(bool)
+            }));
+            MethodReference exposedArrayCctr = module.ImportReference(typeof(ExposedArray).GetConstructor(new Type[]
+            {
+                typeof(int), typeof(Type), typeof(string), typeof(string), typeof(bool), typeof(Type)
             }));
             int index = 0;
 
             foreach (FieldOrProperty field in exposedFields)
             {
-                il.Emit(OpCodes.Dup);
-                il.Append(GetIntInstruction(index)); // Index
-                il.Append(GetIntInstruction(field.id));
-                // If it's an array, only return the base type. The level editor will handle arrays by itself using the IsArray property.
-                il.Emit(OpCodes.Ldtoken, field.IsArray ? module.ImportReference(field.FieldType.Resolve()) : field.FieldType);
-                il.Emit(OpCodes.Call, getType);
-
-                il.Emit(OpCodes.Ldstr, field.Name); // Field name
-                if (string.IsNullOrEmpty(field.customName))
+                if (!field.IsArrayList)
                 {
-                    il.Emit(OpCodes.Ldnull);
+                    WriteExposedProperty(il, field, index, module, exposedPropertyCctr);
                 }
                 else
                 {
-                    il.Emit(OpCodes.Ldstr, field.customName);
+                    WriteExposedArray(il, field, index, module, exposedArrayCctr);
                 }
-                il.Emit(GetBoolOpCode(field.visible)); // Is visible
-                //il.Emit(GetBoolOpCode(field.IsArray)); // Is array
-
-                il.Emit(OpCodes.Newobj, propertyConstructor); // Create the constructor.
-                il.Emit(OpCodes.Stelem_Any, module.ImportReference(typeof(ExposedProperty)));
 
                 index++;
             }
 
             il.Emit(OpCodes.Ret);
             return method;
+        }
+
+        private static void WriteExposedProperty(ILProcessor il, FieldOrProperty field, int index, ModuleDefinition module, MethodReference propertyConstructor)
+        {
+            il.Emit(OpCodes.Dup);
+            il.Append(GetIntInstruction(index)); // Index
+            il.Append(GetIntInstruction(field.id));
+            il.Emit(OpCodes.Ldtoken, module.ImportReference(field.FieldType));
+            il.Emit(OpCodes.Call, getType);
+
+            il.Emit(OpCodes.Ldstr, field.Name); // Field name
+            if (string.IsNullOrEmpty(field.customName))
+            {
+                il.Emit(OpCodes.Ldnull);
+            }
+            else
+            {
+                il.Emit(OpCodes.Ldstr, field.customName);
+            }
+            il.Emit(GetBoolOpCode(field.visible)); // Is visible
+
+            il.Emit(OpCodes.Newobj, propertyConstructor); // Create the constructor.
+            il.Emit(OpCodes.Stelem_Any, module.ImportReference(typeof(ExposedProperty)));
+        }
+
+        private static void WriteExposedArray(ILProcessor il, FieldOrProperty field, int index, ModuleDefinition module, MethodReference propertyConstructor)
+        {
+            il.Emit(OpCodes.Dup);
+            il.Append(GetIntInstruction(index)); // Index
+            il.Append(GetIntInstruction(field.id));
+            il.Emit(OpCodes.Ldtoken, module.ImportReference(field.FieldType));
+            il.Emit(OpCodes.Call, getType);
+
+            il.Emit(OpCodes.Ldstr, field.Name); // Field name
+            if (string.IsNullOrEmpty(field.customName))
+            {
+                il.Emit(OpCodes.Ldnull);
+            }
+            else
+            {
+                il.Emit(OpCodes.Ldstr, field.customName);
+            }
+            il.Emit(GetBoolOpCode(field.visible)); // Is visible
+
+            if (field.IsList)
+            {
+                il.Emit(OpCodes.Ldtoken, module.ImportReference(((GenericInstanceType)field.FieldType).GenericArguments[0]));
+            }
+            else
+            {
+                il.Emit(OpCodes.Ldtoken, module.ImportReference(field.FieldType.Resolve()));
+            }
+
+            il.Emit(OpCodes.Call, getType);
+
+            il.Emit(OpCodes.Newobj, propertyConstructor); // Create the constructor.
+            il.Emit(OpCodes.Stelem_Any, module.ImportReference(typeof(ExposedArray)));
         }
 
         private static MethodDefinition CreateGetValue(ModuleDefinition module, List<FieldOrProperty> exposedFields)
@@ -647,10 +684,10 @@ namespace Hertzole.ALE.Editor
                 }
                 else
                 {
-                    il.Emit(field.IsArray ? OpCodes.Ldarg_2 : OpCodes.Ldarg_0);
+                    il.Emit(field.IsArrayOnly ? OpCodes.Ldarg_2 : OpCodes.Ldarg_0);
                 }
 
-                if (!field.IsArray)
+                if (!field.IsArrayOnly)
                 {
                     bool isInequalityCheck = true;
                     bool isObjectEquals = false;

@@ -18,8 +18,8 @@ ALE is still in EARLY development. There's still a lot to do and it's nowhere cl
 #### Required
 What needs to be done before 1.0.0 verified.  
 - [x] Binary serialization and deserialization
-- [ ] JSON serialization and deserialization
-- [ ] Unified serializer for binary and JSON
+- [x] JSON serialization and deserialization
+- [x] Unified serializer for binary and JSON
 - [x] Editor camera
 - [ ] Full 2D support
 - [ ] Full 3D support
@@ -39,8 +39,8 @@ What needs to be done before 1.0.0 verified.
 - [ ] Integrate custom serializers
 - [ ] Menu items
 - [x] Custom component wrappers
-- [ ] Serialize arrays
-- [ ] Serialize lists
+- [x] Serialize arrays
+- [x] Serialize lists
 - [ ] Serialize dictionary
 - [ ] Resource limit support
 - [ ] Generate resource icons at build time

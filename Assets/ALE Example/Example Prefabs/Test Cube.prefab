@@ -13,6 +13,7 @@ GameObject:
   - component: {fileID: 6129102779647413279}
   - component: {fileID: 446762255455591348}
   - component: {fileID: 6720483487702025507}
+  - component: {fileID: 3477611412611313805}
   m_Layer: 0
   m_Name: Test Cube
   m_TagString: Untagged
@@ -133,3 +134,18 @@ MonoBehaviour:
   structTest:
     str: 
     vec: {x: 0, y: 0, z: 0}
+--- !u!114 &3477611412611313805
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2837006266036230208}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5eb404e8ff357374581d37e865285860, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  stringTest:
+  - Hello
+  - World

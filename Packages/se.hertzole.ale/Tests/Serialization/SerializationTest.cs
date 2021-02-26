@@ -108,7 +108,6 @@ namespace Hertzole.ALE.Tests
             LevelEditorPropertyData data = BuildPropertyData();
             data.typeName = typeof(string[]).FullName;
             data.type = typeof(string[]);
-            data.isArray = true;
             data.value = new string[] { "Hello", "World" };
 
             LevelEditorSerializer.RegisterType<string[]>();
@@ -164,7 +163,6 @@ namespace Hertzole.ALE.Tests
             return new LevelEditorPropertyData()
             {
                 id = 0,
-                isArray = false,
                 type = typeof(Vector3),
                 typeName = typeof(Vector3).FullName,
                 value = new Vector3(1.5f, 25f, 33.33f)

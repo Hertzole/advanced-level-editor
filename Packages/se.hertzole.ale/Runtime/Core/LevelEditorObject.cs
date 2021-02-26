@@ -130,7 +130,6 @@ namespace Hertzole.ALE
                                 value = (Color)col;
                             }
 
-                            Debug.Log(exposedComponents[j] + " | " + properties[k].id + " | " + properties[k].type + " | " + properties[k].value);
                             exposedComponents[j].SetValue(properties[k].id, value, false);
                         }
                     }
