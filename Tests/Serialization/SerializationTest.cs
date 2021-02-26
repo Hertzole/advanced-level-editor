@@ -19,6 +19,20 @@ namespace Hertzole.ALE.Tests
         }
 
         [Test]
+        public void CustomDataArraySerialization()
+        {
+            LevelEditorCustomData data = BuildCustomData();
+            data.type = typeof(string[]);
+            data.typeName = typeof(string[]).FullName;
+            data.value = new string[] { "Hello", "World" };
+            data.isArray = true;
+
+            LevelEditorSerializer.RegisterType<string[]>();
+
+            SerializeTest(data);
+        }
+
+        [Test]
         public void ObjectDataSerialization()
         {
             SerializeTest(BuildObjectData());
@@ -69,17 +83,19 @@ namespace Hertzole.ALE.Tests
             SerializeTest(data);
         }
 
-        //[Test]
-        //public void PropertyDataArraySerialization()
-        //{
-        //    LevelEditorPropertyData data = BuildPropertyData();
-        //    data.typeName = typeof(string).FullName;
-        //    data.type = typeof(string[]);
-        //    data.isArray = true;
-        //    data.value = new string[] { "Hello", "World" };
+        [Test]
+        public void PropertyDataArraySerialization()
+        {
+            LevelEditorPropertyData data = BuildPropertyData();
+            data.typeName = typeof(string[]).FullName;
+            data.type = typeof(string[]);
+            data.isArray = true;
+            data.value = new string[] { "Hello", "World" };
 
-        //    SerializeTest(data);
-        //}
+            LevelEditorSerializer.RegisterType<string[]>();
+
+            SerializeTest(data);
+        }
 
         protected abstract void SerializeTest<T>(T data);
 
