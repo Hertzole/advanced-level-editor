@@ -18,36 +18,36 @@ namespace Hertzole.ALE.Tests
         [Test]
         public void TestVector3()
         {
-            Vector3 value = new Vector3(1.1f, 22.22f, 333.333f);
+            Vector3 value = new Vector3(1.1f, 22.22f, 33.33f);
 
             value = SerializeAndDeserialize(value);
             Assert.AreEqual(1.1f, value.x);
             Assert.AreEqual(22.22f, value.y);
-            Assert.AreEqual(333.333f, value.z);
+            Assert.AreEqual(33.33f, value.z);
         }
 
         [Test]
         public void TestVector4()
         {
-            Vector4 value = new Vector4(1.1f, 22.22f, 333.333f, 4444.4444f);
+            Vector4 value = new Vector4(1.1f, 22.22f, 33.33f, 44.44f);
 
             value = SerializeAndDeserialize(value);
             Assert.AreEqual(1.1f, value.x);
             Assert.AreEqual(22.22f, value.y);
-            Assert.AreEqual(333.333f, value.z);
-            Assert.AreEqual(4444.4444f, value.w);
+            Assert.AreEqual(33.33f, value.z);
+            Assert.AreEqual(44.44f, value.w);
         }
 
         [Test]
         public void TestQuaternion()
         {
-            Quaternion value = new Quaternion(1.1f, 22.22f, 333.333f, 4444.4444f);
+            Quaternion value = new Quaternion(1.1f, 22.22f, 33.33f, 44.44f);
 
             value = SerializeAndDeserialize(value);
             Assert.AreEqual(1.1f, value.x);
             Assert.AreEqual(22.22f, value.y);
-            Assert.AreEqual(333.333f, value.z);
-            Assert.AreEqual(4444.4444f, value.w);
+            Assert.AreEqual(33.33f, value.z);
+            Assert.AreEqual(44.44f, value.w);
         }
 
         [Test]

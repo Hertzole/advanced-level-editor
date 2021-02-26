@@ -1,5 +1,8 @@
 ﻿using MessagePack;
 using MessagePack.Formatters;
+using MessagePack.Resolvers;
+using MessagePack.Unity;
+using MessagePack.Unity.Extension;
 using System;
 using System.Collections.Generic;
 using UnityEngine;
@@ -8,6 +11,25 @@ namespace Hertzole.ALE.Binary
 {
     public class LevelEditorResolver : IFormatterResolver
     {
+        private static bool serializerRegistered = false;
+
+        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
+        private static void ResetStatics()
+        {
+            if (serializerRegistered)
+            {
+                return;
+            }
+
+            StaticCompositeResolver.Instance.Register(UnityResolver.Instance,
+                                                      UnityBlitResolver.Instance,
+                                                      StandardResolver.Instance,
+                                                      LevelEditorResolver.Instance);
+            MessagePackSerializer.DefaultOptions = MessagePackSerializerOptions.Standard.WithResolver(StaticCompositeResolver.Instance);
+
+            serializerRegistered = true;
+        }
+
         public static readonly IFormatterResolver Instance = new LevelEditorResolver();
 
         private LevelEditorResolver() { }

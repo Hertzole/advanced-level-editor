@@ -1,15 +1,12 @@
-﻿using NUnit.Framework;
-
-namespace Hertzole.ALE.Tests
+﻿namespace Hertzole.ALE.Tests
 {
     public class BinarySerialization : SerializationTest
     {
-        protected override void SerializeTest<T>(T data)
+        protected override T SerializeAndDeserialize<T>(T data)
         {
-            byte[] bytes = LevelEditorBinarySerializer.Serialize(data);
+            byte[] bytes = LevelEditorSerializer.SerializeBinary(data);
 
-            T newData = LevelEditorBinarySerializer.Deserialize<T>(bytes);
-            Assert.AreEqual(data, newData);
+            return LevelEditorSerializer.DeserializeBinary<T>(bytes);
         }
     }
 }
