@@ -6,12 +6,6 @@ namespace Hertzole.ALE.Tests
 {
     public abstract class SerializationTest
     {
-        //[Test]
-        //public void SerializedSaveDataSerialization()
-        //{
-        //    SerializeTest(BuildSerializedLevelData());
-        //}
-
         [Test]
         public void SaveDataSerialization()
         {
@@ -64,27 +58,30 @@ namespace Hertzole.ALE.Tests
             SerializeTest(data);
         }
 
-        protected abstract void SerializeTest<T>(T data);
+        [Test]
+        public void PropertyDataComponentSerialization()
+        {
+            LevelEditorPropertyData data = BuildPropertyData();
+            data.typeName = typeof(Component).FullName;
+            data.type = typeof(Component);
+            data.value = null;
 
-        //public static SerializedLevelData BuildSerializedLevelData()
+            SerializeTest(data);
+        }
+
+        //[Test]
+        //public void PropertyDataArraySerialization()
         //{
-        //    SerializedLevelData data = new SerializedLevelData
-        //    {
-        //        TypePalette = new Dictionary<string, int>()
-        //        {
-        //            { "temp1", 0 },
-        //            { "temp2", 1 },
-        //        },
-        //        ObjectPalette = new Dictionary<string, int>()
-        //        {
-        //            { "temp3", 3 },
-        //            { "temp4", 3 }
-        //        },
-        //        Data = BuildSaveData()
-        //    };
+        //    LevelEditorPropertyData data = BuildPropertyData();
+        //    data.typeName = typeof(string).FullName;
+        //    data.type = typeof(string[]);
+        //    data.isArray = true;
+        //    data.value = new string[] { "Hello", "World" };
 
-        //    return data;
+        //    SerializeTest(data);
         //}
+
+        protected abstract void SerializeTest<T>(T data);
 
         public static LevelEditorSaveData BuildSaveData()
         {
@@ -92,12 +89,11 @@ namespace Hertzole.ALE.Tests
             {
                 name = "Test Level",
                 objects = new List<LevelEditorObjectData>() { BuildObjectData(), BuildObjectData() },
-                //customData = new Dictionary<string, LevelEditorCustomData>()
-                //{
-                //    { "data1", new LevelEditorCustomData(typeof(string), false, "Hello world") },
-                //    { "data2", new LevelEditorCustomData(typeof(int), false, 42) }
-                //}
-                customData = null
+                customData = new Dictionary<string, LevelEditorCustomData>()
+                {
+                    { "data1", new LevelEditorCustomData(typeof(string), false, "Hello world") },
+                    { "data2", new LevelEditorCustomData(typeof(int), false, 42) }
+                }
             };
         }
 

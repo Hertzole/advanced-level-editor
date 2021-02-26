@@ -9,9 +9,9 @@ namespace Hertzole.ALE
     {
         public override void Serialize(ref MessagePackWriter writer, LevelEditorPropertyData value, MessagePackSerializerOptions options)
         {
-            if (!LevelEditorSerializer.HasType(value.type))
+            if (!LevelEditorSerializer.HasType(value.type, value.isArray))
             {
-                Debug.LogError($"{value.typeName} is not a supported type.");
+                Debug.LogError($"{value.type} is not a supported type.");
                 writer.WriteNil();
                 return;
             }
@@ -20,7 +20,6 @@ namespace Hertzole.ALE
             writer.WriteInt32(value.id);
             options.Resolver.GetFormatterWithVerify<string>().Serialize(ref writer, value.typeName, options);
             options.Resolver.GetFormatterWithVerify<bool>().Serialize(ref writer, value.isArray, options);
-            Debug.Log(value.type);
             options.Resolver.GetFormatterDynamic(value.type).SerializeObject(ref writer, value.value, options);
         }
 

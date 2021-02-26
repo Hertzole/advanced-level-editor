@@ -113,14 +113,14 @@ namespace MessagePack.Resolvers
         /// </summary>
         /// <typeparam name="T">The type of value to be serialized or deserialized.</typeparam>
         /// <returns>A formatter, if this resolver supplies one for type <typeparamref name="T"/>; otherwise <c>null</c>.</returns>
-        public MessagePackFormatter<T> GetFormatter<T>()
+        public MessagePackFormatter GetFormatter<T>()
         {
             return Cache<T>.Formatter;
         }
 
         private static class Cache<T>
         {
-            public static readonly MessagePackFormatter<T> Formatter;
+            public static readonly MessagePackFormatter Formatter;
 
             static Cache()
             {
@@ -136,7 +136,7 @@ namespace MessagePack.Resolvers
 
                 foreach (IFormatterResolver item in Instance.resolvers)
                 {
-                    MessagePackFormatter<T> f = item.GetFormatter<T>();
+                    MessagePackFormatter f = item.GetFormatter<T>();
                     if (f != null)
                     {
                         Formatter = f;

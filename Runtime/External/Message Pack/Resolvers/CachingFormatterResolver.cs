@@ -16,7 +16,7 @@ namespace MessagePack.Resolvers
         private readonly ThreadsafeTypeKeyHashTable<MessagePackFormatter> formatters = new ThreadsafeTypeKeyHashTable<MessagePackFormatter>();
 
         /// <inheritdoc />
-        public MessagePackFormatter<T> GetFormatter<T>()
+        public MessagePackFormatter GetFormatter<T>()
         {
             if (!formatters.TryGetValue(typeof(T), out MessagePackFormatter formatter))
             {

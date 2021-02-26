@@ -19,7 +19,7 @@ namespace MessagePack.Unity.Extension
         {
         }
 
-        public MessagePackFormatter<T> GetFormatter<T>()
+        public MessagePackFormatter GetFormatter<T>()
         {
             return FormatterCache<T>.Formatter;
         }
@@ -46,7 +46,7 @@ namespace MessagePack.Unity.Extension
         {
         }
 
-        public MessagePackFormatter<T> GetFormatter<T>()
+        public MessagePackFormatter GetFormatter<T>()
         {
             return FormatterCache<T>.Formatter;
         }
@@ -60,7 +60,7 @@ namespace MessagePack.Unity.Extension
                 Formatter = (MessagePackFormatter<T>)UnityBlitWithPrimitiveResolverGetFormatterHelper.GetFormatter(typeof(T));
                 if (Formatter == null)
                 {
-                    Formatter = UnityBlitResolver.Instance.GetFormatter<T>();
+                    Formatter = (MessagePackFormatter<T>)UnityBlitResolver.Instance.GetFormatter<T>();
                 }
             }
         }

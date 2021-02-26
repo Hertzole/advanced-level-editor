@@ -1,6 +1,4 @@
-﻿using UnityEngine;
-
-namespace MessagePack.Formatters
+﻿namespace MessagePack.Formatters
 {
     public abstract class MessagePackFormatter
     {
@@ -13,7 +11,6 @@ namespace MessagePack.Formatters
     {
         public sealed override void SerializeObject(ref MessagePackWriter writer, object value, MessagePackSerializerOptions options)
         {
-            Debug.Log(value);
             Serialize(ref writer, (T)value, options);
         }
 

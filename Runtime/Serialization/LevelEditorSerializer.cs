@@ -1,5 +1,4 @@
 ﻿using Hertzole.ALE;
-using MessagePack;
 using MessagePack.Formatters;
 using MessagePack.Unity;
 using System;
@@ -70,26 +69,13 @@ public static class LevelEditorSerializer
         return typeMap.ContainsKey(typeName);
     }
 
-    public static bool HasType(Type type)
+    public static bool HasType(Type type, bool isArray)
     {
+        if (isArray)
+        {
+            type = type.GetElementType();
+        }
+
         return HasType(type.FullName);
-    }
-
-    public static void Serialize(ref MessagePackWriter writer, Type type, object value, bool isArray, MessagePackSerializerOptions options)
-    {
-        if (formatters.TryGetValue(type, out MessagePackFormatter formatter))
-        {
-            formatter.SerializeObject(ref writer, value, options);
-        }
-    }
-
-    public static object Deserialize(ref MessagePackReader reader, Type type, bool isArray, MessagePackSerializerOptions options)
-    {
-        if (!formatters.TryGetValue(type, out MessagePackFormatter formatter))
-        {
-            return null;
-        }
-
-        return formatter.DeserializeObject(ref reader, options);
     }
 }
