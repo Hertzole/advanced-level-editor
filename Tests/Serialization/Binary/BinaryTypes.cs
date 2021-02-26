@@ -4,9 +4,9 @@
     {
         public override T SerializeAndDeserialize<T>(T value)
         {
-            byte[] bytes = LevelEditorBinarySerializer.Serialize(value);
+            byte[] bytes = LevelEditorSerializer.SerializeBinary(value);
 
-            return LevelEditorBinarySerializer.Deserialize<T>(bytes);
+            return LevelEditorSerializer.DeserializeBinary<T>(bytes);
         }
     }
 }

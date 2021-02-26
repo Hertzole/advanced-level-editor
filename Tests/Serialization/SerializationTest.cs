@@ -9,13 +9,19 @@ namespace Hertzole.ALE.Tests
         [Test]
         public void SaveDataSerialization()
         {
-            SerializeTest(BuildSaveData());
+            LevelEditorSaveData data = BuildSaveData();
+
+            LevelEditorSaveData newData = SerializeAndDeserialize(data);
+            Assert.AreEqual(data, newData);
         }
 
         [Test]
         public void CustomDataSerialization()
         {
-            SerializeTest(BuildCustomData());
+            LevelEditorCustomData data = BuildCustomData();
+
+            LevelEditorCustomData newData = SerializeAndDeserialize(data);
+            Assert.AreEqual(data, newData);
         }
 
         [Test]
@@ -29,25 +35,35 @@ namespace Hertzole.ALE.Tests
 
             LevelEditorSerializer.RegisterType<string[]>();
 
-            SerializeTest(data);
+            LevelEditorCustomData newData = SerializeAndDeserialize(data);
+            Assert.AreEqual(data, newData);
         }
 
         [Test]
         public void ObjectDataSerialization()
         {
-            SerializeTest(BuildObjectData());
+            LevelEditorObjectData data = BuildObjectData();
+
+            LevelEditorObjectData newData = SerializeAndDeserialize(data);
+            Assert.AreEqual(data, newData);
         }
 
         [Test]
         public void ComponentDataSerialization()
         {
-            SerializeTest(BuildComponentData());
+            LevelEditorComponentData data = BuildComponentData();
+
+            LevelEditorComponentData newData = SerializeAndDeserialize(data);
+            Assert.AreEqual(data, newData);
         }
 
         [Test]
         public void PropertyDataSerialization()
         {
-            SerializeTest(BuildPropertyData());
+            LevelEditorPropertyData data = BuildPropertyData();
+
+            LevelEditorPropertyData newData = SerializeAndDeserialize(data);
+            Assert.AreEqual(data, newData);
         }
 
         [Test]
@@ -58,7 +74,8 @@ namespace Hertzole.ALE.Tests
             data.type = typeof(string);
             data.value = "Hello world";
 
-            SerializeTest(data);
+            LevelEditorPropertyData newData = SerializeAndDeserialize(data);
+            Assert.AreEqual(data, newData);
         }
 
         [Test]
@@ -69,7 +86,8 @@ namespace Hertzole.ALE.Tests
             data.type = typeof(int);
             data.value = 65;
 
-            SerializeTest(data);
+            LevelEditorPropertyData newData = SerializeAndDeserialize(data);
+            Assert.AreEqual(data, newData);
         }
 
         [Test]
@@ -80,7 +98,8 @@ namespace Hertzole.ALE.Tests
             data.type = typeof(Component);
             data.value = null;
 
-            SerializeTest(data);
+            LevelEditorPropertyData newData = SerializeAndDeserialize(data);
+            Assert.AreEqual(data, newData);
         }
 
         [Test]
@@ -94,10 +113,11 @@ namespace Hertzole.ALE.Tests
 
             LevelEditorSerializer.RegisterType<string[]>();
 
-            SerializeTest(data);
+            LevelEditorPropertyData newData = SerializeAndDeserialize(data);
+            Assert.AreEqual(data, newData);
         }
 
-        protected abstract void SerializeTest<T>(T data);
+        protected abstract T SerializeAndDeserialize<T>(T data);
 
         public static LevelEditorSaveData BuildSaveData()
         {

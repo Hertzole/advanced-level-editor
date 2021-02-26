@@ -81,7 +81,7 @@ namespace Hertzole.ALE
                 return new LevelEditorSaveData();
             }
 
-            data = LevelEditorBinarySerializer.Deserialize<LevelEditorSaveData>(File.ReadAllBytes(path));
+            data = LevelEditorSerializer.DeserializeBinary<LevelEditorSaveData>(File.ReadAllBytes(path));
 
             //#if ALE_JSON
             //            if (saveAsJson)
@@ -169,7 +169,7 @@ namespace Hertzole.ALE
             //                //File.WriteAllBytes(saveLocation, data);
             //            }
 
-            byte[] bytes = LevelEditorBinarySerializer.Serialize(saveData);
+            byte[] bytes = LevelEditorSerializer.SerializeBinary(saveData);
             File.WriteAllBytes(path, bytes);
 
             OnLevelSaved?.Invoke(this, new LevelEventArgs(saveData));
