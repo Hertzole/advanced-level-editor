@@ -28,7 +28,7 @@ namespace Hertzole.ALE
 
         public bool Equals(LevelEditorPropertyData other)
         {
-            return isArray == other.isArray && id == other.id && typeName == other.typeName && ((value == null && other.value == null) || value.Equals(other.value));
+            return isArray == other.isArray && id == other.id && typeName == other.typeName && value.AdvancedEquals(other.value);
         }
 
         public override int GetHashCode()

@@ -18,8 +18,8 @@ namespace Hertzole.ALE
 
             writer.WriteArrayHeader(4);
             writer.WriteInt32(value.id);
-            options.Resolver.GetFormatterWithVerify<string>().Serialize(ref writer, value.typeName, options);
             options.Resolver.GetFormatterWithVerify<bool>().Serialize(ref writer, value.isArray, options);
+            options.Resolver.GetFormatterWithVerify<string>().Serialize(ref writer, value.typeName, options);
             options.Resolver.GetFormatterDynamic(value.type).SerializeObject(ref writer, value.value, options);
         }
 
@@ -47,11 +47,11 @@ namespace Hertzole.ALE
                         id = reader.ReadInt32();
                         break;
                     case 1:
-                        typeName = options.Resolver.GetFormatterWithVerify<string>().Deserialize(ref reader, options);
-                        type = LevelEditorSerializer.GetType(typeName);
+                        isArray = options.Resolver.GetFormatterWithVerify<bool>().Deserialize(ref reader, options);
                         break;
                     case 2:
-                        isArray = options.Resolver.GetFormatterWithVerify<bool>().Deserialize(ref reader, options);
+                        typeName = options.Resolver.GetFormatterWithVerify<string>().Deserialize(ref reader, options);
+                        type = LevelEditorSerializer.GetType(typeName);
                         break;
                     case 3:
                         value = options.Resolver.GetFormatterDynamic(type).DeserializeObject(ref reader, options);

@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections;
 using UnityEngine;
 
 namespace Hertzole.ALE
@@ -103,6 +104,31 @@ namespace Hertzole.ALE
             {
                 exists?.Invoke(t);
             }
+        }
+
+        public static bool AdvancedEquals(this object a, object b)
+        {
+            if (a == null && b == null)
+            {
+                return true;
+            }
+
+            if (a == null)
+            {
+                return false;
+            }
+
+            if (a.Equals(b))
+            {
+                return true;
+            }
+
+            if (a is ICollection ac && b is ICollection bc && ac.IsSameAs(bc))
+            {
+                return true;
+            }
+
+            return false;
         }
     }
 }

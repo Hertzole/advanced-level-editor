@@ -1,14 +1,10 @@
-﻿using Hertzole.ALE;
-using MessagePack.Formatters;
-using MessagePack.Unity;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using UnityEngine;
 
 public static class LevelEditorSerializer
 {
     private static readonly Dictionary<string, Type> typeMap = new Dictionary<string, Type>();
-    private static readonly Dictionary<Type, MessagePackFormatter> formatters = new Dictionary<Type, MessagePackFormatter>();
 
     private static bool registeredTypes = false;
 
@@ -20,38 +16,37 @@ public static class LevelEditorSerializer
             return;
         }
 
-        RegisterType<byte>(ByteFormatter.Instance);
-        RegisterType<sbyte>(SByteFormatter.Instance);
-        RegisterType<short>(Int16Formatter.Instance);
-        RegisterType<ushort>(UInt16Formatter.Instance);
-        RegisterType<int>(Int32Formatter.Instance);
-        RegisterType<uint>(UInt32Formatter.Instance);
-        RegisterType<long>(Int64Formatter.Instance);
-        RegisterType<ulong>(UInt64Formatter.Instance);
-        RegisterType<float>(SingleFormatter.Instance);
-        RegisterType<double>(DoubleFormatter.Instance);
-        RegisterType<decimal>(DecimalFormatter.Instance);
-        RegisterType<string>(NullableStringFormatter.Instance);
-        RegisterType<char>(CharFormatter.Instance);
-        RegisterType<bool>(BooleanFormatter.Instance);
-        RegisterType<Vector2>(new Vector2Formatter());
-        RegisterType<Vector2Int>(new Vector2IntFormatter());
-        RegisterType<Vector3>(new Vector3Formatter());
-        RegisterType<Vector3Int>(new Vector3IntFormatter());
-        RegisterType<Vector4>(new Vector4Formatter());
-        RegisterType<Quaternion>(new QuaternionFormatter());
-        RegisterType<Rect>(new RectFormatter());
-        RegisterType<Color>(new ColorFormatter());
-        RegisterType<Color32>(new Color32Formatter());
-        RegisterType<Component>(new ComponentFormatter());
+        RegisterType<byte>();
+        RegisterType<sbyte>();
+        RegisterType<short>();
+        RegisterType<ushort>();
+        RegisterType<int>();
+        RegisterType<uint>();
+        RegisterType<long>();
+        RegisterType<ulong>();
+        RegisterType<float>();
+        RegisterType<double>();
+        RegisterType<decimal>();
+        RegisterType<string>();
+        RegisterType<char>();
+        RegisterType<bool>();
+        RegisterType<Vector2>();
+        RegisterType<Vector2Int>();
+        RegisterType<Vector3>();
+        RegisterType<Vector3Int>();
+        RegisterType<Vector4>();
+        RegisterType<Quaternion>();
+        RegisterType<Rect>();
+        RegisterType<Color>();
+        RegisterType<Color32>();
+        RegisterType<Component>();
 
         registeredTypes = true;
     }
 
-    public static void RegisterType<T>(MessagePackFormatter formatter)
+    public static void RegisterType<T>()
     {
         typeMap[typeof(T).FullName] = typeof(T);
-        formatters[typeof(T)] = formatter;
     }
 
     public static Type GetType(string typeName)

@@ -12,8 +12,8 @@ namespace Hertzole.ALE
 
         public LevelEditorCustomData(Type type, bool isArray, object value)
         {
-            typeName = type.IsArray ? type.GetElementType().FullName : type.FullName;
-            this.type = type.IsArray ? type.GetElementType() : type;
+            typeName = type.FullName;
+            this.type = type;
             this.isArray = isArray;
             this.value = value;
         }
@@ -25,7 +25,7 @@ namespace Hertzole.ALE
 
         public bool Equals(LevelEditorCustomData other)
         {
-            return typeName == other.typeName && isArray == other.isArray && EqualityComparer<object>.Default.Equals(value, other.value);
+            return typeName == other.typeName && isArray == other.isArray && value.AdvancedEquals(other.value);
         }
 
         public override int GetHashCode()
@@ -45,6 +45,11 @@ namespace Hertzole.ALE
         public static bool operator !=(LevelEditorCustomData left, LevelEditorCustomData right)
         {
             return !(left == right);
+        }
+
+        public override string ToString()
+        {
+            return $"{nameof(LevelEditorCustomData)} ({typeName}, {isArray}, {type}, {value})";
         }
     }
 }
