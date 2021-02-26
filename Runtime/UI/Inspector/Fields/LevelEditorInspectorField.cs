@@ -102,7 +102,8 @@ namespace Hertzole.ALE
 
         public virtual bool SupportsType(ExposedProperty property)
         {
-            return SupportsType(property.Type, property.IsArray);
+            //TODO: Support arrays
+            return SupportsType(property.Type, property.Type.IsArray);
         }
 
         public virtual bool SupportsType(Type type, bool isArray)

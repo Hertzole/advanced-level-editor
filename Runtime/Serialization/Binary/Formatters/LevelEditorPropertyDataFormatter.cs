@@ -9,16 +9,15 @@ namespace Hertzole.ALE
     {
         public override void Serialize(ref MessagePackWriter writer, LevelEditorPropertyData value, MessagePackSerializerOptions options)
         {
-            if (!LevelEditorSerializer.HasType(value.type, value.isArray))
+            if (!LevelEditorSerializer.HasType(value.type))
             {
                 Debug.LogError($"{value.type} is not a supported type.");
                 writer.WriteNil();
                 return;
             }
 
-            writer.WriteArrayHeader(4);
+            writer.WriteArrayHeader(3);
             writer.WriteInt32(value.id);
-            options.Resolver.GetFormatterWithVerify<bool>().Serialize(ref writer, value.isArray, options);
             options.Resolver.GetFormatterWithVerify<string>().Serialize(ref writer, value.typeName, options);
             options.Resolver.GetFormatterDynamic(value.type).SerializeObject(ref writer, value.value, options);
         }
@@ -34,7 +33,6 @@ namespace Hertzole.ALE
 
             int id = -1;
             string typeName = null;
-            bool isArray = false;
             object value = null;
             Type type = null;
 
@@ -47,13 +45,10 @@ namespace Hertzole.ALE
                         id = reader.ReadInt32();
                         break;
                     case 1:
-                        isArray = options.Resolver.GetFormatterWithVerify<bool>().Deserialize(ref reader, options);
-                        break;
-                    case 2:
                         typeName = options.Resolver.GetFormatterWithVerify<string>().Deserialize(ref reader, options);
                         type = LevelEditorSerializer.GetType(typeName);
                         break;
-                    case 3:
+                    case 2:
                         value = options.Resolver.GetFormatterDynamic(type).DeserializeObject(ref reader, options);
                         break;
                     default:
@@ -63,7 +58,7 @@ namespace Hertzole.ALE
             }
 
             reader.Depth--;
-            return new LevelEditorPropertyData() { id = id, typeName = typeName, isArray = isArray, value = value, type = type };
+            return new LevelEditorPropertyData() { id = id, typeName = typeName, value = value, type = type };
         }
     }
 }
