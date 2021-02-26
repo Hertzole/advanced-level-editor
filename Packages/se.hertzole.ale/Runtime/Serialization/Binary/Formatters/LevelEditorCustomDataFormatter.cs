@@ -11,7 +11,7 @@ namespace Hertzole.ALE.Binary
             writer.WriteArrayHeader(3);
             options.Resolver.GetFormatterWithVerify<string>().Serialize(ref writer, value.typeName, options);
             options.Resolver.GetFormatterWithVerify<bool>().Serialize(ref writer, value.isArray, options);
-            LevelEditorSerializer.Serialize(ref writer, value.type, value.value, value.isArray, options);
+            options.Resolver.GetFormatterDynamic(value.type).SerializeObject(ref writer, value.value, options);
         }
 
         public override LevelEditorCustomData Deserialize(ref MessagePackReader reader, MessagePackSerializerOptions options)
@@ -36,7 +36,7 @@ namespace Hertzole.ALE.Binary
                         isArray = options.Resolver.GetFormatterWithVerify<bool>().Deserialize(ref reader, options);
                         break;
                     case 2:
-                        value = LevelEditorSerializer.Deserialize(ref reader, type, isArray, options);
+                        value = options.Resolver.GetFormatterDynamic(type).DeserializeObject(ref reader, options);
                         break;
                     default:
                         reader.Skip();

@@ -17,7 +17,7 @@ namespace MessagePack.Resolvers
         {
         }
 
-        public MessagePackFormatter<T> GetFormatter<T>()
+        public MessagePackFormatter GetFormatter<T>()
         {
             return FormatterCache<T>.Formatter;
         }

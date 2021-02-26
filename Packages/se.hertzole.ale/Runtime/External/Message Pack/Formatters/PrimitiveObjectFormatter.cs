@@ -282,7 +282,7 @@ namespace MessagePack.Formatters
                             return Array.Empty<object>();
                         }
 
-                        MessagePackFormatter<object> objectFormatter = resolver.GetFormatter<object>();
+                        MessagePackFormatter<object> objectFormatter = resolver.GetFormatterWithVerify<object>();
                         object[] array = new object[length];
                         options.Security.DepthStep(ref reader);
                         try
@@ -325,7 +325,7 @@ namespace MessagePack.Formatters
 
         protected virtual object DeserializeMap(ref MessagePackReader reader, int length, MessagePackSerializerOptions options)
         {
-            MessagePackFormatter<object> objectFormatter = options.Resolver.GetFormatter<object>();
+            MessagePackFormatter<object> objectFormatter = options.Resolver.GetFormatterWithVerify<object>();
             Dictionary<object, object> dictionary = new Dictionary<object, object>(length, options.Security.GetEqualityComparer<object>());
             for (int i = 0; i < length; i++)
             {

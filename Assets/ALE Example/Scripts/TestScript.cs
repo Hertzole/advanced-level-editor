@@ -1,8 +1,10 @@
 ﻿#define temp
 
 using Hertzole.ALE;
+using MessagePack;
 using System;
 using UnityEngine;
+using UnityEngine.Scripting;
 
 [Serializable]
 public class MyCustomStruct : IExposedToLevelEditor
@@ -162,6 +164,12 @@ public class TestScript : MonoBehaviour, ILevelEditorGizmos
         {
             LevelEditorGizmos.DrawLine(transform.position, otherObject.position, Color.red);
         }
+    }
+
+    [Preserve]
+    private static void AoTTest()
+    {
+        MessagePackSerializerOptions.Standard.Resolver.GetFormatter<decimal>();
     }
 #pragma warning restore CS0414
 }

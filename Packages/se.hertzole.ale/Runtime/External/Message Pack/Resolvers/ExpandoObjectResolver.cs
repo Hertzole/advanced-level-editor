@@ -41,7 +41,7 @@ namespace MessagePack.Resolvers
             protected override object DeserializeMap(ref MessagePackReader reader, int length, MessagePackSerializerOptions options)
             {
                 MessagePackFormatter<string> keyFormatter = options.Resolver.GetFormatterWithVerify<string>();
-                MessagePackFormatter<object> objectFormatter = options.Resolver.GetFormatter<object>();
+                MessagePackFormatter<object> objectFormatter = options.Resolver.GetFormatterWithVerify<object>();
                 IDictionary<string, object> dictionary = new ExpandoObject();
                 for (int i = 0; i < length; i++)
                 {

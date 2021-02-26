@@ -8,10 +8,10 @@ namespace Hertzole.ALE
     {
         public override void Serialize(ref MessagePackWriter writer, LevelEditorSaveData value, MessagePackSerializerOptions options)
         {
-            writer.WriteArrayHeader(2);
+            writer.WriteArrayHeader(3);
             options.Resolver.GetFormatterWithVerify<string>().Serialize(ref writer, value.name, options);
             options.Resolver.GetFormatterWithVerify<List<LevelEditorObjectData>>().Serialize(ref writer, value.objects, options);
-            //options.Resolver.GetFormatterWithVerify<Dictionary<string, LevelEditorCustomData>>().Serialize(ref writer, value.customData, options);
+            options.Resolver.GetFormatterWithVerify<Dictionary<string, LevelEditorCustomData>>().Serialize(ref writer, value.customData, options);
         }
 
         public override LevelEditorSaveData Deserialize(ref MessagePackReader reader, MessagePackSerializerOptions options)
@@ -33,9 +33,9 @@ namespace Hertzole.ALE
                     case 1:
                         objects = options.Resolver.GetFormatterWithVerify<List<LevelEditorObjectData>>().Deserialize(ref reader, options);
                         break;
-                    //case 2:
-                    //    customData = options.Resolver.GetFormatterWithVerify<Dictionary<string, LevelEditorCustomData>>().Deserialize(ref reader, options);
-                    //    break;
+                    case 2:
+                        customData = options.Resolver.GetFormatterWithVerify<Dictionary<string, LevelEditorCustomData>>().Deserialize(ref reader, options);
+                        break;
                     default:
                         reader.Skip();
                         break;

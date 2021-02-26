@@ -12,21 +12,21 @@ namespace Hertzole.ALE.Binary
 
         private LevelEditorResolver() { }
 
-        public MessagePackFormatter<T> GetFormatter<T>()
+        public MessagePackFormatter GetFormatter<T>()
         {
             return FormatterCache<T>.Formatter;
         }
 
         private static class FormatterCache<T>
         {
-            internal static readonly MessagePackFormatter<T> Formatter;
+            internal static readonly MessagePackFormatter Formatter;
 
             static FormatterCache()
             {
-                object f = LevelEditorResolverGetFormatterHelper.GetFormatter(typeof(T));
+                MessagePackFormatter f = LevelEditorResolverGetFormatterHelper.GetFormatter(typeof(T));
                 if (f != null)
                 {
-                    Formatter = (MessagePackFormatter<T>)f;
+                    Formatter = f;
                 }
             }
         }
@@ -52,7 +52,7 @@ namespace Hertzole.ALE.Binary
                 };
             }
 
-            internal static object GetFormatter(Type t)
+            internal static MessagePackFormatter GetFormatter(Type t)
             {
                 if (!lookup.TryGetValue(t, out int key))
                 {
@@ -78,7 +78,7 @@ namespace Hertzole.ALE.Binary
                     case 7:
                         return new ArrayFormatter<LevelEditorPropertyData>();
                     case 8:
-                        return new DictionaryFormatter<string, LevelEditorPropertyData>();
+                        return new DictionaryFormatter<string, LevelEditorCustomData>();
                     case 9:
                         return new ComponentFormatter();
                     default:

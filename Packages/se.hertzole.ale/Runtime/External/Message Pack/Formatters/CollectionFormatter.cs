@@ -8,11 +8,9 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
-using UnityEngine.Scripting;
 
 #pragma warning disable SA1649 // File name should match first type name
 
-[assembly: Preserve]
 namespace MessagePack.Formatters
 {
     public sealed class ArrayFormatter<T> : MessagePackFormatter<T[]>

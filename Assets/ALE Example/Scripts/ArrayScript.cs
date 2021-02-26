@@ -1,10 +1,11 @@
-﻿using UnityEngine;
+﻿using Hertzole.ALE;
+using UnityEngine;
 
 public class ArrayScript : MonoBehaviour
 {
-    //[SerializeField]
-    //[ExposeToLevelEditor(0)]
-    //private string[] stringTest = null;
+    [SerializeField]
+    [ExposeToLevelEditor(0, visible = false)]
+    private string[] stringTest = null;
     //[SerializeField]
     //[ExposeToLevelEditor(2)]
     //private MyCustomStruct[] testArray = null;

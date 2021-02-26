@@ -79,7 +79,7 @@ namespace MessagePack.Resolvers
                 this.subResolvers = subResolvers ?? throw new ArgumentNullException(nameof(subResolvers));
             }
 
-            public MessagePackFormatter<T> GetFormatter<T>()
+            public MessagePackFormatter GetFormatter<T>()
             {
                 if (!formattersCache.TryGetValue(typeof(T), out MessagePackFormatter formatter))
                 {
