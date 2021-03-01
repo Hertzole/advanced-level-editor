@@ -1,49 +1,10 @@
 ﻿using MessagePack;
 using System;
 using System.Collections.Generic;
-using UnityEngine;
 
 public static class LevelEditorSerializer
 {
     private static readonly Dictionary<string, Type> typeMap = new Dictionary<string, Type>();
-
-    private static bool registeredTypes = false;
-
-    [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
-    private static void ReigsterTypes()
-    {
-        if (registeredTypes)
-        {
-            return;
-        }
-
-        RegisterType<byte>();
-        RegisterType<sbyte>();
-        RegisterType<short>();
-        RegisterType<ushort>();
-        RegisterType<int>();
-        RegisterType<uint>();
-        RegisterType<long>();
-        RegisterType<ulong>();
-        RegisterType<float>();
-        RegisterType<double>();
-        RegisterType<decimal>();
-        RegisterType<string>();
-        RegisterType<char>();
-        RegisterType<bool>();
-        RegisterType<Vector2>();
-        RegisterType<Vector2Int>();
-        RegisterType<Vector3>();
-        RegisterType<Vector3Int>();
-        RegisterType<Vector4>();
-        RegisterType<Quaternion>();
-        RegisterType<Rect>();
-        RegisterType<Color>();
-        RegisterType<Color32>();
-        RegisterType<Component>();
-
-        registeredTypes = true;
-    }
 
     public static void RegisterType<T>()
     {

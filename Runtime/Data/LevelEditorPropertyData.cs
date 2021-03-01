@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using UnityEngine;
 
 namespace Hertzole.ALE
@@ -13,9 +14,28 @@ namespace Hertzole.ALE
         public LevelEditorPropertyData(ExposedProperty property, IExposedToLevelEditor exposedComponent)
         {
             id = property.ID;
-            value = exposedComponent.GetValue(property.ID);
+            value = exposedComponent == null ? default : exposedComponent.GetValue(property.ID);
             // Used for Unity references. They need to be converted to a simple component.
-            type = property.Type.IsSubclassOf(typeof(Component)) ? typeof(Component) : property.Type;
+            type = property.Type;
+            if (property is ExposedArray array)
+            {
+                if (array.ElementType.IsSubclassOf(typeof(Component)))
+                {
+                    if (type.IsGenericType && (type.GetGenericTypeDefinition() == typeof(List<>)))
+                    {
+                        //type = typeof(List<>).MakeGenericType(typeof(Component));
+                        throw new NotSupportedException($"List<{array.ElementType}> is not supported. For collection of Unity objects, use array instead.");
+                    }
+                    else
+                    {
+                        type = typeof(Component).MakeArrayType();
+                    }
+                }
+            }
+            else
+            {
+                type = property.Type.IsSubclassOf(typeof(Component)) ? typeof(Component) : property.Type;
+            }
             typeName = type.FullName;
         }
 

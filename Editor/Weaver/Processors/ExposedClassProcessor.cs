@@ -172,6 +172,7 @@ namespace Hertzole.ALE.Editor
                         }
 
                         exposedFields.Add(new FieldOrProperty(attribute) { field = type.Fields[i], order = customOrder });
+                        RegisterTypeProcessor.AddType(type.Fields[i].FieldType);
                     }
                 }
             }
@@ -220,6 +221,7 @@ namespace Hertzole.ALE.Editor
                         }
 
                         exposedFields.Add(new FieldOrProperty(attribute) { property = type.Properties[i], order = customOrder });
+                        RegisterTypeProcessor.AddType(type.Properties[i].PropertyType);
                     }
                 }
             }
