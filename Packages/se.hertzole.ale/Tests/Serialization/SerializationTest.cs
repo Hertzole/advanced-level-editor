@@ -31,7 +31,6 @@ namespace Hertzole.ALE.Tests
             data.type = typeof(string[]);
             data.typeName = typeof(string[]).FullName;
             data.value = new string[] { "Hello", "World" };
-            data.isArray = true;
 
             LevelEditorSerializer.RegisterType<string[]>();
 
@@ -217,15 +216,15 @@ namespace Hertzole.ALE.Tests
                 objects = new List<LevelEditorObjectData>() { BuildObjectData(), BuildObjectData() },
                 customData = new Dictionary<string, LevelEditorCustomData>()
                 {
-                    { "data1", new LevelEditorCustomData(typeof(string), false, "Hello world") },
-                    { "data2", new LevelEditorCustomData(typeof(int), false, 42) }
+                    { "data1", new LevelEditorCustomData(typeof(string), "Hello world") },
+                    { "data2", new LevelEditorCustomData(typeof(int), 42) }
                 }
             };
         }
 
         public static LevelEditorCustomData BuildCustomData()
         {
-            return new LevelEditorCustomData(typeof(string), false, "Hello world");
+            return new LevelEditorCustomData(typeof(string), "Hello world");
         }
 
         public static LevelEditorObjectData BuildObjectData()
