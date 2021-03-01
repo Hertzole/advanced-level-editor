@@ -1,8 +1,10 @@
-﻿using Mono.Cecil;
+﻿using MessagePack.Resolvers;
+using Mono.Cecil;
 using Mono.Cecil.Cil;
 using System;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.Scripting;
 
 namespace Hertzole.ALE.Editor
 {
@@ -84,8 +86,8 @@ namespace Hertzole.ALE.Editor
             }
 
             TypeDefinition generatedClass = CreateClass();
-            MethodDefinition registerMethod = CreateMethod();
-            generatedClass.Methods.Add(registerMethod);
+            generatedClass.Methods.Add(CreateRegisterMethod());
+            generatedClass.Methods.Add(CreateAOTPreserveMethod());
 
             assembly.MainModule.Types.Add(generatedClass);
         }
@@ -99,7 +101,7 @@ namespace Hertzole.ALE.Editor
             return type;
         }
 
-        private static MethodDefinition CreateMethod()
+        private static MethodDefinition CreateRegisterMethod()
         {
             MethodDefinition method = new MethodDefinition("Generated__RegisterExposedTypes",
                 MethodAttributes.Private | MethodAttributes.HideBySig | MethodAttributes.Static, assembly.MainModule.ImportReference(typeof(void)));
@@ -119,6 +121,33 @@ namespace Hertzole.ALE.Editor
                 GenericInstanceMethod m = new GenericInstanceMethod(registerType);
                 m.GenericArguments.Add(types[i]);
                 il.Emit(OpCodes.Call, m);
+            }
+
+            il.Emit(OpCodes.Ret);
+
+            return method;
+        }
+
+        private static MethodDefinition CreateAOTPreserveMethod()
+        {
+            MethodDefinition method = new MethodDefinition("AOT__Preserve__Generated",
+                MethodAttributes.Private | MethodAttributes.HideBySig | MethodAttributes.Static,
+                assembly.MainModule.ImportReference(typeof(void)));
+
+            CustomAttribute attribute = new CustomAttribute(assembly.MainModule.ImportReference(typeof(PreserveAttribute).GetConstructor(Type.EmptyTypes)));
+            method.CustomAttributes.Add(attribute);
+
+            ILProcessor il = method.Body.GetILProcessor();
+            FieldReference instance = assembly.MainModule.ImportReference(typeof(StaticCompositeResolver).GetField("Instance"));
+            MethodReference getFormatter = assembly.MainModule.ImportReference(typeof(StaticCompositeResolver).GetMethod("GetFormatter"));
+
+            for (int i = 0; i < types.Count; i++)
+            {
+                il.Emit(OpCodes.Ldsfld, instance);
+                GenericInstanceMethod m = new GenericInstanceMethod(getFormatter);
+                m.GenericArguments.Add(types[i]);
+                il.Emit(OpCodes.Callvirt, m);
+                il.Emit(OpCodes.Pop);
             }
 
             il.Emit(OpCodes.Ret);

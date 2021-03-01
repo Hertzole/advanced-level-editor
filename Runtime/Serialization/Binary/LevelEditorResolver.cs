@@ -6,6 +6,7 @@ using MessagePack.Unity.Extension;
 using System;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.Scripting;
 
 namespace Hertzole.ALE.Binary
 {
@@ -110,6 +111,17 @@ namespace Hertzole.ALE.Binary
                         return null;
                 }
             }
+        }
+
+        // Used only for making sure methods are generated in AOT.
+        [Preserve]
+        private static void AOTPreserve()
+        {
+            StaticCompositeResolver.Instance.GetFormatter<LevelEditorSaveData>();
+            StaticCompositeResolver.Instance.GetFormatter<LevelEditorObjectData>();
+            StaticCompositeResolver.Instance.GetFormatter<LevelEditorComponentData>();
+            StaticCompositeResolver.Instance.GetFormatter<LevelEditorPropertyData>();
+            StaticCompositeResolver.Instance.GetFormatter<LevelEditorCustomData>();
         }
     }
 }
