@@ -17,9 +17,9 @@ In the future, the same will magic will be applied to much more. It's coming eve
 ALE is still in EARLY development. There's still a lot to do and it's nowhere close to finish. But it should be useable now. Anyways, here are some things that I need to do and the things that are finished.
 #### Required
 What needs to be done before 1.0.0 verified.  
-- [ ] Binary serialization and deserialization
+- [x] Binary serialization and deserialization
 - [x] JSON serialization and deserialization
-- [ ] Unified serializer for binary and JSON
+- [x] Unified serializer for binary and JSON
 - [x] Editor camera
 - [ ] Full 2D support
 - [ ] Full 3D support
@@ -36,11 +36,11 @@ What needs to be done before 1.0.0 verified.
 - [x] Save all exposed values in play mode
 - [ ] Auto serialize unknown types
 - [ ] Auto expose unknown types
-- [x] Integrate custom serializers
+- [ ] Integrate custom serializers
 - [ ] Menu items
 - [x] Custom component wrappers
 - [x] Serialize arrays
-- [ ] Serialize lists
+- [x] Serialize lists
 - [ ] Serialize dictionary
 - [ ] Resource limit support
 - [ ] Generate resource icons at build time
@@ -118,6 +118,7 @@ ALE itself is licensed under MIT. However, it contains some code that is under U
 Unity Technologies/ProBuilder team - [GILES](https://github.com/Unity-Technologies/giles) for editor camera  
 [judah4](https://github.com/judah4) - [HSV Color Picker](https://github.com/judah4/HSV-Color-Picker-Unity) for color picker  
 The [MirrorNG team](https://github.com/MirrorNG) - Lots of weaving code from [MirrorNG](https://github.com/MirrorNG/MirrorNG)  
-[paulpach](https://github.com/paulpach) - Helped me with weaver related questions
+[paulpach](https://github.com/paulpach) - Helped me with weaver related questions  
+[Yoshifumi Kawai](https://github.com/neuecc) - [MessagePack for C#](https://github.com/neuecc/MessagePack-CSharp) 
 
 ❤ Developed with love and support from [Limit Break Studio](https://main.limitbreakstudio.com/) ❤

@@ -187,7 +187,11 @@ namespace Hertzole.ALE
                         {
                             if (properties[k].typeName == "UnityEngine.Component")
                             {
-                                ILevelEditorObject targetObj = GetObject((int)properties[k].value);
+                                ILevelEditorObject targetObj = null;
+                                if (properties[k].value != null)
+                                {
+                                    targetObj = GetObject((int)properties[k].value);
+                                }
                                 properties[k].value = targetObj ?? null;
                             }
                         }

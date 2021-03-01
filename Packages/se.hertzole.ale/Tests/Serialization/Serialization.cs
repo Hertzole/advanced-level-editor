@@ -1,64 +1,64 @@
-﻿using System.Collections;
-using UnityEngine;
-using UnityEngine.Assertions;
-using UnityEngine.TestTools;
+﻿//using System.Collections;
+//using UnityEngine;
+//using UnityEngine.Assertions;
+//using UnityEngine.TestTools;
 
-namespace Hertzole.ALE.Tests
-{
-    public class Serialization : SerializationTest
-    {
-        private LevelEditorObjectManager objectManager;
-        private LevelEditorSaveManager saveManager;
+//namespace Hertzole.ALE.Tests
+//{
+//    public class Serialization : SerializationTest
+//    {
+//        private LevelEditorObjectManager objectManager;
+//        private LevelEditorSaveManager saveManager;
 
-        protected override void OnSceneSetup()
-        {
-            base.OnSceneSetup();
+//        protected override void OnSceneSetup()
+//        {
+//            base.OnSceneSetup();
 
-            GameObject prefabBase = GameObject.CreatePrimitive(PrimitiveType.Cube);
-            prefabBase.name = "Prefab";
+//            GameObject prefabBase = GameObject.CreatePrimitive(PrimitiveType.Cube);
+//            prefabBase.name = "Prefab";
 
-            LevelEditorResource resource = new LevelEditorResource()
-            {
-                Asset = prefabBase,
-                Name = "Test prefab",
-                ID = "test_prefab",
-            };
+//            LevelEditorResource resource = new LevelEditorResource()
+//            {
+//                Asset = prefabBase,
+//                Name = "Test prefab",
+//                ID = "test_prefab",
+//            };
 
-            LevelEditorResourceList list = ScriptableObject.CreateInstance<LevelEditorResourceList>();
-            list.AddResource(resource);
+//            LevelEditorResourceList list = ScriptableObject.CreateInstance<LevelEditorResourceList>();
+//            list.AddResource(resource);
 
-            objectManager = new GameObject("Object Manager").AddComponent<LevelEditorObjectManager>();
-            objectManager.ResourcesObject = list;
+//            objectManager = new GameObject("Object Manager").AddComponent<LevelEditorObjectManager>();
+//            objectManager.ResourcesObject = list;
 
-            saveManager = new GameObject("Save manager").AddComponent<LevelEditorSaveManager>();
-            saveManager.ObjectManager = objectManager;
+//            saveManager = new GameObject("Save manager").AddComponent<LevelEditorSaveManager>();
+//            saveManager.ObjectManager = objectManager;
 
-            sceneObjects.Add(prefabBase);
-            sceneObjects.Add(objectManager.gameObject);
-            sceneObjects.Add(saveManager.gameObject);
-        }
+//            sceneObjects.Add(prefabBase);
+//            sceneObjects.Add(objectManager.gameObject);
+//            sceneObjects.Add(saveManager.gameObject);
+//        }
 
-        [UnityTest]
-        public IEnumerator SerializeJson()
-        {
-            ILevelEditorObject obj = objectManager.CreateObject("test_prefab", new Vector3(10, 15, 5));
+//        [UnityTest]
+//        public IEnumerator SerializeJson()
+//        {
+//            ILevelEditorObject obj = objectManager.CreateObject("test_prefab", new Vector3(10, 15, 5));
 
-            int instanceId = obj.InstanceID;
+//            int instanceId = obj.InstanceID;
 
-            saveManager.SaveLevel("test_level", FilePath);
+//            saveManager.SaveLevel("test_level", FilePath);
 
-            objectManager.DeleteAllObjects();
+//            objectManager.DeleteAllObjects();
 
-            yield return null;
+//            yield return null;
 
-            saveManager.LoadLevel(FilePath);
+//            saveManager.LoadLevel(FilePath);
 
-            obj = objectManager.GetObject(instanceId);
+//            obj = objectManager.GetObject(instanceId);
 
-            Assert.AreEqual(instanceId, obj.InstanceID);
-            Assert.AreEqual(obj.MyGameObject.transform.position, new Vector3(10, 15, 5));
+//            Assert.AreEqual(instanceId, obj.InstanceID);
+//            Assert.AreEqual(obj.MyGameObject.transform.position, new Vector3(10, 15, 5));
 
-            yield return null;
-        }
-    }
-}
+//            yield return null;
+//        }
+//    }
+//}

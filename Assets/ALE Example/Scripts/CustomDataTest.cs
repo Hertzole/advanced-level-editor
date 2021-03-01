@@ -15,12 +15,12 @@ public class CustomDataTest : MonoBehaviour
 
     private void OnLevelLoaded(object sender, LevelEventArgs e)
     {
-        if (e.Data.TryGetCustomData("test", out int intValue))
+        if (e.TryGetCustomData("test", out int intValue))
         {
             Debug.Log(intValue);
         }
 
-        if (e.Data.TryGetCustomData("messages", out string[] messages))
+        if (e.TryGetCustomData("messages", out string[] messages))
         {
             foreach (string m in messages)
             {
@@ -31,8 +31,8 @@ public class CustomDataTest : MonoBehaviour
 
     private void OnLevelSaving(object sender, LevelSavingLoadingArgs e)
     {
-        e.Data.AddCustomData("test", 32);
-        e.Data.AddCustomData("messages", new string[] { "hello", "world" });
+        e.AddCustomData("test", 32);
+        e.AddCustomData("messages", new string[] { "hello", "world" });
     }
 
     // Update is called once per frame

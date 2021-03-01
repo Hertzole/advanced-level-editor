@@ -10,11 +10,14 @@ namespace Hertzole.ALE.Editor
         {
             //new LevelEditorReaderWriterProcessor(),
             new ExposedClassProcessor(),
+            new ALEMessagePackProcessor(),
         };
 
         public static (bool success, bool dirty) ProcessAssembly(AssemblyDefinition assembly)
         {
             bool dirty = false;
+
+            RegisterTypeProcessor.StartEditing(assembly);
 
             foreach (ModuleDefinition module in assembly.Modules)
             {
@@ -57,6 +60,8 @@ namespace Hertzole.ALE.Editor
                     }
                 }
             }
+
+            RegisterTypeProcessor.EndEditing();
 
             return (true, dirty);
         }

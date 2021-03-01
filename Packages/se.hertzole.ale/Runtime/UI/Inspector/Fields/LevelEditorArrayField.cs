@@ -100,7 +100,7 @@ namespace Hertzole.ALE
                 float height = originalHeight + fieldsSpacing;
                 for (int i = 0; i < valueArray.Length; i++)
                 {
-                    LevelEditorInspectorField field = inspector.GetField(BoundProperty.Type, false, contentHolder);
+                    LevelEditorInspectorField field = inspector.GetField(BoundProperty.Type, contentHolder);
                     field.Depth = Depth + 1;
                     field.Label = $"Element {i}";
                     height += ((RectTransform)field.transform).sizeDelta.y + fieldsSpacing;

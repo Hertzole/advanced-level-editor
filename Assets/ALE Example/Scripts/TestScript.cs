@@ -1,4 +1,6 @@
-﻿#define temp
+﻿#pragma warning disable CS0414
+#pragma warning disable CS0067
+#define temp
 
 using Hertzole.ALE;
 using System;
@@ -7,12 +9,6 @@ using UnityEngine;
 [Serializable]
 public class MyCustomStruct : IExposedToLevelEditor
 {
-    [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
-    private static void AddToJson()
-    {
-        LevelEditorJsonSerializer.AddType<MyCustomStruct>();
-    }
-
     public string str;
     public Vector3 vec;
 
@@ -70,7 +66,6 @@ public class MyCustomStruct : IExposedToLevelEditor
 public class TestScript : MonoBehaviour, ILevelEditorGizmos
 {
 
-#pragma warning disable CS0414
     [SerializeField]
     [ExposeToLevelEditor(0)]
     private string testString = null;
@@ -147,7 +142,18 @@ public class TestScript : MonoBehaviour, ILevelEditorGizmos
     [SerializeField]
     [ExposeToLevelEditor(22)]
     private MyCustomStruct structTest = new MyCustomStruct();
-
+    [SerializeField]
+    [ExposeToLevelEditor(23)]
+    private Vector2 secondVector3 = Vector2.zero;
+    [SerializeField]
+    [ExposeToLevelEditor(24)]
+    private Vector2 secondVector4 = Vector2.zero;
+    [SerializeField]
+    [ExposeToLevelEditor(25)]
+    private Vector2 secondVector5 = Vector2.zero;
+    [SerializeField]
+    [ExposeToLevelEditor(26)]
+    private Transform[] transformArray = null;
 
     private int[] ints = null;
     private Color32[] colors = null;
@@ -164,4 +170,5 @@ public class TestScript : MonoBehaviour, ILevelEditorGizmos
         }
     }
 #pragma warning restore CS0414
+#pragma warning restore CS0067
 }
