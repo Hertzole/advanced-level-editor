@@ -8,9 +8,8 @@ namespace Hertzole.ALE.Binary
     {
         public override void Serialize(ref MessagePackWriter writer, LevelEditorCustomData value, MessagePackSerializerOptions options)
         {
-            writer.WriteArrayHeader(3);
+            writer.WriteArrayHeader(2);
             options.Resolver.GetFormatterWithVerify<string>().Serialize(ref writer, value.typeName, options);
-            options.Resolver.GetFormatterWithVerify<bool>().Serialize(ref writer, value.isArray, options);
             options.Resolver.GetFormatterDynamic(value.type).SerializeObject(ref writer, value.value, options);
         }
 
@@ -18,8 +17,6 @@ namespace Hertzole.ALE.Binary
         {
             options.Security.DepthStep(ref reader);
 
-            string typeName = null;
-            bool isArray = false;
             object value = null;
             Type type = null;
 
@@ -29,13 +26,9 @@ namespace Hertzole.ALE.Binary
                 switch (i)
                 {
                     case 0:
-                        typeName = options.Resolver.GetFormatterWithVerify<string>().Deserialize(ref reader, options);
-                        type = LevelEditorSerializer.GetType(typeName);
+                        type = LevelEditorSerializer.GetType(options.Resolver.GetFormatterWithVerify<string>().Deserialize(ref reader, options));
                         break;
                     case 1:
-                        isArray = options.Resolver.GetFormatterWithVerify<bool>().Deserialize(ref reader, options);
-                        break;
-                    case 2:
                         value = options.Resolver.GetFormatterDynamic(type).DeserializeObject(ref reader, options);
                         break;
                     default:
@@ -44,7 +37,7 @@ namespace Hertzole.ALE.Binary
                 }
             }
 
-            return new LevelEditorCustomData(type, isArray, value);
+            return new LevelEditorCustomData(type, value);
         }
     }
 }

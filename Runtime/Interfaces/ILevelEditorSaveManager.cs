@@ -19,47 +19,14 @@ namespace Hertzole.ALE
         public void AddCustomData(string key, object value)
         {
             Type valueType = value.GetType();
-            customData.Add(key, new LevelEditorCustomData(valueType, valueType.IsArray, value));
+            customData.Add(key, new LevelEditorCustomData(valueType, value));
         }
 
         public bool TryGetCustomData<T>(string key, out T value)
         {
             if (customData.TryGetValue(key, out LevelEditorCustomData data))
             {
-                if (data.isArray)
-                {
-                    Debug.LogError("This function is only used for single values.");
-                    value = default;
-                    return false;
-                }
-                else
-                {
-                    value = (T)data.value;
-                    return true;
-                }
-            }
-            else
-            {
-                value = default;
-                return false;
-            }
-        }
-
-        public bool TryGetCustomData<T>(string key, out T[] value)
-        {
-            if (customData.TryGetValue(key, out LevelEditorCustomData data))
-            {
-                if (data.isArray)
-                {
-                    value = Array.ConvertAll((object[])data.value, item => (T)item);
-                }
-                else
-                {
-                    Debug.LogError("This function is only used for getting arrays.");
-                    value = null;
-                    return false;
-                }
-
+                value = (T)data.value;
                 return true;
             }
             else
