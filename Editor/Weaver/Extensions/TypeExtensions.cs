@@ -159,5 +159,28 @@ namespace Hertzole.ALE.Editor
 
             return false;
         }
+
+        public static TypeReference GetNestedType<T>(this TypeDefinition type)
+        {
+            return type.GetNestedType(typeof(T));
+        }
+
+        public static TypeReference GetNestedType(this TypeDefinition t, Type type)
+        {
+            if (!t.HasNestedTypes)
+            {
+                return null;
+            }
+
+            for (int i = 0; i < t.NestedTypes.Count; i++)
+            {
+                if (t.NestedTypes[i].FullName == type.FullName)
+                {
+                    return t.NestedTypes[i];
+                }
+            }
+
+            return null;
+        }
     }
 }

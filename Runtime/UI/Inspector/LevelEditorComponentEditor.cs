@@ -80,9 +80,9 @@ namespace Hertzole.ALE
 
         protected bool TryGetField<T>(ExposedProperty property, out LevelEditorInspectorField field)
         {
-            if (Inspector.HasField(typeof(T), false))
+            if (Inspector.HasField(typeof(T)))
             {
-                field = Inspector.GetField(typeof(T), false, content);
+                field = Inspector.GetField(typeof(T), content);
                 field.Bind(property, Exposed);
                 return true;
             }

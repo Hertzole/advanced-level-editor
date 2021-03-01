@@ -5,14 +5,14 @@ namespace Hertzole.ALE
 {
     public struct LevelEditorCustomData : IEquatable<LevelEditorCustomData>
     {
-        public string type;
-        public bool isArray;
+        public string typeName;
         public object value;
+        public Type type;
 
-        public LevelEditorCustomData(string type, bool isArray, object value)
+        public LevelEditorCustomData(Type type, object value)
         {
+            typeName = type.FullName;
             this.type = type;
-            this.isArray = isArray;
             this.value = value;
         }
 
@@ -23,14 +23,13 @@ namespace Hertzole.ALE
 
         public bool Equals(LevelEditorCustomData other)
         {
-            return type == other.type && isArray == other.isArray && EqualityComparer<object>.Default.Equals(value, other.value);
+            return typeName == other.typeName && value.AdvancedEquals(other.value);
         }
 
         public override int GetHashCode()
         {
             int hashCode = 1148455455;
-            hashCode = hashCode * -1521134295 + EqualityComparer<string>.Default.GetHashCode(type);
-            hashCode = hashCode * -1521134295 + isArray.GetHashCode();
+            hashCode = hashCode * -1521134295 + EqualityComparer<string>.Default.GetHashCode(typeName);
             hashCode = hashCode * -1521134295 + EqualityComparer<object>.Default.GetHashCode(value);
             return hashCode;
         }
@@ -43,6 +42,11 @@ namespace Hertzole.ALE
         public static bool operator !=(LevelEditorCustomData left, LevelEditorCustomData right)
         {
             return !(left == right);
+        }
+
+        public override string ToString()
+        {
+            return $"{nameof(LevelEditorCustomData)} ({typeName}, {type}, {value})";
         }
     }
 }

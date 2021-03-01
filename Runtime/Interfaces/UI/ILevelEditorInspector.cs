@@ -9,10 +9,10 @@ namespace Hertzole.ALE
 
         void BindObject(ILevelEditorObject target);
 
-        LevelEditorInspectorField GetField(Type fieldType, bool isArray, Transform parent);
+        LevelEditorInspectorField GetField(Type fieldType, Transform parent);
 
         void PoolField(LevelEditorInspectorField field);
 
-        bool HasField(Type type, bool isArray);
+        bool HasField(Type type);
     }
 }

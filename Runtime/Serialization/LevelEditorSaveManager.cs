@@ -59,7 +59,7 @@ namespace Hertzole.ALE
             return data;
         }
 
-        public string[] GetLevels()
+        public virtual string[] GetLevels()
         {
             string location = BuildSaveLocation(baseSaveLocation, saveSuffix);
             if (!Directory.Exists(location))
@@ -78,21 +78,23 @@ namespace Hertzole.ALE
             if (!File.Exists(path))
             {
                 Debug.LogError($"There's no file with path '{path}'.");
-                return null;
+                return new LevelEditorSaveData();
             }
 
-#if ALE_JSON
-            if (saveAsJson)
-            {
-                data = LevelEditorJsonSerializer.DeserializeJson(File.ReadAllText(path));
-            }
-            else
-#endif
-            {
-                Debug.Log("Binary serialization is not yet supported. Please use JSON for now.");
-                return null;
-                //data = LevelEditorSerializer.DeserializeBinary(File.ReadAllBytes(path));
-            }
+            data = LevelEditorSerializer.DeserializeBinary<LevelEditorSaveData>(File.ReadAllBytes(path));
+
+            //#if ALE_JSON
+            //            if (saveAsJson)
+            //            {
+            //                data = LevelEditorJsonSerializer.DeserializeJson(File.ReadAllText(path));
+            //            }
+            //            else
+            //#endif
+            //            {
+            //                Debug.Log("Binary serialization is not yet supported. Please use JSON for now.");
+            //                return new LevelEditorSaveData();
+            //                //data = LevelEditorSerializer.DeserializeBinary(File.ReadAllBytes(path));
+            //            }
 
             return LoadLevel(data);
         }
@@ -150,20 +152,25 @@ namespace Hertzole.ALE
                 return;
             }
 
-#if ALE_JSON
-            if (saveAsJson)
-            {
-                //string json = LevelEditorSerializer.SerializeJson(saveData, prettyPrint);
-                string json = LevelEditorJsonSerializer.SerializeJson(saveData, prettyPrint);
-                File.WriteAllText(path, json);
-            }
-            else
-#endif
-            {
-                Debug.LogError("Serialize binary is not yet supported. Please use JSON serialization.");
-                //byte[] data = LevelEditorSerializer.SerializeBinary(saveData);
-                //File.WriteAllBytes(saveLocation, data);
-            }
+            saveData.customData = args.GetAllCustomData();
+
+            //#if ALE_JSON
+            //            if (saveAsJson)
+            //            {
+            //                //string json = LevelEditorSerializer.SerializeJson(saveData, prettyPrint);
+            //                string json = LevelEditorJsonSerializer.SerializeJson(saveData, prettyPrint);
+            //                File.WriteAllText(path, json);
+            //            }
+            //            else
+            //#endif
+            //            {
+            //                Debug.LogError("Serialize binary is not yet supported. Please use JSON serialization.");
+            //                //byte[] data = LevelEditorSerializer.SerializeBinary(saveData);
+            //                //File.WriteAllBytes(saveLocation, data);
+            //            }
+
+            byte[] bytes = LevelEditorSerializer.SerializeBinary(saveData);
+            File.WriteAllBytes(path, bytes);
 
             OnLevelSaved?.Invoke(this, new LevelEventArgs(saveData));
 
