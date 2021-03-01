@@ -16,10 +16,18 @@ namespace Hertzole.ALE
                 return;
             }
 
+            MessagePackFormatter valueFormatter = options.Resolver.GetFormatterDynamic(value.type);
+            if (valueFormatter == null)
+            {
+                Debug.LogError($"Found no formatter for {value.type}.");
+                writer.WriteNil();
+                return;
+            }
+
             writer.WriteArrayHeader(3);
             writer.WriteInt32(value.id);
             options.Resolver.GetFormatterWithVerify<string>().Serialize(ref writer, value.typeName, options);
-            options.Resolver.GetFormatterDynamic(value.type).SerializeObject(ref writer, value.value, options);
+            valueFormatter.SerializeObject(ref writer, value.value, options);
         }
 
         public override LevelEditorPropertyData Deserialize(ref MessagePackReader reader, MessagePackSerializerOptions options)

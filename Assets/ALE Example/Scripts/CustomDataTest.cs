@@ -20,19 +20,19 @@ public class CustomDataTest : MonoBehaviour
             Debug.Log(intValue);
         }
 
-        //if (e.TryGetCustomData("messages", out string[] messages))
-        //{
-        //    foreach (string m in messages)
-        //    {
-        //        Debug.Log(m);
-        //    }
-        //}
+        if (e.TryGetCustomData("messages", out string[] messages))
+        {
+            foreach (string m in messages)
+            {
+                Debug.Log(m);
+            }
+        }
     }
 
     private void OnLevelSaving(object sender, LevelSavingLoadingArgs e)
     {
         e.AddCustomData("test", 32);
-        //e.AddCustomData("messages", new string[] { "hello", "world" });
+        e.AddCustomData("messages", new string[] { "hello", "world" });
     }
 
     // Update is called once per frame

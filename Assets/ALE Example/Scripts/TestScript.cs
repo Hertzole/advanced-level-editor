@@ -3,10 +3,8 @@
 #define temp
 
 using Hertzole.ALE;
-using MessagePack;
 using System;
 using UnityEngine;
-using UnityEngine.Scripting;
 
 [Serializable]
 public class MyCustomStruct : IExposedToLevelEditor
@@ -144,7 +142,18 @@ public class TestScript : MonoBehaviour, ILevelEditorGizmos
     [SerializeField]
     [ExposeToLevelEditor(22)]
     private MyCustomStruct structTest = new MyCustomStruct();
-
+    [SerializeField]
+    [ExposeToLevelEditor(23)]
+    private Vector2 secondVector3 = Vector2.zero;
+    [SerializeField]
+    [ExposeToLevelEditor(24)]
+    private Vector2 secondVector4 = Vector2.zero;
+    [SerializeField]
+    [ExposeToLevelEditor(25)]
+    private Vector2 secondVector5 = Vector2.zero;
+    [SerializeField]
+    [ExposeToLevelEditor(26)]
+    private Transform[] transformArray = null;
 
     private int[] ints = null;
     private Color32[] colors = null;
@@ -159,12 +168,6 @@ public class TestScript : MonoBehaviour, ILevelEditorGizmos
         {
             LevelEditorGizmos.DrawLine(transform.position, otherObject.position, Color.red);
         }
-    }
-
-    [Preserve]
-    private static void AoTTest()
-    {
-        MessagePackSerializerOptions.Standard.Resolver.GetFormatter<decimal>();
     }
 #pragma warning restore CS0414
 #pragma warning restore CS0067

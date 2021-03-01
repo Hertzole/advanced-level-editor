@@ -105,12 +105,103 @@ namespace Hertzole.ALE.Tests
         [Test]
         public void PropertyDataArraySerialization()
         {
-            LevelEditorPropertyData data = BuildPropertyData();
-            data.typeName = typeof(string[]).FullName;
-            data.type = typeof(string[]);
-            data.value = new string[] { "Hello", "World" };
+            ExposedArray array = new ExposedArray(0, typeof(string[]), "test", null, true, typeof(string));
+            LevelEditorPropertyData data = new LevelEditorPropertyData(array, null)
+            {
+                value = new string[] { "Hello", "World" }
+            };
 
             LevelEditorSerializer.RegisterType<string[]>();
+
+            LevelEditorPropertyData newData = SerializeAndDeserialize(data);
+            Assert.AreEqual(data, newData);
+        }
+
+        [Test]
+        public void PropertyDataListSerialization()
+        {
+            ExposedArray array = new ExposedArray(0, typeof(List<string>), "test", null, true, typeof(string));
+            LevelEditorPropertyData data = new LevelEditorPropertyData(array, null)
+            {
+                value = new List<string>() { "Hello", "World" }
+            };
+
+            LevelEditorSerializer.RegisterType<List<string>>();
+
+            LevelEditorPropertyData newData = SerializeAndDeserialize(data);
+            Assert.AreEqual(data, newData);
+        }
+
+        [Test]
+        public void PropertyDataComponentArraySerialization()
+        {
+            ExposedArray array = new ExposedArray(0, typeof(Component[]), "test", null, true, typeof(Component));
+            LevelEditorPropertyData data = new LevelEditorPropertyData(array, null)
+            {
+                value = new Component[0]
+            };
+
+            LevelEditorSerializer.RegisterType<Component[]>();
+
+            LevelEditorPropertyData newData = SerializeAndDeserialize(data);
+            Assert.AreEqual(data, newData);
+        }
+
+        [Test]
+        public void PropertyDataComponentListSerialization()
+        {
+            ExposedArray array = new ExposedArray(0, typeof(List<Component>), "test", null, true, typeof(List<Component>));
+            LevelEditorPropertyData data = new LevelEditorPropertyData(array, null)
+            {
+                value = new List<Component>()
+            };
+
+            LevelEditorSerializer.RegisterType<List<Component>>();
+
+            LevelEditorPropertyData newData = SerializeAndDeserialize(data);
+            Assert.AreEqual(data, newData);
+        }
+
+        [Test]
+        public void PropertyDataTransformArraySerialization()
+        {
+            ExposedArray array = new ExposedArray(0, typeof(Transform[]), "test", null, true, typeof(Transform));
+            LevelEditorPropertyData data = new LevelEditorPropertyData(array, null)
+            {
+                value = new Transform[0]
+            };
+
+            LevelEditorSerializer.RegisterType<Component[]>();
+
+            LevelEditorPropertyData newData = SerializeAndDeserialize(data);
+            Assert.AreEqual(data, newData);
+        }
+
+        [Test]
+        public void PropertyDataGameObjectArraySerialization()
+        {
+            ExposedArray array = new ExposedArray(0, typeof(GameObject[]), "test", null, true, typeof(GameObject));
+            LevelEditorPropertyData data = new LevelEditorPropertyData(array, null)
+            {
+                value = new GameObject[0]
+            };
+
+            LevelEditorSerializer.RegisterType<GameObject[]>();
+
+            LevelEditorPropertyData newData = SerializeAndDeserialize(data);
+            Assert.AreEqual(data, newData);
+        }
+
+        [Test]
+        public void PropertyDataGameObjectListSerialization()
+        {
+            ExposedArray array = new ExposedArray(0, typeof(List<GameObject>), "test", null, true, typeof(GameObject));
+            LevelEditorPropertyData data = new LevelEditorPropertyData(array, null)
+            {
+                value = new List<GameObject>()
+            };
+
+            LevelEditorSerializer.RegisterType<List<GameObject>>();
 
             LevelEditorPropertyData newData = SerializeAndDeserialize(data);
             Assert.AreEqual(data, newData);

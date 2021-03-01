@@ -23,14 +23,14 @@ namespace MessagePack.Formatters
             }
             else
             {
-                MessagePackFormatter<T> formatter = options.Resolver.GetFormatterWithVerify<T>();
+                MessagePackFormatter formatter = options.Resolver.GetFormatterDynamicWithVerify(typeof(T));
 
                 writer.WriteArrayHeader(value.Length);
 
                 for (int i = 0; i < value.Length; i++)
                 {
                     writer.CancellationToken.ThrowIfCancellationRequested();
-                    formatter.Serialize(ref writer, value[i], options);
+                    formatter.SerializeObject(ref writer, value[i], options);
                 }
             }
         }
@@ -48,7 +48,7 @@ namespace MessagePack.Formatters
                 return Array.Empty<T>();
             }
 
-            MessagePackFormatter<T> formatter = options.Resolver.GetFormatterWithVerify<T>();
+            MessagePackFormatter formatter = options.Resolver.GetFormatterDynamicWithVerify(typeof(T));
             T[] array = new T[len];
             options.Security.DepthStep(ref reader);
             try
@@ -56,7 +56,7 @@ namespace MessagePack.Formatters
                 for (int i = 0; i < array.Length; i++)
                 {
                     reader.CancellationToken.ThrowIfCancellationRequested();
-                    array[i] = formatter.Deserialize(ref reader, options);
+                    array[i] = (T)formatter.DeserializeObject(ref reader, options);
                 }
             }
             finally
@@ -255,7 +255,7 @@ namespace MessagePack.Formatters
             }
             else
             {
-                MessagePackFormatter<T> formatter = options.Resolver.GetFormatterWithVerify<T>();
+                MessagePackFormatter formatter = options.Resolver.GetFormatterDynamicWithVerify(typeof(T));
 
                 int c = value.Count;
                 writer.WriteArrayHeader(c);
@@ -263,7 +263,7 @@ namespace MessagePack.Formatters
                 for (int i = 0; i < c; i++)
                 {
                     writer.CancellationToken.ThrowIfCancellationRequested();
-                    formatter.Serialize(ref writer, value[i], options);
+                    formatter.SerializeObject(ref writer, value[i], options);
                 }
             }
         }
@@ -276,7 +276,7 @@ namespace MessagePack.Formatters
             }
             else
             {
-                MessagePackFormatter<T> formatter = options.Resolver.GetFormatterWithVerify<T>();
+                MessagePackFormatter formatter = options.Resolver.GetFormatterDynamicWithVerify(typeof(T));
 
                 int len = reader.ReadArrayHeader();
                 List<T> list = new List<T>(len);
@@ -286,7 +286,7 @@ namespace MessagePack.Formatters
                     for (int i = 0; i < len; i++)
                     {
                         reader.CancellationToken.ThrowIfCancellationRequested();
-                        list.Add(formatter.Deserialize(ref reader, options));
+                        list.Add((T)formatter.DeserializeObject(ref reader, options));
                     }
                 }
                 finally

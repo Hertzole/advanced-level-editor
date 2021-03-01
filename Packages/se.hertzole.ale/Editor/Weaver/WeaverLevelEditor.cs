@@ -17,6 +17,8 @@ namespace Hertzole.ALE.Editor
         {
             bool dirty = false;
 
+            RegisterTypeProcessor.StartEditing(assembly);
+
             foreach (ModuleDefinition module in assembly.Modules)
             {
                 IEnumerable<TypeDefinition> types = module.GetTypes();
@@ -58,6 +60,8 @@ namespace Hertzole.ALE.Editor
                     }
                 }
             }
+
+            RegisterTypeProcessor.EndEditing();
 
             return (true, dirty);
         }

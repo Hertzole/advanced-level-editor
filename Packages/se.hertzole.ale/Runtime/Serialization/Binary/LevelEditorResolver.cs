@@ -14,7 +14,7 @@ namespace Hertzole.ALE.Binary
         private static bool serializerRegistered = false;
 
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
-        private static void ResetStatics()
+        private static void RegisterResolvers()
         {
             if (serializerRegistered)
             {
@@ -71,6 +71,7 @@ namespace Hertzole.ALE.Binary
                     { typeof(LevelEditorPropertyData[]), 7 },
                     { typeof(Dictionary<string, LevelEditorCustomData>), 8 },
                     { typeof(Component), 9 },
+                    { typeof(GameObject), 10 },
                 };
             }
 
@@ -103,6 +104,8 @@ namespace Hertzole.ALE.Binary
                         return new DictionaryFormatter<string, LevelEditorCustomData>();
                     case 9:
                         return new ComponentFormatter();
+                    case 10:
+                        return new GameObjectFormatter();
                     default:
                         return null;
                 }

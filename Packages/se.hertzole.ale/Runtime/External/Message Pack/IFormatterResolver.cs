@@ -81,7 +81,6 @@ namespace MessagePack
                 throw new ArgumentNullException(nameof(type));
             }
 
-
             if (!FormatterGetters.TryGetValue(type, out MessagePackFormatter formatter))
             {
                 MethodInfo method = resolver.GetType().GetMethod("GetFormatter", Type.EmptyTypes);
@@ -96,9 +95,9 @@ namespace MessagePack
             return formatter;
         }
 
-        internal static object GetFormatterDynamicWithVerify(this IFormatterResolver resolver, Type type)
+        internal static MessagePackFormatter GetFormatterDynamicWithVerify(this IFormatterResolver resolver, Type type)
         {
-            object result = GetFormatterDynamic(resolver, type);
+            MessagePackFormatter result = GetFormatterDynamic(resolver, type);
             if (result == null)
             {
                 Throw(type, resolver);
