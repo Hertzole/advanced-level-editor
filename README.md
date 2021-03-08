@@ -39,9 +39,9 @@ What needs to be done before 1.0.0 verified.
 - [ ] Integrate custom serializers
 - [ ] Menu items
 - [x] Custom component wrappers
-- [x] Serialize arrays
-- [x] Serialize lists
-- [ ] Serialize dictionary
+- [x] Serialize arrays^1
+- [x] Serialize lists^1
+- [ ] Serialize dictionary^2
 - [ ] Resource limit support
 - [ ] Generate resource icons at build time
 
@@ -74,6 +74,9 @@ The supported inspector fields.
 - [ ] Arrays
 - [ ] Nested classes/structs
 - [x] Enum field
+
+^1 Doesn't work 100% with Unity objects yet. **May appear to work during runtime but most likely won't work in build!**  
+^2 While technically it will serialize dictionaries, it won't serialize exposed field dictionaries.
 
 ## 📦 Installation 
 #### Without package manager
