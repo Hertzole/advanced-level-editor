@@ -14,6 +14,8 @@ namespace Hertzole.ALE.Binary
     {
         private static bool serializerRegistered = false;
 
+        private static List<IFormatterResolver> customResolvers = new List<IFormatterResolver>();
+
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
         private static void RegisterResolvers()
         {
@@ -22,10 +24,12 @@ namespace Hertzole.ALE.Binary
                 return;
             }
 
-            StaticCompositeResolver.Instance.Register(UnityResolver.Instance,
-                                                      UnityBlitResolver.Instance,
-                                                      StandardResolver.Instance,
-                                                      LevelEditorResolver.Instance);
+            customResolvers.Add(UnityResolver.Instance);
+            customResolvers.Add(UnityBlitResolver.Instance);
+            customResolvers.Add(StandardResolver.Instance);
+            customResolvers.Add(Instance);
+
+            StaticCompositeResolver.Instance.Register(customResolvers.ToArray());
             MessagePackSerializer.DefaultOptions = MessagePackSerializerOptions.Standard.WithResolver(StaticCompositeResolver.Instance);
 
             serializerRegistered = true;
@@ -38,6 +42,11 @@ namespace Hertzole.ALE.Binary
         public MessagePackFormatter GetFormatter<T>()
         {
             return FormatterCache<T>.Formatter;
+        }
+
+        public static void RegisterResolver(IFormatterResolver resolver)
+        {
+            customResolvers.Add(resolver);
         }
 
         private static class FormatterCache<T>
