@@ -7,6 +7,7 @@ namespace Hertzole.ALE
 {
     public class LevelEditorSaveManager : MonoBehaviour, ILevelEditorSaveManager
     {
+        public enum FormatType { JSON, Binary }
         public enum SaveLocation { ApplicationData = 0, ApplicationPersistentData = 1, Desktop = 2, Documents = 3 };
 
         [SerializeField]
@@ -18,12 +19,8 @@ namespace Hertzole.ALE
         private string saveSuffix = "Saved Levels";
         [SerializeField]
         private string fileExtension = ".json";
-#if ALE_JSON
         [SerializeField]
-        private bool saveAsJson = true;
-        [SerializeField]
-        private bool prettyPrint = false;
-#endif
+        private FormatType levelFormat = FormatType.JSON;
 
         private string loadLocation;
 
@@ -81,20 +78,18 @@ namespace Hertzole.ALE
                 return new LevelEditorSaveData();
             }
 
-            data = LevelEditorSerializer.DeserializeBinary<LevelEditorSaveData>(File.ReadAllBytes(path));
-
-            //#if ALE_JSON
-            //            if (saveAsJson)
-            //            {
-            //                data = LevelEditorJsonSerializer.DeserializeJson(File.ReadAllText(path));
-            //            }
-            //            else
-            //#endif
-            //            {
-            //                Debug.Log("Binary serialization is not yet supported. Please use JSON for now.");
-            //                return new LevelEditorSaveData();
-            //                //data = LevelEditorSerializer.DeserializeBinary(File.ReadAllBytes(path));
-            //            }
+            switch (levelFormat)
+            {
+                case FormatType.JSON:
+                    data = LevelEditorSerializer.DeserializeJson<LevelEditorSaveData>(File.ReadAllText(path));
+                    break;
+                case FormatType.Binary:
+                    data = LevelEditorSerializer.DeserializeBinary<LevelEditorSaveData>(File.ReadAllBytes(path));
+                    break;
+                default:
+                    data = new LevelEditorSaveData();
+                    break;
+            }
 
             return LoadLevel(data);
         }
@@ -154,35 +149,27 @@ namespace Hertzole.ALE
 
             saveData.customData = args.GetAllCustomData();
 
-            //#if ALE_JSON
-            //            if (saveAsJson)
-            //            {
-            //                //string json = LevelEditorSerializer.SerializeJson(saveData, prettyPrint);
-            //                string json = LevelEditorJsonSerializer.SerializeJson(saveData, prettyPrint);
-            //                File.WriteAllText(path, json);
-            //            }
-            //            else
-            //#endif
-            //            {
-            //                Debug.LogError("Serialize binary is not yet supported. Please use JSON serialization.");
-            //                //byte[] data = LevelEditorSerializer.SerializeBinary(saveData);
-            //                //File.WriteAllBytes(saveLocation, data);
-            //            }
-
-            byte[] bytes = LevelEditorSerializer.SerializeBinary(saveData);
-            File.WriteAllBytes(path, bytes);
-
-            OnLevelSaved?.Invoke(this, new LevelEventArgs(saveData));
-
             try
             {
-
+                switch (levelFormat)
+                {
+                    case FormatType.JSON:
+                        string json = LevelEditorSerializer.SerializeJson(saveData);
+                        File.WriteAllText(path, json);
+                        break;
+                    case FormatType.Binary:
+                        byte[] bytes = LevelEditorSerializer.SerializeBinary(saveData);
+                        File.WriteAllBytes(path, bytes);
+                        break;
+                }
             }
             catch (Exception ex)
             {
                 //TODO: Show some notification.
                 throw ex;
             }
+
+            OnLevelSaved?.Invoke(this, new LevelEventArgs(saveData));
         }
 
         //TODO: Cache save location string somehow.
