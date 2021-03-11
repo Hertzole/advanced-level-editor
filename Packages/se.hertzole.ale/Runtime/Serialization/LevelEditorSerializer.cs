@@ -1,10 +1,20 @@
 ﻿using MessagePack;
 using System;
 using System.Collections.Generic;
+using UnityEngine;
 
 public static class LevelEditorSerializer
 {
     private static readonly Dictionary<string, Type> typeMap = new Dictionary<string, Type>();
+
+    [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
+    private static void RegisterTypes()
+    {
+        RegisterType<Vector3>();
+        RegisterType<Component>();
+        RegisterType<bool>();
+        RegisterType<float>();
+    }
 
     public static void RegisterType<T>()
     {
