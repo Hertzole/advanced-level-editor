@@ -16,7 +16,7 @@ namespace Hertzole.ALE.Binary
 
         private static List<IFormatterResolver> customResolvers = new List<IFormatterResolver>();
 
-        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
+        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
         private static void RegisterResolvers()
         {
             if (serializerRegistered)
