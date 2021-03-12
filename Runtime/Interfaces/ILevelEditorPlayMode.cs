@@ -13,8 +13,8 @@ namespace Hertzole.ALE
 
         bool CanStopPlayMode(out string failReason);
 
-        void StartPlayMode(bool bypassCheck = false);
+        void StartPlayMode(ILevelEditor levelEditor);
 
-        void StopPlayMode(bool bypassCheck = false);
+        void StopPlayMode(ILevelEditor levelEditor);
     }
 }
