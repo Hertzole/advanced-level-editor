@@ -311,7 +311,7 @@ namespace Hertzole.ALE
                 return false;
             }
 
-            playModeComp.StartPlayMode(true);
+            playModeComp.StartPlayMode(this);
             return true;
         }
 
@@ -332,7 +332,7 @@ namespace Hertzole.ALE
                 return false;
             }
 
-            playModeComp.StopPlayMode(true);
+            playModeComp.StopPlayMode(this);
             return true;
         }
 
