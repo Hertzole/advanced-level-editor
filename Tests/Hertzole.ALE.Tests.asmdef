@@ -13,7 +13,6 @@
     "overrideReferences": true,
     "precompiledReferences": [
         "nunit.framework.dll",
-        "Newtonsoft.Json.dll",
         "System.Buffers.dll",
         "System.Memory.dll",
         "System.Runtime.CompilerServices.Unsafe.dll",
@@ -23,12 +22,6 @@
     "defineConstraints": [
         "UNITY_INCLUDE_TESTS"
     ],
-    "versionDefines": [
-        {
-            "name": "com.unity.nuget.newtonsoft-json",
-            "expression": "",
-            "define": "ALE_JSON"
-        }
-    ],
+    "versionDefines": [],
     "noEngineReferences": false
 }

@@ -15,11 +15,6 @@
     "defineConstraints": [],
     "versionDefines": [
         {
-            "name": "com.unity.nuget.newtonsoft-json",
-            "expression": "",
-            "define": "ALE_JSON"
-        },
-        {
             "name": "com.unity.render-pipelines.universal",
             "expression": "",
             "define": "ALE_URP"
