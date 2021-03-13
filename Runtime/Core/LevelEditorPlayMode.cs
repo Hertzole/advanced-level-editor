@@ -102,7 +102,7 @@ namespace Hertzole.ALE
                 int count = ObjectManager.GetObjectCount(playModeRequirements[i].objectID);
                 if (count < playModeRequirements[i].minAmount)
                 {
-                    failReason = "You need to have at least " + playModeRequirements[i].minAmount + " of " + ObjectManager.GetResource(playModeRequirements[i].objectID).Name + " to play a level.";
+                    failReason = $"You need to have at least {playModeRequirements[i].minAmount} of {ObjectManager.GetResource(playModeRequirements[i].objectID).Name} to play a level.";
                     return false;
                 }
             }
