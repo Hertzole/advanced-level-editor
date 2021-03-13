@@ -30,7 +30,7 @@ namespace Hertzole.ALE.Binary
             customResolvers.Add(Instance);
 
             StaticCompositeResolver.Instance.Register(customResolvers.ToArray());
-            MessagePackSerializer.DefaultOptions = MessagePackSerializerOptions.Standard.WithResolver(StaticCompositeResolver.Instance);
+            MessagePackSerializer.DefaultOptions = MessagePackSerializerOptions.Standard.WithResolver(StaticCompositeResolver.Instance).WithCompression(MessagePackCompression.Lz4Block);
 
             serializerRegistered = true;
         }
