@@ -1,6 +1,5 @@
 ﻿using System.Collections.Generic;
 using UnityEngine;
-using UnityEngine.InputSystem;
 
 namespace Hertzole.ALE
 {
@@ -15,9 +14,11 @@ namespace Hertzole.ALE
         private GameObject objectManager = null;
         [SerializeField, RequireType(typeof(ILevelEditor))]
         private GameObject levelEditor = null;
+        [SerializeField, RequireType(typeof(ILevelEditorInput))]
+        private GameObject input = null;
 
         [SerializeField]
-        private InputActionReference stopPlayModeAction = null;
+        private string stopPlayModeAction = null;
         [SerializeField]
         private bool disableCameraDuringPlayMode = true;
         [SerializeField]
@@ -39,6 +40,7 @@ namespace Hertzole.ALE
 
         protected ILevelEditorObjectManager ObjectManager { get; private set; }
         protected ILevelEditor LevelEditor { get; private set; }
+        protected ILevelEditorInput Input { get; private set; }
 
         public bool IsPlaying { get { return isPlaying; } }
 
@@ -52,6 +54,7 @@ namespace Hertzole.ALE
             {
                 LevelEditor = levelEditor.GetComponent<ILevelEditor>();
             }
+            Input = input.GetComponent<ILevelEditorInput>();
         }
 
         private void OnEnable()
@@ -62,10 +65,6 @@ namespace Hertzole.ALE
                 throw new System.NullReferenceException("No Stop Play Mode Action set on LevelEditorPlayMode.");
             }
 #endif
-
-            stopPlayModeAction.action.performed += OnInputStopPlayMode;
-
-            stopPlayModeAction.action.Enable();
         }
 
         private void OnDisable()
@@ -76,19 +75,19 @@ namespace Hertzole.ALE
                 throw new System.NullReferenceException("No Stop Play Mode Action set on LevelEditorPlayMode.");
             }
 #endif
-
-            stopPlayModeAction.action.performed -= OnInputStopPlayMode;
-
-            stopPlayModeAction.action.Disable();
         }
 
-        private void OnInputStopPlayMode(InputAction.CallbackContext ctx)
+        protected void Update()
         {
-            if (ctx.performed && isPlaying)
+            if (isPlaying && Input.GetButtonDown(stopPlayModeAction))
             {
-                StopPlayMode(LevelEditor);
+                LevelEditor.StopPlayMode(out _);
             }
+
+            OnUpdate();
         }
+
+        protected virtual void OnUpdate() { }
 
         public virtual bool CanStartPlayMode(out string failReason)
         {
