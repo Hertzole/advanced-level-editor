@@ -163,6 +163,11 @@ namespace Hertzole.ALE
                 IExposedToLevelEditor[] components = target.GetExposedComponents();
                 for (int i = 0; i < components.Length; i++)
                 {
+                    if (!components[i].HasVisibleFields)
+                    {
+                        continue;
+                    }
+
                     if (!includeTransform && components[i].ComponentType == typeof(Transform))
                     {
                         continue;

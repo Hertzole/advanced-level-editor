@@ -13,6 +13,7 @@ namespace Hertzole.ALE
         }
 
         public override int Order { get { return -100000; } }
+        public override bool HasVisibleFields { get { return true; } }
 
         private const string POSITION = "position";
         private const string ROTATION = "rotation";

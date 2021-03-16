@@ -39,6 +39,7 @@ namespace Hertzole.ALE
         public virtual string TypeName { get { throw new NotImplementedException(); } }
         public virtual int Order { get { return 0; } }
         public virtual Type ComponentType { get { return null; } }
+        public abstract bool HasVisibleFields { get; }
 
         public event Action<int, object> OnValueChanged;
 

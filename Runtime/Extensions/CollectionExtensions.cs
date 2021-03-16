@@ -25,6 +25,11 @@ namespace Hertzole.ALE
             return "{" + string.Join(",", dictionary.Select(kv => kv.Key + ": " + kv.Value).ToArray()) + "}";
         }
 
+        public static string ToDebugString<T>(this T[] array)
+        {
+            return "{" + string.Join(", ", array) + "}";
+        }
+
         public static bool DictionaryEquals(this IDictionary a, IDictionary b)
         {
             if (a == null && b == null)

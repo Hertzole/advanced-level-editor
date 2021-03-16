@@ -95,7 +95,7 @@ namespace Hertzole.ALE.Editor
         private static TypeDefinition CreateClass()
         {
             TypeDefinition type = new TypeDefinition("Hertzole.ALE.Generated", "ALE__Generated__RegisterTypes",
-                TypeAttributes.Public | TypeAttributes.AutoClass | TypeAttributes.AnsiClass | TypeAttributes.Abstract |
+                TypeAttributes.Public | TypeAttributes.AnsiClass | TypeAttributes.Abstract |
                 TypeAttributes.Sealed | TypeAttributes.BeforeFieldInit, assembly.MainModule.ImportReference(typeof(object)));
 
             return type;
