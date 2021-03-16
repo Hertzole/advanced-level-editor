@@ -3,63 +3,54 @@
 #define temp
 
 using Hertzole.ALE;
+using MessagePack;
 using System;
+using System.Collections.Generic;
 using UnityEngine;
 
 [Serializable]
-public class MyCustomStruct : IExposedToLevelEditor
+[MessagePackObject]
+public struct MyCustomStruct
+{
+    [Key("str")]
+    public string str;
+    [Key("vec")]
+    public Vector3 vec;
+}
+
+[Serializable]
+public struct MyGooderStruct : IEquatable<MyGooderStruct>
 {
     public string str;
     public Vector3 vec;
 
-    public string ComponentName { get { return "My Custom Struct"; } }
-
-    public string TypeName { get { return typeof(MyCustomStruct).FullName; } }
-
-    public int Order { get { return 0; } }
-
-    public Type ComponentType { get { return typeof(MyCustomStruct); } }
-
-    public event Action<int, object> OnValueChanged;
-
-    public ExposedProperty[] GetProperties()
+    public override bool Equals(object obj)
     {
-        return new ExposedProperty[1]
-        {
-            new ExposedProperty(0, typeof(string), "str", null, true)
-        };
+        return obj is MyGooderStruct @struct && Equals(@struct);
     }
 
-    public object GetValue(int id)
+    public bool Equals(MyGooderStruct other)
     {
-        if (id == 0)
-        {
-            return str;
-        }
-        else
-        {
-            throw new ArgumentException("no");
-        }
+        return str == other.str &&
+               vec.Equals(other.vec);
     }
 
-    public Type GetValueType(int id)
+    public override int GetHashCode()
     {
-        if (id == 0)
-        {
-            return typeof(string);
-        }
-        else
-        {
-            throw new ArgumentException("no");
-        }
+        int hashCode = 582594805;
+        hashCode = hashCode * -1521134295 + EqualityComparer<string>.Default.GetHashCode(str);
+        hashCode = hashCode * -1521134295 + vec.GetHashCode();
+        return hashCode;
     }
 
-    public void SetValue(int id, object value, bool notify)
+    public static bool operator ==(MyGooderStruct left, MyGooderStruct right)
     {
-        if (id == 0)
-        {
-            str = (string)value;
-        }
+        return left.Equals(right);
+    }
+
+    public static bool operator !=(MyGooderStruct left, MyGooderStruct right)
+    {
+        return !(left == right);
     }
 }
 
@@ -133,9 +124,9 @@ public class TestScript : MonoBehaviour, ILevelEditorGizmos
     [SerializeField]
     [ExposeToLevelEditor(20)]
     private Transform otherObject = null;
-    //[SerializeField]
-    //[ExposeToLevelEditor(21)]
-    //private string[] messages = null;
+    [SerializeField]
+    [ExposeToLevelEditor(21)]
+    private string[] messages = null;
     //[SerializeField]
     //[ExposeToLevelEditor(33)]
     //private MyCustomStruct[] structTestArray = null;
@@ -154,6 +145,9 @@ public class TestScript : MonoBehaviour, ILevelEditorGizmos
     [SerializeField]
     [ExposeToLevelEditor(26)]
     private Transform[] transformArray = null;
+    [ExposeToLevelEditor(27)]
+    [SerializeField]
+    private MyGooderStruct gooderStruct = new MyGooderStruct();
 
     private int[] ints = null;
     private Color32[] colors = null;
@@ -167,6 +161,24 @@ public class TestScript : MonoBehaviour, ILevelEditorGizmos
         if (otherObject != null)
         {
             LevelEditorGizmos.DrawLine(transform.position, otherObject.position, Color.red);
+        }
+    }
+
+    private void Template(int id, object value)
+    {
+        if (id == 22)
+        {
+            if (structTest.Equals((MyCustomStruct)value))
+            {
+                structTest = (MyCustomStruct)value;
+            }
+        }
+        else if (id == 23)
+        {
+            if (gooderStruct == (MyGooderStruct)value)
+            {
+                gooderStruct = (MyGooderStruct)value;
+            }
         }
     }
 #pragma warning restore CS0414

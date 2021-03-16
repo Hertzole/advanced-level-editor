@@ -146,7 +146,70 @@ namespace Hertzole.ALE.Editor
             return false;
         }
 
-        public static bool TryGetMethodInBaseType(this TypeDefinition type, string methodName, out MethodDefinition method, params TypeReference[] parameterTypes)
+        public static bool TryGetMethodWithParameters(this TypeDefinition type, string methodName, out MethodReference method, params TypeReference[] parameterTypes)
+        {
+            method = null;
+            if (!type.HasMethods)
+            {
+                return false;
+            }
+
+            for (int i = 0; i < type.Methods.Count; i++)
+            {
+                if (type.Methods[i].Name == methodName && type.Methods[i].Parameters.Count == parameterTypes.Length)
+                {
+                    bool validMethod = true;
+
+                    for (int j = 0; j < type.Methods[i].Parameters.Count; j++)
+                    {
+                        if (type.Methods[i].Parameters[j].ParameterType != parameterTypes[j])
+                        {
+                            validMethod = false;
+                            break;
+                        }
+                    }
+
+                    if (validMethod)
+                    {
+                        method = type.Methods[i];
+                        return true;
+                    }
+                }
+            }
+
+            return false;
+        }
+
+        public static bool TryGetMethodInBaseType(this TypeDefinition type, string methodName, out MethodReference method)
+        {
+            method = null;
+            TypeDefinition typedef = type;
+            while (typedef != null)
+            {
+                for (int i = 0; i < typedef.Methods.Count; i++)
+                {
+                    if (typedef.Methods[i].Name == methodName)
+                    {
+                        method = typedef.Methods[i];
+                        return true;
+                    }
+                }
+
+                try
+                {
+                    TypeReference parent = typedef.BaseType;
+                    typedef = parent?.Resolve();
+                }
+                catch (AssemblyResolutionException)
+                {
+                    break;
+                }
+            }
+
+            return false;
+        }
+
+        public static bool TryGetMethodInBaseTypeWithParameters(this TypeDefinition type, string methodName, out MethodReference method, params TypeReference[] parameterTypes)
         {
             method = null;
             TypeDefinition typedef = type;
@@ -156,12 +219,12 @@ namespace Hertzole.ALE.Editor
                 {
                     if (typedef.Methods[i].Name == methodName && typedef.Methods[i].Parameters.Count == parameterTypes.Length)
                     {
-                        bool validParameters = false;
+                        bool validParameters = true;
                         for (int j = 0; j < typedef.Methods[i].Parameters.Count; j++)
                         {
-                            if (typedef.Methods[i].Parameters[j].ParameterType.FullName == parameterTypes[j].FullName)
+                            if (typedef.Methods[i].Parameters[j].ParameterType.FullName != parameterTypes[j].FullName)
                             {
-                                validParameters = true;
+                                validParameters = false;
                                 break;
                             }
                         }
@@ -186,6 +249,24 @@ namespace Hertzole.ALE.Editor
             }
 
             return false;
+        }
+
+        public static MethodDefinition GetMethod(this TypeDefinition type, string method)
+        {
+            if (!type.HasMethods)
+            {
+                throw new NullReferenceException("There's no methods in " + type.FullName);
+            }
+
+            for (int i = 0; i < type.Methods.Count; i++)
+            {
+                if (type.Methods[i].Name == method)
+                {
+                    return type.Methods[i];
+                }
+            }
+
+            throw new ArgumentException("There's no method called " + method + " in " + type.FullName + " with those parameters.");
         }
 
         public static MethodDefinition GetMethod(this TypeDefinition type, string method, params Type[] parameters)
@@ -312,6 +393,17 @@ namespace Hertzole.ALE.Editor
             }
 
             return self.Module.ImportReference(reference);
+        }
+
+        public static GenericInstanceMethod MakeGenericMethod(this MethodReference self, params TypeReference[] genericTypes)
+        {
+            GenericInstanceMethod result = new GenericInstanceMethod(self);
+            foreach (TypeReference argument in genericTypes)
+            {
+                result.GenericArguments.Add(argument);
+            }
+
+            return result;
         }
     }
 }

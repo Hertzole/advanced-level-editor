@@ -7,6 +7,7 @@ namespace Hertzole.ALE
         string ComponentName { get; }
         string TypeName { get; }
         Type ComponentType { get; }
+        bool HasVisibleFields { get; }
 
         int Order { get; }
 

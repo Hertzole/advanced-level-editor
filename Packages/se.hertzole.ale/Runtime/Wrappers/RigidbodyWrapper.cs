@@ -11,6 +11,8 @@ namespace Hertzole.ALE
             RegisterWrapper<Rigidbody, RigidbodyWrapper>();
         }
 
+        public override bool HasVisibleFields { get { return true; } }
+
         private bool useGravity;
         private bool isKinematic;
 

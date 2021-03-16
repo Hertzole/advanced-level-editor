@@ -1198,6 +1198,8 @@ GameObject:
   m_Component:
   - component: {fileID: 682176888}
   - component: {fileID: 682176887}
+  - component: {fileID: 682176889}
+  - component: {fileID: 682176890}
   m_Layer: 0
   m_Name: GameObject
   m_TagString: Untagged
@@ -1232,6 +1234,48 @@ Transform:
   m_Father: {fileID: 0}
   m_RootOrder: 6
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &682176889
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 682176886}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ef165c09674f72f42b54888a441e8e85, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  stringTest: 
+  intTest: 0
+  colorTest: {r: 0, g: 0, b: 0, a: 0}
+  color32Test:
+    serializedVersion: 2
+    rgba: 0
+  vectorTest: {x: 0, y: 0, z: 0}
+  referenceTest: {fileID: 0}
+  simpleClass:
+    value: 
+  advancedClass:
+    value: 
+  simpleStruct:
+    value: 
+  advancedStruct:
+    value: 
+  classArray: []
+  structArray: []
+--- !u!114 &682176890
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 682176886}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e25b849872b6c524cb6c91ab9d5e1591, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!1001 &737730295
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -3836,7 +3880,7 @@ MonoBehaviour:
   baseSaveLocation: 1
   saveSuffix: Saved Levels
   fileExtension: .json
-  levelFormat: 0
+  levelFormat: 1
 --- !u!114 &1918987441
 MonoBehaviour:
   m_ObjectHideFlags: 0

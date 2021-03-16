@@ -160,6 +160,24 @@ namespace Hertzole.ALE.Editor
             return false;
         }
 
+        public static bool ImplementsInterface<T>(this TypeDefinition type)
+        {
+            if (!type.HasInterfaces)
+            {
+                return false;
+            }
+
+            for (int i = 0; i < type.Interfaces.Count; i++)
+            {
+                if (type.Interfaces[i].InterfaceType.FullName == typeof(T).FullName)
+                {
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
         public static TypeReference GetNestedType<T>(this TypeDefinition type)
         {
             return type.GetNestedType(typeof(T));

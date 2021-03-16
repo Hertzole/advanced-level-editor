@@ -15,10 +15,10 @@ public class ArrayScript : MonoBehaviour
 #endif
 
     [SerializeField]
-    [ExposeToLevelEditor(0)]
+    [ExposeToLevelEditor(0, visible = false)]
     private string[] stringTest = null;
     [SerializeField]
-    [ExposeToLevelEditor(1)]
+    [ExposeToLevelEditor(1, visible = false)]
     private List<int> listTest = null;
     //[SerializeField]
     //[ExposeToLevelEditor(2)]

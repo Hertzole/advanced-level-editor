@@ -41,6 +41,8 @@ public class EnumTester : MonoBehaviour, IExposedToLevelEditor
         }
     }
 
+    public bool HasVisibleFields { get { return true; } }
+
     public Type ComponentType { get { return typeof(EnumTester); } }
 
     public ExposedProperty[] GetProperties()
