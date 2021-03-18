@@ -1,6 +1,7 @@
 ﻿using Mono.Cecil;
 using Mono.Cecil.Cil;
 using System;
+using UnityEngine;
 
 namespace Hertzole.ALE.Editor
 {
@@ -404,6 +405,45 @@ namespace Hertzole.ALE.Editor
             }
 
             return result;
+        }
+
+        public static VariableDefinition AddLocalVariable<T>(this MethodDefinition m, out int index)
+        {
+            if (m.Module == null)
+            {
+                Debug.LogError("This method has yet to be added to the assembly and doesn't have a module. Please provide a module.");
+                index = 0;
+                return null;
+            }
+
+            return m.AddLocalVariable(m.Module, m.Module.ImportReference(typeof(T)), out index);
+        }
+
+        public static VariableDefinition AddLocalVariable(this MethodDefinition m, TypeReference type, out int index)
+        {
+            if (m.Module == null)
+            {
+                Debug.LogError("This method has yet to be added to the assembly and doesn't have a module. Please provide a module.");
+                index = 0;
+                return null;
+            }
+
+            return m.AddLocalVariable(m.Module, type, out index);
+        }
+
+        public static VariableDefinition AddLocalVariable<T>(this MethodDefinition m, ModuleDefinition module, out int index)
+        {
+            return m.AddLocalVariable(module, module.ImportReference(typeof(T)), out index);
+        }
+
+        public static VariableDefinition AddLocalVariable(this MethodDefinition m, ModuleDefinition module, TypeReference type, out int index)
+        {
+            index = m.Body.Variables.Count;
+
+            VariableDefinition variable = new VariableDefinition(module.ImportReference(type));
+            m.Body.Variables.Add(variable);
+
+            return variable;
         }
     }
 }
