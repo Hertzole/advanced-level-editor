@@ -30,6 +30,11 @@ namespace Hertzole.ALE
             return "{" + string.Join(", ", array) + "}";
         }
 
+        public static string ToDebugString<T>(this IList<T> list)
+        {
+            return "{" + string.Join(", ", list) + "}";
+        }
+
         public static bool DictionaryEquals(this IDictionary a, IDictionary b)
         {
             if (a == null && b == null)
