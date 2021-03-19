@@ -7,7 +7,7 @@ namespace Hertzole.ALE.CodeGen
 {
     public class Weaver
     {
-        private readonly List<DiagnosticMessage> diagnostics;
+        public readonly List<DiagnosticMessage> diagnostics;
 
         private readonly BaseProcessor[] processors = new BaseProcessor[]
         {
@@ -22,7 +22,14 @@ namespace Hertzole.ALE.CodeGen
 
         public void ProcessAssembly(ModuleDefinition module)
         {
-            RegisterTypeProcessor.StartEditing(module.Assembly);
+            RegisterTypeProcessor typeRegister = new RegisterTypeProcessor(module);
+
+            for (int i = 0; i < processors.Length; i++)
+            {
+                processors[i].Weaver = this;
+                processors[i].Module = module;
+                processors[i].TypeRegister = typeRegister;
+            }
 
             IEnumerable<TypeDefinition> types = module.GetTypes();
             foreach (TypeDefinition type in types)
@@ -39,12 +46,14 @@ namespace Hertzole.ALE.CodeGen
                         continue;
                     }
 
-                    processors[i].ProcessClass(module, type);
+                    processors[i].Type = type;
+
+                    processors[i].ProcessClass(type);
                     type.CustomAttributes.Add(new CustomAttribute(module.ImportReference(typeof(ALEProcessedAttribute).GetConstructor(Type.EmptyTypes))));
                 }
             }
 
-            RegisterTypeProcessor.EndEditing();
+            typeRegister.EndEditing();
         }
     }
 }

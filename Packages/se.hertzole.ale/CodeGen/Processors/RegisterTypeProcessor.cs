@@ -8,28 +8,18 @@ using UnityEngine.Scripting;
 
 namespace Hertzole.ALE.CodeGen
 {
-    //TODO: Convert into not static.
-    public static class RegisterTypeProcessor
+    public class RegisterTypeProcessor
     {
-        private static AssemblyDefinition assembly;
+        private ModuleDefinition module;
+        private List<TypeReference> types;
 
-        private static List<TypeReference> types;
-
-        public static void StartEditing(AssemblyDefinition assembly)
+        public RegisterTypeProcessor(ModuleDefinition module)
         {
-            if (types == null)
-            {
-                types = new List<TypeReference>();
-            }
-            else
-            {
-                types.Clear();
-            }
-
-            RegisterTypeProcessor.assembly = assembly;
+            this.module = module;
+            types = new List<TypeReference>();
         }
 
-        public static void AddType(TypeReference type)
+        public void AddType(TypeReference type)
         {
             type = ResolveType(type);
 
@@ -39,7 +29,7 @@ namespace Hertzole.ALE.CodeGen
             }
         }
 
-        private static TypeReference ResolveType(TypeReference type)
+        private TypeReference ResolveType(TypeReference type)
         {
             bool isArray = type.IsArray;
             bool isList = type.Is(typeof(List<>));
@@ -50,15 +40,15 @@ namespace Hertzole.ALE.CodeGen
                 {
                     if (isList)
                     {
-                        type = assembly.MainModule.ImportReference(typeof(List<Component>));
+                        type = module.ImportReference(typeof(List<Component>));
                     }
                     else if (isArray)
                     {
-                        type = assembly.MainModule.ImportReference(typeof(Component[]));
+                        type = module.ImportReference(typeof(Component[]));
                     }
                     else
                     {
-                        type = assembly.MainModule.ImportReference(typeof(Component));
+                        type = module.ImportReference(typeof(Component));
                     }
                 }
             }
@@ -66,7 +56,7 @@ namespace Hertzole.ALE.CodeGen
             return type;
         }
 
-        private static bool ContainsType(TypeReference type)
+        private bool ContainsType(TypeReference type)
         {
             for (int i = 0; i < types.Count; i++)
             {
@@ -79,7 +69,7 @@ namespace Hertzole.ALE.CodeGen
             return false;
         }
 
-        public static void EndEditing()
+        public void EndEditing()
         {
             if (types == null || types.Count == 0)
             {
@@ -90,31 +80,31 @@ namespace Hertzole.ALE.CodeGen
             generatedClass.Methods.Add(CreateRegisterMethod());
             generatedClass.Methods.Add(CreateAOTPreserveMethod());
 
-            assembly.MainModule.Types.Add(generatedClass);
+            module.Types.Add(generatedClass);
         }
 
-        private static TypeDefinition CreateClass()
+        private TypeDefinition CreateClass()
         {
             TypeDefinition type = new TypeDefinition("Hertzole.ALE.Generated", "ALE__Generated__RegisterTypes",
                 TypeAttributes.Public | TypeAttributes.AnsiClass | TypeAttributes.Abstract |
-                TypeAttributes.Sealed | TypeAttributes.BeforeFieldInit, assembly.MainModule.ImportReference(typeof(object)));
+                TypeAttributes.Sealed | TypeAttributes.BeforeFieldInit, module.ImportReference(typeof(object)));
 
             return type;
         }
 
-        private static MethodDefinition CreateRegisterMethod()
+        private MethodDefinition CreateRegisterMethod()
         {
             MethodDefinition method = new MethodDefinition("Generated__RegisterExposedTypes",
-                MethodAttributes.Private | MethodAttributes.HideBySig | MethodAttributes.Static, assembly.MainModule.ImportReference(typeof(void)));
+                MethodAttributes.Private | MethodAttributes.HideBySig | MethodAttributes.Static, module.ImportReference(typeof(void)));
 
-            MethodReference initAttributeCtor = assembly.MainModule.ImportReference(
+            MethodReference initAttributeCtor = module.ImportReference(
                 typeof(RuntimeInitializeOnLoadMethodAttribute).GetConstructor(new Type[] { typeof(RuntimeInitializeLoadType) }));
             CustomAttribute attribute = new CustomAttribute(initAttributeCtor);
-            attribute.ConstructorArguments.Add(new CustomAttributeArgument(assembly.MainModule.ImportReference(
+            attribute.ConstructorArguments.Add(new CustomAttributeArgument(module.ImportReference(
                 typeof(RuntimeInitializeLoadType)), RuntimeInitializeLoadType.BeforeSceneLoad));
             method.CustomAttributes.Add(attribute);
 
-            MethodReference registerType = assembly.MainModule.ImportReference(typeof(LevelEditorSerializer).GetMethod("RegisterType"));
+            MethodReference registerType = module.ImportReference(typeof(LevelEditorSerializer).GetMethod("RegisterType"));
 
             ILProcessor il = method.Body.GetILProcessor();
             for (int i = 0; i < types.Count; i++)
@@ -129,18 +119,18 @@ namespace Hertzole.ALE.CodeGen
             return method;
         }
 
-        private static MethodDefinition CreateAOTPreserveMethod()
+        private MethodDefinition CreateAOTPreserveMethod()
         {
             MethodDefinition method = new MethodDefinition("AOT__Preserve__Generated",
                 MethodAttributes.Private | MethodAttributes.HideBySig | MethodAttributes.Static,
-                assembly.MainModule.ImportReference(typeof(void)));
+                module.ImportReference(typeof(void)));
 
-            CustomAttribute attribute = new CustomAttribute(assembly.MainModule.ImportReference(typeof(PreserveAttribute).GetConstructor(Type.EmptyTypes)));
+            CustomAttribute attribute = new CustomAttribute(module.ImportReference(typeof(PreserveAttribute).GetConstructor(Type.EmptyTypes)));
             method.CustomAttributes.Add(attribute);
 
             ILProcessor il = method.Body.GetILProcessor();
-            FieldReference instance = assembly.MainModule.ImportReference(typeof(StaticCompositeResolver).GetField("Instance"));
-            MethodReference getFormatter = assembly.MainModule.ImportReference(typeof(StaticCompositeResolver).GetMethod("GetFormatter"));
+            FieldReference instance = module.ImportReference(typeof(StaticCompositeResolver).GetField("Instance"));
+            MethodReference getFormatter = module.ImportReference(typeof(StaticCompositeResolver).GetMethod("GetFormatter"));
 
             for (int i = 0; i < types.Count; i++)
             {
