@@ -108,6 +108,7 @@ namespace Hertzole.ALE.Editor
                     EditorGUILayout.PropertyField(lookSpeed);
                     EditorGUILayout.PropertyField(orbitSpeed);
                 }
+
                 EditorGUILayout.PropertyField(scrollModifier);
                 EditorGUILayout.PropertyField(zoomSpeed);
                 EditorGUILayout.PropertyField(minZoom);
