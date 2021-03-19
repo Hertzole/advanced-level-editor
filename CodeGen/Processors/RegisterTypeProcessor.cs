@@ -6,8 +6,9 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Scripting;
 
-namespace Hertzole.ALE.Editor
+namespace Hertzole.ALE.CodeGen
 {
+    //TODO: Convert into not static.
     public static class RegisterTypeProcessor
     {
         private static AssemblyDefinition assembly;

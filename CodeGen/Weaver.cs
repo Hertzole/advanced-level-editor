@@ -1,104 +1,50 @@
 ﻿using Mono.Cecil;
 using System;
 using System.Collections.Generic;
-using System.IO;
-using UnityEngine;
+using Unity.CompilationPipeline.Common.Diagnostics;
 
-namespace Hertzole.ALE.Editor
+namespace Hertzole.ALE.CodeGen
 {
-    public static partial class Weaver
+    public class Weaver
     {
-        public static bool WeaveAssembly(string assemblyPath, string unityEngine, string runtimeAssembly, params string[] searchPaths)
+        private readonly List<DiagnosticMessage> diagnostics;
+
+        private readonly BaseProcessor[] processors = new BaseProcessor[]
         {
-            using (DefaultAssemblyResolver asmResolver = new DefaultAssemblyResolver())
+            new ExposedClassProcessor(),
+            //new FormatterProcessor()
+        };
+
+        public Weaver(List<DiagnosticMessage> diagnostics)
+        {
+            this.diagnostics = diagnostics;
+        }
+
+        public void ProcessAssembly(ModuleDefinition module)
+        {
+            RegisterTypeProcessor.StartEditing(module.Assembly);
+
+            IEnumerable<TypeDefinition> types = module.GetTypes();
+            foreach (TypeDefinition type in types)
             {
-                using (AssemblyDefinition assembly = AssemblyDefinition.ReadAssembly(assemblyPath, new ReaderParameters { ReadWrite = true, ReadSymbols = true, AssemblyResolver = asmResolver }))
+                if (type.HasAttribute<ALEProcessedAttribute>())
                 {
-                    asmResolver.AddSearchDirectory(unityEngine);
-                    asmResolver.AddSearchDirectory(runtimeAssembly);
+                    continue;
+                }
 
-                    for (int i = 0; i < searchPaths.Length; i++)
+                for (int i = 0; i < processors.Length; i++)
+                {
+                    if (!processors[i].IsValidClass(type))
                     {
-                        asmResolver.AddSearchDirectory(searchPaths[i]);
+                        continue;
                     }
 
-                    (bool success, bool dirty) = ProcessAssembly(assembly);
-                    if (success && dirty)
-                    {
-                        WriterParameters writeParams = new WriterParameters { WriteSymbols = true };
-                        assembly.Write(writeParams);
-                    }
-
-                    return success;
+                    processors[i].ProcessClass(module, type);
+                    type.CustomAttributes.Add(new CustomAttribute(module.ImportReference(typeof(ALEProcessedAttribute).GetConstructor(Type.EmptyTypes))));
                 }
             }
-        }
 
-        private static bool WeaveAssemblies(string[] assemblies, string unityEngine, string runtimeAssembly, string[] dependencies)
-        {
-            try
-            {
-                foreach (string asm in assemblies)
-                {
-                    if (!WeaveAssembly(asm, unityEngine, runtimeAssembly, dependencies))
-                    {
-                        return false;
-                    }
-                }
-            }
-            catch (Exception e)
-            {
-                Debug.LogError(e);
-                return false;
-            }
-            return true;
-        }
-
-        public static bool Process(string unityAssembly, string runtimeAssembly, string output, string[] assemblies, string[] extraAssemblyPaths)
-        {
-            Validate(unityAssembly, runtimeAssembly, output, assemblies);
-
-            return WeaveAssemblies(assemblies, unityAssembly, runtimeAssembly, extraAssemblyPaths);
-        }
-
-        private static void Validate(string unityEngine, string netDLL, string outputDirectory, string[] assemblies)
-        {
-            CheckDllPath(unityEngine);
-            CheckDllPath(netDLL);
-            CheckOutputDirectory(outputDirectory);
-            CheckAssemblies(assemblies);
-        }
-
-        private static void CheckDllPath(string path)
-        {
-            if (!File.Exists(path))
-            {
-                throw new Exception("dll could not be located at " + path + ".");
-            }
-        }
-
-        private static void CheckAssemblies(IEnumerable<string> assemblyPaths)
-        {
-            foreach (string assemblyPath in assemblyPaths)
-            {
-                CheckAssemblyPath(assemblyPath);
-            }
-        }
-
-        private static void CheckAssemblyPath(string assemblyPath)
-        {
-            if (!File.Exists(assemblyPath))
-            {
-                throw new Exception("Assembly " + assemblyPath + " does not exist.");
-            }
-        }
-
-        private static void CheckOutputDirectory(string outputDir)
-        {
-            if (!string.IsNullOrEmpty(outputDir) && !Directory.Exists(outputDir))
-            {
-                Directory.CreateDirectory(outputDir);
-            }
+            RegisterTypeProcessor.EndEditing();
         }
     }
 }

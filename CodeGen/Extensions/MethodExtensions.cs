@@ -3,7 +3,7 @@ using Mono.Cecil.Cil;
 using System;
 using UnityEngine;
 
-namespace Hertzole.ALE.Editor
+namespace Hertzole.ALE.CodeGen
 {
     public static partial class WeaverExtensions
     {

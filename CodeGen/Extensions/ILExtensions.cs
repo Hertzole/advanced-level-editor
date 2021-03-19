@@ -4,7 +4,7 @@ using Mono.Collections.Generic;
 using System.Collections.Generic;
 using System.Linq;
 
-namespace Hertzole.ALE.Editor
+namespace Hertzole.ALE.CodeGen
 {
     public static partial class WeaverExtensions
     {

@@ -1,7 +1,7 @@
 ﻿using Mono.Cecil;
 using System;
 
-namespace Hertzole.ALE.Editor
+namespace Hertzole.ALE.CodeGen
 {
     public static partial class WeaverExtensions
     {
