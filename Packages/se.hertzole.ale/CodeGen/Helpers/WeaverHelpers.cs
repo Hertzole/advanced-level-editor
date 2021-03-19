@@ -4,7 +4,7 @@ using Mono.Cecil.Rocks;
 using System;
 using System.Runtime.CompilerServices;
 
-namespace Hertzole.ALE.Editor
+namespace Hertzole.ALE.CodeGen
 {
     public static class WeaverHelpers
     {
