@@ -137,22 +137,20 @@ namespace Hertzole.ALE.CodeGen
             return false;
         }
 
-        public override (bool success, bool dirty) ProcessClass(ModuleDefinition module, TypeDefinition type)
+        public override void ProcessClass(TypeDefinition targetType)
         {
             List<FieldOrProperty> exposedFields = new List<FieldOrProperty>();
             List<int> usedIds = new List<int>();
-            if (type.HasFields)
+            if (targetType.HasFields)
             {
-                for (int i = 0; i < type.Fields.Count; i++)
+                for (int i = 0; i < targetType.Fields.Count; i++)
                 {
-                    if (type.Fields[i].TryGetAttribute<ExposeToLevelEditorAttribute>(out CustomAttribute attribute))
+                    if (targetType.Fields[i].TryGetAttribute<ExposeToLevelEditorAttribute>(out CustomAttribute attribute))
                     {
                         int id = attribute.GetConstructorArgument(0, 0);
                         if (usedIds.Contains(id))
                         {
-                            Debug.LogError($"The ID {id} is already in use in {type.FullName}. The IDs need to be unique!");
-
-                            return (false, false);
+                            Error($"{targetType.Name}.{targetType.Fields[i].Name} has a duplicate ID ({id}). IDs need to be unique.");
                         }
 
                         usedIds.Add(id);
@@ -160,49 +158,44 @@ namespace Hertzole.ALE.CodeGen
                         int customOrder = attribute.GetField("order", 0);
                         if (customOrder > 0)
                         {
-                            customOrder += type.Fields.Count + type.Properties.Count;
+                            customOrder += targetType.Fields.Count + targetType.Properties.Count;
                         }
                         else if (customOrder < 0)
                         {
-                            customOrder -= type.Fields.Count + type.Properties.Count;
+                            customOrder -= targetType.Fields.Count + targetType.Properties.Count;
                         }
                         else
                         {
                             customOrder = i;
                         }
 
-                        exposedFields.Add(new FieldOrProperty(attribute) { field = type.Fields[i], order = customOrder });
-                        RegisterTypeProcessor.AddType(type.Fields[i].FieldType);
+                        exposedFields.Add(new FieldOrProperty(attribute) { field = targetType.Fields[i], order = customOrder });
+                        //RegisterTypeProcessor.AddType(type.Fields[i].FieldType);
+                        TypeRegister.AddType(targetType.Fields[i].FieldType);
                     }
                 }
             }
 
-            if (type.HasProperties)
+            if (targetType.HasProperties)
             {
-                for (int i = 0; i < type.Properties.Count; i++)
+                for (int i = 0; i < targetType.Properties.Count; i++)
                 {
-                    if (type.Properties[i].TryGetAttribute<ExposeToLevelEditorAttribute>(out CustomAttribute attribute))
+                    if (targetType.Properties[i].TryGetAttribute<ExposeToLevelEditorAttribute>(out CustomAttribute attribute))
                     {
-                        if (type.Properties[i].GetMethod == null)
+                        if (targetType.Properties[i].GetMethod == null)
                         {
-                            Debug.LogError(type.FullName + "." + type.Properties[i].Name + " does not have a get method. Exposed properties need to have both a getter and setter.");
-
-                            return (false, false);
+                            Error($"{targetType.FullName}.{targetType.Properties[i].Name} does not have a get method. Exposed properties need to have both a getter and setter.");
                         }
 
-                        if (type.Properties[i].SetMethod == null)
+                        if (targetType.Properties[i].SetMethod == null)
                         {
-                            Debug.LogError(type.FullName + "." + type.Properties[i].Name + " does not have a set method. Exposed properties need to have both a getter and setter.");
-
-                            return (false, false);
+                            Error($"{targetType.FullName}.{targetType.Properties[i].Name} does not have a set method. Exposed properties need to have both a getter and setter.");
                         }
 
                         int id = attribute.GetConstructorArgument(0, 0);
                         if (usedIds.Contains(id))
                         {
-                            Debug.LogError($"The ID {id} is already in use in {type.FullName}. The IDs need to be unique!");
-
-                            return (false, false);
+                            Error($"{targetType.Name}.{targetType.Properties[i].Name} has a duplicate ID ({id}). IDs need to be unique.");
                         }
 
                         usedIds.Add(id);
@@ -210,19 +203,19 @@ namespace Hertzole.ALE.CodeGen
                         int customOrder = attribute.GetField("order", 0);
                         if (customOrder > 0)
                         {
-                            customOrder += type.Fields.Count + type.Properties.Count;
+                            customOrder += targetType.Fields.Count + targetType.Properties.Count;
                         }
                         else if (customOrder < 0)
                         {
-                            customOrder -= type.Fields.Count + type.Properties.Count;
+                            customOrder -= targetType.Fields.Count + targetType.Properties.Count;
                         }
                         else
                         {
-                            customOrder = type.Fields.Count + i;
+                            customOrder = targetType.Fields.Count + i;
                         }
 
-                        exposedFields.Add(new FieldOrProperty(attribute) { property = type.Properties[i], order = customOrder });
-                        RegisterTypeProcessor.AddType(type.Properties[i].PropertyType);
+                        exposedFields.Add(new FieldOrProperty(attribute) { property = targetType.Properties[i], order = customOrder });
+                        TypeRegister.AddType(targetType.Properties[i].PropertyType);
                     }
                 }
             }
@@ -230,7 +223,7 @@ namespace Hertzole.ALE.CodeGen
             // There were no exposed fields so there's no reason to continue.
             if (exposedFields.Count == 0)
             {
-                return (true, false);
+                return;
             }
 
             bool hasVisibleFields = false;
@@ -243,52 +236,50 @@ namespace Hertzole.ALE.CodeGen
                 }
             }
 
-            stringFormat = module.ImportReference(typeof(string).GetMethod("Format", new Type[] { typeof(string), typeof(object) }));
-            stringEquality = module.ImportReference(typeof(string).GetMethod("op_Equality", new Type[] { typeof(string), typeof(string) }));
-            argumentException = module.ImportReference(typeof(ArgumentException).GetConstructor(new Type[] { typeof(string) }));
-            getType = module.ImportReference(typeof(Type).GetMethod("GetTypeFromHandle", new Type[] { typeof(RuntimeTypeHandle) }));
+            stringFormat = Module.ImportReference(typeof(string).GetMethod("Format", new Type[] { typeof(string), typeof(object) }));
+            stringEquality = Module.ImportReference(typeof(string).GetMethod("op_Equality", new Type[] { typeof(string), typeof(string) }));
+            argumentException = Module.ImportReference(typeof(ArgumentException).GetConstructor(new Type[] { typeof(string) }));
+            getType = Module.ImportReference(typeof(Type).GetMethod("GetTypeFromHandle", new Type[] { typeof(RuntimeTypeHandle) }));
 
             exposedFields.Sort((x, y) => x.order.CompareTo(y.order));
 
-            InterfaceImplementation exposedInterface = new InterfaceImplementation(module.ImportReference(typeof(IExposedToLevelEditor)));
+            InterfaceImplementation exposedInterface = new InterfaceImplementation(Module.ImportReference(typeof(IExposedToLevelEditor)));
 
             // It already implements the interface.
-            if (type.ImplementsInterface(exposedInterface))
+            if (targetType.ImplementsInterface(exposedInterface))
             {
-                return (true, false);
+                return;
             }
 
-            type.Interfaces.Add(exposedInterface);
+            targetType.Interfaces.Add(exposedInterface);
 
-            CreateLockObject(type);
-            CreateValueChangedEvent(type);
+            CreateLockObject(targetType);
+            CreateValueChangedEvent(targetType);
 
-            PropertyDefinition componentName = CreateProperty("ComponentName", type.Name, typeof(string), module, type);
-            PropertyDefinition typeName = CreateProperty("TypeName", type.FullName, typeof(string), module, type);
-            PropertyDefinition order = CreateProperty("Order", 0, typeof(int), module, type);
-            PropertyDefinition componentType = CreateProperty("ComponentType", type, typeof(Type), module, type);
-            PropertyDefinition hasVisibleFieldsProperty = CreateProperty("HasVisibleFields", hasVisibleFields, typeof(bool), module, type);
+            PropertyDefinition componentName = CreateProperty("ComponentName", targetType.Name, typeof(string), targetType);
+            PropertyDefinition typeName = CreateProperty("TypeName", targetType.FullName, typeof(string), targetType);
+            PropertyDefinition order = CreateProperty("Order", 0, typeof(int), targetType);
+            PropertyDefinition componentType = CreateProperty("ComponentType", targetType, typeof(Type), targetType);
+            PropertyDefinition hasVisibleFieldsProperty = CreateProperty("HasVisibleFields", hasVisibleFields, typeof(bool), targetType);
 
-            type.Properties.Add(componentName);
-            type.Properties.Add(typeName);
-            type.Properties.Add(order);
-            type.Properties.Add(componentType);
-            type.Properties.Add(hasVisibleFieldsProperty);
+            targetType.Properties.Add(componentName);
+            targetType.Properties.Add(typeName);
+            targetType.Properties.Add(order);
+            targetType.Properties.Add(componentType);
+            targetType.Properties.Add(hasVisibleFieldsProperty);
 
-            MethodDefinition getPropertiesMethod = CreateGetProperties(module, exposedFields);
-            MethodDefinition getValueMethod = CreateGetValue(module, exposedFields);
-            MethodDefinition setValueMethod = CreateSetValue(module, exposedFields);
-            MethodDefinition getValueTypeMethod = CreateGetValueType(module, exposedFields);
+            MethodDefinition getPropertiesMethod = CreateGetProperties(exposedFields);
+            MethodDefinition getValueMethod = CreateGetValue(exposedFields);
+            MethodDefinition setValueMethod = CreateSetValue(exposedFields);
+            MethodDefinition getValueTypeMethod = CreateGetValueType(exposedFields);
 
-            type.Methods.Add(getPropertiesMethod);
-            type.Methods.Add(getValueMethod);
-            type.Methods.Add(setValueMethod);
-            type.Methods.Add(getValueTypeMethod);
-
-            return (true, true);
+            targetType.Methods.Add(getPropertiesMethod);
+            targetType.Methods.Add(getValueMethod);
+            targetType.Methods.Add(setValueMethod);
+            targetType.Methods.Add(getValueTypeMethod);
         }
 
-        private static void CreateLockObject(TypeDefinition type)
+        private void CreateLockObject(TypeDefinition type)
         {
             lockField = GetOrCreateField("ALE_ExposedToLevelEditor_lockObject", type, typeof(object));
             type.Fields.Add(lockField);
@@ -304,7 +295,7 @@ namespace Hertzole.ALE.CodeGen
             il.InsertAfter(il.Body.Instructions[2], Instruction.Create(OpCodes.Ldarg_0));
         }
 
-        private static void CreateValueChangedEvent(TypeDefinition type)
+        private void CreateValueChangedEvent(TypeDefinition type)
         {
             TypeReference action = type.Module.ImportReference(typeof(Action<int, object>));
             TypeReference voidType = type.Module.ImportReference(typeof(void));
@@ -314,7 +305,7 @@ namespace Hertzole.ALE.CodeGen
             CreateOnValueChanged(type, action, voidType);
         }
 
-        private static void CreateInternalOnValueChanged(TypeDefinition type, TypeReference action, TypeReference voidType, CustomAttribute compilerGenerated)
+        private void CreateInternalOnValueChanged(TypeDefinition type, TypeReference action, TypeReference voidType, CustomAttribute compilerGenerated)
         {
             internalOnValueChanged = new EventDefinition("ALE_ExposedToLevelEditor_OnValueChanged", EventAttributes.None, action);
             internalOnValueChangedField = new FieldDefinition("ALE_ExposedToLevelEditor_OnValueChanged", FieldAttributes.Private, action);
@@ -334,7 +325,7 @@ namespace Hertzole.ALE.CodeGen
             type.Events.Add(internalOnValueChanged);
         }
 
-        private static MethodDefinition CreateInternalAddRemoveEventMethod(TypeDefinition type, FieldDefinition eventField, string name, bool combine,
+        private MethodDefinition CreateInternalAddRemoveEventMethod(TypeDefinition type, FieldDefinition eventField, string name, bool combine,
             TypeReference action, TypeReference voidType, CustomAttribute compilerGenerated)
         {
             MethodDefinition method = new MethodDefinition(name, MethodAttributes.Private | MethodAttributes.HideBySig | MethodAttributes.SpecialName, voidType);
@@ -381,7 +372,7 @@ namespace Hertzole.ALE.CodeGen
             return method;
         }
 
-        private static void CreateOnValueChanged(TypeDefinition type, TypeReference action, TypeReference voidType)
+        private void CreateOnValueChanged(TypeDefinition type, TypeReference action, TypeReference voidType)
         {
             EventDefinition valueChanged = new EventDefinition("IExposedToLevelEditor.OnValueChanged", EventAttributes.None, action);
 
@@ -397,7 +388,7 @@ namespace Hertzole.ALE.CodeGen
             type.Events.Add(valueChanged);
         }
 
-        private static MethodDefinition CreateOnValueChangeAddRemoveMethod(TypeDefinition type, FieldDefinition lockObject, string name, bool remove, MethodDefinition targetMethod,
+        private MethodDefinition CreateOnValueChangeAddRemoveMethod(TypeDefinition type, FieldDefinition lockObject, string name, bool remove, MethodDefinition targetMethod,
             TypeReference action, TypeReference voidType)
         {
             MethodDefinition method = new MethodDefinition(name, MethodAttributes.Private | MethodAttributes.Final | MethodAttributes.HideBySig | MethodAttributes.SpecialName |
@@ -451,24 +442,24 @@ namespace Hertzole.ALE.CodeGen
             return method;
         }
 
-        private static FieldDefinition GetOrCreateField(string fieldName, TypeDefinition type, Type fieldType)
+        private FieldDefinition GetOrCreateField(string fieldName, TypeDefinition type, Type fieldType)
         {
             if (!type.TryGetField(fieldName, out FieldDefinition field))
             {
-                return new FieldDefinition(fieldName, FieldAttributes.Private, type.Module.ImportReference(fieldType));
+                return new FieldDefinition(fieldName, FieldAttributes.Private, Module.ImportReference(fieldType));
             }
 
             return field;
         }
 
-        private static PropertyDefinition CreateProperty(string name, object value, Type returnType, ModuleDefinition module, TypeDefinition type)
+        private PropertyDefinition CreateProperty(string name, object value, Type returnType, TypeDefinition type)
         {
-            PropertyDefinition prop = new PropertyDefinition($"Hertzole.ALE.IExposedToLevelEditor.{name}", PropertyAttributes.None, module.ImportReference(returnType));
+            PropertyDefinition prop = new PropertyDefinition($"Hertzole.ALE.IExposedToLevelEditor.{name}", PropertyAttributes.None, Module.ImportReference(returnType));
             MethodDefinition propGet = new MethodDefinition($"Hertzole.ALE.IExposedToLevelEditor.get_{name}()",
                 MethodAttributes.Private | MethodAttributes.Final | MethodAttributes.HideBySig | MethodAttributes.SpecialName | MethodAttributes.NewSlot | MethodAttributes.Virtual,
-                module.ImportReference(returnType));
+                Module.ImportReference(returnType));
 
-            propGet.Overrides.Add(module.ImportReference(typeof(IExposedToLevelEditor).GetMethod("get_" + name, Array.Empty<Type>())));
+            propGet.Overrides.Add(Module.ImportReference(typeof(IExposedToLevelEditor).GetMethod("get_" + name, Array.Empty<Type>())));
 
             ILProcessor il = propGet.Body.GetILProcessor();
 
@@ -487,7 +478,7 @@ namespace Hertzole.ALE.CodeGen
             else if (returnType == typeof(Type))
             {
                 il.Emit(OpCodes.Ldtoken, (TypeReference)value);
-                il.Emit(OpCodes.Call, module.ImportReference(typeof(Type).GetMethod("GetTypeFromHandle", new Type[] { typeof(RuntimeTypeHandle) })));
+                il.Emit(OpCodes.Call, Module.ImportReference(typeof(Type).GetMethod("GetTypeFromHandle", new Type[] { typeof(RuntimeTypeHandle) })));
             }
 
             il.Emit(OpCodes.Ret);
@@ -498,24 +489,24 @@ namespace Hertzole.ALE.CodeGen
             return prop;
         }
 
-        private static MethodDefinition CreateGetProperties(ModuleDefinition module, List<FieldOrProperty> exposedFields)
+        private MethodDefinition CreateGetProperties(List<FieldOrProperty> exposedFields)
         {
             MethodDefinition method = new MethodDefinition("Hertzole.ALE.IExposedToLevelEditor.GetProperties",
                 MethodAttributes.Private | MethodAttributes.Final | MethodAttributes.HideBySig | MethodAttributes.NewSlot | MethodAttributes.Virtual,
-                module.ImportReference(typeof(ExposedProperty[])));
+                Module.ImportReference(typeof(ExposedProperty[])));
 
-            method.Overrides.Add(module.ImportReference(typeof(IExposedToLevelEditor).GetMethod("GetProperties", Array.Empty<Type>())));
+            method.Overrides.Add(Module.ImportReference(typeof(IExposedToLevelEditor).GetMethod("GetProperties", Array.Empty<Type>())));
 
             ILProcessor il = method.Body.GetILProcessor();
 
             il.Append(GetIntInstruction(exposedFields.Count));
-            il.Emit(OpCodes.Newarr, module.ImportReference(typeof(ExposedProperty)));
+            il.Emit(OpCodes.Newarr, Module.ImportReference(typeof(ExposedProperty)));
 
-            MethodReference exposedPropertyCctr = module.ImportReference(typeof(ExposedProperty).GetConstructor(new Type[]
+            MethodReference exposedPropertyCctr = Module.ImportReference(typeof(ExposedProperty).GetConstructor(new Type[]
             {
                 typeof(int), typeof(Type), typeof(string), typeof(string), typeof(bool)
             }));
-            MethodReference exposedArrayCctr = module.ImportReference(typeof(ExposedArray).GetConstructor(new Type[]
+            MethodReference exposedArrayCctr = Module.ImportReference(typeof(ExposedArray).GetConstructor(new Type[]
 
             {
                 typeof(int), typeof(Type), typeof(string), typeof(string), typeof(bool), typeof(Type)
@@ -527,11 +518,11 @@ namespace Hertzole.ALE.CodeGen
             {
                 if (!field.IsCollection)
                 {
-                    WriteExposedProperty(il, field, index, module, exposedPropertyCctr);
+                    WriteExposedProperty(il, field, index, exposedPropertyCctr);
                 }
                 else
                 {
-                    WriteExposedArray(il, field, index, module, exposedArrayCctr);
+                    WriteExposedArray(il, field, index, exposedArrayCctr);
                 }
 
                 index++;
@@ -542,12 +533,12 @@ namespace Hertzole.ALE.CodeGen
             return method;
         }
 
-        private static void WriteExposedProperty(ILProcessor il, FieldOrProperty field, int index, ModuleDefinition module, MethodReference propertyConstructor)
+        private void WriteExposedProperty(ILProcessor il, FieldOrProperty field, int index, MethodReference propertyConstructor)
         {
             il.Emit(OpCodes.Dup);
             il.Append(GetIntInstruction(index)); // Index
             il.Append(GetIntInstruction(field.id));
-            il.Emit(OpCodes.Ldtoken, module.ImportReference(field.FieldType));
+            il.Emit(OpCodes.Ldtoken, Module.ImportReference(field.FieldType));
             il.Emit(OpCodes.Call, getType);
 
             il.Emit(OpCodes.Ldstr, field.Name); // Field name
@@ -563,15 +554,15 @@ namespace Hertzole.ALE.CodeGen
             il.Emit(GetBoolOpCode(field.visible)); // Is visible
 
             il.Emit(OpCodes.Newobj, propertyConstructor); // Create the constructor.
-            il.Emit(OpCodes.Stelem_Any, module.ImportReference(typeof(ExposedProperty)));
+            il.Emit(OpCodes.Stelem_Any, Module.ImportReference(typeof(ExposedProperty)));
         }
 
-        private static void WriteExposedArray(ILProcessor il, FieldOrProperty field, int index, ModuleDefinition module, MethodReference propertyConstructor)
+        private void WriteExposedArray(ILProcessor il, FieldOrProperty field, int index, MethodReference propertyConstructor)
         {
             il.Emit(OpCodes.Dup);
             il.Append(GetIntInstruction(index)); // Index
             il.Append(GetIntInstruction(field.id));
-            il.Emit(OpCodes.Ldtoken, module.ImportReference(field.FieldType));
+            il.Emit(OpCodes.Ldtoken, Module.ImportReference(field.FieldType));
             il.Emit(OpCodes.Call, getType);
 
             il.Emit(OpCodes.Ldstr, field.Name); // Field name
@@ -588,27 +579,27 @@ namespace Hertzole.ALE.CodeGen
 
             if (field.IsList)
             {
-                il.Emit(OpCodes.Ldtoken, module.ImportReference(((GenericInstanceType)field.FieldType).GenericArguments[0]));
+                il.Emit(OpCodes.Ldtoken, Module.ImportReference(((GenericInstanceType)field.FieldType).GenericArguments[0]));
             }
             else
             {
-                il.Emit(OpCodes.Ldtoken, module.ImportReference(field.FieldType.Resolve()));
+                il.Emit(OpCodes.Ldtoken, Module.ImportReference(field.FieldType.Resolve()));
             }
 
             il.Emit(OpCodes.Call, getType);
 
             il.Emit(OpCodes.Newobj, propertyConstructor); // Create the constructor.
-            il.Emit(OpCodes.Stelem_Any, module.ImportReference(typeof(ExposedArray)));
+            il.Emit(OpCodes.Stelem_Any, Module.ImportReference(typeof(ExposedArray)));
         }
 
-        private static MethodDefinition CreateGetValue(ModuleDefinition module, List<FieldOrProperty> exposedFields)
+        private MethodDefinition CreateGetValue(List<FieldOrProperty> exposedFields)
         {
             MethodDefinition method = new MethodDefinition("Hertzole.ALE.IExposedToLevelEditor.GetValue",
                 MethodAttributes.Private | MethodAttributes.Final | MethodAttributes.HideBySig | MethodAttributes.NewSlot | MethodAttributes.Virtual,
-                module.ImportReference(typeof(object)));
+                Module.ImportReference(typeof(object)));
 
-            method.Parameters.Add(new ParameterDefinition("id", ParameterAttributes.None, module.ImportReference(typeof(int))));
-            method.Overrides.Add(module.ImportReference(typeof(IExposedToLevelEditor).GetMethod("GetValue", new Type[] { typeof(int) })));
+            method.Parameters.Add(new ParameterDefinition("id", ParameterAttributes.None, Module.ImportReference(typeof(int))));
+            method.Overrides.Add(Module.ImportReference(typeof(IExposedToLevelEditor).GetMethod("GetValue", new Type[] { typeof(int) })));
 
             CreateIfContainer(exposedFields, method, (i, il) =>
             {
@@ -641,9 +632,9 @@ namespace Hertzole.ALE.CodeGen
                 Instruction noProperty = Instruction.Create(OpCodes.Ldstr, NO_EXPOSED_FIELDS);
                 il.Append(noProperty);
                 il.Emit(OpCodes.Ldarg_1);
-                il.Emit(OpCodes.Box, module.ImportReference(typeof(int)));
+                il.Emit(OpCodes.Box, Module.ImportReference(typeof(int)));
                 il.Emit(OpCodes.Call, stringFormat);
-                il.Emit(OpCodes.Call, module.GetMethod<Debug>("LogWarning", new Type[] { typeof(object) }));
+                il.Emit(OpCodes.Call, Module.GetMethod<Debug>("LogWarning", new Type[] { typeof(object) }));
                 il.Emit(OpCodes.Ldnull);
                 il.Emit(OpCodes.Ret);
 
@@ -655,22 +646,22 @@ namespace Hertzole.ALE.CodeGen
             return method;
         }
 
-        private static MethodDefinition CreateSetValue(ModuleDefinition module, List<FieldOrProperty> exposedFields)
+        private MethodDefinition CreateSetValue(List<FieldOrProperty> exposedFields)
         {
             MethodDefinition method = new MethodDefinition("Hertzole.ALE.IExposedToLevelEditor.SetValue",
                 MethodAttributes.Private | MethodAttributes.Final | MethodAttributes.HideBySig | MethodAttributes.NewSlot | MethodAttributes.Virtual,
-                module.ImportReference(typeof(void)));
+                Module.ImportReference(typeof(void)));
 
-            method.Parameters.Add(new ParameterDefinition("id", ParameterAttributes.None, module.ImportReference(typeof(int))));
-            method.Parameters.Add(new ParameterDefinition("value", ParameterAttributes.None, module.ImportReference(typeof(object))));
-            method.Parameters.Add(new ParameterDefinition("notify", ParameterAttributes.None, module.ImportReference(typeof(bool))));
-            method.Overrides.Add(module.ImportReference(typeof(IExposedToLevelEditor).GetMethod("SetValue", new Type[] { typeof(int), typeof(object), typeof(bool) })));
+            method.Parameters.Add(new ParameterDefinition("id", ParameterAttributes.None, Module.ImportReference(typeof(int))));
+            method.Parameters.Add(new ParameterDefinition("value", ParameterAttributes.None, Module.ImportReference(typeof(object))));
+            method.Parameters.Add(new ParameterDefinition("notify", ParameterAttributes.None, Module.ImportReference(typeof(bool))));
+            method.Overrides.Add(Module.ImportReference(typeof(IExposedToLevelEditor).GetMethod("SetValue", new Type[] { typeof(int), typeof(object), typeof(bool) })));
 
             ILProcessor il = method.Body.GetILProcessor();
 
             Instruction last = Instruction.Create(OpCodes.Ldarg_3);
 
-            VariableDefinition changedFlag = method.AddLocalVariable<bool>(module, out int changedFlagIndex);
+            VariableDefinition changedFlag = method.AddLocalVariable<bool>(Module, out int changedFlagIndex);
             // Set 'changed' flag to false.
             il.EmitBoolean(false, changedFlag, changedFlagIndex);
 
@@ -678,7 +669,7 @@ namespace Hertzole.ALE.CodeGen
 
             for (int i = 0; i < exposedFields.Count; i++)
             {
-                VariableDefinition variable = method.AddLocalVariable(module, exposedFields[i].FieldType, out int varIndex);
+                VariableDefinition variable = method.AddLocalVariable(Module, exposedFields[i].FieldType, out int varIndex);
                 Instruction[] instructions = WriteSetField(exposedFields[i], variable, varIndex);
 
                 il.Append(instructions);
@@ -686,9 +677,9 @@ namespace Hertzole.ALE.CodeGen
 
             il.Append(ifElseLast);
             il.Emit(OpCodes.Ldarg_1);
-            il.Emit(OpCodes.Box, module.ImportReference(typeof(int)));
-            il.Emit(OpCodes.Call, module.ImportReference(typeof(string).GetMethod("Format", new Type[] { typeof(string), typeof(object) })));
-            il.Emit(OpCodes.Call, module.ImportReference(typeof(Debug).GetMethod("LogWarning", new Type[] { typeof(object) })));
+            il.Emit(OpCodes.Box, Module.ImportReference(typeof(int)));
+            il.Emit(OpCodes.Call, Module.ImportReference(typeof(string).GetMethod("Format", new Type[] { typeof(string), typeof(object) })));
+            il.Emit(OpCodes.Call, Module.ImportReference(typeof(Debug).GetMethod("LogWarning", new Type[] { typeof(object) })));
 
             for (int i = 0; i < il.Body.Instructions.Count; i++)
             {
@@ -736,7 +727,7 @@ namespace Hertzole.ALE.CodeGen
 
             il.Append(invokeEvent);
             il.Emit(OpCodes.Ldarg_2);
-            il.Emit(OpCodes.Callvirt, module.ImportReference(typeof(Action<int, object>).GetMethod("Invoke", new Type[] { typeof(int), typeof(object) })));
+            il.Emit(OpCodes.Callvirt, Module.ImportReference(typeof(Action<int, object>).GetMethod("Invoke", new Type[] { typeof(int), typeof(object) })));
 
             il.Append(ret);
 
@@ -800,7 +791,7 @@ namespace Hertzole.ALE.CodeGen
 
                 if (field.IsCollection)
                 {
-                    equals = module.ImportReference(typeof(LevelEditorExtensions).GetMethod("IsSameAs", new Type[] { typeof(ICollection), typeof(ICollection) }));
+                    equals = Module.ImportReference(typeof(LevelEditorExtensions).GetMethod("IsSameAs", new Type[] { typeof(ICollection), typeof(ICollection) }));
                     i.Add(Instruction.Create(OpCodes.Call, equals));
                     i.Add(Instruction.Create(OpCodes.Brtrue, last));
                 }
@@ -810,7 +801,7 @@ namespace Hertzole.ALE.CodeGen
 
                     if (isSameEquals)
                     {
-                        i.Add(Instruction.Create(OpCodes.Call, module.ImportReference(equals)));
+                        i.Add(Instruction.Create(OpCodes.Call, Module.ImportReference(equals)));
                     }
                     else
                     {
@@ -821,7 +812,7 @@ namespace Hertzole.ALE.CodeGen
                             i.Add(Instruction.Create(OpCodes.Constrained, field.FieldType));
                         }
 
-                        i.Add(Instruction.Create(OpCodes.Callvirt, module.ImportReference(equals)));
+                        i.Add(Instruction.Create(OpCodes.Callvirt, Module.ImportReference(equals)));
                     }
 
                     if (isInEquality)
@@ -859,7 +850,7 @@ namespace Hertzole.ALE.CodeGen
                     TypeReference fieldType = field.FieldType;
                     if (type.IsSubclassOf<UnityEngine.Object>())
                     {
-                        fieldType = module.ImportReference(typeof(UnityEngine.Object));
+                        fieldType = Module.ImportReference(typeof(UnityEngine.Object));
                     }
 
                     if (!type.TryGetMethodWithParameters("Equals", out MethodReference method, fieldType))
@@ -870,7 +861,7 @@ namespace Hertzole.ALE.CodeGen
                             {
                                 if (!type.TryGetMethodInBaseTypeWithParameters("op_Inequality", out method, fieldType, fieldType))
                                 {
-                                    if (!type.TryGetMethodWithParameters("Equals", out method, module.ImportReference(typeof(object))))
+                                    if (!type.TryGetMethodWithParameters("Equals", out method, Module.ImportReference(typeof(object))))
                                     {
                                         method = type.GetMethodInBaseType("Equals");
                                     }
@@ -900,13 +891,13 @@ namespace Hertzole.ALE.CodeGen
             }
         }
 
-        private static MethodDefinition CreateGetValueType(ModuleDefinition module, List<FieldOrProperty> exposedFields)
+        private MethodDefinition CreateGetValueType(List<FieldOrProperty> exposedFields)
         {
             MethodDefinition method = new MethodDefinition("Hertzole.ALE.IExposedToLevelEditor.GetValueType",
                 MethodAttributes.Private | MethodAttributes.Final | MethodAttributes.HideBySig | MethodAttributes.NewSlot | MethodAttributes.Virtual,
-                module.ImportReference(typeof(Type)));
-            method.Parameters.Add(new ParameterDefinition("id", ParameterAttributes.None, module.ImportReference(typeof(int))));
-            method.Overrides.Add(module.ImportReference(typeof(IExposedToLevelEditor).GetMethod("GetValueType", new Type[] { typeof(int) })));
+                Module.ImportReference(typeof(Type)));
+            method.Parameters.Add(new ParameterDefinition("id", ParameterAttributes.None, Module.ImportReference(typeof(int))));
+            method.Overrides.Add(Module.ImportReference(typeof(IExposedToLevelEditor).GetMethod("GetValueType", new Type[] { typeof(int) })));
 
             CreateIfContainer(exposedFields, method, (i, il) =>
             {
@@ -932,9 +923,9 @@ namespace Hertzole.ALE.CodeGen
                 Instruction noProperty = Instruction.Create(OpCodes.Ldstr, NO_EXPOSED_FIELDS);
                 il.Append(noProperty);
                 il.Emit(OpCodes.Ldarg_1);
-                il.Emit(OpCodes.Box, module.GetTypeReference<int>());
+                il.Emit(OpCodes.Box, Module.GetTypeReference<int>());
                 il.Emit(OpCodes.Call, stringFormat);
-                il.Emit(OpCodes.Call, module.GetMethod<Debug>("LogWarning", new Type[] { typeof(object) }));
+                il.Emit(OpCodes.Call, Module.GetMethod<Debug>("LogWarning", new Type[] { typeof(object) }));
                 il.Emit(OpCodes.Ldnull);
                 il.Emit(OpCodes.Ret);
 

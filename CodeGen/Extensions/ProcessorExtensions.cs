@@ -28,7 +28,7 @@ namespace Hertzole.ALE.CodeGen
                 File = sequencePoint?.Document.Url.Replace($"{Environment.CurrentDirectory}{Path.DirectorySeparatorChar}", ""),
                 Line = sequencePoint?.StartLine ?? 0,
                 Column = sequencePoint?.StartColumn ?? 0,
-                MessageData = $" - {message}"
+                MessageData = message
             });
         }
 
