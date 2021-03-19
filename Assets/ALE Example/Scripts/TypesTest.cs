@@ -76,6 +76,16 @@ public struct AdvancedStruct : IEquatable<AdvancedStruct>
     {
         return !(left == right);
     }
+
+    public static implicit operator SimpleStruct(AdvancedStruct x)
+    {
+        return new SimpleStruct() { value = x.value };
+    }
+
+    public static implicit operator Vector3(AdvancedStruct x)
+    {
+        return Vector3.one;
+    }
 }
 
 public class TypesTest : MonoBehaviour
@@ -163,9 +173,6 @@ public class TypesTest : MonoBehaviour
 
     [ExposeToLevelEditor(27)] public Dictionary<string, int> Dic { get { return dic; } set { dic = value; } }
 
-    [ExposeToLevelEditor(100)]
-    public string fucker;
-
     public event Action<int, object> OnTemplateValueChanged;
 
     private Type GetValueTypeTemplate(int id)
@@ -243,6 +250,11 @@ public class TypesTest : MonoBehaviour
             if (value is Color value_2 && !colorTest.Equals(value_2))
             {
                 colorTest = value_2;
+                changed = true;
+            }
+            else if (value is Vector4 value_2_vec4 && !colorTest.Equals(value_2_vec4))
+            {
+                colorTest = value_2_vec4;
                 changed = true;
             }
         }
@@ -379,14 +391,6 @@ public class TypesTest : MonoBehaviour
             if (value is SimpleClass[] value_24 && !ClassArray.IsSameAs(value_24))
             {
                 ClassArray = value_24;
-                changed = true;
-            }
-        }
-        else if (id == 100)
-        {
-            if (value is string value_100 && !fucker.Equals(value_100))
-            {
-                fucker = value_100;
                 changed = true;
             }
         }
