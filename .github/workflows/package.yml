@@ -13,11 +13,11 @@ jobs:
         fetch-depth: 0
     - name: Create dev package branch
       run: |
-        git branch -d dev-package &> /dev/null || echo dev-package branch not found
-        git subtree split -P "$PKG_ROOT" -b dev-package
+        git branch -d package &> /dev/null || echo package branch not found
+        git subtree split -P "$PKG_ROOT" -b package
         mv "Assets/ALE Example" /tmp/example
         mv README.md /tmp/README.md
-        git checkout dev-package
+        git checkout package
         mv /tmp/README.md README.md
         git add README.md
         mkdir "Samples~"
@@ -26,7 +26,7 @@ jobs:
         git config --global user.name 'github-bot'
         git config --global user.email 'github-bot@users.noreply.github.com'
         git commit -am "Packaged project"
-        git push -f -u origin dev-package
+        git push -f -u origin package
       env:
         PKG_ROOT: "Packages/se.hertzole.ale"
         

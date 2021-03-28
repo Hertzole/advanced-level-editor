@@ -170,7 +170,6 @@ namespace Hertzole.ALE.CodeGen
                         }
 
                         exposedFields.Add(new FieldOrProperty(attribute) { field = targetType.Fields[i], order = customOrder });
-                        //RegisterTypeProcessor.AddType(type.Fields[i].FieldType);
                         TypeRegister.AddType(targetType.Fields[i].FieldType);
                     }
                 }
@@ -869,11 +868,13 @@ namespace Hertzole.ALE.CodeGen
                                 else
                                 {
                                     isInEquality = true;
+                                    isSameEquals = true;
                                 }
                             }
                             else
                             {
                                 isInEquality = true;
+                                isSameEquals = true;
                             }
                         }
                         else
@@ -884,6 +885,13 @@ namespace Hertzole.ALE.CodeGen
                     else
                     {
                         isSameEquals = true;
+                    }
+
+                    if (method.DeclaringType.Is<ValueType>())
+                    {
+                        isSameEquals = false;
+                        isInEquality = false;
+                        method = Module.GetMethod<object>("Equals", new Type[] { typeof(object) });
                     }
 
                     return method;

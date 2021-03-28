@@ -1265,7 +1265,7 @@ MonoBehaviour:
   classArray: []
   structArray: []
   advancedList: []
-  fucker: 
+  enumTest: 1
 --- !u!114 &682176890
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1691,6 +1691,9 @@ MonoBehaviour:
   assetsContent: {fileID: 1483967390}
   assetButtonPrefab: {fileID: 1657355865, guid: 0400328013e88dd4cb8069a745f20d43, type: 3}
   displayFirstSpriteAsIcon: 1
+  iconHandling: 1
+  generateAsync: 0
+  asyncWaitMethod: 2
 --- !u!1001 &1015285062
 PrefabInstance:
   m_ObjectHideFlags: 0

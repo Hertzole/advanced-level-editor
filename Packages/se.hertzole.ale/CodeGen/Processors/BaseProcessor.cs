@@ -53,6 +53,11 @@ namespace Hertzole.ALE.CodeGen
 
         public static Instruction GetLdloc(int index, VariableDefinition variable, bool ldloc_a = false)
         {
+            if (ldloc_a)
+            {
+                return Instruction.Create(OpCodes.Ldloca_S, variable);
+            }
+
             switch (index)
             {
                 case 0:
@@ -64,7 +69,7 @@ namespace Hertzole.ALE.CodeGen
                 case 3:
                     return Instruction.Create(OpCodes.Ldloc_3);
                 default:
-                    return Instruction.Create(ldloc_a ? OpCodes.Ldloca_S : OpCodes.Ldloc_S, variable);
+                    return Instruction.Create(OpCodes.Ldloc_S, variable);
             }
         }
 

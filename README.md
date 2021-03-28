@@ -2,6 +2,9 @@
 
 ⚠ **ALE IS IN VERY EARLY DEVELOPMENT! ANYTHING CAN CHANGE SUDDENLY! USE AT YOUR OWN RISK** ⚠
 
+![Built level editor](https://i.imgur.com/DDV0CIm.png)
+*Image is what ALE currently looks like. Will get periodically updated along with ALE. Keep in mind everything is a work in progress!*
+
 ## ❓ What is it?
 ALE is a runtime level editor for Unity that aims to be simple to use both for the user and the developer. It's built with performance and usability in mind. It should also be extendable so you can adapt it to fit just right for your game.
 
@@ -23,7 +26,7 @@ What needs to be done before 1.0.0 verified.
 - [x] Editor camera
 - [ ] Full 2D support
 - [ ] Full 3D support
-- [ ] Input System support
+- [x] Input System support
 - [ ] Undo and redo
 - [x] Hierarchy
 - [ ] Hierarchy customization
@@ -31,19 +34,19 @@ What needs to be done before 1.0.0 verified.
 - [x] Custom component fields
 - [x] Resource browser
 - [ ] Resource browser customization
-- [ ] Level editor gizmos
-- [ ] Play mode
+- [x] Level editor gizmos
+- [x] Play mode
 - [x] Save all exposed values in play mode
 - [ ] Auto serialize unknown types
 - [ ] Auto expose unknown types
-- [ ] Integrate custom serializers
+- [x] Integrate custom serializers
 - [ ] Menu items
+- [ ] Add component menus
 - [x] Custom component wrappers
 - [x] Serialize arrays¹
 - [x] Serialize lists¹
 - [ ] Serialize dictionary²
 - [ ] Resource limit support
-- [ ] Generate resource icons at build time
 
 #### Optional
 What would be really nice to have before 1.0.0 verified.  
@@ -51,7 +54,6 @@ What would be really nice to have before 1.0.0 verified.
 - [ ] Scene grid
 - [ ] Manipulation handles
 - [ ] Adaptive editor GUI
-- [ ] Clean up code
 - [ ] Tilemap integration
 - [ ] ProBuilder integration
 - [ ] Multiselection support
@@ -69,9 +71,9 @@ The supported inspector fields.
 - [x] Vector3(int) field
 - [ ] Vector4/Quaternion field
 - [x] Object reference field
-- [ ] Resource reference
+- [ ] Resource reference field
 - [x] Color field
-- [ ] Arrays
+- [ ] Array field
 - [ ] Nested classes/structs
 - [x] Enum field
 

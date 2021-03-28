@@ -21,8 +21,7 @@ public class AdvancedClass : IEquatable<AdvancedClass>
 
     public bool Equals(AdvancedClass other)
     {
-        return other != null &&
-               value == other.value;
+        return other != null && value == other.value;
     }
 
     public override int GetHashCode()
@@ -90,88 +89,85 @@ public struct AdvancedStruct : IEquatable<AdvancedStruct>
 
 public class TypesTest : MonoBehaviour
 {
+    public enum TestEnum { Test1 = -10, Test3 = 66, Consistency = 520, No = 1 }
+
     [ExposeToLevelEditor(0)]
     [SerializeField]
     private string stringTest;
-
     [ExposeToLevelEditor(1)]
     [SerializeField]
     private int intTest;
-
     [ExposeToLevelEditor(2)]
     [SerializeField]
     private Color colorTest;
-
     [ExposeToLevelEditor(3)]
     [SerializeField]
     private Color32 color32Test;
-
     [ExposeToLevelEditor(4)]
     [SerializeField]
     private Vector3 vectorTest;
-
     [ExposeToLevelEditor(5)]
     [SerializeField]
     private Transform referenceTest;
-
     [ExposeToLevelEditor(6)]
     [SerializeField]
     private SimpleClass simpleClass;
-
     [ExposeToLevelEditor(7)]
     [SerializeField]
     private AdvancedClass advancedClass;
-
     [ExposeToLevelEditor(8)]
     [SerializeField]
     private SimpleStruct simpleStruct;
-
     [ExposeToLevelEditor(9)]
     [SerializeField]
     private AdvancedStruct advancedStruct;
-
     [ExposeToLevelEditor(10)]
     [SerializeField]
     private SimpleClass[] classArray;
-
     [ExposeToLevelEditor(11)]
     [SerializeField]
     private SimpleStruct[] structArray;
-
     [ExposeToLevelEditor(12)]
     [SerializeField]
     private List<AdvancedClass> advancedList = new List<AdvancedClass>();
-
     [ExposeToLevelEditor(13)]
     private Dictionary<string, int> dic = new Dictionary<string, int>();
 
-    [ExposeToLevelEditor(14)] public string StringTest { get { return stringTest; } set { stringTest = value; } }
+    [ExposeToLevelEditor(14)]
+    public string StringTest { get { return stringTest; } set { stringTest = value; } }
+    [ExposeToLevelEditor(15)]
+    public int IntTest { get { return intTest; } set { intTest = value; } }
+    [ExposeToLevelEditor(16)]
+    public Color ColorTest { get { return colorTest; } set { colorTest = value; } }
+    [ExposeToLevelEditor(17)]
+    public Color32 Color32Test { get { return color32Test; } set { color32Test = value; } }
+    [ExposeToLevelEditor(18)]
+    public Vector3 VectorTest { get { return vectorTest; } set { vectorTest = value; } }
+    [ExposeToLevelEditor(19)]
+    public Transform ReferenceTest { get { return referenceTest; } set { referenceTest = value; } }
+    [ExposeToLevelEditor(20)]
+    public SimpleClass SimpleClass { get { return simpleClass; } set { simpleClass = value; } }
+    [ExposeToLevelEditor(21)]
+    public AdvancedClass AdvancedClass { get { return advancedClass; } set { advancedClass = value; } }
+    [ExposeToLevelEditor(22)]
+    public SimpleStruct SimpleStruct { get { return simpleStruct; } set { simpleStruct = value; } }
+    [ExposeToLevelEditor(23)]
+    public AdvancedStruct AdvancedStruct { get { return advancedStruct; } set { advancedStruct = value; } }
+    [ExposeToLevelEditor(24)]
+    public SimpleClass[] ClassArray { get { return classArray; } set { classArray = value; } }
+    [ExposeToLevelEditor(25)]
+    public SimpleStruct[] StructArray { get { return structArray; } set { structArray = value; } }
+    [ExposeToLevelEditor(26)]
+    public List<AdvancedClass> AdvancedList { get { return advancedList; } set { advancedList = value; } }
+    [ExposeToLevelEditor(27)]
+    public Dictionary<string, int> Dic { get { return dic; } set { dic = value; } }
 
-    [ExposeToLevelEditor(15)] public int IntTest { get { return intTest; } set { intTest = value; } }
+    [SerializeField]
+    [ExposeToLevelEditor(28)]
+    private TestEnum enumTest = TestEnum.No;
 
-    [ExposeToLevelEditor(16)] public Color ColorTest { get { return colorTest; } set { colorTest = value; } }
-
-    [ExposeToLevelEditor(17)] public Color32 Color32Test { get { return color32Test; } set { color32Test = value; } }
-
-    [ExposeToLevelEditor(18)] public Vector3 VectorTest { get { return vectorTest; } set { vectorTest = value; } }
-
-    [ExposeToLevelEditor(19)] public Transform ReferenceTest { get { return referenceTest; } set { referenceTest = value; } }
-
-    [ExposeToLevelEditor(20)] public SimpleClass SimpleClass { get { return simpleClass; } set { simpleClass = value; } }
-
-    [ExposeToLevelEditor(21)] public AdvancedClass AdvancedClass { get { return advancedClass; } set { advancedClass = value; } }
-
-    [ExposeToLevelEditor(22)] public SimpleStruct SimpleStruct { get { return simpleStruct; } set { simpleStruct = value; } }
-
-    [ExposeToLevelEditor(23)] public AdvancedStruct AdvancedStruct { get { return advancedStruct; } set { advancedStruct = value; } }
-
-    [ExposeToLevelEditor(24)] public SimpleClass[] ClassArray { get { return classArray; } set { classArray = value; } }
-
-    [ExposeToLevelEditor(25)] public SimpleStruct[] StructArray { get { return structArray; } set { structArray = value; } }
-
-    [ExposeToLevelEditor(26)] public List<AdvancedClass> AdvancedList { get { return advancedList; } set { advancedList = value; } }
-
-    [ExposeToLevelEditor(27)] public Dictionary<string, int> Dic { get { return dic; } set { dic = value; } }
+    [ExposeToLevelEditor(29)]
+    public TestEnum EnumTest { get { return enumTest; } set { enumTest = value; } }
 
     public event Action<int, object> OnTemplateValueChanged;
 

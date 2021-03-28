@@ -56,6 +56,7 @@ public struct MyGooderStruct : IEquatable<MyGooderStruct>
 
 public class TestScript : MonoBehaviour, ILevelEditorGizmos
 {
+    public enum TestEnum { Test1 = -10, Test3 = 66, Consistency = 520, No = 1 }
 
     [SerializeField]
     [ExposeToLevelEditor(0)]
@@ -148,6 +149,9 @@ public class TestScript : MonoBehaviour, ILevelEditorGizmos
     [ExposeToLevelEditor(27)]
     [SerializeField]
     private MyGooderStruct gooderStruct = new MyGooderStruct();
+    [SerializeField]
+    [ExposeToLevelEditor(28)]
+    private TestEnum enumTest = TestEnum.Test3;
 
     private int[] ints = null;
     private Color32[] colors = null;
