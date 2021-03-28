@@ -1,13 +1,16 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Assertions;
 
 namespace Hertzole.ALE
 {
-    //TODO: Add option to generate icons async.
     public class LevelEditorResourceView : MonoBehaviour, ILevelEditorResourceView
     {
+        public enum IconHandling { Temporary = 0, SaveInMemory = 1 }
+        public enum WaitMethod { EndOfFrame = 0, NextFrame = 1, NextFixedUpdate = 2 }
+
         [Header("Folders")]
         [SerializeField]
         private ObjectTree folderTree = null;
@@ -24,13 +27,28 @@ namespace Hertzole.ALE
         [SerializeField]
         private bool displayFirstSpriteAsIcon = true;
 
+        [Header("Icon Handling")]
+        [SerializeField]
+        private IconHandling iconHandling = IconHandling.SaveInMemory;
+        [SerializeField]
+        private bool generateAsync = false;
+        [SerializeField]
+        private WaitMethod asyncWaitMethod = WaitMethod.EndOfFrame;
+
+        private bool creatingIcons;
+
         protected LevelEditorResource treeRoot;
         protected LevelEditorResource[] allAssets;
 
+        private Coroutine createIconsRoutine;
+        private YieldInstruction waitMethod;
+
         private Dictionary<int, LevelEditorResource> treeLookup = new Dictionary<int, LevelEditorResource>();
+        private Dictionary<string, Sprite> iconCache;
 
         private List<LevelEditorAssetButton> activeButtons = new List<LevelEditorAssetButton>();
         private Stack<LevelEditorAssetButton> pooledAssetButtons = new Stack<LevelEditorAssetButton>();
+
 
         public event EventHandler<AssetClickEventArgs> OnClickAsset;
         public event EventHandler<AssetClickEventArgs> OnClickFolder;
@@ -44,6 +62,26 @@ namespace Hertzole.ALE
             RuntimePreviewGenerator.OrthographicMode = true;
             RuntimePreviewGenerator.BackgroundColor = Color.clear;
             RuntimePreviewGenerator.MarkTextureNonReadable = true;
+
+            if (iconHandling == IconHandling.SaveInMemory)
+            {
+                iconCache = new Dictionary<string, Sprite>();
+            }
+
+            switch (asyncWaitMethod)
+            {
+                case WaitMethod.EndOfFrame:
+                    waitMethod = new WaitForEndOfFrame();
+                    break;
+                case WaitMethod.NextFrame:
+                    waitMethod = null;
+                    break;
+                case WaitMethod.NextFixedUpdate:
+                    waitMethod = new WaitForFixedUpdate();
+                    break;
+                default:
+                    break;
+            }
         }
 
         private void OnBindTreeItem(object sender, TreeBindItemEventArgs<TreeItem, object> e)
@@ -74,6 +112,12 @@ namespace Hertzole.ALE
         {
             if (e.New is LevelEditorResource resource)
             {
+                if (generateAsync && creatingIcons)
+                {
+                    StopCoroutine(createIconsRoutine);
+                }
+
+                creatingIcons = false;
                 resource = LookupAsset(resource.TreeID);
 
                 if (activeButtons.Count < resource.Children.Count)
@@ -100,32 +144,21 @@ namespace Hertzole.ALE
                     activeButtons[i].gameObject.name = $"{assetButtonPrefab.name} - {resource.Children[i].Name} ({resource.Children[i].ID})";
 #endif
 
-                    if (resource.Children[i].CustomIcon && resource.Children[i].Icon != null)
+                    if (generateAsync)
                     {
-                        activeButtons[i].Icon.sprite = resource.Children[i].Icon;
+                        activeButtons[i].Icon.sprite = null;
+                        activeButtons[i].Icon.color = Color.clear;
                     }
                     else
                     {
-#if UNITY_EDITOR
-                        if (resource.Children[i].Asset is GameObject go)
-                        {
-
-                            if (displayFirstSpriteAsIcon)
-                            {
-                                SpriteRenderer goSprite = go.GetComponentInChildren<SpriteRenderer>();
-                                if (goSprite != null)
-                                {
-                                    activeButtons[i].Icon.sprite = goSprite.sprite;
-                                    activeButtons[i].Icon.color = goSprite.color;
-                                    continue;
-                                }
-                            }
-                            Texture2D icon = RuntimePreviewGenerator.GenerateModelPreview(go.transform, 128, 128, true);
-                            activeButtons[i].Icon.color = Color.white;
-                            activeButtons[i].Icon.sprite = Sprite.Create(icon, new Rect(0, 0, icon.width, icon.height), new Vector2(0.5f, 0.5f));
-                        }
-#endif
+                        activeButtons[i].Icon.sprite = GetIcon(resource.Children[i], out Color iconColor);
+                        activeButtons[i].Icon.color = iconColor;
                     }
+                }
+
+                if (generateAsync)
+                {
+                    createIconsRoutine = StartCoroutine(GetIconsRoutine(resource.Children));
                 }
             }
             else if (e.New == null)
@@ -135,6 +168,73 @@ namespace Hertzole.ALE
                     PoolAssetButton(activeButtons[i]);
                 }
             }
+        }
+
+        private IEnumerator GetIconsRoutine(List<LevelEditorResource> resources)
+        {
+            creatingIcons = true;
+
+            for (int i = 0; i < resources.Count; i++)
+            {
+                activeButtons[i].Icon.sprite = GetIcon(resources[i], out Color iconColor, out bool isCached);
+                activeButtons[i].Icon.color = iconColor;
+
+                if (!isCached)
+                {
+                    yield return waitMethod;
+                }
+            }
+
+            creatingIcons = false;
+        }
+
+        private Sprite GetIcon(ILevelEditorResource resource, out Color color)
+        {
+            return GetIcon(resource, out color, out _);
+        }
+
+        private Sprite GetIcon(ILevelEditorResource resource, out Color color, out bool isCached)
+        {
+            isCached = false;
+            if (resource.CustomIcon && resource.Icon != null)
+            {
+                color = Color.white;
+                return resource.Icon;
+            }
+            else if (iconHandling == IconHandling.SaveInMemory && iconCache.TryGetValue(resource.ID, out Sprite cachedIcon))
+            {
+                color = Color.white;
+                isCached = true;
+                return cachedIcon;
+            }
+            else
+            {
+                if (resource.Asset is GameObject go)
+                {
+                    if (displayFirstSpriteAsIcon)
+                    {
+                        SpriteRenderer goSprite = go.GetComponentInChildren<SpriteRenderer>();
+                        if (goSprite != null)
+                        {
+                            color = goSprite.color;
+                            return goSprite.sprite;
+                        }
+                    }
+                    Texture2D icon = RuntimePreviewGenerator.GenerateModelPreview(go.transform, 128, 128, true);
+                    Sprite spriteIcon = Sprite.Create(icon, new Rect(0, 0, icon.width, icon.height), new Vector2(0.5f, 0.5f));
+
+                    if (iconHandling == IconHandling.SaveInMemory)
+                    {
+                        iconCache.Add(resource.ID, spriteIcon);
+                    }
+
+                    color = Color.white;
+                    return spriteIcon;
+                }
+            }
+
+            color = Color.clear;
+            return null;
         }
 
         private void OnClickAssetButton(object sender, AssetButtonClickArgs args)
