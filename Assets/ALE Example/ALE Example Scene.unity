@@ -1694,6 +1694,11 @@ MonoBehaviour:
   iconHandling: 1
   generateAsync: 0
   asyncWaitMethod: 2
+  isOrtographic: 1
+  backgroundColor: {r: 0, g: 0, b: 0, a: 0}
+  padding: 0
+  previewDirection: {x: -1, y: -1, z: -1}
+  imageSize: {x: 128, y: 128}
 --- !u!1001 &1015285062
 PrefabInstance:
   m_ObjectHideFlags: 0
