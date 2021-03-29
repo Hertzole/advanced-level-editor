@@ -27,13 +27,23 @@ namespace Hertzole.ALE
         [SerializeField]
         private bool displayFirstSpriteAsIcon = true;
 
-        [Header("Icon Handling")]
+        [Header("Preview Generator")]
         [SerializeField]
         private IconHandling iconHandling = IconHandling.SaveInMemory;
         [SerializeField]
         private bool generateAsync = false;
         [SerializeField]
         private WaitMethod asyncWaitMethod = WaitMethod.EndOfFrame;
+        [SerializeField]
+        private bool isOrtographic = true;
+        [SerializeField]
+        private Color backgroundColor = Color.clear;
+        [SerializeField]
+        private float padding = 0f;
+        [SerializeField]
+        private Vector3 previewDirection = new Vector3(-1f, -1f, -1f);
+        [SerializeField]
+        private Vector2Int imageSize = new Vector2Int(128, 128);
 
         private bool creatingIcons;
 
@@ -58,10 +68,6 @@ namespace Hertzole.ALE
             folderTree.OnBindItem += OnBindTreeItem;
             folderTree.OnItemExpandingCollapsing += OnTreeItemExpandCollapsing;
             folderTree.OnSelectionChanged += OnTreeSelectionChanged;
-
-            RuntimePreviewGenerator.OrthographicMode = true;
-            RuntimePreviewGenerator.BackgroundColor = Color.clear;
-            RuntimePreviewGenerator.MarkTextureNonReadable = true;
 
             if (iconHandling == IconHandling.SaveInMemory)
             {
@@ -220,8 +226,9 @@ namespace Hertzole.ALE
                             return goSprite.sprite;
                         }
                     }
-                    Texture2D icon = RuntimePreviewGenerator.GenerateModelPreview(go.transform, 128, 128, true);
-                    Sprite spriteIcon = Sprite.Create(icon, new Rect(0, 0, icon.width, icon.height), new Vector2(0.5f, 0.5f));
+
+                    Texture2D icon = GetIconTexture(go.transform);
+                    Sprite spriteIcon = Sprite.Create(icon, new Rect(0, 0, imageSize.x, imageSize.y), new Vector2(0.5f, 0.5f));
 
                     if (iconHandling == IconHandling.SaveInMemory)
                     {
@@ -235,6 +242,17 @@ namespace Hertzole.ALE
 
             color = Color.clear;
             return null;
+        }
+
+        public Texture2D GetIconTexture(Transform obj)
+        {
+            RuntimePreviewGenerator.OrthographicMode = isOrtographic;
+            RuntimePreviewGenerator.BackgroundColor = backgroundColor;
+            RuntimePreviewGenerator.Padding = padding;
+            RuntimePreviewGenerator.PreviewDirection = previewDirection;
+            RuntimePreviewGenerator.MarkTextureNonReadable = true;
+
+            return RuntimePreviewGenerator.GenerateModelPreview(obj, imageSize.x, imageSize.y, true);
         }
 
         private void OnClickAssetButton(object sender, AssetButtonClickArgs args)
