@@ -4,10 +4,12 @@ using Mono.Cecil.Rocks;
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Linq;
 using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Threading;
+using UnityEditorInternal;
 using UnityEngine;
 using EventAttributes = Mono.Cecil.EventAttributes;
 using FieldAttributes = Mono.Cecil.FieldAttributes;
@@ -490,105 +492,120 @@ namespace Hertzole.ALE.CodeGen
 
         private MethodDefinition CreateGetProperties(List<FieldOrProperty> exposedFields)
         {
-            MethodDefinition method = new MethodDefinition("Hertzole.ALE.IExposedToLevelEditor.GetProperties",
-                MethodAttributes.Private | MethodAttributes.Final | MethodAttributes.HideBySig | MethodAttributes.NewSlot | MethodAttributes.Virtual,
-                Module.ImportReference(typeof(ExposedProperty[])));
+            FieldDefinition cachedProperties = new FieldDefinition("ALE_ExposedToLevelEditor_cachedProperties", FieldAttributes.Private, Module.GetTypeReference<ReadOnlyCollection<ExposedProperty>>());
+            Type.Fields.Add(cachedProperties);
 
-            method.Overrides.Add(Module.ImportReference(typeof(IExposedToLevelEditor).GetMethod("GetProperties", Array.Empty<Type>())));
-
-            ILProcessor il = method.Body.GetILProcessor();
-
-            il.Append(GetIntInstruction(exposedFields.Count));
-            il.Emit(OpCodes.Newarr, Module.ImportReference(typeof(ExposedProperty)));
+            MethodDefinition constructor = Type.GetConstructor();
+            ILProcessor cil = constructor.Body.GetILProcessor();
 
             MethodReference exposedPropertyCctr = Module.ImportReference(typeof(ExposedProperty).GetConstructor(new Type[]
             {
                 typeof(int), typeof(Type), typeof(string), typeof(string), typeof(bool)
             }));
             MethodReference exposedArrayCctr = Module.ImportReference(typeof(ExposedArray).GetConstructor(new Type[]
-
             {
                 typeof(int), typeof(Type), typeof(string), typeof(string), typeof(bool), typeof(Type)
             }));
 
-            int index = 0;
+            cil.InsertAfter(cil.Body.Instructions[0], WriteCachedProperties());
+            
+            MethodDefinition method = new MethodDefinition("Hertzole.ALE.IExposedToLevelEditor.GetProperties",
+                MethodAttributes.Private | MethodAttributes.Final | MethodAttributes.HideBySig | MethodAttributes.NewSlot | MethodAttributes.Virtual,
+                Module.ImportReference(typeof(ExposedProperty[])));
 
-            foreach (FieldOrProperty field in exposedFields)
+            method.Overrides.Add(Module.ImportReference(typeof(IExposedToLevelEditor).GetMethod("GetProperties", Array.Empty<Type>())));
+
+            ILProcessor bodyIl = method.Body.GetILProcessor();
+
+            bodyIl.Emit(OpCodes.Ldarg_0);
+            bodyIl.Emit(OpCodes.Ldfld, cachedProperties);
+            bodyIl.Emit(OpCodes.Ret);
+
+            return method;
+            
+            Instruction[] WriteCachedProperties()
             {
-                if (!field.IsCollection)
+                List<Instruction> i = new List<Instruction>();
+
+                i.Add(Instruction.Create(OpCodes.Ldarg_0));
+                i.Add(GetIntInstruction(exposedFields.Count));
+                i.Add(Instruction.Create(OpCodes.Newarr, Module.ImportReference(typeof(ExposedProperty))));
+
+                for (int j = 0; j < exposedFields.Count; j++)
                 {
-                    WriteExposedProperty(il, field, index, exposedPropertyCctr);
+                    FieldOrProperty field = exposedFields[j];
+                    if (field.IsCollection)
+                    {
+                        i.AddRange(WriteExposedArray(field, j, exposedArrayCctr));
+                    }
+                    else
+                    {
+                        i.AddRange(WriteExposedProperty(field, j, exposedPropertyCctr));
+                    }
+                }
+
+                i.Add(Instruction.Create(OpCodes.Newobj, Module.ImportReference(typeof(ReadOnlyCollection<ExposedProperty>).GetConstructor(new Type[] { typeof(IList<ExposedProperty>) }))));
+                i.Add(Instruction.Create(OpCodes.Stfld, cachedProperties));
+
+                return i.ToArray();
+            }
+
+            Instruction[] WriteExposedProperty(FieldOrProperty field, int index, MethodReference propertyConstructor)
+            {
+                List<Instruction> i = new List<Instruction>();
+                
+                i.Add(Instruction.Create(OpCodes.Dup));
+                
+                i.Add(GetIntInstruction(index)); // Index
+                i.Add(GetIntInstruction(field.id));
+                
+                i.Add(Instruction.Create(OpCodes.Ldtoken, Module.ImportReference(field.FieldType)));
+                i.Add(Instruction.Create(OpCodes.Call, getType));
+                
+                i.Add(Instruction.Create(OpCodes.Ldstr, field.Name));
+                i.Add(string.IsNullOrEmpty(field.customName) ? Instruction.Create(OpCodes.Ldnull) : Instruction.Create(OpCodes.Ldstr, field.customName));
+                
+                i.Add(Instruction.Create(GetBoolOpCode(field.visible))); // Is visible
+                
+                i.Add(Instruction.Create(OpCodes.Newobj, propertyConstructor)); // Create the constructor.
+                i.Add(Instruction.Create(OpCodes.Stelem_Ref));
+
+                return i.ToArray();
+            }
+
+            Instruction[] WriteExposedArray(FieldOrProperty field, int index, MethodReference propertyConstructor)
+            {
+                List<Instruction> i = new List<Instruction>();
+                
+                i.Add(Instruction.Create(OpCodes.Dup));
+                
+                i.Add(GetIntInstruction(index)); // Index
+                i.Add(GetIntInstruction(field.id));
+                
+                i.Add(Instruction.Create(OpCodes.Ldtoken, Module.ImportReference(field.FieldType)));
+                i.Add(Instruction.Create(OpCodes.Call, getType));
+                
+                i.Add(Instruction.Create(OpCodes.Ldstr, field.Name));
+                i.Add(string.IsNullOrEmpty(field.customName) ? Instruction.Create(OpCodes.Ldnull) : Instruction.Create(OpCodes.Ldstr, field.customName));
+                
+                i.Add(Instruction.Create(GetBoolOpCode(field.visible))); // Is visible
+
+                if (field.IsList)
+                {
+                    i.Add(Instruction.Create(OpCodes.Ldtoken, Module.ImportReference(((GenericInstanceType) field.FieldType).GenericArguments[0])));
                 }
                 else
                 {
-                    WriteExposedArray(il, field, index, exposedArrayCctr);
+                    i.Add(Instruction.Create(OpCodes.Ldtoken, Module.ImportReference(field.FieldType.Resolve())));
                 }
+                
+                i.Add(Instruction.Create(OpCodes.Call, getType));
+                
+                i.Add(Instruction.Create(OpCodes.Newobj, propertyConstructor)); // Create the constructor.
+                i.Add(Instruction.Create(OpCodes.Stelem_Ref));
 
-                index++;
+                return i.ToArray();
             }
-
-            il.Emit(OpCodes.Ret);
-
-            return method;
-        }
-
-        private void WriteExposedProperty(ILProcessor il, FieldOrProperty field, int index, MethodReference propertyConstructor)
-        {
-            il.Emit(OpCodes.Dup);
-            il.Append(GetIntInstruction(index)); // Index
-            il.Append(GetIntInstruction(field.id));
-            il.Emit(OpCodes.Ldtoken, Module.ImportReference(field.FieldType));
-            il.Emit(OpCodes.Call, getType);
-
-            il.Emit(OpCodes.Ldstr, field.Name); // Field name
-            if (string.IsNullOrEmpty(field.customName))
-            {
-                il.Emit(OpCodes.Ldnull);
-            }
-            else
-            {
-                il.Emit(OpCodes.Ldstr, field.customName);
-            }
-
-            il.Emit(GetBoolOpCode(field.visible)); // Is visible
-
-            il.Emit(OpCodes.Newobj, propertyConstructor); // Create the constructor.
-            il.Emit(OpCodes.Stelem_Any, Module.ImportReference(typeof(ExposedProperty)));
-        }
-
-        private void WriteExposedArray(ILProcessor il, FieldOrProperty field, int index, MethodReference propertyConstructor)
-        {
-            il.Emit(OpCodes.Dup);
-            il.Append(GetIntInstruction(index)); // Index
-            il.Append(GetIntInstruction(field.id));
-            il.Emit(OpCodes.Ldtoken, Module.ImportReference(field.FieldType));
-            il.Emit(OpCodes.Call, getType);
-
-            il.Emit(OpCodes.Ldstr, field.Name); // Field name
-            if (string.IsNullOrEmpty(field.customName))
-            {
-                il.Emit(OpCodes.Ldnull);
-            }
-            else
-            {
-                il.Emit(OpCodes.Ldstr, field.customName);
-            }
-
-            il.Emit(GetBoolOpCode(field.visible)); // Is visible
-
-            if (field.IsList)
-            {
-                il.Emit(OpCodes.Ldtoken, Module.ImportReference(((GenericInstanceType)field.FieldType).GenericArguments[0]));
-            }
-            else
-            {
-                il.Emit(OpCodes.Ldtoken, Module.ImportReference(field.FieldType.Resolve()));
-            }
-
-            il.Emit(OpCodes.Call, getType);
-
-            il.Emit(OpCodes.Newobj, propertyConstructor); // Create the constructor.
-            il.Emit(OpCodes.Stelem_Any, Module.ImportReference(typeof(ExposedArray)));
         }
 
         private MethodDefinition CreateGetValue(List<FieldOrProperty> exposedFields)

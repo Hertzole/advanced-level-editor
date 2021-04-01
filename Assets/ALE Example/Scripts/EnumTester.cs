@@ -4,7 +4,7 @@ using Hertzole.ALE;
 using System;
 using UnityEngine;
 
-public class EnumTester : MonoBehaviour, IExposedToLevelEditor
+public class EnumTester : MonoBehaviour
 {
     public enum TestEnum { Test1 = -10, Test3 = 66, Consistency = 520, No = 1 }
 
@@ -45,14 +45,14 @@ public class EnumTester : MonoBehaviour, IExposedToLevelEditor
 
     public Type ComponentType { get { return typeof(EnumTester); } }
 
-    public ExposedProperty[] GetProperties()
-    {
-        return new ExposedProperty[]
-        {
-            new ExposedProperty(0, typeof(TestEnum), "enumTest", null, true),
-            //new ExposedEnum(1, typeof(TestEnum), "enumArrayTest", null, true)
-        };
-    }
+    // public ExposedProperty[] GetProperties()
+    // {
+    //     return new ExposedProperty[]
+    //     {
+    //         new ExposedProperty(0, typeof(TestEnum), "enumTest", null, true),
+    //         //new ExposedEnum(1, typeof(TestEnum), "enumArrayTest", null, true)
+    //     };
+    // }
 
     public object GetValue(int id)
     {

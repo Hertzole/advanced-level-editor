@@ -9,6 +9,7 @@
 #if !STRIP
 using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
@@ -183,8 +184,8 @@ namespace Hertzole.ALE
                     }
                     else
                     {
-                        ExposedProperty[] properties = components[i].GetProperties();
-                        for (int j = 0; j < properties.Length; j++)
+                        ReadOnlyCollection<ExposedProperty> properties = components[i].GetProperties();
+                        for (int j = 0; j < properties.Count; j++)
                         {
                             if (!properties[j].IsVisible)
                             {

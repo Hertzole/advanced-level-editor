@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using UnityEngine;
 
 namespace Hertzole.ALE
@@ -20,15 +22,17 @@ namespace Hertzole.ALE
         private const string SCALE = "scale";
         private const string PARENT = "parent";
 
-        public override ExposedProperty[] GetProperties()
+        private ReadOnlyCollection<ExposedProperty> cachedProperties = new ReadOnlyCollection<ExposedProperty>(new ExposedProperty[]
         {
-            return new ExposedProperty[4]
-            {
-                new ExposedProperty(0, typeof(Vector3), POSITION, null, true),
-                new ExposedProperty(1, typeof(Vector3), ROTATION, null, true),
-                new ExposedProperty(2, typeof(Vector3), SCALE, null, true),
-                new ExposedProperty(3, typeof(Transform), PARENT, null, false),
-            };
+            new ExposedProperty(0, typeof(Vector3), POSITION, null, true),
+            new ExposedProperty(1, typeof(Vector3), ROTATION, null, true),
+            new ExposedProperty(2, typeof(Vector3), SCALE, null, true),
+            new ExposedProperty(3, typeof(Transform), PARENT, null, false)
+        });
+
+        public override ReadOnlyCollection<ExposedProperty> GetProperties()
+        {
+            return cachedProperties;
         }
 
         public override object GetValue(int id)
@@ -55,30 +59,33 @@ namespace Hertzole.ALE
             switch (id)
             {
                 case 0:
-                    if (transform.position != (Vector3)value)
+                    if (transform.position != (Vector3) value)
                     {
-                        transform.position = (Vector3)value;
+                        transform.position = (Vector3) value;
                         changed = true;
                     }
+
                     break;
                 case 1:
-                    if (transform.eulerAngles != (Vector3)value)
+                    if (transform.eulerAngles != (Vector3) value)
                     {
-                        transform.eulerAngles = (Vector3)value;
+                        transform.eulerAngles = (Vector3) value;
                         changed = true;
                     }
+
                     break;
                 case 2:
-                    if (transform.localScale != (Vector3)value)
+                    if (transform.localScale != (Vector3) value)
                     {
-                        transform.localScale = (Vector3)value;
+                        transform.localScale = (Vector3) value;
                         changed = true;
                     }
+
                     break;
                 case 3:
-                    if (transform.parent != (Transform)value)
+                    if (transform.parent != (Transform) value)
                     {
-                        transform.SetParent((Transform)value, true);
+                        transform.SetParent((Transform) value, true);
                         changed = true;
                         if (transform.parent != null)
                         {
@@ -86,6 +93,7 @@ namespace Hertzole.ALE
                             LevelEditorObject.Parent.AddChild(LevelEditorObject);
                         }
                     }
+
                     break;
                 default:
                     throw new ArgumentException($"No exposed property with the ID '{id}'.");

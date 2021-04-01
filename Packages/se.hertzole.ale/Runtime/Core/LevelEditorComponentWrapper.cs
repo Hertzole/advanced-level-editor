@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using UnityEngine;
 
 namespace Hertzole.ALE
@@ -43,7 +44,7 @@ namespace Hertzole.ALE
 
         public event Action<int, object> OnValueChanged;
 
-        public abstract ExposedProperty[] GetProperties();
+        public abstract ReadOnlyCollection<ExposedProperty> GetProperties();
         public abstract object GetValue(int id);
         public abstract Type GetValueType(int id);
         public abstract void SetValue(int id, object value, bool notify);

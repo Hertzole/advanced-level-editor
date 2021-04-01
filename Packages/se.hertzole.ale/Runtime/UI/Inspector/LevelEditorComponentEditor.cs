@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using UnityEngine;
 
 namespace Hertzole.ALE
@@ -13,7 +14,7 @@ namespace Hertzole.ALE
         public ILevelEditorInspector Inspector;
 #endif
 
-        private ExposedProperty[] exposedProperties;
+        private ReadOnlyCollection<ExposedProperty> exposedProperties;
         private RectTransform content;
 
         protected Component TargetComponent { get; private set; }
@@ -54,7 +55,7 @@ namespace Hertzole.ALE
 
         protected ExposedProperty GetProperty(string name)
         {
-            for (int i = 0; i < exposedProperties.Length; i++)
+            for (int i = 0; i < exposedProperties.Count; i++)
             {
                 if (exposedProperties[i].Name == name)
                 {
@@ -67,7 +68,7 @@ namespace Hertzole.ALE
 
         protected ExposedProperty GetProperty(int id)
         {
-            for (int i = 0; i < exposedProperties.Length; i++)
+            for (int i = 0; i < exposedProperties.Count; i++)
             {
                 if (exposedProperties[i].ID == id)
                 {

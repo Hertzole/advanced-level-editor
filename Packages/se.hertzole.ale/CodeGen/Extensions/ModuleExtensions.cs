@@ -14,7 +14,7 @@ namespace Hertzole.ALE.CodeGen
         {
             return module.ImportReference(type);
         }
-
+        
         public static MethodReference GetMethod<T>(this ModuleDefinition module, string methodName)
         {
             return module.GetMethod(typeof(T), methodName);
