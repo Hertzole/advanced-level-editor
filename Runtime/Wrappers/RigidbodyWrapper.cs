@@ -9,7 +9,12 @@ namespace Hertzole.ALE
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
         private static void RegisterRigidbodyWrapper()
         {
-            RegisterWrapper<Rigidbody, RigidbodyWrapper>();
+            Debug.Log(ALESettings.Get().ApplyRigidbodyWrapper);
+            
+            if (ALESettings.Get().ApplyRigidbodyWrapper)
+            {
+                RegisterWrapper<Rigidbody, RigidbodyWrapper>();
+            }
         }
 
         public override bool HasVisibleFields { get { return true; } }

@@ -11,7 +11,10 @@ namespace Hertzole.ALE
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
         private static void RegisterTransformWrapper()
         {
-            RegisterWrapper<Transform, TransformWrapper>();
+            if (ALESettings.Get().ApplyTransformWrapper)
+            {
+                RegisterWrapper<Transform, TransformWrapper>();
+            }
         }
 
         public override int Order { get { return -100000; } }
