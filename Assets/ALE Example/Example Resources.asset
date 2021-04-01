@@ -49,6 +49,15 @@ MonoBehaviour:
     asset: {fileID: 0}
     treeID: 5
     treeDepth: 0
+  - name: Spawnpoint
+    id: spawnpoint
+    customIcon: 0
+    icon: {fileID: 0}
+    limit: 0
+    hidden: 0
+    asset: {fileID: 376625356297951343, guid: d26afc165b06a5649a88c8807bd94ed7, type: 3}
+    treeID: 14
+    treeDepth: 1
   - name: Color Cube
     id: color_cube
     customIcon: 0

@@ -110,11 +110,11 @@ MonoBehaviour:
   contentParent: {fileID: 5169234991372736761}
   closeButton: {fileID: 0}
   headerHeight: 30
-  tabNormalColor: {r: 0.3018868, g: 0.3018868, b: 0.3018868, a: 1}
+  tabNormalColor: {r: 0.3018868, g: 0.3018868, b: 0.3018868, a: 0}
   tabNormalTextColor: {r: 1, g: 1, b: 1, a: 1}
-  tabSelectedColor: {r: 0.3764706, g: 0.3764706, b: 0.3764706, a: 1}
+  tabSelectedColor: {r: 0.34117648, g: 0.34117648, b: 0.37254903, a: 1}
   tabSelectedTextColor: {r: 1, g: 1, b: 1, a: 1}
-  tabDetachingColor: {r: 0.3764706, g: 0.3764706, b: 0.3764706, a: 1}
+  tabDetachingColor: {r: 0, g: 0.47058824, b: 0.9098039, a: 0.39215687}
   tabDetachingTextColor: {r: 1, g: 1, b: 1, a: 1}
 --- !u!1 &3981751969722106535
 GameObject:
@@ -176,7 +176,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   m_Material: {fileID: 0}
-  m_Color: {r: 0.2794118, g: 0.2794118, b: 0.2794118, a: 1}
+  m_Color: {r: 0.25642106, g: 0.25642106, b: 0.28, a: 1}
   m_RaycastTarget: 1
   m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
   m_Maskable: 1

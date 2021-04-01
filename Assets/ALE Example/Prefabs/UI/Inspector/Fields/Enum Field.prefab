@@ -14,6 +14,9 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   label: {fileID: 2518408313595253179}
   dropdown: {fileID: 1181523211329271185}
+  onValueChanged:
+    m_PersistentCalls:
+      m_Calls: []
 --- !u!1001 &878979097709599831
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -131,22 +134,6 @@ PrefabInstance:
   m_Modification:
     m_TransformParent: {fileID: 3249554316606796001}
     m_Modifications:
-    - target: {fileID: 8081798975706967895, guid: d6abd6ad54c5b3a4c80cbd030f3e3c24, type: 3}
-      propertyPath: m_CaptionText
-      value: 
-      objectReference: {fileID: 2273770745391522991}
-    - target: {fileID: 8081798975706967895, guid: d6abd6ad54c5b3a4c80cbd030f3e3c24, type: 3}
-      propertyPath: m_Options.m_Options.Array.size
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 8081798975706967895, guid: d6abd6ad54c5b3a4c80cbd030f3e3c24, type: 3}
-      propertyPath: m_Options.m_Options.Array.data[0].m_Text
-      value: Option C
-      objectReference: {fileID: 0}
-    - target: {fileID: 8081798975706967895, guid: d6abd6ad54c5b3a4c80cbd030f3e3c24, type: 3}
-      propertyPath: m_Options.m_Options.Array.data[1].m_Text
-      value: Option C
-      objectReference: {fileID: 0}
     - target: {fileID: 8081798975706967896, guid: d6abd6ad54c5b3a4c80cbd030f3e3c24, type: 3}
       propertyPath: m_Pivot.x
       value: 0.5
@@ -235,10 +222,6 @@ PrefabInstance:
       propertyPath: m_Name
       value: Dropdown
       objectReference: {fileID: 0}
-    - target: {fileID: 9206415585556397673, guid: d6abd6ad54c5b3a4c80cbd030f3e3c24, type: 3}
-      propertyPath: m_text
-      value: 
-      objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: d6abd6ad54c5b3a4c80cbd030f3e3c24, type: 3}
 --- !u!114 &1181523211329271185 stripped
@@ -250,16 +233,5 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 7b743370ac3e4ec2a1668f5455a8ef8a, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
---- !u!114 &2273770745391522991 stripped
-MonoBehaviour:
-  m_CorrespondingSourceObject: {fileID: 9206415585556397673, guid: d6abd6ad54c5b3a4c80cbd030f3e3c24, type: 3}
-  m_PrefabInstance: {fileID: 6939427178984102598}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 0}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: f4688fdb7df04437aeb418b961361dc5, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 

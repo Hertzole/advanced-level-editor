@@ -1,6 +1,10 @@
-﻿using System.Collections.Generic;
+﻿#if UNITY_2019_1_OR_NEWER && ALE_URP
+#define URP
+#endif
+
+using System.Collections.Generic;
 using UnityEngine;
-#if UNITY_2019_1_OR_NEWER && ALE_URP
+#if URP
 using UnityEngine.Rendering;
 #endif
 
@@ -16,9 +20,11 @@ namespace Hertzole.ALE
         [SerializeField]
         private Shader lineShader = null;
 
+#if !URP
         [SerializeField]
         [HideInInspector]
         private Camera cam = null;
+#endif
 
         private List<ILevelEditorGizmos> renderObjects = new List<ILevelEditorGizmos>();
         private List<ILevelEditorSelectedGizmos> selectedRenderObjects = new List<ILevelEditorSelectedGizmos>();
@@ -52,12 +58,12 @@ namespace Hertzole.ALE
                 instance = this;
             }
 
-#if UNITY_2019_1_OR_NEWER && ALE_URP
+#if URP
             RenderPipelineManager.endCameraRendering += OnEndCameraRendering;
 #endif
         }
 
-#if UNITY_2019_1_OR_NEWER && ALE_URP
+#if URP
         private void OnDisable()
         {
             RenderPipelineManager.endCameraRendering -= OnEndCameraRendering;
@@ -96,12 +102,12 @@ namespace Hertzole.ALE
             }
         }
 
-#if UNITY_2019_1_OR_NEWER && !ALE_URP
+#if !URP
         private void OnPostRender()
         {
             Draw(cam);
         }
-#elif UNITY_2019_1_OR_NEWER && ALE_URP
+#else
         private void OnEndCameraRendering(ScriptableRenderContext context, Camera camera)
         {
             Draw(camera);
@@ -130,7 +136,10 @@ namespace Hertzole.ALE
                     selectedRenderObjects[i].DrawLevelEditorGizmosSelected();
                 }
             }
-            finally { GL.PopMatrix(); }
+            finally
+            {
+                GL.PopMatrix();
+            }
         }
 
 #if UNITY_EDITOR
@@ -146,10 +155,12 @@ namespace Hertzole.ALE
 
         private void GetStandardComponents()
         {
+#if !URP
             if (cam == null)
             {
                 cam = GetComponent<Camera>();
             }
+#endif
 
             if (lineShader == null)
             {

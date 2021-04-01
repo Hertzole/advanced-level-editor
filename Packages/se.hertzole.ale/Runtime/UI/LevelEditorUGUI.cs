@@ -253,7 +253,7 @@ namespace Hertzole.ALE
             ToggleLoadModal(false);
         }
 
-        private void ClickNewLevel()
+        public void ClickNewLevel()
         {
             if (levelEditor.IsDirty)
             {
@@ -267,7 +267,7 @@ namespace Hertzole.ALE
             CloseNotification();
         }
 
-        private void ClickPlayLevel()
+        public void ClickPlayLevel()
         {
             if (!levelEditor.StartPlayMode(out string failReason))
             {
@@ -332,14 +332,28 @@ namespace Hertzole.ALE
 
         public virtual void OnPlayModeStart()
         {
-            editorRoot.IfExists(x => x.SetActive(false));
-            playModeRoot.IfExists(x => x.SetActive(true));
+            if (editorRoot != null)
+            {
+                editorRoot.SetActive(false);
+            }
+            
+            if (playModeRoot != null)
+            {
+                playModeRoot.SetActive(true);
+            }
         }
 
         public virtual void OnPlayModeStop()
         {
-            editorRoot.IfExists(x => x.SetActive(true));
-            playModeRoot.IfExists(x => x.SetActive(false));
+            if (editorRoot != null)
+            {
+                editorRoot.SetActive(true);
+            }
+            
+            if (playModeRoot != null)
+            {
+                playModeRoot.SetActive(false);
+            }
         }
 
         protected virtual void OnSelectionChanged(object sender, SelectionEvent e)

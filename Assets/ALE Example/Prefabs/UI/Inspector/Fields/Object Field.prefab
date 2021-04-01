@@ -543,6 +543,10 @@ PrefabInstance:
       propertyPath: m_fontColor32.rgba
       value: 4289638062
       objectReference: {fileID: 0}
+    - target: {fileID: 1147172621863324011, guid: cf14e781ebd55504c8cb778574ab831a, type: 3}
+      propertyPath: m_enableWordWrapping
+      value: 0
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: cf14e781ebd55504c8cb778574ab831a, type: 3}
 --- !u!224 &6042589938058964525 stripped
