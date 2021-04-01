@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.ObjectModel;
 using System.Linq;
 
 namespace Hertzole.ALE
@@ -11,8 +12,8 @@ namespace Hertzole.ALE
         public LevelEditorComponentData(IExposedToLevelEditor exposed)
         {
             type = exposed.TypeName;
-            ExposedProperty[] exposedProperties = exposed.GetProperties();
-            properties = new LevelEditorPropertyData[exposedProperties.Length];
+            ReadOnlyCollection<ExposedProperty> exposedProperties = exposed.GetProperties();
+            properties = new LevelEditorPropertyData[exposedProperties.Count];
             for (int i = 0; i < properties.Length; i++)
             {
                 properties[i] = new LevelEditorPropertyData(exposedProperties[i], exposed);
