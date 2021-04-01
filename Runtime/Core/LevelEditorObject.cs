@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using UnityEngine;
 
 namespace Hertzole.ALE
@@ -143,8 +144,8 @@ namespace Hertzole.ALE
 
             for (int i = 0; i < exposedComponents.Length; i++)
             {
-                ExposedProperty[] properties = exposedComponents[i].GetProperties();
-                for (int ii = 0; ii < properties.Length; ii++)
+                ReadOnlyCollection<ExposedProperty> properties = exposedComponents[i].GetProperties();
+                for (int ii = 0; ii < properties.Count; ii++)
                 {
                     savedValues[i][ii] = new ValueInfo(ii, exposedComponents[i].GetValue(ii));
                 }
@@ -163,8 +164,8 @@ namespace Hertzole.ALE
         {
             for (int i = 0; i < exposedComponents.Length; i++)
             {
-                ExposedProperty[] properties = exposedComponents[i].GetProperties();
-                for (int ii = 0; ii < properties.Length; ii++)
+                ReadOnlyCollection<ExposedProperty> properties = exposedComponents[i].GetProperties();
+                for (int ii = 0; ii < properties.Count; ii++)
                 {
                     exposedComponents[i].SetValue(savedValues[i][ii].id, savedValues[i][ii].value, true);
                 }
@@ -222,7 +223,7 @@ namespace Hertzole.ALE
 
             for (int i = 0; i < exposedComponents.Length; i++)
             {
-                savedValues.Add(i, new ValueInfo[exposedComponents[i].GetProperties().Length]);
+                savedValues.Add(i, new ValueInfo[exposedComponents[i].GetProperties().Count]);
             }
 
             gotComponents = true;

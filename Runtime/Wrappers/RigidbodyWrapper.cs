@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.ObjectModel;
 using UnityEngine;
 
 namespace Hertzole.ALE
@@ -25,16 +26,18 @@ namespace Hertzole.ALE
             Target.isKinematic = true;
         }
 
-        public override ExposedProperty[] GetProperties()
+        private ReadOnlyCollection<ExposedProperty> cachedProperties = new ReadOnlyCollection<ExposedProperty>(new ExposedProperty[]
         {
-            return new ExposedProperty[]
-            {
-                new ExposedProperty(0, typeof(float), "mass", null, true),
-                new ExposedProperty(1, typeof(float), "drag", null, true),
-                new ExposedProperty(2, typeof(float), "angularDrag", null, true),
-                new ExposedProperty(3, typeof(bool), "useGravity", null, true),
-                new ExposedProperty(4, typeof(bool), "isKinematic", null, true)
-            };
+            new ExposedProperty(0, typeof(float), "mass", null, true),
+            new ExposedProperty(1, typeof(float), "drag", null, true),
+            new ExposedProperty(2, typeof(float), "angularDrag", null, true),
+            new ExposedProperty(3, typeof(bool), "useGravity", null, true),
+            new ExposedProperty(4, typeof(bool), "isKinematic", null, true)
+        });
+
+        public override ReadOnlyCollection<ExposedProperty> GetProperties()
+        {
+            return cachedProperties;
         }
 
         public override object GetValue(int id)
@@ -114,6 +117,7 @@ namespace Hertzole.ALE
                     }
                     break;
                 default:
+                    Debug.LogWarning($"There's no exposed fields with the ID {id}.");
                     break;
             }
 
