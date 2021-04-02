@@ -126,10 +126,6 @@ namespace Hertzole.ALE
                                     value = targetObj.MyGameObject.GetComponent(valueType);
                                 }
                             }
-                            if (value is Color32 col)
-                            {
-                                value = (Color)col;
-                            }
 
                             exposedComponents[j].SetValue(properties[k].id, value, false);
                         }

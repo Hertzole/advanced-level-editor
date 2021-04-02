@@ -2,7 +2,7 @@
 
 ⚠ **ALE IS IN VERY EARLY DEVELOPMENT! ANYTHING CAN CHANGE SUDDENLY! USE AT YOUR OWN RISK** ⚠
 
-![Built level editor](https://i.imgur.com/DDV0CIm.png)
+![Built level editor](https://i.imgur.com/Q8Wgo8n.png)
 *Image is what ALE currently looks like. Will get periodically updated along with ALE. Keep in mind everything is a work in progress!*
 
 ## ❓ What is it?

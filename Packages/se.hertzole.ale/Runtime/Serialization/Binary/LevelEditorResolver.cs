@@ -8,7 +8,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Scripting;
 
-namespace Hertzole.ALE.Binary
+namespace Hertzole.ALE
 {
     public class LevelEditorResolver : IFormatterResolver
     {
