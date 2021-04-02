@@ -9,8 +9,6 @@ namespace Hertzole.ALE
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
         private static void RegisterRigidbodyWrapper()
         {
-            Debug.Log(ALESettings.Get().ApplyRigidbodyWrapper);
-            
             if (ALESettings.Get().ApplyRigidbodyWrapper)
             {
                 RegisterWrapper<Rigidbody, RigidbodyWrapper>();

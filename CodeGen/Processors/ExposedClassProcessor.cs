@@ -511,7 +511,7 @@ namespace Hertzole.ALE.CodeGen
             
             MethodDefinition method = new MethodDefinition("Hertzole.ALE.IExposedToLevelEditor.GetProperties",
                 MethodAttributes.Private | MethodAttributes.Final | MethodAttributes.HideBySig | MethodAttributes.NewSlot | MethodAttributes.Virtual,
-                Module.ImportReference(typeof(ExposedProperty[])));
+                Module.GetTypeReference<ReadOnlyCollection<ExposedProperty>>());
 
             method.Overrides.Add(Module.ImportReference(typeof(IExposedToLevelEditor).GetMethod("GetProperties", Array.Empty<Type>())));
 

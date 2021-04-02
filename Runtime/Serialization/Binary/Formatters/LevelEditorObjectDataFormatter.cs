@@ -3,7 +3,7 @@ using MessagePack.Formatters;
 using MessagePack.Internal;
 using System;
 
-namespace Hertzole.ALE.Binary
+namespace Hertzole.ALE
 {
     public sealed class LevelEditorObjectDataFormatter : MessagePackFormatter<LevelEditorObjectData>
     {

@@ -388,9 +388,9 @@ namespace Hertzole.ALE.CodeGen
                 reference.Parameters.Add(new ParameterDefinition(parameter.ParameterType));
             }
 
-            foreach (GenericParameter generic_parameter in self.GenericParameters)
+            foreach (GenericParameter p in self.GenericParameters)
             {
-                reference.GenericParameters.Add(new GenericParameter(generic_parameter.Name, reference));
+                reference.GenericParameters.Add(new GenericParameter(p.Name, reference));
             }
 
             return self.Module.ImportReference(reference);
