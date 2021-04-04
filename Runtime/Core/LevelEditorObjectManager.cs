@@ -260,7 +260,23 @@ namespace Hertzole.ALE
                 LevelEditorGLRenderer.Remove(gizmos);
             }
 
+            if (target.Parent != null)
+            {
+                target.Parent.RemoveChild(target);
+            }
+
             target.MyGameObject.SetActive(false);
+
+            if (target.HasChildren())
+            {
+                //TODO: If deleting children, register delete multiple undo.
+                for (int i = 0; i < target.Children.Count; i++)
+                {
+                    DeleteObject(target.Children[i], false);
+                }
+
+                target.Children.Clear();
+            }
 
             //TODO: Apply undo.
 
