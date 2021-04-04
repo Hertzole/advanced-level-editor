@@ -5,16 +5,16 @@ using UnityEngine.TestTools;
 
 namespace Hertzole.ALE.Tests
 {
-    public class ALETest
+    public class LevelEditorTest
     {
-        public List<GameObject> sceneObjects;
+        private List<GameObject> sceneObjects;
 
         [UnitySetUp]
         public IEnumerator SceneSetup()
         {
             sceneObjects = new List<GameObject>();
 
-            OnSceneSetup();
+            OnSceneSetup(sceneObjects);
 
 
 #if UNITY_EDITOR
@@ -24,7 +24,7 @@ namespace Hertzole.ALE.Tests
 #endif
         }
 
-        protected virtual void OnSceneSetup() { }
+        protected virtual void OnSceneSetup(List<GameObject> sceneObjects) { }
 
         [UnityTearDown]
         public IEnumerator TearDownScene()

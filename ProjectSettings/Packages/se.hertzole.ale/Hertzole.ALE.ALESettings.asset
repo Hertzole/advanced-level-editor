@@ -13,4 +13,4 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   applyTransformWrapper: 1
-  applyRigidbodyWrapper: 0
+  applyRigidbodyWrapper: 1
