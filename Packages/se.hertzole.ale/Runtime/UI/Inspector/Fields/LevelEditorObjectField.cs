@@ -2,13 +2,13 @@
 using TMPro;
 using UnityEngine;
 using UnityEngine.Events;
+using UnityEngine.EventSystems;
 using UnityEngine.UI;
 using UnityObject = UnityEngine.Object;
 
 namespace Hertzole.ALE
 {
-    //TODO: Implement drop support
-    public class LevelEditorObjectField : LevelEditorInspectorField
+    public class LevelEditorObjectField : LevelEditorInspectorField, IDropHandler
     {
         [Serializable]
         public class ObjectEvent : UnityEvent<UnityObject> { }
@@ -53,24 +53,29 @@ namespace Hertzole.ALE
         {
             if (isComponent)
             {
-                if (obj == null)
-                {
-                    SetPropertyValue(null);
-                    onValueChanged.Invoke(null);
-                }
-                else
-                {
-                    Component value = ((Component)obj).GetComponent(BoundProperty.Type);
-                    SetPropertyValue(value);
-                    onValueChanged.Invoke(value);
-                }
-
-                UpdateLabel((UnityObject)RawValue);
+                SetUnityObject(obj);
             }
             else
             {
                 throw new NotImplementedException("Non-components are not supported yet.");
             }
+        }
+
+        private void SetUnityObject(UnityObject obj)
+        {
+            if (obj == null)
+            {
+                SetPropertyValue(null);
+                onValueChanged.Invoke(null);
+            }
+            else
+            {
+                Component value = ((Component)obj).GetComponent(BoundProperty.Type);
+                SetPropertyValue(value);
+                onValueChanged.Invoke(value);
+            }
+
+            UpdateLabel((UnityObject)RawValue);
         }
 
         public override bool SupportsType(Type type, bool isArray)
@@ -95,6 +100,27 @@ namespace Hertzole.ALE
         private void UpdateLabel(UnityObject value)
         {
             objectLabel.text = string.Format(labelFormat, value == null ? nullValueText : value.name, BoundProperty.Type.Name);
+        }
+
+        public void OnDrop(PointerEventData eventData)
+        {
+            if (IsValidDrop(out UnityObject draggingItem))
+            {
+                SetUnityObject(draggingItem);
+            }
+        }
+
+        private bool IsValidDrop(out UnityObject obj)
+        {
+            if (UI != null && UI.HierarchyPanel != null && UI.HierarchyPanel is LevelEditorHierarchy hierarchy &&
+               hierarchy.TreeControl != null && hierarchy.TreeControl.DraggingItem != null && hierarchy.TreeControl.DraggingItem is UnityObject unityObj)
+            {
+                obj = unityObj;
+                return true;
+            }
+
+            obj = null;
+            return false;
         }
 
 #if UNITY_EDITOR

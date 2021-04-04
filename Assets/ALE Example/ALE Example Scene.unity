@@ -1321,96 +1321,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 4e29b1a8efbd4b44bb3f3716e73f07ff, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
---- !u!1 &682176886
-GameObject:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 682176888}
-  - component: {fileID: 682176887}
-  - component: {fileID: 682176889}
-  - component: {fileID: 682176890}
-  m_Layer: 0
-  m_Name: GameObject
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 1
---- !u!114 &682176887
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 682176886}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 5d445c4f565ad5740a4491e104d0cd97, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  saveManager: {fileID: 1918987440}
---- !u!4 &682176888
-Transform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 682176886}
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 59.8937, y: 578.435, z: -68.54787}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_Children: []
-  m_Father: {fileID: 0}
-  m_RootOrder: 6
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &682176889
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 682176886}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: ef165c09674f72f42b54888a441e8e85, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  stringTest: 
-  intTest: 0
-  colorTest: {r: 0, g: 0, b: 0, a: 0}
-  color32Test:
-    serializedVersion: 2
-    rgba: 0
-  vectorTest: {x: 0, y: 0, z: 0}
-  referenceTest: {fileID: 0}
-  simpleClass:
-    value: 
-  advancedClass:
-    value: 
-  simpleStruct:
-    value: 
-  advancedStruct:
-    value: 
-  classArray: []
-  structArray: []
-  advancedList: []
-  enumTest: 1
---- !u!114 &682176890
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 682176886}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: e25b849872b6c524cb6c91ab9d5e1591, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
 --- !u!1001 &737730295
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -1893,11 +1803,11 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 6464335026621190031, guid: 8be025fa1f513484bbcfe76a6b9b7caa, type: 3}
       propertyPath: m_AnchoredPosition.x
-      value: 0
+      value: 299.4
       objectReference: {fileID: 0}
     - target: {fileID: 6464335026621190031, guid: 8be025fa1f513484bbcfe76a6b9b7caa, type: 3}
       propertyPath: m_AnchoredPosition.y
-      value: 0
+      value: 82.7
       objectReference: {fileID: 0}
     - target: {fileID: 6464335026621190031, guid: 8be025fa1f513484bbcfe76a6b9b7caa, type: 3}
       propertyPath: m_LocalEulerAnglesHint.x
@@ -3587,7 +3497,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   canReorderItems: 1
   dragDropTargetVisual: {fileID: 878364096}
-  dragItemReference: {fileID: 0}
+  dragItemReferencePrefab: {fileID: 5678953820839693246, guid: 79b5a59c387764e4c816a204d7f28a3c, type: 3}
   siblingIndexModificationArea: 5
   scrollableArea: 75
   canUnselect: 1
@@ -4698,7 +4608,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   canReorderItems: 0
   dragDropTargetVisual: {fileID: 0}
-  dragItemReference: {fileID: 0}
+  dragItemReferencePrefab: {fileID: 0}
   siblingIndexModificationArea: 5
   scrollableArea: 75
   canUnselect: 0

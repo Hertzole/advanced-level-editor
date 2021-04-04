@@ -21,7 +21,7 @@ namespace Hertzole.ALE
             treeControl.Initialize(
             (go) =>
             {
-                return go.Parent == null ? null : go.Parent;
+                return (go == null || go.Parent == null) ? null : go.Parent;
             },
             (go) =>
             {
