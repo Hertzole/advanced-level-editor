@@ -80,24 +80,20 @@ namespace Hertzole.ALE
 
         private void OnObjectManagerCreatedObject(object sender, LevelEditorObjectEvent args)
         {
-            if (loadingLevel)
-            {
-                return;
-            }
-
             args.Object.OnStateChanged += OnObjectStateChanged;
-            treeControl.AddItem(args.Object);
+            if (!loadingLevel)
+            {
+                treeControl.AddItem(args.Object);
+            }
         }
 
         private void OnObjectManagerDeleteObject(object sender, LevelEditorObjectEvent args)
         {
-            if (loadingLevel)
-            {
-                return;
-            }
-
             args.Object.OnStateChanged -= OnObjectStateChanged;
-            treeControl.RemoveItem(args.Object);
+            if (!loadingLevel)
+            {
+                treeControl.RemoveItem(args.Object);
+            }
         }
 
         private void OnObjectStateChanged(object sender, LevelEditorObjectStateArgs e)

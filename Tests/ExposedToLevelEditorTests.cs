@@ -1,28 +1,20 @@
-using System.Collections;
+﻿using System.Collections;
+using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Assertions;
 using UnityEngine.TestTools;
 
 namespace Hertzole.ALE.Tests
 {
-    public class ExposedToLevelEditorTests
+    public class ExposedToLevelEditorTests : LevelEditorTest
     {
         private TestExposedBehavior testObject;
 
-        [UnitySetUp]
-        public IEnumerator Setup()
+        protected override void OnSceneSetup(List<GameObject> sceneObjects)
         {
             testObject = new GameObject().AddComponent<TestExposedBehavior>();
 
-            yield break;
-        }
-
-        [UnityTearDown]
-        public IEnumerator TearDown()
-        {
-            Object.DestroyImmediate(testObject.gameObject);
-
-            yield break;
+            sceneObjects.Add(testObject.gameObject);
         }
 
         [UnityTest]
@@ -104,14 +96,14 @@ namespace Hertzole.ALE.Tests
         public IEnumerator TestGetValueType()
         {
             AssertIsExposed(out IExposedToLevelEditor exposed);
-            
+
             Assert.AreEqual(typeof(string), exposed.GetValueType(0));
             Assert.AreEqual(typeof(int), exposed.GetValueType(1));
             Assert.AreEqual(typeof(Vector3), exposed.GetValueType(2));
             Assert.AreEqual(typeof(Color), exposed.GetValueType(3));
             Assert.AreEqual(typeof(Color32), exposed.GetValueType(4));
             Assert.AreEqual(typeof(Transform), exposed.GetValueType(5));
-            
+
             yield break;
         }
 
