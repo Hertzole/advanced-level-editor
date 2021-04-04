@@ -11,13 +11,16 @@ namespace Hertzole.ALE
     [RequireComponent(typeof(ScrollRect), typeof(RecycledListView))]
     public abstract class TreeControl : MonoBehaviour, IDropHandler, IPointerEnterHandler, IPointerExitHandler, IPointerClickHandler
     {
+        private const float POINTER_VALIDATE_INTERVAL = 5f;
+
         [Header("Reorder")]
         [SerializeField]
         protected bool canReorderItems = true;
         [SerializeField]
-        protected RectTransform dragDropTargetVisual = null;
+        protected RectTransform dragDropTargetVisual;
         [SerializeField]
-        private TreeItemReference dragItemReference = null;
+        private TreeItemReference dragItemReferencePrefab;
+
         [SerializeField]
         private float siblingIndexModificationArea = 5f;
         [SerializeField]
@@ -29,37 +32,40 @@ namespace Hertzole.ALE
 
         [SerializeField]
         [HideInInspector]
-        private ScrollRect scroll = null;
+        private ScrollRect scroll;
         [SerializeField]
         [HideInInspector]
-        protected RecycledListView listView = null;
+        protected RecycledListView listView;
 
-        private bool isDragging = false;
-        protected bool initialized = false;
-
-        private float pointerLastYPos = 0f;
-        private float nextPointerValidation = 0;
-        private float height;
-        private float oneOverScrollableArea;
         private float autoScrollSpeed;
-        private float itemHeight;
-
-        private const float POINTER_VALIDATE_INTERVAL = 5f;
+        private Canvas canvas;
 
         private object draggingItem;
-        protected object selectedItem;
 
-        private RectTransform rectTransform;
+        private TreeItemReference dragReferenceItem;
+        private float height;
+        protected bool initialized;
 
-        private Camera canvasCamera;
+        private bool isDragging;
+        private float itemHeight;
+        private float nextPointerValidation;
+        private float oneOverScrollableArea;
 
         private PointerEventData pointer;
+
+        private float pointerLastYPos;
+        private Canvas popupCanvas;
+
+        private RectTransform rectTransform;
+        protected object selectedItem;
+
+        public object DraggingItem { get { return draggingItem; } }
 
         protected virtual void Awake()
         {
             rectTransform = (RectTransform)transform;
 
-            canvasCamera = Camera.main;
+            canvas = GetComponentInParent<Canvas>();
 
             oneOverScrollableArea = 1f / scrollableArea;
 
@@ -74,28 +80,157 @@ namespace Hertzole.ALE
             }
         }
 
-        protected virtual void InternalInitialize()
+        protected virtual void Update()
         {
-            if (initialized)
-            {
-                Debug.LogWarning(gameObject.name + " has already been initialized.");
-                return;
-            }
-
-            initialized = true;
+            UpdateDragging();
+            AutoScroll();
         }
-
-        protected virtual float GetItemHeight() { return 0f; }
 
         private void OnRectTransformDimensionsChange()
         {
             height = 0;
         }
 
-        protected virtual void Update()
+        public void OnDrop(PointerEventData eventData)
         {
-            UpdateDragging();
-            AutoScroll();
+            if (!canReorderItems || !isDragging)
+            {
+                return;
+            }
+
+            float contentYPos = pointerLastYPos + scroll.content.anchoredPosition.y;
+            int dataIndex = (int)contentYPos / (int)itemHeight;
+
+            object target = listView.GetItem(dataIndex);
+            if (target == null)
+            {
+                InvokeOnReparent(draggingItem, target, ItemDropAction.SetLastChild);
+            }
+            else
+            {
+                int insertDirection = 0;
+                float relativePosition = contentYPos % itemHeight;
+                if (relativePosition < siblingIndexModificationArea)
+                {
+                    insertDirection = -1;
+                }
+                else if (relativePosition > itemHeight - siblingIndexModificationArea)
+                {
+                    insertDirection = 1;
+                }
+
+                if (insertDirection != 0)
+                {
+                    if (insertDirection < 0 && dataIndex > 0)
+                    {
+                        object newTarget = listView.GetItem(dataIndex - 1);
+                        if (newTarget != null)
+                        {
+                            target = newTarget;
+                            insertDirection = 1;
+                        }
+                    }
+                    else if (insertDirection > 0 && dataIndex < listView.ItemCount - 1)
+                    {
+                        object newTarget = listView.GetItem(dataIndex + 1);
+                        if (newTarget != null)
+                        {
+                            target = newTarget;
+                            insertDirection = -1;
+                        }
+                    }
+                }
+
+                // Dropped onto self.
+                if (target == null || target == draggingItem)
+                {
+                    StopDragging();
+
+                    return;
+                }
+
+                int targetIndex = listView.IndexOf(target);
+
+                switch (insertDirection)
+                {
+                    case 0:
+                        if (InvokeOnReparenting(draggingItem, target, ItemDropAction.SetLastChild))
+                        {
+                            listView.RemoveItem(draggingItem);
+                            InvokeOnReparent(draggingItem, target, ItemDropAction.SetLastChild);
+                        }
+
+                        break;
+                    case -1:
+                        if (InvokeOnReparenting(draggingItem, target, ItemDropAction.SetPreviousSibling))
+                        {
+                            listView.MoveItem(draggingItem, targetIndex);
+                            InvokeOnReparent(draggingItem, target, ItemDropAction.SetPreviousSibling);
+                        }
+
+                        break;
+                    case 1:
+                        if (InvokeOnReparenting(draggingItem, target, ItemDropAction.SetNextSibling))
+                        {
+                            listView.MoveItem(draggingItem, targetIndex + 1);
+                            InvokeOnReparent(draggingItem, target, ItemDropAction.SetNextSibling);
+                        }
+
+                        break;
+                }
+
+                SelectItemInternal(draggingItem);
+            }
+
+            draggingItem = null;
+            StopDragging();
+        }
+
+        public void OnPointerClick(PointerEventData eventData)
+        {
+            if (!canUnselect)
+            {
+                return;
+            }
+
+            if (eventData.button == PointerEventData.InputButton.Left)
+            {
+                SelectItemInternal(null);
+            }
+        }
+
+        public void OnPointerEnter(PointerEventData eventData)
+        {
+            if (!eventData.dragging || !isDragging)
+            {
+                return;
+            }
+
+            StartDragging(draggingItem, eventData);
+        }
+
+        public void OnPointerExit(PointerEventData eventData)
+        {
+            bool oldDragging = isDragging;
+            StopDragging();
+            isDragging = oldDragging;
+        }
+
+        protected virtual void InternalInitialize()
+        {
+            if (initialized)
+            {
+                Debug.LogWarning(gameObject.name + " has already been initialized.");
+
+                return;
+            }
+
+            initialized = true;
+        }
+
+        protected virtual float GetItemHeight()
+        {
+            return 0f;
         }
 
         protected virtual void UpdateDragging()
@@ -113,6 +248,7 @@ namespace Hertzole.ALE
                 if (!pointer.IsPointerValid())
                 {
                     pointer = null;
+
                     return;
                 }
             }
@@ -232,26 +368,13 @@ namespace Hertzole.ALE
 
         public void ClearItems()
         {
-            SelectItemInternal(null, true);
+            SelectItemInternal(null);
             listView.ClearItems();
         }
 
         public void RebindItem(object item)
         {
             listView.BindItem(item);
-        }
-
-        public void OnPointerClick(PointerEventData eventData)
-        {
-            if (!canUnselect)
-            {
-                return;
-            }
-
-            if (eventData.button == PointerEventData.InputButton.Left)
-            {
-                SelectItemInternal(null);
-            }
         }
 
         public void StartDragging(object item, PointerEventData eventData)
@@ -264,8 +387,7 @@ namespace Hertzole.ALE
             isDragging = true;
             draggingItem = item;
 
-            //TODO: Create drag reference.
-            CreateDragItemReference(item, eventData);
+            CreateDragItemReference(item, eventData, canvas);
 
             pointer = eventData;
             pointerLastYPos = -1f;
@@ -274,118 +396,9 @@ namespace Hertzole.ALE
             UpdateDragging();
         }
 
-        public void OnDrop(PointerEventData eventData)
-        {
-            if (!canReorderItems || !isDragging)
-            {
-                return;
-            }
-
-            float contentYPos = pointerLastYPos + scroll.content.anchoredPosition.y;
-            int dataIndex = (int)contentYPos / (int)itemHeight;
-
-            object target = listView.GetItem(dataIndex);
-            if (target == null)
-            {
-                InvokeOnReparent(draggingItem, target, ItemDropAction.SetLastChild);
-            }
-            else
-            {
-                int insertDirection = 0;
-                float relativePosition = contentYPos % itemHeight;
-                if (relativePosition < siblingIndexModificationArea)
-                {
-                    insertDirection = -1;
-                }
-                else if (relativePosition > itemHeight - siblingIndexModificationArea)
-                {
-                    insertDirection = 1;
-                }
-
-                if (insertDirection != 0)
-                {
-                    if (insertDirection < 0 && dataIndex > 0)
-                    {
-                        object newTarget = listView.GetItem(dataIndex - 1);
-                        if (newTarget != null)
-                        {
-                            target = newTarget;
-                            insertDirection = 1;
-                        }
-                    }
-                    else if (insertDirection > 0 && dataIndex < listView.ItemCount - 1)
-                    {
-                        object newTarget = listView.GetItem(dataIndex + 1);
-                        if (newTarget != null)
-                        {
-                            target = newTarget;
-                            insertDirection = -1;
-                        }
-                    }
-                }
-
-                // Dropped onto self.
-                if (target == null || target == draggingItem)
-                {
-                    StopDragging();
-                    return;
-                }
-
-                int targetIndex = listView.IndexOf(target);
-
-                switch (insertDirection)
-                {
-                    case 0:
-                        if (InvokeOnReparenting(draggingItem, target, ItemDropAction.SetLastChild))
-                        {
-                            listView.RemoveItem(draggingItem);
-                            InvokeOnReparent(draggingItem, target, ItemDropAction.SetLastChild);
-                        }
-                        break;
-                    case -1:
-                        if (InvokeOnReparenting(draggingItem, target, ItemDropAction.SetPreviousSibling))
-                        {
-                            listView.MoveItem(draggingItem, targetIndex);
-                            InvokeOnReparent(draggingItem, target, ItemDropAction.SetPreviousSibling);
-                        }
-                        break;
-                    case 1:
-                        if (InvokeOnReparenting(draggingItem, target, ItemDropAction.SetNextSibling))
-                        {
-                            listView.MoveItem(draggingItem, targetIndex + 1);
-                            InvokeOnReparent(draggingItem, target, ItemDropAction.SetNextSibling);
-                        }
-                        break;
-                }
-
-                SelectItemInternal(draggingItem);
-            }
-
-            draggingItem = null;
-            StopDragging();
-        }
-
-        public void OnPointerEnter(PointerEventData eventData)
-        {
-            if (!eventData.dragging || !isDragging)
-            {
-                return;
-            }
-
-            StartDragging(draggingItem, eventData);
-        }
-
-        public void OnPointerExit(PointerEventData eventData)
-        {
-            bool oldDragging = isDragging;
-            StopDragging();
-            isDragging = oldDragging;
-        }
-
         private void StopDragging()
         {
             pointer = null;
-            canvasCamera = null;
             isDragging = false;
 
             if (dragDropTargetVisual != null && dragDropTargetVisual.gameObject.activeSelf)
@@ -394,6 +407,18 @@ namespace Hertzole.ALE
             }
 
             autoScrollSpeed = 0;
+        }
+
+        public void ToggleReferenceItem(bool enableItem)
+        {
+            if (dragReferenceItem == null && enableItem)
+            {
+                dragReferenceItem = Instantiate(dragItemReferencePrefab, popupCanvas.transform, false);
+            }
+            else
+            {
+                dragReferenceItem.gameObject.SetActive(enableItem);
+            }
         }
 
         protected virtual void SelectItemInternal(object item, bool updateUI = true) { }
@@ -408,9 +433,25 @@ namespace Hertzole.ALE
             throw new NotImplementedException("Make sure to override BindItem!");
         }
 
-        private void CreateDragItemReference(object reference, PointerEventData draggingPointer)
+        private void CreateDragItemReference(object reference, PointerEventData draggingPointer, Canvas referenceCanvas)
         {
+            if (dragItemReferencePrefab == null)
+            {
+                return;
+            }
 
+            bool hasCanvasChanged = CreatePopupCanvas(referenceCanvas);
+
+            ToggleReferenceItem(true);
+
+            if (hasCanvasChanged)
+            {
+                dragReferenceItem.Initialize(popupCanvas);
+            }
+
+            dragReferenceItem.SetPointer(draggingPointer);
+
+            dragReferenceItem.SetContent(reference);
         }
 
         protected virtual void InvokeOnReparent(object draggingItem, object target, ItemDropAction action)
@@ -421,6 +462,27 @@ namespace Hertzole.ALE
         protected virtual bool InvokeOnReparenting(object draggingItem, object target, ItemDropAction action)
         {
             throw new NotImplementedException("Make sure to override InvokeOnReparenting!");
+        }
+
+        private bool CreatePopupCanvas(Canvas referenceCanvas)
+        {
+            bool hasCanvasChanged = !popupCanvas;
+            if (popupCanvas == null)
+            {
+                popupCanvas = new GameObject("Popup Canvas").AddComponent<Canvas>();
+                popupCanvas.gameObject.AddComponent<CanvasScaler>();
+
+                popupCanvas.renderMode = referenceCanvas.renderMode;
+            }
+
+            if (hasCanvasChanged)
+            {
+                // Forces canvas to rebuild.
+                popupCanvas.gameObject.SetActive(false);
+                popupCanvas.gameObject.SetActive(true);
+            }
+
+            return hasCanvasChanged;
         }
 
 #if UNITY_EDITOR
@@ -451,80 +513,73 @@ namespace Hertzole.ALE
 
     public class TreeBindItemEventArgs<T, TItem> : EventArgs
     {
-        public int Index { get; private set; }
-        public TItem Item { get; private set; }
-        public T TreeItem { get; private set; }
-
         public TreeBindItemEventArgs(int index, TItem item, T treeItem)
         {
             Index = index;
             Item = item;
             TreeItem = treeItem;
         }
+
+        public int Index { get; }
+        public TItem Item { get; }
+        public T TreeItem { get; }
     }
 
     public class TreeReparentEventArgs<T> : EventArgs
     {
-        public T DraggingItem { get; private set; }
-        public T Target { get; private set; }
-        public ItemDropAction Action { get; private set; }
-
         public TreeReparentEventArgs(T draggingItem, T target, ItemDropAction action)
         {
             DraggingItem = draggingItem;
             Target = target;
             Action = action;
         }
+
+        public T DraggingItem { get; }
+        public T Target { get; }
+        public ItemDropAction Action { get; }
     }
 
     public class TreeReparentingEventArgs<T> : TreeReparentEventArgs<T>
     {
-        public bool Cancel { get; set; }
-
         public TreeReparentingEventArgs(T draggingItem, T target, ItemDropAction action) : base(draggingItem, target, action) { }
+        public bool Cancel { get; set; }
     }
 
     public class TreeExpandingEventArgs<T> : EventArgs
     {
-        public T Parent { get; private set; }
-        public bool IsExpanded { get; private set; }
-        public List<T> Children { get; private set; }
-
         public TreeExpandingEventArgs(T parent, bool isExpanded)
         {
             Parent = parent;
             IsExpanded = isExpanded;
             Children = new List<T>();
         }
+
+        public T Parent { get; }
+        public bool IsExpanded { get; }
+        public List<T> Children { get; }
     }
 
     public class TreeSelectionArgs<T> : EventArgs
     {
-        public T Old { get; private set; }
-        public T New { get; private set; }
-
         public TreeSelectionArgs(T oldItem, T newItem)
         {
             Old = oldItem;
             New = newItem;
         }
+
+        public T Old { get; }
+        public T New { get; }
     }
 
     public abstract class TreeControl<TTreeItem, TItem> : TreeControl where TTreeItem : RecycledListItem, ITreeItem
     {
         [SerializeField]
-        private TTreeItem itemPrefab = null;
+        private TTreeItem itemPrefab;
 
-        public event EventHandler<TreeBindItemEventArgs<TTreeItem, TItem>> OnBindItem;
-        public event EventHandler<TreeReparentingEventArgs<TItem>> OnReparenting;
-        public event EventHandler<TreeReparentEventArgs<TItem>> OnReparent;
-        public event EventHandler<TreeExpandingEventArgs<TItem>> OnItemExpandingCollapsing;
-        public event EventHandler<TreeSelectionArgs<TItem>> OnSelectionChanged;
-
-        private Func<TItem, TItem> getParent;
+        private readonly Dictionary<object, bool> expandedStates = new Dictionary<object, bool>();
         private Func<TItem, List<TItem>> getChildren;
 
-        private Dictionary<object, bool> expandedStates = new Dictionary<object, bool>();
+        private Func<TItem, TItem> getParent;
 
         public TItem SelectedItem { get { return (TItem)selectedItem; } }
 
@@ -534,6 +589,12 @@ namespace Hertzole.ALE
 
             listView.Initialize(null, ((RectTransform)itemPrefab.transform).sizeDelta.y);
         }
+
+        public event EventHandler<TreeBindItemEventArgs<TTreeItem, TItem>> OnBindItem;
+        public event EventHandler<TreeReparentingEventArgs<TItem>> OnReparenting;
+        public event EventHandler<TreeReparentEventArgs<TItem>> OnReparent;
+        public event EventHandler<TreeExpandingEventArgs<TItem>> OnItemExpandingCollapsing;
+        public event EventHandler<TreeSelectionArgs<TItem>> OnSelectionChanged;
 
         public void Initialize(Func<TItem, TItem> getParent, Func<TItem, List<TItem>> getChildren)
         {
@@ -548,6 +609,7 @@ namespace Hertzole.ALE
             if (!initialized)
             {
                 Debug.LogError($"{gameObject.name} needs to be initialized first! Call the Initialize method.", gameObject);
+
                 return;
             }
 
@@ -587,8 +649,7 @@ namespace Hertzole.ALE
             {
                 OnItemExpanded(item, true, false);
                 parent = getParent(parent);
-            }
-            while (parent != null || listView.HasItem(parent));
+            } while (parent != null || listView.HasItem(parent));
 
             listView.UpdateList(false);
         }
@@ -609,6 +670,7 @@ namespace Hertzole.ALE
                 parent = getParent(parent);
                 depth++;
             }
+
             ((TTreeItem)item).Depth = depth;
             ((ITreeItem)item).SetSelectedWithoutNotify(selectedItem == obj);
 
@@ -620,6 +682,7 @@ namespace Hertzole.ALE
                 {
                     expanded = false;
                 }
+
                 args.TreeItem.SetIsExpandedWithoutNotify(expanded);
             }
         }
@@ -646,18 +709,32 @@ namespace Hertzole.ALE
 
             TreeReparentEventArgs<TItem> args = new TreeReparentEventArgs<TItem>((TItem)draggingItem, (TItem)target, action);
             OnReparent?.Invoke(this, args);
-            MoveChildren((TItem)draggingItem);
+            if (action != ItemDropAction.SetLastChild)
+            {
+                MoveChildren((TItem)draggingItem);
+            }
 
             ITreeItem listItem = (ITreeItem)listView.GetListItem(listView.IndexOf(target));
 
             if (action == ItemDropAction.SetLastChild)
             {
-                listItem.SetIsExpandedWithoutNotify(true);
-                expandedStates[target] = true;
-
                 List<TItem> children = new List<TItem>();
                 GetAllChildren((TItem)target, children, true);
-                listView.InsertItem(draggingItem, listView.IndexOf(target) + children.Count);
+
+                if (!listItem.Expanded)
+                {
+                    listItem.SetIsExpandedWithoutNotify(true);
+                    expandedStates[target] = true;
+
+                    for (int i = children.Count - 1; i >= 0; i--)
+                    {
+                        listView.InsertItem(children[i], listView.IndexOf(target) + 1, false);
+                    }
+                }
+                else
+                {
+                    listView.InsertItem(draggingItem, listView.IndexOf(target) + children.Count, false);
+                }
             }
 
             listView.UpdateList(false);
@@ -666,9 +743,10 @@ namespace Hertzole.ALE
         protected override RecycledListItem CreateItem()
         {
             TTreeItem item = Instantiate(itemPrefab);
-            item.OnExpandedChanged.AddListener((expanded) => OnItemExpanded((TItem)item.Item, expanded));
+            item.OnExpandedChanged.AddListener(expanded => OnItemExpanded((TItem)item.Item, expanded));
             item.OnSelected += OnItemSelected;
             item.Initialize(this);
+
             return item;
         }
 
@@ -707,8 +785,8 @@ namespace Hertzole.ALE
                 {
                     RemoveChildren(args.Children[i]);
                 }
-
             }
+
             if (updateList)
             {
                 listView.UpdateList(false);
@@ -745,6 +823,7 @@ namespace Hertzole.ALE
             if (children == null || children.Count == 0)
             {
                 listView.RemoveItem(parent, false);
+
                 return;
             }
 
