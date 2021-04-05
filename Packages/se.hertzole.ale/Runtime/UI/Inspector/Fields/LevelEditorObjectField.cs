@@ -24,7 +24,7 @@ namespace Hertzole.ALE
         [SerializeField]
         private ObjectEvent onValueChanged = new ObjectEvent();
 
-        private bool isComponent = false;
+        private bool isSceneObject = false;
 
         public ObjectEvent OnValueChanged { get { return onValueChanged; } }
 
@@ -36,7 +36,7 @@ namespace Hertzole.ALE
         protected virtual void OnClickObjectButton()
         {
             BeginEdit();
-            UI.ObjectPickerWindow.Show(BoundProperty.Type, isComponent);
+            UI.ObjectPickerWindow.Show(BoundProperty.Type, isSceneObject);
             UI.ObjectPickerWindow.OnWindowClose.AddListener(OnPickerWindowClose);
             UI.ObjectPickerWindow.OnObjectSelected += OnPickerObjectSelected;
         }
@@ -51,14 +51,7 @@ namespace Hertzole.ALE
 
         private void OnPickerObjectSelected(UnityObject obj)
         {
-            if (isComponent)
-            {
-                SetUnityObject(obj);
-            }
-            else
-            {
-                throw new NotImplementedException("Non-components are not supported yet.");
-            }
+            SetUnityObject(obj);
         }
 
         private void SetUnityObject(UnityObject obj)
@@ -70,9 +63,24 @@ namespace Hertzole.ALE
             }
             else
             {
-                Component value = ((Component)obj).GetComponent(BoundProperty.Type);
-                SetPropertyValue(value);
-                onValueChanged.Invoke(value);
+                if (obj is ILevelEditorObject levelObject)
+                {
+                    if (BoundProperty.Type == typeof(GameObject))
+                    {
+                        SetPropertyValue(levelObject.MyGameObject);
+                        onValueChanged.Invoke(levelObject.MyGameObject);
+                    }
+                    else
+                    {
+                        Component value = levelObject.MyGameObject.GetComponent(BoundProperty.Type);
+                        SetPropertyValue(value);
+                        onValueChanged.Invoke(value);
+                    }
+                }
+                else
+                {
+                    throw new NotImplementedException($"There's no support yet for the {obj.GetType()} in object fields.");
+                }
             }
 
             UpdateLabel((UnityObject)RawValue);
@@ -94,7 +102,7 @@ namespace Hertzole.ALE
 
             UpdateLabel(obj);
 
-            isComponent = BoundProperty.Type.IsSubclassOf(typeof(Component));
+            isSceneObject = BoundProperty.Type.IsSubclassOf(typeof(Component)) || BoundProperty.Type == typeof(GameObject);
         }
 
         private void UpdateLabel(UnityObject value)

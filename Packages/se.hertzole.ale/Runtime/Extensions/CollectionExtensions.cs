@@ -119,7 +119,7 @@ namespace Hertzole.ALE
                 return true;
             }
 
-            if (a == null)
+            if (a == null || b == null)
             {
                 return false;
             }

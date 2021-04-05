@@ -152,6 +152,9 @@ public class TestScript : MonoBehaviour, ILevelEditorGizmos
     [SerializeField]
     [ExposeToLevelEditor(28)]
     private TestEnum enumTest = TestEnum.Test3;
+    [SerializeField]
+    [ExposeToLevelEditor(29)]
+    private GameObject gameObjectField = null;
 
     private int[] ints = null;
     private Color32[] colors = null;

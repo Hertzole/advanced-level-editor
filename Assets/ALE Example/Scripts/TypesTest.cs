@@ -227,7 +227,7 @@ public class TypesTest : MonoBehaviour
 
         if (id == -100)
         {
-            if (value is string value_0 && !stringTest.Equals(value_0))
+            if (!((IExposedToLevelEditor)this).ClassEquals<string>(value, stringTest, out string value_0))
             {
                 stringTest = value_0;
                 changed = true;
@@ -288,7 +288,7 @@ public class TypesTest : MonoBehaviour
         }
         else if (id == 7)
         {
-            if (value is AdvancedClass value_7 && !advancedClass.Equals(value_7))
+            if (((IExposedToLevelEditor)this).ClassEquals(value, advancedClass, out AdvancedClass value_7))
             {
                 advancedClass = value_7;
                 changed = true;
@@ -312,7 +312,7 @@ public class TypesTest : MonoBehaviour
         }
         else if (id == 10)
         {
-            if (value is SimpleClass[] value_10 && !classArray.IsSameAs(value_10))
+            if (!((IExposedToLevelEditor)this).CollectionEquals(value, classArray, out SimpleClass[] value_10))
             {
                 classArray = value_10;
                 changed = true;

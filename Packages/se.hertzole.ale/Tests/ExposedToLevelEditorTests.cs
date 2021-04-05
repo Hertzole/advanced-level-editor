@@ -64,6 +64,7 @@ namespace Hertzole.ALE.Tests
 
             int lastChanged = -1;
             object lastValue = null;
+            bool second = false;
 
             exposed.OnValueChanged += (i, o) =>
             {
@@ -75,20 +76,45 @@ namespace Hertzole.ALE.Tests
             AssertValueChanged<int>(1, 42);
             AssertValueChanged<Vector3>(2, new Vector3(1, 2, 3));
             AssertValueChanged<Color>(3, new Color(0.25f, 0.5f, 0.75f, 1f));
-            AssertValueChanged<Color32>(4, new Color32(10, 20, 30, 40));
             AssertValueChanged<Transform>(5, testObject.transform);
+            AssertValueChanged<Color32>(4, new Color32(10, 20, 30, 40));
+            AssertValueChanged<string>(6, "New value");
+            AssertValueChanged<string[]>(7, new string[] { "Hello", "World!" });
+            AssertValueChanged<string[]>(8, new string[] { "Hello from other side" });
+            AssertValueChanged<int[]>(9, new int[] { 0, 1, 2, 3 });
+            AssertValueChanged<List<string>>(10, new List<string> { "Hello", "World" });
+            AssertValueChanged<GameObject>(11, testObject.gameObject);
 
             yield break;
 
             void AssertValueChanged<T>(int id, object value)
             {
-                Debug.Log($"Assert value changed {id} {value}");
+                lastChanged = -1;
+                lastValue = null;
 
                 exposed.SetValue(id, value, true);
 
                 Assert.AreEqual(lastChanged, id, $"{id} ID did not match the last changed ({lastChanged}).");
-                Assert.IsTrue(lastValue is T, $"{lastValue} is not {typeof(T)}.");
+                if (value == null)
+                {
+                    Assert.IsNull(lastValue, "Last value was not null when a null value was set.");
+                }
+                else
+                {
+                    Assert.IsTrue(lastValue is T, $"{lastValue} is not {typeof(T)}.");
+                }
+
                 Assert.AreEqual(lastValue, value, $"{lastValue} is not the same as {value}");
+
+                if (!second)
+                {
+                    second = true;
+                    AssertValueChanged<T>(id, default(T));
+                }
+                else
+                {
+                    second = false;
+                }
             }
         }
 
@@ -103,6 +129,11 @@ namespace Hertzole.ALE.Tests
             Assert.AreEqual(typeof(Color), exposed.GetValueType(3));
             Assert.AreEqual(typeof(Color32), exposed.GetValueType(4));
             Assert.AreEqual(typeof(Transform), exposed.GetValueType(5));
+            Assert.AreEqual(typeof(string), exposed.GetValueType(6));
+            Assert.AreEqual(typeof(string[]), exposed.GetValueType(7));
+            Assert.AreEqual(typeof(string[]), exposed.GetValueType(8));
+            Assert.AreEqual(typeof(int[]), exposed.GetValueType(9));
+            Assert.AreEqual(typeof(List<string>), exposed.GetValueType(10));
 
             yield break;
         }
@@ -118,24 +149,28 @@ namespace Hertzole.ALE.Tests
         {
             [ExposeToLevelEditor(0)]
             public string stringValue = "";
-
             [ExposeToLevelEditor(1)]
             public int intValue;
-
             [ExposeToLevelEditor(2)]
             public Vector3 vector3Value;
-
             [ExposeToLevelEditor(3)]
             public Color colorValue;
-
             [ExposeToLevelEditor(4)]
             public Color32 color32Value;
-
             [ExposeToLevelEditor(5)]
             public Transform transformValue;
-
             [ExposeToLevelEditor(6)]
             public string nullStringValue;
+            [ExposeToLevelEditor(7)]
+            public string[] nullStringArray;
+            [ExposeToLevelEditor(8)]
+            public string[] stringArray = new string[] { "Hello", "World" };
+            [ExposeToLevelEditor(9)]
+            public int[] intArray;
+            [ExposeToLevelEditor(10)]
+            public List<string> stringList = new List<string>();
+            [ExposeToLevelEditor(11)]
+            public GameObject gameObjectField;
         }
     }
 }
