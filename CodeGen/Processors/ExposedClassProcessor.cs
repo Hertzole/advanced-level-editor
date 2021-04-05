@@ -2,14 +2,12 @@
 using Mono.Cecil.Cil;
 using Mono.Cecil.Rocks;
 using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
 using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Threading;
-using UnityEditorInternal;
 using UnityEngine;
 using EventAttributes = Mono.Cecil.EventAttributes;
 using FieldAttributes = Mono.Cecil.FieldAttributes;
@@ -508,7 +506,7 @@ namespace Hertzole.ALE.CodeGen
             }));
 
             cil.InsertAfter(cil.Body.Instructions[0], WriteCachedProperties());
-            
+
             MethodDefinition method = new MethodDefinition("Hertzole.ALE.IExposedToLevelEditor.GetProperties",
                 MethodAttributes.Private | MethodAttributes.Final | MethodAttributes.HideBySig | MethodAttributes.NewSlot | MethodAttributes.Virtual,
                 Module.GetTypeReference<ReadOnlyCollection<ExposedProperty>>());
@@ -522,14 +520,15 @@ namespace Hertzole.ALE.CodeGen
             bodyIl.Emit(OpCodes.Ret);
 
             return method;
-            
+
             Instruction[] WriteCachedProperties()
             {
-                List<Instruction> i = new List<Instruction>();
-
-                i.Add(Instruction.Create(OpCodes.Ldarg_0));
-                i.Add(GetIntInstruction(exposedFields.Count));
-                i.Add(Instruction.Create(OpCodes.Newarr, Module.ImportReference(typeof(ExposedProperty))));
+                List<Instruction> i = new List<Instruction>
+                {
+                    Instruction.Create(OpCodes.Ldarg_0),
+                    GetIntInstruction(exposedFields.Count),
+                    Instruction.Create(OpCodes.Newarr, Module.ImportReference(typeof(ExposedProperty)))
+                };
 
                 for (int j = 0; j < exposedFields.Count; j++)
                 {
@@ -552,55 +551,57 @@ namespace Hertzole.ALE.CodeGen
 
             Instruction[] WriteExposedProperty(FieldOrProperty field, int index, MethodReference propertyConstructor)
             {
-                List<Instruction> i = new List<Instruction>();
-                
-                i.Add(Instruction.Create(OpCodes.Dup));
-                
-                i.Add(GetIntInstruction(index)); // Index
-                i.Add(GetIntInstruction(field.id));
-                
-                i.Add(Instruction.Create(OpCodes.Ldtoken, Module.ImportReference(field.FieldType)));
-                i.Add(Instruction.Create(OpCodes.Call, getType));
-                
-                i.Add(Instruction.Create(OpCodes.Ldstr, field.Name));
-                i.Add(string.IsNullOrEmpty(field.customName) ? Instruction.Create(OpCodes.Ldnull) : Instruction.Create(OpCodes.Ldstr, field.customName));
-                
-                i.Add(Instruction.Create(GetBoolOpCode(field.visible))); // Is visible
-                
-                i.Add(Instruction.Create(OpCodes.Newobj, propertyConstructor)); // Create the constructor.
-                i.Add(Instruction.Create(OpCodes.Stelem_Ref));
+                List<Instruction> i = new List<Instruction>
+                {
+                    Instruction.Create(OpCodes.Dup),
+
+                    GetIntInstruction(index), // Index
+                    GetIntInstruction(field.id),
+
+                    Instruction.Create(OpCodes.Ldtoken, Module.ImportReference(field.FieldType)),
+                    Instruction.Create(OpCodes.Call, getType),
+
+                    Instruction.Create(OpCodes.Ldstr, field.Name),
+                    string.IsNullOrEmpty(field.customName) ? Instruction.Create(OpCodes.Ldnull) : Instruction.Create(OpCodes.Ldstr, field.customName),
+
+                    Instruction.Create(GetBoolOpCode(field.visible)), // Is visible
+
+                    Instruction.Create(OpCodes.Newobj, propertyConstructor), // Create the constructor.
+                    Instruction.Create(OpCodes.Stelem_Ref)
+                };
 
                 return i.ToArray();
             }
 
             Instruction[] WriteExposedArray(FieldOrProperty field, int index, MethodReference propertyConstructor)
             {
-                List<Instruction> i = new List<Instruction>();
-                
-                i.Add(Instruction.Create(OpCodes.Dup));
-                
-                i.Add(GetIntInstruction(index)); // Index
-                i.Add(GetIntInstruction(field.id));
-                
-                i.Add(Instruction.Create(OpCodes.Ldtoken, Module.ImportReference(field.FieldType)));
-                i.Add(Instruction.Create(OpCodes.Call, getType));
-                
-                i.Add(Instruction.Create(OpCodes.Ldstr, field.Name));
-                i.Add(string.IsNullOrEmpty(field.customName) ? Instruction.Create(OpCodes.Ldnull) : Instruction.Create(OpCodes.Ldstr, field.customName));
-                
-                i.Add(Instruction.Create(GetBoolOpCode(field.visible))); // Is visible
+                List<Instruction> i = new List<Instruction>
+                {
+                    Instruction.Create(OpCodes.Dup),
+
+                    GetIntInstruction(index), // Index
+                    GetIntInstruction(field.id),
+
+                    Instruction.Create(OpCodes.Ldtoken, Module.ImportReference(field.FieldType)),
+                    Instruction.Create(OpCodes.Call, getType),
+
+                    Instruction.Create(OpCodes.Ldstr, field.Name),
+                    string.IsNullOrEmpty(field.customName) ? Instruction.Create(OpCodes.Ldnull) : Instruction.Create(OpCodes.Ldstr, field.customName),
+
+                    Instruction.Create(GetBoolOpCode(field.visible)) // Is visible
+                };
 
                 if (field.IsList)
                 {
-                    i.Add(Instruction.Create(OpCodes.Ldtoken, Module.ImportReference(((GenericInstanceType) field.FieldType).GenericArguments[0])));
+                    i.Add(Instruction.Create(OpCodes.Ldtoken, Module.ImportReference(((GenericInstanceType)field.FieldType).GenericArguments[0])));
                 }
                 else
                 {
                     i.Add(Instruction.Create(OpCodes.Ldtoken, Module.ImportReference(field.FieldType.Resolve())));
                 }
-                
+
                 i.Add(Instruction.Create(OpCodes.Call, getType));
-                
+
                 i.Add(Instruction.Create(OpCodes.Newobj, propertyConstructor)); // Create the constructor.
                 i.Add(Instruction.Create(OpCodes.Stelem_Ref));
 
@@ -761,27 +762,17 @@ namespace Hertzole.ALE.CodeGen
                     Instruction.Create(OpCodes.Ldarg_1),
                     GetIntInstruction(field.id),
                     Instruction.Create(OpCodes.Bne_Un_S, dummy),
-                    Instruction.Create(OpCodes.Ldarg_2),
-                    Instruction.Create(OpCodes.Isinst, field.FieldType)
                 };
 
-                // Type check
-                if (field.IsCollection || (field.IsClass && !field.IsValueType))
+                if (field.IsValueType && !field.IsCollection)
                 {
-                    i.Add(GetStloc(localIndex, local));
-                    i.Add(GetLdloc(localIndex, local));
+                    i.Add(Instruction.Create(OpCodes.Ldarg_2));
+                    i.Add(Instruction.Create(OpCodes.Isinst, field.FieldType));
+                    i.Add(Instruction.Create(OpCodes.Brfalse, last));
                 }
-
-                i.Add(Instruction.Create(OpCodes.Brfalse, last));
 
                 // If check
-                if (field.IsCollection || (field.IsClass && !field.IsValueType))
-                {
-                    i.Add(Instruction.Create(OpCodes.Ldarg_0));
-                    i.Add(field.GetLoadInstruction());
-                    i.Add(GetLdloc(localIndex, local));
-                }
-                else if (field.IsValueType)
+                if (field.IsValueType && !field.IsCollection)
                 {
                     i.Add(Instruction.Create(OpCodes.Ldarg_2));
                     i.Add(Instruction.Create(OpCodes.Unbox_Any, field.FieldType));
@@ -805,13 +796,7 @@ namespace Hertzole.ALE.CodeGen
                 // Equals check
                 MethodReference equals;
 
-                if (field.IsCollection)
-                {
-                    equals = Module.ImportReference(typeof(LevelEditorExtensions).GetMethod("IsSameAs", new Type[] { typeof(ICollection), typeof(ICollection) }));
-                    i.Add(Instruction.Create(OpCodes.Call, equals));
-                    i.Add(Instruction.Create(OpCodes.Brtrue, last));
-                }
-                else
+                if (field.IsValueType && !field.IsCollection)
                 {
                     equals = GetEqualsMethod(field.FieldTypeDefinition, out bool isSameEquals, out bool isInEquality);
 
@@ -839,6 +824,26 @@ namespace Hertzole.ALE.CodeGen
                     {
                         i.Add(Instruction.Create(OpCodes.Brtrue, last));
                     }
+                }
+                else
+                {
+                    if (field.IsCollection)
+                    {
+                        equals = Module.GetMethod(typeof(LevelEditorExtensions), nameof(LevelEditorExtensions.CollectionEquals)).MakeGenericMethod(field.FieldType);
+                    }
+                    else
+                    {
+                        equals = Module.GetMethod(typeof(LevelEditorExtensions), nameof(LevelEditorExtensions.ClassEquals)).MakeGenericMethod(field.FieldType);
+                    }
+
+                    i.Add(Instruction.Create(OpCodes.Ldarg_0));
+                    i.Add(Instruction.Create(OpCodes.Castclass, Module.GetTypeReference<IExposedToLevelEditor>()));
+                    i.Add(Instruction.Create(OpCodes.Ldarg_2));
+                    i.Add(Instruction.Create(OpCodes.Ldarg_0));
+                    i.Add(field.GetLoadInstruction());
+                    i.Add(GetLdloc(localIndex, local, true));
+                    i.Add(Instruction.Create(OpCodes.Call, equals));
+                    i.Add(Instruction.Create(OpCodes.Brtrue, last));
                 }
 
                 i.Add(Instruction.Create(OpCodes.Ldarg_0));
