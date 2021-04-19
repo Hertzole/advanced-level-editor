@@ -137,6 +137,7 @@ namespace Hertzole.ALE
         public void StartPlayMode()
         {
             CachePlayModeObjects();
+            CacheExposedComponents();
 
             for (int i = 0; i < exposedComponents.Length; i++)
             {
@@ -158,6 +159,9 @@ namespace Hertzole.ALE
 
         public void StopPlayMode()
         {
+            CachePlayModeObjects();
+            CacheExposedComponents();
+
             for (int i = 0; i < exposedComponents.Length; i++)
             {
                 ReadOnlyCollection<ExposedProperty> properties = exposedComponents[i].GetProperties();
