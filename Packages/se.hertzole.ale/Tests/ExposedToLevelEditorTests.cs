@@ -84,6 +84,7 @@ namespace Hertzole.ALE.Tests
             AssertValueChanged<int[]>(9, new int[] { 0, 1, 2, 3 });
             AssertValueChanged<List<string>>(10, new List<string> { "Hello", "World" });
             AssertValueChanged<GameObject>(11, testObject.gameObject);
+            AssertValueChanged<List<Transform>>(12, new List<Transform>(){ testObject.transform });
 
             yield break;
 
@@ -171,6 +172,8 @@ namespace Hertzole.ALE.Tests
             public List<string> stringList = new List<string>();
             [ExposeToLevelEditor(11)]
             public GameObject gameObjectField;
+            [ExposeToLevelEditor(12)]
+            public List<Transform> transformList = new List<Transform>();
         }
     }
 }

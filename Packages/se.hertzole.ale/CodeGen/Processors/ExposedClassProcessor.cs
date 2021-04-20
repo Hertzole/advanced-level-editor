@@ -677,6 +677,17 @@ namespace Hertzole.ALE.CodeGen
             ILProcessor il = method.Body.GetILProcessor();
 
             Instruction last = Instruction.Create(OpCodes.Ldarg_3);
+            
+#if ALE_DEBUG
+            il.Emit(OpCodes.Ldstr, Type.Name + " SetValue(Id: {0}, Value: {1}, Notify: {2})");
+            il.Emit(OpCodes.Ldarg_1);
+            il.Emit(OpCodes.Box, Module.GetTypeReference<int>());
+            il.Emit(OpCodes.Ldarg_2);
+            il.Emit(OpCodes.Ldarg_3);
+            il.Emit(OpCodes.Box, Module.GetTypeReference<bool>());
+            il.Emit(OpCodes.Call, Module.GetMethod<string>("Format", new Type[] { typeof(string), typeof(object), typeof(object), typeof(object) }));
+            il.Emit(OpCodes.Call, Module.GetMethod(typeof(LevelEditorLogger), "Log", new Type[] { typeof(object) }));
+#endif
 
             VariableDefinition changedFlag = method.AddLocalVariable<bool>(Module, out int changedFlagIndex);
             // Set 'changed' flag to false.
@@ -710,7 +721,7 @@ namespace Hertzole.ALE.CodeGen
                             il.Body.Instructions[i].Operand = il.Body.Instructions[j];
                             break;
                         }
-                        else if (il.Body.Instructions[j].OpCode == OpCodes.Ldstr)
+                        else if (il.Body.Instructions[j].OpCode == OpCodes.Ldstr && il.Body.Instructions[j].Operand == ifElseLast.Operand)
                         {
                             isLast = true;
                             il.Body.Instructions[i].Operand = il.Body.Instructions[j];
@@ -846,6 +857,30 @@ namespace Hertzole.ALE.CodeGen
                     i.Add(Instruction.Create(OpCodes.Brtrue, last));
                 }
 
+#if ALE_DEBUG
+                i.Add(Instruction.Create(OpCodes.Ldstr, field.Name + " changed from {0} to {1}."));
+                i.Add(Instruction.Create(OpCodes.Ldarg_0));
+                if (field.IsProperty)
+                {
+                    i.Add(Instruction.Create(OpCodes.Call, field.property.GetMethod));
+                }
+                else
+                {
+                    i.Add(Instruction.Create(OpCodes.Ldfld, field.field));
+                }
+                if (field.IsValueType)
+                {
+                    i.Add(Instruction.Create(OpCodes.Box, field.FieldType));
+                }
+                i.Add(GetLdloc(localIndex, local));
+                if (field.IsValueType)
+                {
+                    i.Add(Instruction.Create(OpCodes.Box, field.FieldType));
+                }
+                i.Add(Instruction.Create(OpCodes.Call, Module.GetMethod<string>("Format", new Type[] { typeof(string), typeof(object), typeof(object) })));
+                i.Add(Instruction.Create(OpCodes.Call, Module.GetMethod(typeof(LevelEditorLogger), "Log", new Type[] { typeof(object) })));
+#endif
+                
                 i.Add(Instruction.Create(OpCodes.Ldarg_0));
                 i.Add(GetLdloc(localIndex, local));
                 if (field.IsProperty)
