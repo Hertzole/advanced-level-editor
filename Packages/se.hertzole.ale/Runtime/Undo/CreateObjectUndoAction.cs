@@ -8,11 +8,11 @@ namespace Hertzole.ALE
         private Vector3 position;
         private Quaternion rotation;
         private Transform parent;
-        private int instanceID;
+        private uint instanceID;
 
         private ILevelEditorObject obj;
 
-        public CreateObjectUndoAction(ILevelEditorResource resource, Vector3 position, Quaternion rotation, Transform parent, int instanceID, ILevelEditorObject obj)
+        public CreateObjectUndoAction(ILevelEditorResource resource, Vector3 position, Quaternion rotation, Transform parent, uint instanceID, ILevelEditorObject obj)
         {
             this.resource = resource;
             this.position = position;

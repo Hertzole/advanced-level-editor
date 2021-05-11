@@ -9,7 +9,7 @@ namespace Hertzole.ALE
     [DisallowMultipleComponent]
     [AddComponentMenu("")]
 #endif
-    public class LevelEditorObject : MonoBehaviour, ILevelEditorObject, IEquatable<LevelEditorObject>, IEquatable<ILevelEditorObject>
+    public class LevelEditorObject : MonoBehaviour, ILevelEditorObject, IEquatable<LevelEditorObject>, IEquatable<ILevelEditorObject>, ILevelEditorPoolable
     {
         private struct ValueInfo
         {
@@ -58,7 +58,7 @@ namespace Hertzole.ALE
         }
 
         public string ID { get; set; }
-        public int InstanceID { get; set; }
+        public uint InstanceID { get; set; }
 
         public ILevelEditorObject Parent { get; set; }
 
@@ -114,20 +114,7 @@ namespace Hertzole.ALE
                                 continue;
                             }
 
-                            object value = properties[k].value;
-
-                            // Required to get the proper component that it needs.
-                            Type valueType = exposedComponents[j].GetValueType(properties[k].id);
-                            if (valueType.IsSubclassOf(typeof(Component)))
-                            {
-                                if (value != null)
-                                {
-                                    ILevelEditorObject targetObj = (ILevelEditorObject)value;
-                                    value = targetObj.MyGameObject.GetComponent(valueType);
-                                }
-                            }
-
-                            exposedComponents[j].SetValue(properties[k].id, value, false);
+                            exposedComponents[j].SetValue(properties[k].id, properties[k].value, false);
                         }
                     }
                 }
@@ -248,6 +235,16 @@ namespace Hertzole.ALE
         public bool Equals(ILevelEditorObject other)
         {
             return other != null && other.InstanceID == InstanceID && other.ID == ID;
+        }
+
+        public void OnLevelEditorPooled()
+        {
+            LevelEditorWorld.RemoveObject(this);
+        }
+
+        public void OnLevelEditorUnpooled()
+        {
+            LevelEditorWorld.AddObject(this);
         }
     }
 }

@@ -49,7 +49,7 @@ namespace Hertzole.ALE
                 case 2:
                     return transform.localScale;
                 case 3:
-                    return transform.parent == null ? null : transform.parent;
+                    return new ComponentDataWrapper(transform.parent);
                 default:
                     throw new ArgumentException($"No exposed property with the ID '{id}'.");
             }
@@ -86,17 +86,11 @@ namespace Hertzole.ALE
 
                     break;
                 case 3:
-                    if (transform.parent != (Transform) value)
+                    if (value is ComponentDataWrapper wrapper && !wrapper.Equals(transform.parent))
                     {
-                        transform.SetParent((Transform) value, true);
-                        changed = true;
-                        if (transform.parent != null)
-                        {
-                            LevelEditorObject.Parent = transform.parent.GetComponent<ILevelEditorObject>();
-                            LevelEditorObject.Parent.AddChild(LevelEditorObject);
-                        }
+                        transform.SetParent(LevelEditorWorld.TryGetObject(wrapper.instanceId, out Transform parent) ? parent : null);
                     }
-
+                    
                     break;
                 default:
                     throw new ArgumentException($"No exposed property with the ID '{id}'.");

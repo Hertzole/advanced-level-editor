@@ -1,17 +1,18 @@
-﻿using Mono.Cecil;
-using Mono.Cecil.Cil;
-using Mono.Cecil.Rocks;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
 using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Threading;
+using Mono.Cecil;
+using Mono.Cecil.Cil;
+using Mono.Cecil.Rocks;
 using UnityEngine;
 using EventAttributes = Mono.Cecil.EventAttributes;
 using FieldAttributes = Mono.Cecil.FieldAttributes;
 using MethodAttributes = Mono.Cecil.MethodAttributes;
+using Object = UnityEngine.Object;
 using ParameterAttributes = Mono.Cecil.ParameterAttributes;
 using PropertyAttributes = Mono.Cecil.PropertyAttributes;
 
@@ -54,6 +55,24 @@ namespace Hertzole.ALE.CodeGen
             public bool IsDictionary { get { return FieldType.Is(typeof(Dictionary<,>)); } }
             public bool IsClass { get { return FieldTypeDefinition.IsClass; } }
             public bool IsValueType { get { return FieldTypeDefinition.IsValueType; } }
+            public bool IsComponent
+            {
+                get
+                {
+                    if (FieldType.Is<GameObject>())
+                    {
+                        return true;
+                    }
+
+                    TypeDefinition resolved = FieldType.Resolve();
+                    if (resolved != null && resolved.IsSubclassOf<Component>())
+                    {
+                        return true;
+                    }
+
+                    return false;
+                }
+            }
 
             public bool IsEnum
             {
@@ -69,6 +88,18 @@ namespace Hertzole.ALE.CodeGen
                 else
                 {
                     return Instruction.Create((IsValueType && !IsCollection) ? OpCodes.Ldflda : OpCodes.Ldfld, field);
+                }
+            }
+
+            public Instruction GetSetInstruction()
+            {
+                if (IsProperty)
+                {
+                    return Instruction.Create(OpCodes.Call, property.SetMethod);
+                }
+                else
+                {
+                    return Instruction.Create(OpCodes.Stfld, field);
                 }
             }
 
@@ -269,12 +300,11 @@ namespace Hertzole.ALE.CodeGen
 
             MethodDefinition getPropertiesMethod = CreateGetProperties(exposedFields);
             MethodDefinition getValueMethod = CreateGetValue(exposedFields);
-            MethodDefinition setValueMethod = CreateSetValue(exposedFields);
+            CreateSetValue(exposedFields);
             MethodDefinition getValueTypeMethod = CreateGetValueType(exposedFields);
 
             targetType.Methods.Add(getPropertiesMethod);
             targetType.Methods.Add(getValueMethod);
-            targetType.Methods.Add(setValueMethod);
             targetType.Methods.Add(getValueTypeMethod);
         }
 
@@ -640,7 +670,17 @@ namespace Hertzole.ALE.CodeGen
                 {
                     il.Emit(OpCodes.Ldfld, exposedFields[i].field);
                 }
-                il.Emit(OpCodes.Box, exposedFields[i].FieldType);
+
+                if (exposedFields[i].IsComponent)
+                {
+                    il.Append(CreateNewComponentWrapper(exposedFields[i].FieldType));
+                    il.Emit(OpCodes.Box, Module.GetTypeReference<ComponentDataWrapper>());
+                }
+                else
+                {
+                    il.Emit(OpCodes.Box, exposedFields[i].FieldType);
+                }
+                
                 il.Emit(OpCodes.Ret);
 
                 return first;
@@ -661,9 +701,15 @@ namespace Hertzole.ALE.CodeGen
             method.Body.Optimize();
 
             return method;
+
+            Instruction CreateNewComponentWrapper(TypeReference typeReference)
+            {
+                MethodReference ctor = Module.GetConstructor<ComponentDataWrapper>(typeReference.Is<GameObject>() ? typeof(GameObject) : typeof(Component));
+                return Instruction.Create(OpCodes.Newobj, ctor);
+            }
         }
 
-        private MethodDefinition CreateSetValue(List<FieldOrProperty> exposedFields)
+        private void CreateSetValue(List<FieldOrProperty> exposedFields)
         {
             MethodDefinition method = new MethodDefinition("Hertzole.ALE.IExposedToLevelEditor.SetValue",
                 MethodAttributes.Private | MethodAttributes.Final | MethodAttributes.HideBySig | MethodAttributes.NewSlot | MethodAttributes.Virtual,
@@ -673,6 +719,8 @@ namespace Hertzole.ALE.CodeGen
             method.Parameters.Add(new ParameterDefinition("value", ParameterAttributes.None, Module.ImportReference(typeof(object))));
             method.Parameters.Add(new ParameterDefinition("notify", ParameterAttributes.None, Module.ImportReference(typeof(bool))));
             method.Overrides.Add(Module.ImportReference(typeof(IExposedToLevelEditor).GetMethod("SetValue", new Type[] { typeof(int), typeof(object), typeof(bool) })));
+
+            Type.Methods.Add(method);
 
             ILProcessor il = method.Body.GetILProcessor();
 
@@ -761,8 +809,6 @@ namespace Hertzole.ALE.CodeGen
 
             method.Body.Optimize();
 
-            return method;
-
             Instruction[] WriteSetField(FieldOrProperty field, VariableDefinition local, int localIndex)
             {
                 // Write dummy 
@@ -774,6 +820,12 @@ namespace Hertzole.ALE.CodeGen
                     GetIntInstruction(field.id),
                     Instruction.Create(OpCodes.Bne_Un_S, dummy),
                 };
+
+                if (field.FieldType.Resolve().IsSubclassOf<Object>())
+                {
+                    WriteComponent();
+                    return i.ToArray();
+                }
 
                 if (field.IsValueType && !field.IsCollection)
                 {
@@ -904,9 +956,9 @@ namespace Hertzole.ALE.CodeGen
                     isSameEquals = false;
 
                     TypeReference fieldType = field.FieldType;
-                    if (type.IsSubclassOf<UnityEngine.Object>())
+                    if (type.IsSubclassOf<Object>())
                     {
-                        fieldType = Module.ImportReference(typeof(UnityEngine.Object));
+                        fieldType = Module.ImportReference(typeof(Object));
                     }
 
                     if (!type.TryGetMethodWithParameters("Equals", out MethodReference method, fieldType))
@@ -952,6 +1004,40 @@ namespace Hertzole.ALE.CodeGen
                     }
 
                     return method;
+                }
+
+                void WriteComponent()
+                {
+                    VariableDefinition wrapper = method.AddLocalVariable<ComponentDataWrapper>(out int wrapperIndex);
+                    VariableDefinition value = method.AddLocalVariable(field.FieldType, out int valueIndex);
+                    
+                    i.Add(Instruction.Create(OpCodes.Ldarg_2));
+                    i.Add(Instruction.Create(OpCodes.Isinst, Module.GetTypeReference<ComponentDataWrapper>()));
+                    i.Add(Instruction.Create(OpCodes.Brfalse, last));
+                    
+                    i.Add(Instruction.Create(OpCodes.Ldarg_2));
+                    i.Add(Instruction.Create(OpCodes.Unbox_Any, Module.GetTypeReference<ComponentDataWrapper>()));
+
+                    i.Add(GetStloc(wrapperIndex, wrapper));
+                    i.Add(GetLdloc(wrapperIndex, wrapper, true));
+                    i.Add(Instruction.Create(OpCodes.Ldarg_0));
+                    i.Add(field.GetLoadInstruction());
+                    i.Add(Instruction.Create(OpCodes.Call, Module.GetMethod<ComponentDataWrapper>("Equals", new Type[] 
+                    {
+                        field.FieldType.Is<GameObject>() ? typeof(GameObject) : typeof(Component)
+                    })));
+                    i.Add(Instruction.Create(OpCodes.Brtrue, last));
+
+                    i.Add(GetLdloc(wrapperIndex, wrapper));
+                    i.Add(Instruction.Create(OpCodes.Ldfld, Module.ImportReference(typeof(ComponentDataWrapper).GetField("instanceId", BindingFlags.Public | BindingFlags.Instance))));
+                    i.Add(GetLdloc(valueIndex, value, true));
+                    i.Add(Instruction.Create(OpCodes.Call, Module.GetGenericMethod(typeof(LevelEditorWorld), "TryGetObject", new Type[] { typeof(uint) }, new TypeReference[] { field.FieldType })));
+                    i.Add(Instruction.Create(OpCodes.Brfalse, last));
+                    
+                    i.Add(Instruction.Create(OpCodes.Ldarg_0));
+                    i.Add(GetLdloc(valueIndex, value));
+                    i.Add(field.GetSetInstruction());
+                    i.Add(Instruction.Create(OpCodes.Br, last));
                 }
             }
         }

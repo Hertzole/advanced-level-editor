@@ -17,7 +17,7 @@ namespace Hertzole.ALE
         [SerializeField, RequireType(typeof(ILevelEditorUndo))]
         private GameObject undo = null;
 
-        private int instanceID = 0;
+        private uint instanceID = 0;
 
         private ILevelEditorResources realResources;
         private ILevelEditorUndo undoComp;
@@ -27,7 +27,7 @@ namespace Hertzole.ALE
         private Dictionary<string, Stack<ILevelEditorObject>> pooledObjects = new Dictionary<string, Stack<ILevelEditorObject>>();
         private Dictionary<string, List<ILevelEditorObject>> activeObjects = new Dictionary<string, List<ILevelEditorObject>>();
         private Dictionary<string, int> objectCount = new Dictionary<string, int>();
-        private Dictionary<int, ILevelEditorObject> objectsWithId = new Dictionary<int, ILevelEditorObject>();
+        private Dictionary<uint, ILevelEditorObject> objectsWithId = new Dictionary<uint, ILevelEditorObject>();
 
         public ScriptableObject ResourcesObject
         {
@@ -81,7 +81,7 @@ namespace Hertzole.ALE
         }
 #endif
 
-        public ILevelEditorObject CreateObject(ILevelEditorResource resource, Vector3 position, Quaternion rotation, Transform parent, int instanceID, bool registerUndo = true)
+        public ILevelEditorObject CreateObject(ILevelEditorResource resource, Vector3 position, Quaternion rotation, Transform parent, uint instanceID, bool registerUndo = true)
         {
             if (resource.Asset is GameObject go)
             {
@@ -190,7 +190,7 @@ namespace Hertzole.ALE
                                 ILevelEditorObject targetObj = null;
                                 if (properties[k].value != null)
                                 {
-                                    targetObj = GetObject((int)properties[k].value);
+                                    // targetObj = GetObject((uint)properties[k].value);
                                 }
                                 properties[k].value = targetObj ?? null;
                             }
@@ -293,7 +293,7 @@ namespace Hertzole.ALE
             return allObjects;
         }
 
-        public ILevelEditorObject GetObject(int instanceID)
+        public ILevelEditorObject GetObject(uint instanceID)
         {
             return objectsWithId.TryGetValue(instanceID, out ILevelEditorObject obj) ? obj : null;
         }
@@ -314,7 +314,7 @@ namespace Hertzole.ALE
             return allObjects.Count;
         }
 
-        public int GetNextInstanceID()
+        public uint GetNextInstanceID()
         {
             return instanceID + 1;
         }

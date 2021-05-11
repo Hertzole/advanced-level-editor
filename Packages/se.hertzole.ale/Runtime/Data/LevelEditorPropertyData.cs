@@ -14,7 +14,7 @@ namespace Hertzole.ALE
         public LevelEditorPropertyData(ExposedProperty property, IExposedToLevelEditor exposedComponent)
         {
             id = property.ID;
-            value = exposedComponent == null ? default : exposedComponent.GetValue(property.ID);
+            value = exposedComponent?.GetValue(property.ID);
             // Used for Unity references. They need to be converted to a simple component.
             type = property.Type;
             if (property is ExposedArray array)
@@ -34,7 +34,8 @@ namespace Hertzole.ALE
             }
             else
             {
-                type = property.Type.IsSubclassOf(typeof(Component)) ? typeof(Component) : property.Type;
+                // type = property.Type.IsSubclassOf(typeof(Component)) ? typeof(Component) : property.Type;
+                type = ComponentDataWrapper.IsComponent(property.Type) ? typeof(ComponentDataWrapper) : property.Type;
             }
             typeName = type.FullName;
         }

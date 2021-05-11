@@ -44,22 +44,22 @@ namespace Hertzole.ALE
             return x.CreateObject(x.GetResource(id), position, Quaternion.identity, parent, x.GetNextInstanceID(), registerUndo);
         }
 
-        public static ILevelEditorObject CreateObject(this ILevelEditorObjectManager x, ILevelEditorResource resource, Vector3 position, int instanceID, bool registerUndo = true)
+        public static ILevelEditorObject CreateObject(this ILevelEditorObjectManager x, ILevelEditorResource resource, Vector3 position, uint instanceID, bool registerUndo = true)
         {
             return x.CreateObject(resource, position, Quaternion.identity, null, instanceID, registerUndo);
         }
 
-        public static ILevelEditorObject CreateObject(this ILevelEditorObjectManager x, string id, Vector3 position, int instanceID, bool registerUndo = true)
+        public static ILevelEditorObject CreateObject(this ILevelEditorObjectManager x, string id, Vector3 position, uint instanceID, bool registerUndo = true)
         {
             return x.CreateObject(x.GetResource(id), position, Quaternion.identity, null, instanceID, registerUndo);
         }
 
-        public static ILevelEditorObject CreateObject(this ILevelEditorObjectManager x, ILevelEditorResource resource, Vector3 position, Transform parent, int instanceID, bool registerUndo = true)
+        public static ILevelEditorObject CreateObject(this ILevelEditorObjectManager x, ILevelEditorResource resource, Vector3 position, Transform parent, uint instanceID, bool registerUndo = true)
         {
             return x.CreateObject(resource, position, Quaternion.identity, parent, instanceID, registerUndo);
         }
 
-        public static ILevelEditorObject CreateObject(this ILevelEditorObjectManager x, string id, Vector3 position, Transform parent, int instanceID, bool registerUndo = true)
+        public static ILevelEditorObject CreateObject(this ILevelEditorObjectManager x, string id, Vector3 position, Transform parent, uint instanceID, bool registerUndo = true)
         {
             return x.CreateObject(x.GetResource(id), position, Quaternion.identity, parent, instanceID, registerUndo);
         }
@@ -74,12 +74,12 @@ namespace Hertzole.ALE
             return x.CreateObject(x.GetResource(id), Vector3.zero, rotation, parent, x.GetNextInstanceID(), registerUndo);
         }
 
-        public static ILevelEditorObject CreateObject(this ILevelEditorObjectManager x, ILevelEditorResource resource, Quaternion rotation, Transform parent, int instanceID, bool registerUndo = true)
+        public static ILevelEditorObject CreateObject(this ILevelEditorObjectManager x, ILevelEditorResource resource, Quaternion rotation, Transform parent, uint instanceID, bool registerUndo = true)
         {
             return x.CreateObject(resource, Vector3.zero, rotation, parent, instanceID, registerUndo);
         }
 
-        public static ILevelEditorObject CreateObject(this ILevelEditorObjectManager x, string id, Quaternion rotation, Transform parent, int instanceID, bool registerUndo = true)
+        public static ILevelEditorObject CreateObject(this ILevelEditorObjectManager x, string id, Quaternion rotation, Transform parent, uint instanceID, bool registerUndo = true)
         {
             return x.CreateObject(x.GetResource(id), Vector3.zero, rotation, parent, instanceID, registerUndo);
         }
@@ -94,12 +94,12 @@ namespace Hertzole.ALE
             return x.CreateObject(x.GetResource(id), Vector3.zero, Quaternion.identity, parent, x.GetNextInstanceID(), registerUndo);
         }
 
-        public static ILevelEditorObject CreateObject(this ILevelEditorObjectManager x, ILevelEditorResource resource, Transform parent, int instanceID, bool registerUndo = true)
+        public static ILevelEditorObject CreateObject(this ILevelEditorObjectManager x, ILevelEditorResource resource, Transform parent, uint instanceID, bool registerUndo = true)
         {
             return x.CreateObject(resource, Vector3.zero, Quaternion.identity, parent, instanceID, registerUndo);
         }
 
-        public static ILevelEditorObject CreateObject(this ILevelEditorObjectManager x, string id, Transform parent, int instanceID, bool registerUndo = true)
+        public static ILevelEditorObject CreateObject(this ILevelEditorObjectManager x, string id, Transform parent, uint instanceID, bool registerUndo = true)
         {
             return x.CreateObject(x.GetResource(id), Vector3.zero, Quaternion.identity, parent, instanceID, registerUndo);
         }
@@ -114,12 +114,12 @@ namespace Hertzole.ALE
             return x.CreateObject(x.GetResource(id), position, rotation, null, x.GetNextInstanceID(), registerUndo);
         }
 
-        public static ILevelEditorObject CreateObject(this ILevelEditorObjectManager x, ILevelEditorResource resource, Vector3 position, Quaternion rotation, int instanceID, bool registerUndo = true)
+        public static ILevelEditorObject CreateObject(this ILevelEditorObjectManager x, ILevelEditorResource resource, Vector3 position, Quaternion rotation, uint instanceID, bool registerUndo = true)
         {
             return x.CreateObject(resource, position, rotation, null, instanceID, registerUndo);
         }
 
-        public static ILevelEditorObject CreateObject(this ILevelEditorObjectManager x, string id, Vector3 position, Quaternion rotation, int instanceID, bool registerUndo = true)
+        public static ILevelEditorObject CreateObject(this ILevelEditorObjectManager x, string id, Vector3 position, Quaternion rotation, uint instanceID, bool registerUndo = true)
         {
             return x.CreateObject(x.GetResource(id), position, rotation, null, instanceID, registerUndo);
         }
@@ -134,7 +134,7 @@ namespace Hertzole.ALE
             return x.CreateObject(x.GetResource(id), position, rotation, parent, x.GetNextInstanceID(), registerUndo);
         }
 
-        public static ILevelEditorObject CreateObject(this ILevelEditorObjectManager x, string id, Vector3 position, Quaternion rotation, Transform parent, int instanceID, bool registerUndo = true)
+        public static ILevelEditorObject CreateObject(this ILevelEditorObjectManager x, string id, Vector3 position, Quaternion rotation, Transform parent, uint instanceID, bool registerUndo = true)
         {
             return x.CreateObject(x.GetResource(id), position, rotation, parent, instanceID, registerUndo);
         }

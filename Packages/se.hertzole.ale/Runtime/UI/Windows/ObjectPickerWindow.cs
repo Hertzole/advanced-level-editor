@@ -58,7 +58,7 @@ namespace Hertzole.ALE
                 {
                     toggle.Label.text = obj.name;
                 }
-                else if ((UnityObject)item == null)
+                else
                 {
                     toggle.Label.text = "None";
                 }
@@ -69,28 +69,10 @@ namespace Hertzole.ALE
         {
             if (sceneObject)
             {
-                List<ILevelEditorObject> allObjects = new List<ILevelEditorObject>(LevelEditor.ObjectManager.GetAllObjects());
-                if (type == typeof(GameObject) || type == typeof(Transform)) // All objects are game objects or have a transform.
-                {
-                    allObjects.Insert(0, null);
-                    listView.SetItems(allObjects);
-                }
-                else
-                {
-                    List<ILevelEditorObject> typeObjects = new List<ILevelEditorObject>();
+                List<UnityObject> allObjects = new List<UnityObject>(LevelEditorWorld.GetObjects(type));
+                allObjects.Insert(0, null);
 
-                    for (int i = 0; i < allObjects.Count; i++)
-                    {
-                        if (allObjects[i].MyGameObject.GetComponent(type))
-                        {
-                            typeObjects.Add(allObjects[i]);
-                        }
-                    }
-
-                    typeObjects.Insert(0, null);
-
-                    listView.SetItems(typeObjects);
-                }
+                listView.SetItems(allObjects);
             }
 
             Show(true);
