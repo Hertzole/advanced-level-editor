@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using MessagePack;
-using UnityEngine;
 
 namespace Hertzole.ALE
 {
@@ -9,18 +8,9 @@ namespace Hertzole.ALE
     {
         private static readonly Dictionary<string, Type> typeMap = new Dictionary<string, Type>();
 
-        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
-        private static void RegisterTypes()
-        {
-            RegisterType<Vector3>();
-            RegisterType<Component>();
-            RegisterType<bool>();
-            RegisterType<float>();
-        }
-
         public static void RegisterType<T>()
         {
-            typeMap[typeof(T).FullName] = typeof(T);
+            typeMap[typeof(T).FullName ?? throw new InvalidOperationException()] = typeof(T);
         }
 
         public static byte[] SerializeBinary<T>(T data)

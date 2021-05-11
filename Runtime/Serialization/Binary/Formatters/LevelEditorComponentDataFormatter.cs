@@ -1,7 +1,7 @@
-﻿using MessagePack;
+﻿using System;
+using MessagePack;
 using MessagePack.Formatters;
 using MessagePack.Internal;
-using System;
 
 namespace Hertzole.ALE
 {

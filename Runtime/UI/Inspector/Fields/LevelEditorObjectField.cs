@@ -45,8 +45,6 @@ namespace Hertzole.ALE
         {
             UI.ObjectPickerWindow.OnWindowClose.RemoveListener(OnPickerWindowClose);
             UI.ObjectPickerWindow.OnObjectSelected -= OnPickerObjectSelected;
-
-            SetPropertyValue(RawValue, true);
         }
 
         private void OnPickerObjectSelected(UnityObject obj)
@@ -56,9 +54,14 @@ namespace Hertzole.ALE
 
         private void SetUnityObject(UnityObject obj)
         {
+            if (!isSceneObject)
+            {
+                throw new NotSupportedException($"Non-scene objects are not supported.");
+            }
+            
             if (obj == null)
             {
-                SetPropertyValue(null);
+                SetPropertyValue(new ComponentDataWrapper(0));
                 onValueChanged.Invoke(null);
             }
             else
@@ -67,23 +70,29 @@ namespace Hertzole.ALE
                 {
                     if (BoundProperty.Type == typeof(GameObject))
                     {
-                        SetPropertyValue(levelObject.MyGameObject);
+                        SetPropertyValue(new ComponentDataWrapper(levelObject.MyGameObject));
                         onValueChanged.Invoke(levelObject.MyGameObject);
                     }
                     else
                     {
                         Component value = levelObject.MyGameObject.GetComponent(BoundProperty.Type);
-                        SetPropertyValue(value);
+                        SetPropertyValue(new ComponentDataWrapper(value));
                         onValueChanged.Invoke(value);
                     }
                 }
+                else if(obj is GameObject go)
+                {
+                    SetPropertyValue(new ComponentDataWrapper(go));
+                    onValueChanged.Invoke(obj);
+                }
                 else
                 {
-                    throw new NotImplementedException($"There's no support yet for the {obj.GetType()} in object fields.");
+                    SetPropertyValue(new ComponentDataWrapper((Component)obj));
+                    onValueChanged.Invoke(obj);
                 }
             }
 
-            UpdateLabel((UnityObject)RawValue);
+            UpdateLabel(obj);
         }
 
         public override bool SupportsType(Type type, bool isArray)
@@ -98,7 +107,16 @@ namespace Hertzole.ALE
 
         protected override void SetFieldValue(object value)
         {
-            UnityObject obj = (UnityObject)value;
+            UnityObject obj = null;
+            
+            if (value is ComponentDataWrapper dataWrapper)
+            {
+                LevelEditorWorld.TryGetObject(dataWrapper.instanceId, BoundProperty.Type, out obj);
+            }
+            else if (value is UnityObject unityObj)
+            {
+                obj = unityObj;
+            }
 
             UpdateLabel(obj);
 

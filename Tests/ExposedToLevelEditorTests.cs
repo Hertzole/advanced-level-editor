@@ -76,15 +76,16 @@ namespace Hertzole.ALE.Tests
             AssertValueChanged<int>(1, 42);
             AssertValueChanged<Vector3>(2, new Vector3(1, 2, 3));
             AssertValueChanged<Color>(3, new Color(0.25f, 0.5f, 0.75f, 1f));
-            AssertValueChanged<Transform>(5, testObject.transform);
+            // AssertValueChanged<Transform>(5, testObject.transform);
             AssertValueChanged<Color32>(4, new Color32(10, 20, 30, 40));
             AssertValueChanged<string>(6, "New value");
             AssertValueChanged<string[]>(7, new string[] { "Hello", "World!" });
             AssertValueChanged<string[]>(8, new string[] { "Hello from other side" });
             AssertValueChanged<int[]>(9, new int[] { 0, 1, 2, 3 });
             AssertValueChanged<List<string>>(10, new List<string> { "Hello", "World" });
-            AssertValueChanged<GameObject>(11, testObject.gameObject);
-            AssertValueChanged<List<Transform>>(12, new List<Transform>(){ testObject.transform });
+            // AssertValueChanged<GameObject>(11, testObject.gameObject);
+            // AssertValueChanged<List<Transform>>(12, new List<Transform>(){ testObject.transform });
+            // AssertValueChanged<List<TestExposedBehavior>>(13, new List<TestExposedBehavior>(){ testObject });
 
             yield break;
 
@@ -135,6 +136,9 @@ namespace Hertzole.ALE.Tests
             Assert.AreEqual(typeof(string[]), exposed.GetValueType(8));
             Assert.AreEqual(typeof(int[]), exposed.GetValueType(9));
             Assert.AreEqual(typeof(List<string>), exposed.GetValueType(10));
+            Assert.AreEqual(typeof(GameObject), exposed.GetValueType(11));
+            Assert.AreEqual(typeof(List<Transform>), exposed.GetValueType(12));
+            Assert.AreEqual(typeof(List<TestExposedBehavior>), exposed.GetValueType(13));
 
             yield break;
         }
@@ -174,6 +178,8 @@ namespace Hertzole.ALE.Tests
             public GameObject gameObjectField;
             [ExposeToLevelEditor(12)]
             public List<Transform> transformList = new List<Transform>();
+            [ExposeToLevelEditor(13)]
+            public List<TestExposedBehavior> exposedList = new List<TestExposedBehavior>();
         }
     }
 }

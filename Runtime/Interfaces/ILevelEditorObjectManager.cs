@@ -49,7 +49,7 @@ namespace Hertzole.ALE
 
         ILevelEditorResources Resources { get; }
 
-        ILevelEditorObject CreateObject(ILevelEditorResource resource, Vector3 position, Quaternion rotation, Transform parent, int instanceID, bool registerUndo = true);
+        ILevelEditorObject CreateObject(ILevelEditorResource resource, Vector3 position, Quaternion rotation, Transform parent, uint instanceID, bool registerUndo = true);
 
         void CreateObjectsFromSaveData(LevelEditorSaveData data);
 
@@ -61,12 +61,12 @@ namespace Hertzole.ALE
 
         List<ILevelEditorObject> GetAllObjects();
 
-        ILevelEditorObject GetObject(int instanceID);
+        ILevelEditorObject GetObject(uint instanceID);
 
         int GetObjectCount(string id);
 
         int GetTotalObjectCount();
 
-        int GetNextInstanceID();
+        uint GetNextInstanceID();
     }
 }

@@ -36,19 +36,19 @@ namespace Hertzole.ALE.CodeGen
             TypeDefinition resolved = isList ? ((GenericInstanceType)type).GenericArguments[0].Resolve() : type.Resolve();
             if (resolved != null)
             {
-                if (resolved.IsSubclassOf<Component>())
+                if (resolved.IsSubclassOf<Component>() || resolved.Is<GameObject>())
                 {
                     if (isList)
                     {
-                        type = module.ImportReference(typeof(List<Component>));
+                        type = module.ImportReference(typeof(List<ComponentDataWrapper>));
                     }
                     else if (isArray)
                     {
-                        type = module.ImportReference(typeof(Component[]));
+                        type = module.ImportReference(typeof(ComponentDataWrapper[]));
                     }
                     else
                     {
-                        type = module.ImportReference(typeof(Component));
+                        type = module.ImportReference(typeof(ComponentDataWrapper));
                     }
                 }
             }

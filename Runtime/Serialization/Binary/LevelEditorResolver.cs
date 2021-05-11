@@ -80,8 +80,9 @@ namespace Hertzole.ALE
                     { typeof(LevelEditorComponentData[]), 6 },
                     { typeof(LevelEditorPropertyData[]), 7 },
                     { typeof(Dictionary<string, LevelEditorCustomData>), 8 },
-                    { typeof(Component), 9 },
-                    { typeof(GameObject), 10 },
+                    { typeof(ComponentDataWrapper), 9 },
+                    { typeof(ComponentDataWrapper[]), 10 },
+                    { typeof(List<ComponentDataWrapper>), 11 }
                 };
             }
 
@@ -113,9 +114,11 @@ namespace Hertzole.ALE
                     case 8:
                         return new DictionaryFormatter<string, LevelEditorCustomData>();
                     case 9:
-                        return new ComponentFormatter();
+                        return new ComponentDataWrapperFormatter();
                     case 10:
-                        return new GameObjectFormatter();
+                        return new ArrayFormatter<ComponentDataWrapper>();
+                    case 11:
+                        return new ListFormatter<ComponentDataWrapper>();
                     default:
                         return null;
                 }

@@ -41,7 +41,7 @@ namespace Hertzole.ALE
             string name = null;
             bool active = false;
             string id = null;
-            int instanceId = -1;
+            uint instanceId = 0;
             LevelEditorComponentData[] components = null;
 
             int count = reader.ReadMapHeader();
@@ -88,7 +88,7 @@ namespace Hertzole.ALE
                                     goto FAIL;
                                 }
 
-                                instanceId = reader.ReadInt32();
+                                instanceId = reader.ReadUInt32();
                                 continue;
 
                             case 7954885741726494563UL:

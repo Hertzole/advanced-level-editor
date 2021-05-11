@@ -8,7 +8,7 @@ namespace Hertzole.ALE
         public string name;
         public bool active;
         public string id;
-        public int instanceId;
+        public uint instanceId;
         public LevelEditorComponentData[] components;
 
         public LevelEditorObjectData(ILevelEditorObject obj)

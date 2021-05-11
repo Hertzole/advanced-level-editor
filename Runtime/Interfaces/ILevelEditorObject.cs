@@ -22,7 +22,7 @@ namespace Hertzole.ALE
         bool IsActive { get; set; }
 
         string ID { get; set; }
-        int InstanceID { get; set; }
+        uint InstanceID { get; set; }
 
         GameObject MyGameObject { get; }
 

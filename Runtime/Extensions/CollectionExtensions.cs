@@ -25,14 +25,9 @@ namespace Hertzole.ALE
             return "{" + string.Join(",", dictionary.Select(kv => kv.Key + ": " + kv.Value).ToArray()) + "}";
         }
 
-        public static string ToDebugString<T>(this T[] array)
+        public static string ToDebugString<T>(this IEnumerable<T> array)
         {
             return "{" + string.Join(", ", array) + "}";
-        }
-
-        public static string ToDebugString<T>(this IList<T> list)
-        {
-            return "{" + string.Join(", ", list) + "}";
         }
 
         public static bool DictionaryEquals(this IDictionary a, IDictionary b)
@@ -52,7 +47,6 @@ namespace Hertzole.ALE
                 return false;
             }
 
-            //Array aKeys = Array.CreateInstance(typeof(object), a.Count);
             object[] aKeys = new object[a.Count];
             object[] bKeys = new object[a.Count];
 
@@ -103,6 +97,16 @@ namespace Hertzole.ALE
 
             for (int i = 0; i < a.Count; i++)
             {
+                if (a[i] == null && b[i] == null)
+                {
+                    continue;
+                }
+
+                if (a[i] == null && b[i] != null)
+                {
+                    return false;
+                }
+                
                 if (!a[i].Equals(b[i]))
                 {
                     return false;
@@ -137,11 +141,6 @@ namespace Hertzole.ALE
             if (a is IList al && b is IList bl)
             {
                 return ListEquals(al, bl);
-            }
-
-            if (a is Array aa && b is Array ba)
-            {
-                return ListEquals(aa, ba);
             }
 
             Debug.LogError("Couldn't match the collection " + a.GetType());
