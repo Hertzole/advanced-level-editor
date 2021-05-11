@@ -47,6 +47,12 @@ namespace Hertzole.ALE
         public abstract ReadOnlyCollection<ExposedProperty> GetProperties();
         public abstract object GetValue(int id);
         public abstract Type GetValueType(int id);
+
+        public IExposedWrapper GetWrapper()
+        {
+            throw new NotImplementedException();
+        }
+
         public abstract void SetValue(int id, object value, bool notify);
 
         protected void InvokeOnValueChanged(int id, object value)

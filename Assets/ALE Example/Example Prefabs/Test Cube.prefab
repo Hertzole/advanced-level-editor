@@ -12,8 +12,7 @@ GameObject:
   - component: {fileID: 4858867421141650840}
   - component: {fileID: 6129102779647413279}
   - component: {fileID: 446762255455591348}
-  - component: {fileID: 6720483487702025507}
-  - component: {fileID: 3477611412611313805}
+  - component: {fileID: 5147275576633076050}
   m_Layer: 0
   m_Name: Test Cube
   m_TagString: Untagged
@@ -97,7 +96,7 @@ BoxCollider:
   serializedVersion: 2
   m_Size: {x: 1, y: 1, z: 1}
   m_Center: {x: 0, y: 0, z: 0}
---- !u!114 &6720483487702025507
+--- !u!114 &5147275576633076050
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -106,46 +105,10 @@ MonoBehaviour:
   m_GameObject: {fileID: 2837006266036230208}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 7d05415303779be4dbe2744df882ce50, type: 3}
+  m_Script: {fileID: 11500000, guid: c1a29d1693aff1c4c85b7fa32c8924db, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  testString: 
-  testByte: 0
-  testSByte: 0
-  testShort: 0
-  testUShort: 0
-  testInt: 0
-  testUint: 0
-  testLong: 0
-  testULong: 0
-  floatTest: 0
-  doubleTest: 0
-  vector2Test: {x: 0, y: 0}
-  vector2IntTest: {x: 0, y: 0}
-  vector3Test: {x: 0, y: 0, z: 0}
-  vector3IntTest: {x: 0, y: 0, z: 0}
-  charTest: 65
-  boolTest: 1
-  colorField: {r: 1, g: 0, b: 0, a: 1}
-  color32Field:
-    serializedVersion: 2
-    rgba: 4278255360
-  otherObject: {fileID: 0}
-  structTest:
-    str: 
-    vec: {x: 0, y: 0, z: 0}
---- !u!114 &3477611412611313805
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 2837006266036230208}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 5eb404e8ff357374581d37e865285860, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  stringTest:
-  - Hello
-  - World
+  testString: Hello world
+  testInt: 42
+  testVector3: {x: 1, y: 2, z: 3}
+  reference: {fileID: 0}

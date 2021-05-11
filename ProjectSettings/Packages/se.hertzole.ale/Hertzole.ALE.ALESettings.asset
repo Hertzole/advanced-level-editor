@@ -12,5 +12,5 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 16630b67d843bf240a222c992742858c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  applyTransformWrapper: 1
+  applyTransformWrapper: 0
   applyRigidbodyWrapper: 1

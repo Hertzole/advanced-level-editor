@@ -2,6 +2,7 @@
 using MessagePack;
 using MessagePack.Formatters;
 using MessagePack.Internal;
+using UnityEngine;
 
 namespace Hertzole.ALE
 {
@@ -16,7 +17,7 @@ namespace Hertzole.ALE
             writer.WriteRaw(SpanType);
             options.Resolver.GetFormatterWithVerify<string>().Serialize(ref writer, value.type, options);
             writer.WriteRaw(SpanProperties);
-            options.Resolver.GetFormatterWithVerify<LevelEditorPropertyData[]>().Serialize(ref writer, value.properties, options);
+            ((LevelEditorResolver)LevelEditorResolver.Instance).SerializeWrapper(null, ref writer, value.wrapper, options);
         }
 
         public LevelEditorComponentData Deserialize(ref MessagePackReader reader, MessagePackSerializerOptions options)
@@ -24,7 +25,8 @@ namespace Hertzole.ALE
             options.Security.DepthStep(ref reader);
 
             string type = null;
-            LevelEditorPropertyData[] properties = null;
+            Type actualType = null;
+            IExposedWrapper wrapper = null;
 
             int count = reader.ReadMapHeader();
             for (int i = 0; i < count; i++)
@@ -44,6 +46,7 @@ namespace Hertzole.ALE
                         }
 
                         type = options.Resolver.GetFormatterWithVerify<string>().Deserialize(ref reader, options);
+                        actualType = LevelEditorSerializer.GetType(type);
                         continue;
                     case 10:
                         if (!MemoryExtensions.SequenceEqual(stringKey, SpanProperties.Slice(1)))
@@ -51,14 +54,15 @@ namespace Hertzole.ALE
                             goto FAIL;
                         }
 
-                        properties = options.Resolver.GetFormatterWithVerify<LevelEditorPropertyData[]>().Deserialize(ref reader, options);
+                        ((LevelEditorResolver) LevelEditorResolver.Instance).DeserializeWrapper(actualType, ref reader, options, out wrapper);
+                        Debug.Log(wrapper);
                         continue;
                 }
             }
 
             reader.Depth--;
 
-            return new LevelEditorComponentData() { type = type, properties = properties };
+            return new LevelEditorComponentData() { type = type, wrapper = wrapper };
         }
     }
 }
