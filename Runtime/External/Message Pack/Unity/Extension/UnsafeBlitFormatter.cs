@@ -1,10 +1,12 @@
 ﻿// Copyright (c) All contributors. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using MessagePack.Formatters;
 using System;
 using System.Buffers;
+using System.Collections.Generic;
 using System.Runtime.InteropServices;
+using System.Text;
+using MessagePack.Formatters;
 using UnityEngine;
 
 #pragma warning disable SA1402 // multiple types in a file
@@ -15,17 +17,14 @@ namespace MessagePack.Unity.Extension
     // use ext instead of ArrayFormatter to extremely boost up performance.
     // Layout: [extHeader, byteSize(integer), isLittleEndian(bool), bytes()]
     // Used Ext:30~36
-    public abstract class UnsafeBlitFormatterBase<T> : MessagePackFormatter<T[]>
+    public abstract class UnsafeBlitFormatterBase<T> : IMessagePackFormatter<T[]>
         where T : struct
     {
         protected abstract sbyte TypeCode { get; }
 
-        protected void CopyDeserializeUnsafe(ReadOnlySpan<byte> src, Span<T> dest)
-        {
-            src.CopyTo(MemoryMarshal.Cast<T, byte>(dest));
-        }
+        protected void CopyDeserializeUnsafe(ReadOnlySpan<byte> src, Span<T> dest) => src.CopyTo(MemoryMarshal.Cast<T, byte>(dest));
 
-        public override void Serialize(ref MessagePackWriter writer, T[] value, MessagePackSerializerOptions options)
+        public void Serialize(ref MessagePackWriter writer, T[] value, MessagePackSerializerOptions options)
         {
             if (value == null)
             {
@@ -33,15 +32,15 @@ namespace MessagePack.Unity.Extension
                 return;
             }
 
-            int byteLen = value.Length * Marshal.SizeOf<T>();
+            var byteLen = value.Length * Marshal.SizeOf<T>();
 
-            writer.WriteExtensionFormatHeader(new ExtensionHeader(TypeCode, byteLen));
+            writer.WriteExtensionFormatHeader(new ExtensionHeader(this.TypeCode, byteLen));
             writer.Write(byteLen); // write original header(not array header)
             writer.Write(BitConverter.IsLittleEndian);
             writer.WriteRaw(MemoryMarshal.Cast<T, byte>(value));
         }
 
-        public override T[] Deserialize(ref MessagePackReader reader, MessagePackSerializerOptions options)
+        public T[] Deserialize(ref MessagePackReader reader, MessagePackSerializerOptions options)
         {
             if (reader.TryReadNil())
             {
@@ -49,16 +48,16 @@ namespace MessagePack.Unity.Extension
             }
 
             ExtensionHeader header = reader.ReadExtensionFormatHeader();
-            if (header.TypeCode != TypeCode)
+            if (header.TypeCode != this.TypeCode)
             {
                 throw new InvalidOperationException("Invalid typeCode.");
             }
 
-            int byteLength = reader.ReadInt32();
-            bool isLittleEndian = reader.ReadBoolean();
+            var byteLength = reader.ReadInt32();
+            var isLittleEndian = reader.ReadBoolean();
 
             // Allocate a T[] that we will return. We'll then cast the T[] as byte[] so we can copy the byte sequence directly into it.
-            T[] result = new T[byteLength / Marshal.SizeOf<T>()];
+            var result = new T[byteLength / Marshal.SizeOf<T>()];
             Span<byte> resultAsBytes = MemoryMarshal.Cast<T, byte>(result);
             reader.ReadRaw(byteLength).CopyTo(resultAsBytes);
 

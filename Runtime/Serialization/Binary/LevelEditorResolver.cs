@@ -39,7 +39,7 @@ namespace Hertzole.ALE
 
         private LevelEditorResolver() { }
 
-        public MessagePackFormatter GetFormatter<T>()
+        public IMessagePackFormatter<T> GetFormatter<T>()
         {
             return FormatterCache<T>.Formatter;
         }
@@ -51,14 +51,14 @@ namespace Hertzole.ALE
 
         private static class FormatterCache<T>
         {
-            internal static readonly MessagePackFormatter Formatter;
+            internal static readonly IMessagePackFormatter<T> Formatter;
 
             static FormatterCache()
             {
-                MessagePackFormatter f = LevelEditorResolverGetFormatterHelper.GetFormatter(typeof(T));
+                IMessagePackFormatter f = LevelEditorResolverGetFormatterHelper.GetFormatter(typeof(T));
                 if (f != null)
                 {
-                    Formatter = f;
+                    Formatter = (IMessagePackFormatter<T>)f;
                 }
             }
         }
@@ -74,7 +74,7 @@ namespace Hertzole.ALE
                     { typeof(LevelEditorSaveData), 0 },
                     { typeof(LevelEditorObjectData), 1 },
                     { typeof(LevelEditorComponentData), 2 },
-                    { typeof(LevelEditorPropertyData), 3 },
+                    // { typeof(LevelEditorPropertyData), 3 },
                     { typeof(LevelEditorCustomData), 4 },
                     { typeof(List<LevelEditorObjectData>), 5 },
                     { typeof(LevelEditorComponentData[]), 6 },
@@ -86,7 +86,7 @@ namespace Hertzole.ALE
                 };
             }
 
-            internal static MessagePackFormatter GetFormatter(Type t)
+            internal static IMessagePackFormatter GetFormatter(Type t)
             {
                 if (!lookup.TryGetValue(t, out int key))
                 {
@@ -101,8 +101,8 @@ namespace Hertzole.ALE
                         return new LevelEditorObjectDataFormatter();
                     case 2:
                         return new LevelEditorComponentDataFormatter();
-                    case 3:
-                        return new LevelEditorPropertyDataFormatter();
+                    // case 3:
+                    //     return new LevelEditorPropertyDataFormatter();
                     case 4:
                         return new LevelEditorCustomDataFormatter();
                     case 5:

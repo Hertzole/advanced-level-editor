@@ -27,20 +27,20 @@ namespace MessagePack.Resolvers
         {
         }
 
-        public MessagePackFormatter GetFormatter<T>()
+        public IMessagePackFormatter<T> GetFormatter<T>()
         {
             return FormatterCache<T>.Formatter;
         }
 
         private static class FormatterCache<T>
         {
-            public static readonly MessagePackFormatter<T> Formatter;
+            public static readonly IMessagePackFormatter<T> Formatter;
 
             static FormatterCache()
             {
-                //Formatter = (typeof(T) == typeof(object))
-                //    ? (MessagePackFormatter<T>)PrimitiveObjectFormatter.Instance
-                //    : null;
+                Formatter = (typeof(T) == typeof(object))
+                    ? (IMessagePackFormatter<T>)(object)PrimitiveObjectFormatter.Instance
+                    : null;
             }
         }
     }
@@ -59,19 +59,19 @@ namespace MessagePack.Resolvers
 
     ////        }
 
-    ////        public MessagePackFormatter<T> GetFormatter<T>()
+    ////        public IMessagePackFormatter<T> GetFormatter<T>()
     ////        {
     ////            return FormatterCache<T>.formatter;
     ////        }
 
     ////        static class FormatterCache<T>
     ////        {
-    ////            public static readonly MessagePackFormatter<T> formatter;
+    ////            public static readonly IMessagePackFormatter<T> formatter;
 
     ////            static FormatterCache()
     ////            {
     ////                formatter = (typeof(T) == typeof(object))
-    ////                    ? (MessagePackFormatter<T>)(object)DynamicObjectTypeFallbackFormatter.Instance
+    ////                    ? (IMessagePackFormatter<T>)(object)DynamicObjectTypeFallbackFormatter.Instance
     ////                    : null;
     ////            }
     ////        }

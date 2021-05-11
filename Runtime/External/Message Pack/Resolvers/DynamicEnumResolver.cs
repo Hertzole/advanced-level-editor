@@ -3,12 +3,13 @@
 
 #if !(UNITY_2018_3_OR_NEWER && NET_STANDARD_2_0)
 
-using MessagePack.Formatters;
-using MessagePack.Internal;
 using System;
+using System.Buffers;
 using System.Reflection;
 using System.Reflection.Emit;
 using System.Threading;
+using MessagePack.Formatters;
+using MessagePack.Internal;
 
 namespace MessagePack.Resolvers
 {
@@ -44,14 +45,14 @@ namespace MessagePack.Resolvers
         }
 #endif
 
-        public MessagePackFormatter GetFormatter<T>()
+        public IMessagePackFormatter<T> GetFormatter<T>()
         {
             return FormatterCache<T>.Formatter;
         }
 
         private static class FormatterCache<T>
         {
-            public static readonly MessagePackFormatter<T> Formatter;
+            public static readonly IMessagePackFormatter<T> Formatter;
 
             static FormatterCache()
             {
@@ -65,13 +66,13 @@ namespace MessagePack.Resolvers
                         return;
                     }
 
-                    MessagePackFormatter innerFormatter = DynamicEnumResolver.Instance.GetFormatterDynamic(ti.AsType());
+                    var innerFormatter = DynamicEnumResolver.Instance.GetFormatterDynamic(ti.AsType());
                     if (innerFormatter == null)
                     {
                         return;
                     }
 
-                    Formatter = (MessagePackFormatter<T>)Activator.CreateInstance(typeof(StaticNullableFormatter<>).MakeGenericType(ti.AsType()), new object[] { innerFormatter });
+                    Formatter = (IMessagePackFormatter<T>)Activator.CreateInstance(typeof(StaticNullableFormatter<>).MakeGenericType(ti.AsType()), new object[] { innerFormatter });
                     return;
                 }
                 else if (!ti.IsEnum)
@@ -80,14 +81,14 @@ namespace MessagePack.Resolvers
                 }
 
                 TypeInfo formatterTypeInfo = BuildType(typeof(T));
-                Formatter = (MessagePackFormatter<T>)Activator.CreateInstance(formatterTypeInfo.AsType());
+                Formatter = (IMessagePackFormatter<T>)Activator.CreateInstance(formatterTypeInfo.AsType());
             }
         }
 
         private static TypeInfo BuildType(Type enumType)
         {
             Type underlyingType = Enum.GetUnderlyingType(enumType);
-            Type formatterType = typeof(MessagePackFormatter<>).MakeGenericType(enumType);
+            Type formatterType = typeof(IMessagePackFormatter<>).MakeGenericType(enumType);
 
             using (MonoProtection.EnterRefEmitLock())
             {

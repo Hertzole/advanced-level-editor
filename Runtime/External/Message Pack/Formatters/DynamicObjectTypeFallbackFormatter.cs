@@ -12,19 +12,19 @@ namespace MessagePack.Formatters
     /// for which another resolver can provide a formatter for the runtime type.
     /// Its deserialization is limited to forwarding all calls to the <see cref="PrimitiveObjectFormatter"/>.
     /// </summary>
-    public sealed class DynamicObjectTypeFallbackFormatter : MessagePackFormatter<object>
+    public sealed class DynamicObjectTypeFallbackFormatter : IMessagePackFormatter<object>
     {
-        public static readonly MessagePackFormatter<object> Instance = new DynamicObjectTypeFallbackFormatter();
+        public static readonly IMessagePackFormatter<object> Instance = new DynamicObjectTypeFallbackFormatter();
 
         private delegate void SerializeMethod(object dynamicFormatter, ref MessagePackWriter writer, object value, MessagePackSerializerOptions options);
 
-        private static readonly ThreadsafeTypeKeyHashTable<SerializeMethod> SerializerDelegates = new ThreadsafeTypeKeyHashTable<SerializeMethod>();
+        private static readonly Internal.ThreadsafeTypeKeyHashTable<SerializeMethod> SerializerDelegates = new Internal.ThreadsafeTypeKeyHashTable<SerializeMethod>();
 
         private DynamicObjectTypeFallbackFormatter()
         {
         }
 
-        public override void Serialize(ref MessagePackWriter writer, object value, MessagePackSerializerOptions options)
+        public void Serialize(ref MessagePackWriter writer, object value, MessagePackSerializerOptions options)
         {
             if (value is null)
             {
@@ -58,7 +58,7 @@ namespace MessagePack.Formatters
                 {
                     if (!SerializerDelegates.TryGetValue(type, out serializerDelegate))
                     {
-                        Type formatterType = typeof(MessagePackFormatter<>).MakeGenericType(type);
+                        Type formatterType = typeof(IMessagePackFormatter<>).MakeGenericType(type);
                         ParameterExpression param0 = Expression.Parameter(typeof(object), "formatter");
                         ParameterExpression param1 = Expression.Parameter(typeof(MessagePackWriter).MakeByRefType(), "writer");
                         ParameterExpression param2 = Expression.Parameter(typeof(object), "value");
@@ -83,7 +83,7 @@ namespace MessagePack.Formatters
             serializerDelegate(formatter, ref writer, value, options);
         }
 
-        public override object Deserialize(ref MessagePackReader reader, MessagePackSerializerOptions options)
+        public object Deserialize(ref MessagePackReader reader, MessagePackSerializerOptions options)
         {
             return PrimitiveObjectFormatter.Instance.Deserialize(ref reader, options);
         }

@@ -5,14 +5,15 @@
  * CHANGE THE .tt FILE INSTEAD. */
 
 using System;
+using System.Buffers;
 
 #pragma warning disable SA1649 // File name should match first type name
 
 namespace MessagePack.Formatters
 {
-    public sealed class ValueTupleFormatter<T1> : MessagePackFormatter<ValueTuple<T1>>
+    public sealed class ValueTupleFormatter<T1> : IMessagePackFormatter<ValueTuple<T1>>
     {
-        public override void Serialize(ref MessagePackWriter writer, ValueTuple<T1> value, MessagePackSerializerOptions options)
+        public void Serialize(ref MessagePackWriter writer, ValueTuple<T1> value, MessagePackSerializerOptions options)
         {
             writer.WriteArrayHeader(1);
 
@@ -20,7 +21,7 @@ namespace MessagePack.Formatters
             resolver.GetFormatterWithVerify<T1>().Serialize(ref writer, value.Item1, options);
         }
 
-        public override ValueTuple<T1> Deserialize(ref MessagePackReader reader, MessagePackSerializerOptions options)
+        public ValueTuple<T1> Deserialize(ref MessagePackReader reader, MessagePackSerializerOptions options)
         {
             if (reader.IsNil)
             {
@@ -28,7 +29,7 @@ namespace MessagePack.Formatters
             }
             else
             {
-                int count = reader.ReadArrayHeader();
+                var count = reader.ReadArrayHeader();
                 if (count != 1)
                 {
                     throw new MessagePackSerializationException("Invalid ValueTuple count");
@@ -50,9 +51,9 @@ namespace MessagePack.Formatters
         }
     }
 
-    public sealed class ValueTupleFormatter<T1, T2> : MessagePackFormatter<ValueTuple<T1, T2>>
+    public sealed class ValueTupleFormatter<T1, T2> : IMessagePackFormatter<ValueTuple<T1, T2>>
     {
-        public override void Serialize(ref MessagePackWriter writer, ValueTuple<T1, T2> value, MessagePackSerializerOptions options)
+        public void Serialize(ref MessagePackWriter writer, ValueTuple<T1, T2> value, MessagePackSerializerOptions options)
         {
             writer.WriteArrayHeader(2);
 
@@ -61,7 +62,7 @@ namespace MessagePack.Formatters
             resolver.GetFormatterWithVerify<T2>().Serialize(ref writer, value.Item2, options);
         }
 
-        public override ValueTuple<T1, T2> Deserialize(ref MessagePackReader reader, MessagePackSerializerOptions options)
+        public ValueTuple<T1, T2> Deserialize(ref MessagePackReader reader, MessagePackSerializerOptions options)
         {
             if (reader.IsNil)
             {
@@ -69,7 +70,7 @@ namespace MessagePack.Formatters
             }
             else
             {
-                int count = reader.ReadArrayHeader();
+                var count = reader.ReadArrayHeader();
                 if (count != 2)
                 {
                     throw new MessagePackSerializationException("Invalid ValueTuple count");
@@ -92,9 +93,9 @@ namespace MessagePack.Formatters
         }
     }
 
-    public sealed class ValueTupleFormatter<T1, T2, T3> : MessagePackFormatter<ValueTuple<T1, T2, T3>>
+    public sealed class ValueTupleFormatter<T1, T2, T3> : IMessagePackFormatter<ValueTuple<T1, T2, T3>>
     {
-        public override void Serialize(ref MessagePackWriter writer, ValueTuple<T1, T2, T3> value, MessagePackSerializerOptions options)
+        public void Serialize(ref MessagePackWriter writer, ValueTuple<T1, T2, T3> value, MessagePackSerializerOptions options)
         {
             writer.WriteArrayHeader(3);
 
@@ -104,7 +105,7 @@ namespace MessagePack.Formatters
             resolver.GetFormatterWithVerify<T3>().Serialize(ref writer, value.Item3, options);
         }
 
-        public override ValueTuple<T1, T2, T3> Deserialize(ref MessagePackReader reader, MessagePackSerializerOptions options)
+        public ValueTuple<T1, T2, T3> Deserialize(ref MessagePackReader reader, MessagePackSerializerOptions options)
         {
             if (reader.IsNil)
             {
@@ -112,7 +113,7 @@ namespace MessagePack.Formatters
             }
             else
             {
-                int count = reader.ReadArrayHeader();
+                var count = reader.ReadArrayHeader();
                 if (count != 3)
                 {
                     throw new MessagePackSerializationException("Invalid ValueTuple count");
@@ -136,9 +137,9 @@ namespace MessagePack.Formatters
         }
     }
 
-    public sealed class ValueTupleFormatter<T1, T2, T3, T4> : MessagePackFormatter<ValueTuple<T1, T2, T3, T4>>
+    public sealed class ValueTupleFormatter<T1, T2, T3, T4> : IMessagePackFormatter<ValueTuple<T1, T2, T3, T4>>
     {
-        public override void Serialize(ref MessagePackWriter writer, ValueTuple<T1, T2, T3, T4> value, MessagePackSerializerOptions options)
+        public void Serialize(ref MessagePackWriter writer, ValueTuple<T1, T2, T3, T4> value, MessagePackSerializerOptions options)
         {
             writer.WriteArrayHeader(4);
 
@@ -149,7 +150,7 @@ namespace MessagePack.Formatters
             resolver.GetFormatterWithVerify<T4>().Serialize(ref writer, value.Item4, options);
         }
 
-        public override ValueTuple<T1, T2, T3, T4> Deserialize(ref MessagePackReader reader, MessagePackSerializerOptions options)
+        public ValueTuple<T1, T2, T3, T4> Deserialize(ref MessagePackReader reader, MessagePackSerializerOptions options)
         {
             if (reader.IsNil)
             {
@@ -157,7 +158,7 @@ namespace MessagePack.Formatters
             }
             else
             {
-                int count = reader.ReadArrayHeader();
+                var count = reader.ReadArrayHeader();
                 if (count != 4)
                 {
                     throw new MessagePackSerializationException("Invalid ValueTuple count");
@@ -182,9 +183,9 @@ namespace MessagePack.Formatters
         }
     }
 
-    public sealed class ValueTupleFormatter<T1, T2, T3, T4, T5> : MessagePackFormatter<ValueTuple<T1, T2, T3, T4, T5>>
+    public sealed class ValueTupleFormatter<T1, T2, T3, T4, T5> : IMessagePackFormatter<ValueTuple<T1, T2, T3, T4, T5>>
     {
-        public override void Serialize(ref MessagePackWriter writer, ValueTuple<T1, T2, T3, T4, T5> value, MessagePackSerializerOptions options)
+        public void Serialize(ref MessagePackWriter writer, ValueTuple<T1, T2, T3, T4, T5> value, MessagePackSerializerOptions options)
         {
             writer.WriteArrayHeader(5);
 
@@ -196,7 +197,7 @@ namespace MessagePack.Formatters
             resolver.GetFormatterWithVerify<T5>().Serialize(ref writer, value.Item5, options);
         }
 
-        public override ValueTuple<T1, T2, T3, T4, T5> Deserialize(ref MessagePackReader reader, MessagePackSerializerOptions options)
+        public ValueTuple<T1, T2, T3, T4, T5> Deserialize(ref MessagePackReader reader, MessagePackSerializerOptions options)
         {
             if (reader.IsNil)
             {
@@ -204,7 +205,7 @@ namespace MessagePack.Formatters
             }
             else
             {
-                int count = reader.ReadArrayHeader();
+                var count = reader.ReadArrayHeader();
                 if (count != 5)
                 {
                     throw new MessagePackSerializationException("Invalid ValueTuple count");
@@ -230,9 +231,9 @@ namespace MessagePack.Formatters
         }
     }
 
-    public sealed class ValueTupleFormatter<T1, T2, T3, T4, T5, T6> : MessagePackFormatter<ValueTuple<T1, T2, T3, T4, T5, T6>>
+    public sealed class ValueTupleFormatter<T1, T2, T3, T4, T5, T6> : IMessagePackFormatter<ValueTuple<T1, T2, T3, T4, T5, T6>>
     {
-        public override void Serialize(ref MessagePackWriter writer, ValueTuple<T1, T2, T3, T4, T5, T6> value, MessagePackSerializerOptions options)
+        public void Serialize(ref MessagePackWriter writer, ValueTuple<T1, T2, T3, T4, T5, T6> value, MessagePackSerializerOptions options)
         {
             writer.WriteArrayHeader(6);
 
@@ -245,7 +246,7 @@ namespace MessagePack.Formatters
             resolver.GetFormatterWithVerify<T6>().Serialize(ref writer, value.Item6, options);
         }
 
-        public override ValueTuple<T1, T2, T3, T4, T5, T6> Deserialize(ref MessagePackReader reader, MessagePackSerializerOptions options)
+        public ValueTuple<T1, T2, T3, T4, T5, T6> Deserialize(ref MessagePackReader reader, MessagePackSerializerOptions options)
         {
             if (reader.IsNil)
             {
@@ -253,7 +254,7 @@ namespace MessagePack.Formatters
             }
             else
             {
-                int count = reader.ReadArrayHeader();
+                var count = reader.ReadArrayHeader();
                 if (count != 6)
                 {
                     throw new MessagePackSerializationException("Invalid ValueTuple count");
@@ -280,9 +281,9 @@ namespace MessagePack.Formatters
         }
     }
 
-    public sealed class ValueTupleFormatter<T1, T2, T3, T4, T5, T6, T7> : MessagePackFormatter<ValueTuple<T1, T2, T3, T4, T5, T6, T7>>
+    public sealed class ValueTupleFormatter<T1, T2, T3, T4, T5, T6, T7> : IMessagePackFormatter<ValueTuple<T1, T2, T3, T4, T5, T6, T7>>
     {
-        public override void Serialize(ref MessagePackWriter writer, ValueTuple<T1, T2, T3, T4, T5, T6, T7> value, MessagePackSerializerOptions options)
+        public void Serialize(ref MessagePackWriter writer, ValueTuple<T1, T2, T3, T4, T5, T6, T7> value, MessagePackSerializerOptions options)
         {
             writer.WriteArrayHeader(7);
 
@@ -296,7 +297,7 @@ namespace MessagePack.Formatters
             resolver.GetFormatterWithVerify<T7>().Serialize(ref writer, value.Item7, options);
         }
 
-        public override ValueTuple<T1, T2, T3, T4, T5, T6, T7> Deserialize(ref MessagePackReader reader, MessagePackSerializerOptions options)
+        public ValueTuple<T1, T2, T3, T4, T5, T6, T7> Deserialize(ref MessagePackReader reader, MessagePackSerializerOptions options)
         {
             if (reader.IsNil)
             {
@@ -304,7 +305,7 @@ namespace MessagePack.Formatters
             }
             else
             {
-                int count = reader.ReadArrayHeader();
+                var count = reader.ReadArrayHeader();
                 if (count != 7)
                 {
                     throw new MessagePackSerializationException("Invalid ValueTuple count");
@@ -332,10 +333,10 @@ namespace MessagePack.Formatters
         }
     }
 
-    public sealed class ValueTupleFormatter<T1, T2, T3, T4, T5, T6, T7, TRest> : MessagePackFormatter<ValueTuple<T1, T2, T3, T4, T5, T6, T7, TRest>>
+    public sealed class ValueTupleFormatter<T1, T2, T3, T4, T5, T6, T7, TRest> : IMessagePackFormatter<ValueTuple<T1, T2, T3, T4, T5, T6, T7, TRest>>
         where TRest : struct
     {
-        public override void Serialize(ref MessagePackWriter writer, ValueTuple<T1, T2, T3, T4, T5, T6, T7, TRest> value, MessagePackSerializerOptions options)
+        public void Serialize(ref MessagePackWriter writer, ValueTuple<T1, T2, T3, T4, T5, T6, T7, TRest> value, MessagePackSerializerOptions options)
         {
             writer.WriteArrayHeader(8);
 
@@ -350,7 +351,7 @@ namespace MessagePack.Formatters
             resolver.GetFormatterWithVerify<TRest>().Serialize(ref writer, value.Rest, options);
         }
 
-        public override ValueTuple<T1, T2, T3, T4, T5, T6, T7, TRest> Deserialize(ref MessagePackReader reader, MessagePackSerializerOptions options)
+        public ValueTuple<T1, T2, T3, T4, T5, T6, T7, TRest> Deserialize(ref MessagePackReader reader, MessagePackSerializerOptions options)
         {
             if (reader.IsNil)
             {
@@ -358,7 +359,7 @@ namespace MessagePack.Formatters
             }
             else
             {
-                int count = reader.ReadArrayHeader();
+                var count = reader.ReadArrayHeader();
                 if (count != 8)
                 {
                     throw new MessagePackSerializationException("Invalid ValueTuple count");
