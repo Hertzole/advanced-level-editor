@@ -182,19 +182,19 @@ namespace Hertzole.ALE
                     LevelEditorComponentData[] components = data.objects[i].components;
                     for (int j = 0; j < components.Length; j++)
                     {
-                        LevelEditorPropertyData[] properties = components[j].properties;
-                        for (int k = 0; k < properties.Length; k++)
-                        {
-                            if (properties[k].typeName == "UnityEngine.Component")
-                            {
-                                ILevelEditorObject targetObj = null;
-                                if (properties[k].value != null)
-                                {
-                                    // targetObj = GetObject((uint)properties[k].value);
-                                }
-                                properties[k].value = targetObj ?? null;
-                            }
-                        }
+                        // LevelEditorPropertyData[] properties = components[j].properties;
+                        // for (int k = 0; k < properties.Length; k++)
+                        // {
+                        //     if (properties[k].typeName == "UnityEngine.Component")
+                        //     {
+                        //         ILevelEditorObject targetObj = null;
+                        //         if (properties[k].value != null)
+                        //         {
+                        //             // targetObj = GetObject((uint)properties[k].value);
+                        //         }
+                        //         properties[k].value = targetObj ?? null;
+                        //     }
+                        // }
                     }
 
                     allObjects[i].ApplyExposedData(components);

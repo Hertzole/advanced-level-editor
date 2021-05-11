@@ -244,7 +244,7 @@ namespace Hertzole.ALE.Tests
             return new LevelEditorComponentData()
             {
                 type = typeof(Transform).FullName,
-                properties = new LevelEditorPropertyData[2] { BuildPropertyData(), BuildPropertyData() }
+                // properties = new LevelEditorPropertyData[2] { BuildPropertyData(), BuildPropertyData() }
             };
         }
 

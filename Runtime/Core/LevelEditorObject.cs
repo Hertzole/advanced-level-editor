@@ -106,16 +106,16 @@ namespace Hertzole.ALE
                 {
                     if (components[i].type == exposedComponents[j].TypeName)
                     {
-                        LevelEditorPropertyData[] properties = components[i].properties;
-                        for (int k = 0; k < properties.Length; k++)
-                        {
-                            if (properties[k].type == null)
-                            {
-                                continue;
-                            }
-
-                            exposedComponents[j].SetValue(properties[k].id, properties[k].value, false);
-                        }
+                        // LevelEditorPropertyData[] properties = components[i].properties;
+                        // for (int k = 0; k < properties.Length; k++)
+                        // {
+                        //     if (properties[k].type == null)
+                        //     {
+                        //         continue;
+                        //     }
+                        //
+                        //     exposedComponents[j].SetValue(properties[k].id, properties[k].value, false);
+                        // }
                     }
                 }
             }
@@ -208,10 +208,10 @@ namespace Hertzole.ALE
                 Array.Sort(exposedComponents, (x, y) => x.Order.CompareTo(y.Order));
             }
 
-            for (int i = 0; i < exposedComponents.Length; i++)
-            {
-                savedValues.Add(i, new ValueInfo[exposedComponents[i].GetProperties().Count]);
-            }
+            // for (int i = 0; i < exposedComponents.Length; i++)
+            // {
+            //     savedValues.Add(i, new ValueInfo[exposedComponents[i].GetProperties().Count]);
+            // }
 
             gotComponents = true;
         }

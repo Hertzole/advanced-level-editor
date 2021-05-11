@@ -10,11 +10,12 @@ using UnityEngine.Scripting;
 
 namespace Hertzole.ALE
 {
-    public class LevelEditorResolver : IFormatterResolver
+    public class LevelEditorResolver : IFormatterResolver, IWrapperSerializer
     {
         private static bool serializerRegistered = false;
 
         private static List<IFormatterResolver> customResolvers = new List<IFormatterResolver>();
+        private static List<IWrapperSerializer> wrapperSerializers = new List<IWrapperSerializer>(); 
 
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
         private static void RegisterResolvers()
@@ -47,6 +48,38 @@ namespace Hertzole.ALE
         public static void RegisterResolver(IFormatterResolver resolver)
         {
             customResolvers.Add(resolver);
+        }
+
+        public static void RegisterWrapperSerializer(IWrapperSerializer serializer)
+        {
+            wrapperSerializers.Add(serializer);
+        }
+        
+        public bool SerializeWrapper(Type type, ref MessagePackWriter writer, IExposedWrapper value, MessagePackSerializerOptions options)
+        {
+            for (int i = 0; i < wrapperSerializers.Count; i++)
+            {
+                if (wrapperSerializers[i].SerializeWrapper(type, ref writer, value, options))
+                {
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
+        public bool DeserializeWrapper(Type type, ref MessagePackReader reader, MessagePackSerializerOptions options, out IExposedWrapper wrapper)
+        {
+            for (int i = 0; i < wrapperSerializers.Count; i++)
+            {
+                if (wrapperSerializers[i].DeserializeWrapper(type, ref reader, options, out wrapper))
+                {
+                    return true;
+                }
+            }
+
+            wrapper = null;
+            return false;
         }
 
         private static class FormatterCache<T>
