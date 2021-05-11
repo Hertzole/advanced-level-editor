@@ -1,6 +1,10 @@
 ﻿// Copyright (c) All contributors. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using System;
+using System.Buffers;
+using System.Collections.Generic;
+using System.Text;
 
 #pragma warning disable SA1649 // File name should match first type name
 
@@ -8,11 +12,11 @@ namespace MessagePack.Formatters
 {
     /* multi dimensional array serialize to [i, j, [seq]] */
 
-    public sealed class TwoDimensionalArrayFormatter<T> : MessagePackFormatter<T[,]>
+    public sealed class TwoDimensionalArrayFormatter<T> : IMessagePackFormatter<T[,]>
     {
         private const int ArrayLength = 3;
 
-        public override void Serialize(ref MessagePackWriter writer, T[,] value, MessagePackSerializerOptions options)
+        public void Serialize(ref MessagePackWriter writer, T[,] value, MessagePackSerializerOptions options)
         {
             if (value == null)
             {
@@ -20,10 +24,10 @@ namespace MessagePack.Formatters
             }
             else
             {
-                int i = value.GetLength(0);
-                int j = value.GetLength(1);
+                var i = value.GetLength(0);
+                var j = value.GetLength(1);
 
-                MessagePackFormatter<T> formatter = options.Resolver.GetFormatterWithVerify<T>();
+                IMessagePackFormatter<T> formatter = options.Resolver.GetFormatterWithVerify<T>();
 
                 writer.WriteArrayHeader(ArrayLength);
                 writer.Write(i);
@@ -38,7 +42,7 @@ namespace MessagePack.Formatters
             }
         }
 
-        public override T[,] Deserialize(ref MessagePackReader reader, MessagePackSerializerOptions options)
+        public T[,] Deserialize(ref MessagePackReader reader, MessagePackSerializerOptions options)
         {
             if (reader.TryReadNil())
             {
@@ -46,22 +50,22 @@ namespace MessagePack.Formatters
             }
             else
             {
-                MessagePackFormatter<T> formatter = options.Resolver.GetFormatterWithVerify<T>();
+                IMessagePackFormatter<T> formatter = options.Resolver.GetFormatterWithVerify<T>();
 
-                int len = reader.ReadArrayHeader();
+                var len = reader.ReadArrayHeader();
                 if (len != ArrayLength)
                 {
                     throw new MessagePackSerializationException("Invalid T[,] format");
                 }
 
-                int iLength = reader.ReadInt32();
-                int jLength = reader.ReadInt32();
-                int maxLen = reader.ReadArrayHeader();
+                var iLength = reader.ReadInt32();
+                var jLength = reader.ReadInt32();
+                var maxLen = reader.ReadArrayHeader();
 
-                T[,] array = new T[iLength, jLength];
+                var array = new T[iLength, jLength];
 
-                int i = 0;
-                int j = -1;
+                var i = 0;
+                var j = -1;
                 options.Security.DepthStep(ref reader);
                 try
                 {
@@ -91,11 +95,11 @@ namespace MessagePack.Formatters
         }
     }
 
-    public sealed class ThreeDimensionalArrayFormatter<T> : MessagePackFormatter<T[,,]>
+    public sealed class ThreeDimensionalArrayFormatter<T> : IMessagePackFormatter<T[,,]>
     {
         private const int ArrayLength = 4;
 
-        public override void Serialize(ref MessagePackWriter writer, T[,,] value, MessagePackSerializerOptions options)
+        public void Serialize(ref MessagePackWriter writer, T[,,] value, MessagePackSerializerOptions options)
         {
             if (value == null)
             {
@@ -103,11 +107,11 @@ namespace MessagePack.Formatters
             }
             else
             {
-                int i = value.GetLength(0);
-                int j = value.GetLength(1);
-                int k = value.GetLength(2);
+                var i = value.GetLength(0);
+                var j = value.GetLength(1);
+                var k = value.GetLength(2);
 
-                MessagePackFormatter<T> formatter = options.Resolver.GetFormatterWithVerify<T>();
+                IMessagePackFormatter<T> formatter = options.Resolver.GetFormatterWithVerify<T>();
 
                 writer.WriteArrayHeader(ArrayLength);
                 writer.Write(i);
@@ -123,7 +127,7 @@ namespace MessagePack.Formatters
             }
         }
 
-        public override T[,,] Deserialize(ref MessagePackReader reader, MessagePackSerializerOptions options)
+        public T[,,] Deserialize(ref MessagePackReader reader, MessagePackSerializerOptions options)
         {
             if (reader.TryReadNil())
             {
@@ -131,24 +135,24 @@ namespace MessagePack.Formatters
             }
             else
             {
-                MessagePackFormatter<T> formatter = options.Resolver.GetFormatterWithVerify<T>();
+                IMessagePackFormatter<T> formatter = options.Resolver.GetFormatterWithVerify<T>();
 
-                int len = reader.ReadArrayHeader();
+                var len = reader.ReadArrayHeader();
                 if (len != ArrayLength)
                 {
                     throw new MessagePackSerializationException("Invalid T[,,] format");
                 }
 
-                int iLength = reader.ReadInt32();
-                int jLength = reader.ReadInt32();
-                int kLength = reader.ReadInt32();
-                int maxLen = reader.ReadArrayHeader();
+                var iLength = reader.ReadInt32();
+                var jLength = reader.ReadInt32();
+                var kLength = reader.ReadInt32();
+                var maxLen = reader.ReadArrayHeader();
 
-                T[,,] array = new T[iLength, jLength, kLength];
+                var array = new T[iLength, jLength, kLength];
 
-                int i = 0;
-                int j = 0;
-                int k = -1;
+                var i = 0;
+                var j = 0;
+                var k = -1;
                 options.Security.DepthStep(ref reader);
                 try
                 {
@@ -184,11 +188,11 @@ namespace MessagePack.Formatters
         }
     }
 
-    public sealed class FourDimensionalArrayFormatter<T> : MessagePackFormatter<T[,,,]>
+    public sealed class FourDimensionalArrayFormatter<T> : IMessagePackFormatter<T[,,,]>
     {
         private const int ArrayLength = 5;
 
-        public override void Serialize(ref MessagePackWriter writer, T[,,,] value, MessagePackSerializerOptions options)
+        public void Serialize(ref MessagePackWriter writer, T[,,,] value, MessagePackSerializerOptions options)
         {
             if (value == null)
             {
@@ -196,12 +200,12 @@ namespace MessagePack.Formatters
             }
             else
             {
-                int i = value.GetLength(0);
-                int j = value.GetLength(1);
-                int k = value.GetLength(2);
-                int l = value.GetLength(3);
+                var i = value.GetLength(0);
+                var j = value.GetLength(1);
+                var k = value.GetLength(2);
+                var l = value.GetLength(3);
 
-                MessagePackFormatter<T> formatter = options.Resolver.GetFormatterWithVerify<T>();
+                IMessagePackFormatter<T> formatter = options.Resolver.GetFormatterWithVerify<T>();
 
                 writer.WriteArrayHeader(ArrayLength);
                 writer.Write(i);
@@ -218,7 +222,7 @@ namespace MessagePack.Formatters
             }
         }
 
-        public override T[,,,] Deserialize(ref MessagePackReader reader, MessagePackSerializerOptions options)
+        public T[,,,] Deserialize(ref MessagePackReader reader, MessagePackSerializerOptions options)
         {
             if (reader.TryReadNil())
             {
@@ -226,25 +230,25 @@ namespace MessagePack.Formatters
             }
             else
             {
-                MessagePackFormatter<T> formatter = options.Resolver.GetFormatterWithVerify<T>();
+                IMessagePackFormatter<T> formatter = options.Resolver.GetFormatterWithVerify<T>();
 
-                int len = reader.ReadArrayHeader();
+                var len = reader.ReadArrayHeader();
                 if (len != ArrayLength)
                 {
                     throw new MessagePackSerializationException("Invalid T[,,,] format");
                 }
 
-                int iLength = reader.ReadInt32();
-                int jLength = reader.ReadInt32();
-                int kLength = reader.ReadInt32();
-                int lLength = reader.ReadInt32();
-                int maxLen = reader.ReadArrayHeader();
-                T[,,,] array = new T[iLength, jLength, kLength, lLength];
+                var iLength = reader.ReadInt32();
+                var jLength = reader.ReadInt32();
+                var kLength = reader.ReadInt32();
+                var lLength = reader.ReadInt32();
+                var maxLen = reader.ReadArrayHeader();
+                var array = new T[iLength, jLength, kLength, lLength];
 
-                int i = 0;
-                int j = 0;
-                int k = 0;
-                int l = -1;
+                var i = 0;
+                var j = 0;
+                var k = 0;
+                var l = -1;
                 options.Security.DepthStep(ref reader);
                 try
                 {

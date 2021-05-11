@@ -4,9 +4,9 @@ using System.Collections.Generic;
 
 namespace Hertzole.ALE
 {
-    public sealed class LevelEditorSaveDataFormatter : MessagePackFormatter<LevelEditorSaveData>
+    public sealed class LevelEditorSaveDataFormatter : IMessagePackFormatter<LevelEditorSaveData>
     {
-        public override void Serialize(ref MessagePackWriter writer, LevelEditorSaveData value, MessagePackSerializerOptions options)
+        public void Serialize(ref MessagePackWriter writer, LevelEditorSaveData value, MessagePackSerializerOptions options)
         {
             writer.WriteArrayHeader(3);
             options.Resolver.GetFormatterWithVerify<string>().Serialize(ref writer, value.name, options);
@@ -14,7 +14,7 @@ namespace Hertzole.ALE
             options.Resolver.GetFormatterWithVerify<Dictionary<string, LevelEditorCustomData>>().Serialize(ref writer, value.customData, options);
         }
 
-        public override LevelEditorSaveData Deserialize(ref MessagePackReader reader, MessagePackSerializerOptions options)
+        public LevelEditorSaveData Deserialize(ref MessagePackReader reader, MessagePackSerializerOptions options)
         {
             options.Security.DepthStep(ref reader);
 

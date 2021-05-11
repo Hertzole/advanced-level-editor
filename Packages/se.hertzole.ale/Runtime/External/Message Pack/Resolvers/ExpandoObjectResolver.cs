@@ -1,9 +1,9 @@
 ﻿// Copyright (c) All contributors. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using MessagePack.Formatters;
 using System.Collections.Generic;
 using System.Dynamic;
+using MessagePack.Formatters;
 
 namespace MessagePack.Resolvers
 {
@@ -21,7 +21,7 @@ namespace MessagePack.Resolvers
         /// This resolver includes more than just the <see cref="ExpandoObjectFormatter"/>.
         /// </remarks>
         public static readonly IFormatterResolver Instance = CompositeResolver.Create(
-            new MessagePackFormatter[]
+            new IMessagePackFormatter[]
             {
                 ExpandoObjectFormatter.Instance,
                 new PrimitiveObjectWithExpandoMaps(),
@@ -40,13 +40,13 @@ namespace MessagePack.Resolvers
         {
             protected override object DeserializeMap(ref MessagePackReader reader, int length, MessagePackSerializerOptions options)
             {
-                MessagePackFormatter<string> keyFormatter = options.Resolver.GetFormatterWithVerify<string>();
-                MessagePackFormatter<object> objectFormatter = options.Resolver.GetFormatterWithVerify<object>();
+                IMessagePackFormatter<string> keyFormatter = options.Resolver.GetFormatterWithVerify<string>();
+                IMessagePackFormatter<object> objectFormatter = options.Resolver.GetFormatter<object>();
                 IDictionary<string, object> dictionary = new ExpandoObject();
                 for (int i = 0; i < length; i++)
                 {
-                    string key = keyFormatter.Deserialize(ref reader, options);
-                    object value = objectFormatter.Deserialize(ref reader, options);
+                    var key = keyFormatter.Deserialize(ref reader, options);
+                    var value = objectFormatter.Deserialize(ref reader, options);
                     dictionary.Add(key, value);
                 }
 

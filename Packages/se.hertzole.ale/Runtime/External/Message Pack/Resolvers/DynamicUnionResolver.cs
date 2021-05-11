@@ -3,8 +3,6 @@
 
 #if !(UNITY_2018_3_OR_NEWER && NET_STANDARD_2_0)
 
-using MessagePack.Formatters;
-using MessagePack.Internal;
 using System;
 using System.Buffers;
 using System.Collections.Generic;
@@ -13,6 +11,8 @@ using System.Reflection;
 using System.Reflection.Emit;
 using System.Text.RegularExpressions;
 using System.Threading;
+using MessagePack.Formatters;
+using MessagePack.Internal;
 
 #pragma warning disable SA1403 // File may only contain a single namespace
 #pragma warning disable SA1509 // Opening braces should not be preceded by blank line
@@ -63,14 +63,14 @@ namespace MessagePack.Resolvers
         }
 #endif
 
-        public MessagePackFormatter GetFormatter<T>()
+        public IMessagePackFormatter<T> GetFormatter<T>()
         {
             return FormatterCache<T>.Formatter;
         }
 
         private static class FormatterCache<T>
         {
-            public static readonly MessagePackFormatter<T> Formatter;
+            public static readonly IMessagePackFormatter<T> Formatter;
 
             static FormatterCache()
             {
@@ -79,13 +79,13 @@ namespace MessagePack.Resolvers
                 {
                     ti = ti.GenericTypeArguments[0].GetTypeInfo();
 
-                    MessagePackFormatter innerFormatter = DynamicUnionResolver.Instance.GetFormatterDynamic(ti.AsType());
+                    var innerFormatter = DynamicUnionResolver.Instance.GetFormatterDynamic(ti.AsType());
                     if (innerFormatter == null)
                     {
                         return;
                     }
 
-                    Formatter = (MessagePackFormatter<T>)Activator.CreateInstance(typeof(StaticNullableFormatter<>).MakeGenericType(ti.AsType()), new object[] { innerFormatter });
+                    Formatter = (IMessagePackFormatter<T>)Activator.CreateInstance(typeof(StaticNullableFormatter<>).MakeGenericType(ti.AsType()), new object[] { innerFormatter });
                     return;
                 }
 
@@ -95,7 +95,7 @@ namespace MessagePack.Resolvers
                     return;
                 }
 
-                Formatter = (MessagePackFormatter<T>)Activator.CreateInstance(formatterTypeInfo.AsType());
+                Formatter = (IMessagePackFormatter<T>)Activator.CreateInstance(formatterTypeInfo.AsType());
             }
         }
 
@@ -116,8 +116,8 @@ namespace MessagePack.Resolvers
                 throw new MessagePackDynamicUnionResolverException("Union can only be interface or abstract class. Type:" + type.Name);
             }
 
-            HashSet<int> checker1 = new HashSet<int>();
-            HashSet<Type> checker2 = new HashSet<Type>();
+            var checker1 = new HashSet<int>();
+            var checker2 = new HashSet<Type>();
             foreach (UnionAttribute item in unionAttrs)
             {
                 if (!checker1.Add(item.Key))
@@ -131,7 +131,7 @@ namespace MessagePack.Resolvers
                 }
             }
 
-            Type formatterType = typeof(MessagePackFormatter<>).MakeGenericType(type);
+            Type formatterType = typeof(IMessagePackFormatter<>).MakeGenericType(type);
             using (MonoProtection.EnterRefEmitLock())
             {
                 TypeBuilder typeBuilder = DynamicAssembly.Value.DefineType("MessagePack.Formatters." + SubtractFullNameRegex.Replace(type.FullName, string.Empty).Replace(".", "_") + "Formatter" + +Interlocked.Increment(ref nameSequence), TypeAttributes.Public | TypeAttributes.Sealed, null, new[] { formatterType });
@@ -186,7 +186,7 @@ namespace MessagePack.Resolvers
                 il.Emit(OpCodes.Ldsfld, runtimeTypeHandleEqualityComparer);
                 il.Emit(OpCodes.Newobj, typeMapDictionaryConstructor);
 
-                int index = 0;
+                var index = 0;
                 foreach (UnionAttribute item in infos)
                 {
                     il.Emit(OpCodes.Dup);
@@ -207,7 +207,7 @@ namespace MessagePack.Resolvers
                 il.EmitLdc_I4(infos.Length);
                 il.Emit(OpCodes.Newobj, keyMapDictionaryConstructor);
 
-                int index = 0;
+                var index = 0;
                 foreach (UnionAttribute item in infos)
                 {
                     il.Emit(OpCodes.Dup);
@@ -329,7 +329,7 @@ namespace MessagePack.Resolvers
 
             // read-array header and validate, reader.ReadArrayHeader() != 2) throw;
             Label rightLabel = il.DefineLabel();
-            ArgumentField reader = new ArgumentField(il, 1);
+            var reader = new ArgumentField(il, 1);
             reader.EmitLdarg();
             il.EmitCall(MessagePackReaderTypeInfo.ReadArrayHeader);
             il.EmitLdc_I4(2);
@@ -421,8 +421,8 @@ namespace MessagePack.Resolvers
         private static readonly MethodInfo getFormatterWithVerify = typeof(FormatterResolverExtensions).GetRuntimeMethods().First(x => x.Name == "GetFormatterWithVerify");
         private static readonly MethodInfo getResolverFromOptions = typeof(MessagePackSerializerOptions).GetRuntimeProperty(nameof(MessagePackSerializerOptions.Resolver)).GetMethod;
 
-        private static readonly Func<Type, MethodInfo> getSerialize = t => typeof(MessagePackFormatter<>).MakeGenericType(t).GetRuntimeMethod("Serialize", new[] { typeof(MessagePackWriter).MakeByRefType(), t, typeof(MessagePackSerializerOptions) });
-        private static readonly Func<Type, MethodInfo> getDeserialize = t => typeof(MessagePackFormatter<>).MakeGenericType(t).GetRuntimeMethod("Deserialize", new[] { typeof(MessagePackReader).MakeByRefType(), typeof(MessagePackSerializerOptions) });
+        private static readonly Func<Type, MethodInfo> getSerialize = t => typeof(IMessagePackFormatter<>).MakeGenericType(t).GetRuntimeMethod("Serialize", new[] { typeof(MessagePackWriter).MakeByRefType(), t, typeof(MessagePackSerializerOptions) });
+        private static readonly Func<Type, MethodInfo> getDeserialize = t => typeof(IMessagePackFormatter<>).MakeGenericType(t).GetRuntimeMethod("Deserialize", new[] { typeof(MessagePackReader).MakeByRefType(), typeof(MessagePackSerializerOptions) });
 
         private static readonly FieldInfo runtimeTypeHandleEqualityComparer = typeof(RuntimeTypeHandleEqualityComparer).GetRuntimeField("Default");
         private static readonly ConstructorInfo intIntKeyValuePairConstructor = typeof(KeyValuePair<int, int>).GetTypeInfo().DeclaredConstructors.First(x => x.GetParameters().Length == 2);

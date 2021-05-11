@@ -4,13 +4,14 @@
 using System;
 using System.Buffers;
 using System.Collections.Generic;
+using System.Net.Security;
 using System.Reflection;
 
 namespace MessagePack.Formatters
 {
-    public class PrimitiveObjectFormatter : MessagePackFormatter<object>
+    public class PrimitiveObjectFormatter : IMessagePackFormatter<object>
     {
-        public static readonly MessagePackFormatter<object> Instance = new PrimitiveObjectFormatter();
+        public static readonly IMessagePackFormatter<object> Instance = new PrimitiveObjectFormatter();
 
         private static readonly Dictionary<Type, int> TypeToJumpCode = new Dictionary<Type, int>()
         {
@@ -66,7 +67,7 @@ namespace MessagePack.Formatters
             return false;
         }
 
-        public override void Serialize(ref MessagePackWriter writer, object value, MessagePackSerializerOptions options)
+        public void Serialize(ref MessagePackWriter writer, object value, MessagePackSerializerOptions options)
         {
             if (value == null)
             {
@@ -139,7 +140,7 @@ namespace MessagePack.Formatters
 #endif
                 {
                     Type underlyingType = Enum.GetUnderlyingType(t);
-                    int code2 = TypeToJumpCode[underlyingType];
+                    var code2 = TypeToJumpCode[underlyingType];
                     switch (code2)
                     {
                         case 2:
@@ -173,23 +174,23 @@ namespace MessagePack.Formatters
                 else if (value is System.Collections.IDictionary)
                 {
                     // check IDictionary first
-                    System.Collections.IDictionary d = value as System.Collections.IDictionary;
+                    var d = value as System.Collections.IDictionary;
                     writer.WriteMapHeader(d.Count);
                     foreach (System.Collections.DictionaryEntry item in d)
                     {
-                        Serialize(ref writer, item.Key, options);
-                        Serialize(ref writer, item.Value, options);
+                        this.Serialize(ref writer, item.Key, options);
+                        this.Serialize(ref writer, item.Value, options);
                     }
 
                     return;
                 }
                 else if (value is System.Collections.ICollection)
                 {
-                    System.Collections.ICollection c = value as System.Collections.ICollection;
+                    var c = value as System.Collections.ICollection;
                     writer.WriteArrayHeader(c.Count);
-                    foreach (object item in c)
+                    foreach (var item in c)
                     {
-                        Serialize(ref writer, item, options);
+                        this.Serialize(ref writer, item, options);
                     }
 
                     return;
@@ -199,14 +200,14 @@ namespace MessagePack.Formatters
             throw new MessagePackSerializationException("Not supported primitive object resolver. type:" + t.Name);
         }
 
-        public override object Deserialize(ref MessagePackReader reader, MessagePackSerializerOptions options)
+        public object Deserialize(ref MessagePackReader reader, MessagePackSerializerOptions options)
         {
             MessagePackType type = reader.NextMessagePackType;
             IFormatterResolver resolver = options.Resolver;
             switch (type)
             {
                 case MessagePackType.Integer:
-                    byte code = reader.NextCode;
+                    var code = reader.NextCode;
                     if (code >= MessagePackCode.MinNegativeFixInt && code <= MessagePackCode.MaxNegativeFixInt)
                     {
                         return reader.ReadSByte();
@@ -276,14 +277,14 @@ namespace MessagePack.Formatters
                     throw new MessagePackSerializationException("Invalid primitive bytes.");
                 case MessagePackType.Array:
                     {
-                        int length = reader.ReadArrayHeader();
+                        var length = reader.ReadArrayHeader();
                         if (length == 0)
                         {
                             return Array.Empty<object>();
                         }
 
-                        MessagePackFormatter<object> objectFormatter = resolver.GetFormatterWithVerify<object>();
-                        object[] array = new object[length];
+                        IMessagePackFormatter<object> objectFormatter = resolver.GetFormatter<object>();
+                        var array = new object[length];
                         options.Security.DepthStep(ref reader);
                         try
                         {
@@ -302,12 +303,12 @@ namespace MessagePack.Formatters
 
                 case MessagePackType.Map:
                     {
-                        int length = reader.ReadMapHeader();
+                        var length = reader.ReadMapHeader();
 
                         options.Security.DepthStep(ref reader);
                         try
                         {
-                            return DeserializeMap(ref reader, length, options);
+                            return this.DeserializeMap(ref reader, length, options);
                         }
                         finally
                         {
@@ -325,12 +326,12 @@ namespace MessagePack.Formatters
 
         protected virtual object DeserializeMap(ref MessagePackReader reader, int length, MessagePackSerializerOptions options)
         {
-            MessagePackFormatter<object> objectFormatter = options.Resolver.GetFormatterWithVerify<object>();
-            Dictionary<object, object> dictionary = new Dictionary<object, object>(length, options.Security.GetEqualityComparer<object>());
+            IMessagePackFormatter<object> objectFormatter = options.Resolver.GetFormatter<object>();
+            var dictionary = new Dictionary<object, object>(length, options.Security.GetEqualityComparer<object>());
             for (int i = 0; i < length; i++)
             {
-                object key = objectFormatter.Deserialize(ref reader, options);
-                object value = objectFormatter.Deserialize(ref reader, options);
+                var key = objectFormatter.Deserialize(ref reader, options);
+                var value = objectFormatter.Deserialize(ref reader, options);
                 dictionary.Add(key, value);
             }
 

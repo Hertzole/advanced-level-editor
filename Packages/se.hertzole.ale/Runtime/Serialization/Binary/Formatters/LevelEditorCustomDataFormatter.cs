@@ -5,21 +5,21 @@ using System;
 
 namespace Hertzole.ALE
 {
-    public class LevelEditorCustomDataFormatter : MessagePackFormatter<LevelEditorCustomData>
+    public class LevelEditorCustomDataFormatter : IMessagePackFormatter<LevelEditorCustomData>
     {
         private static ReadOnlySpan<byte> SpanTypeName { get { return new byte[1 + 4] { 164, 116, 121, 112, 101 }; } }
         private static ReadOnlySpan<byte> SpanValue { get { return new byte[1 + 5] { 165, 118, 97, 108, 117, 101 }; } }
 
-        public override void Serialize(ref MessagePackWriter writer, LevelEditorCustomData value, MessagePackSerializerOptions options)
+        public void Serialize(ref MessagePackWriter writer, LevelEditorCustomData value, MessagePackSerializerOptions options)
         {
             writer.WriteMapHeader(2);
             writer.WriteRaw(SpanTypeName);
             options.Resolver.GetFormatterWithVerify<string>().Serialize(ref writer, value.typeName, options);
             writer.WriteRaw(SpanValue);
-            options.Resolver.GetFormatterDynamic(value.type).SerializeObject(ref writer, value.value, options);
+            // options.Resolver.GetFormatterDynamic(value.type).SerializeObject(ref writer, value.value, options);
         }
 
-        public override LevelEditorCustomData Deserialize(ref MessagePackReader reader, MessagePackSerializerOptions options)
+        public LevelEditorCustomData Deserialize(ref MessagePackReader reader, MessagePackSerializerOptions options)
         {
             options.Security.DepthStep(ref reader);
 
@@ -50,7 +50,7 @@ namespace Hertzole.ALE
                             goto FAIL;
                         }
 
-                        value = options.Resolver.GetFormatterDynamic(type).DeserializeObject(ref reader, options);
+                        // value = options.Resolver.GetFormatterDynamic(type).DeserializeObject(ref reader, options);
                         continue;
                 }
             }

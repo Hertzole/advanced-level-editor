@@ -1,9 +1,9 @@
 ﻿// Copyright (c) All contributors. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using MessagePack.Formatters;
 using System;
 using System.Collections.Generic;
+using MessagePack.Formatters;
 using UnityEngine;
 
 namespace MessagePack.Unity.Extension
@@ -19,18 +19,18 @@ namespace MessagePack.Unity.Extension
         {
         }
 
-        public MessagePackFormatter GetFormatter<T>()
+        public IMessagePackFormatter<T> GetFormatter<T>()
         {
             return FormatterCache<T>.Formatter;
         }
 
         private static class FormatterCache<T>
         {
-            public static readonly MessagePackFormatter<T> Formatter;
+            public static readonly IMessagePackFormatter<T> Formatter;
 
             static FormatterCache()
             {
-                Formatter = (MessagePackFormatter<T>)UnityBlitResolverGetFormatterHelper.GetFormatter(typeof(T));
+                Formatter = (IMessagePackFormatter<T>)UnityBlitResolverGetFormatterHelper.GetFormatter(typeof(T));
             }
         }
     }
@@ -46,21 +46,21 @@ namespace MessagePack.Unity.Extension
         {
         }
 
-        public MessagePackFormatter GetFormatter<T>()
+        public IMessagePackFormatter<T> GetFormatter<T>()
         {
             return FormatterCache<T>.Formatter;
         }
 
         private static class FormatterCache<T>
         {
-            internal static readonly MessagePackFormatter<T> Formatter;
+            internal static readonly IMessagePackFormatter<T> Formatter;
 
             static FormatterCache()
             {
-                Formatter = (MessagePackFormatter<T>)UnityBlitWithPrimitiveResolverGetFormatterHelper.GetFormatter(typeof(T));
+                Formatter = (IMessagePackFormatter<T>)UnityBlitWithPrimitiveResolverGetFormatterHelper.GetFormatter(typeof(T));
                 if (Formatter == null)
                 {
-                    Formatter = (MessagePackFormatter<T>)UnityBlitResolver.Instance.GetFormatter<T>();
+                    Formatter = UnityBlitResolver.Instance.GetFormatter<T>();
                 }
             }
         }

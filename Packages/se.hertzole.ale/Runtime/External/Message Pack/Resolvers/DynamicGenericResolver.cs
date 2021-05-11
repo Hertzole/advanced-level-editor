@@ -1,8 +1,6 @@
 ﻿// Copyright (c) All contributors. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using MessagePack.Formatters;
-using MessagePack.Internal;
 using System;
 using System.Buffers;
 using System.Collections;
@@ -10,6 +8,9 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
 using System.Reflection;
+using System.Threading.Tasks;
+using MessagePack.Formatters;
+using MessagePack.Internal;
 
 #pragma warning disable SA1403 // File may only contain a single namespace
 
@@ -26,18 +27,18 @@ namespace MessagePack.Resolvers
         {
         }
 
-        public MessagePackFormatter GetFormatter<T>()
+        public IMessagePackFormatter<T> GetFormatter<T>()
         {
             return FormatterCache<T>.Formatter;
         }
 
         private static class FormatterCache<T>
         {
-            public static readonly MessagePackFormatter<T> Formatter;
+            public static readonly IMessagePackFormatter<T> Formatter;
 
             static FormatterCache()
             {
-                Formatter = (MessagePackFormatter<T>)DynamicGenericResolverGetFormatterHelper.GetFormatter(typeof(T));
+                Formatter = (IMessagePackFormatter<T>)DynamicGenericResolverGetFormatterHelper.GetFormatter(typeof(T));
             }
         }
     }
@@ -85,7 +86,7 @@ namespace MessagePack.Internal
 
             if (t.IsArray)
             {
-                int rank = t.GetArrayRank();
+                var rank = t.GetArrayRank();
                 if (rank == 1)
                 {
                     if (t.GetElementType() == typeof(byte))
@@ -117,7 +118,7 @@ namespace MessagePack.Internal
             {
                 Type genericType = ti.GetGenericTypeDefinition();
                 TypeInfo genericTypeInfo = genericType.GetTypeInfo();
-                bool isNullable = genericTypeInfo.IsNullable();
+                var isNullable = genericTypeInfo.IsNullable();
                 Type nullableElementType = isNullable ? ti.GenericTypeArguments[0] : null;
 
                 if (genericType == typeof(KeyValuePair<,>))
@@ -304,7 +305,7 @@ namespace MessagePack.Internal
             // check inherited types(e.g. Foo : ICollection<>, Bar<T> : ICollection<T>)
             {
                 // generic dictionary
-                Type dictionaryDef = ti.ImplementedInterfaces.FirstOrDefault(x => x.GetTypeInfo().IsConstructedGenericType() && x.GetGenericTypeDefinition() == typeof(IDictionary<,>));
+                var dictionaryDef = ti.ImplementedInterfaces.FirstOrDefault(x => x.GetTypeInfo().IsConstructedGenericType() && x.GetGenericTypeDefinition() == typeof(IDictionary<,>));
                 if (dictionaryDef != null && ti.DeclaredConstructors.Any(x => x.GetParameters().Length == 0))
                 {
                     Type keyType = dictionaryDef.GenericTypeArguments[0];
@@ -313,7 +314,7 @@ namespace MessagePack.Internal
                 }
 
                 // generic collection
-                Type collectionDef = ti.ImplementedInterfaces.FirstOrDefault(x => x.GetTypeInfo().IsConstructedGenericType() && x.GetGenericTypeDefinition() == typeof(ICollection<>));
+                var collectionDef = ti.ImplementedInterfaces.FirstOrDefault(x => x.GetTypeInfo().IsConstructedGenericType() && x.GetGenericTypeDefinition() == typeof(ICollection<>));
                 if (collectionDef != null && ti.DeclaredConstructors.Any(x => x.GetParameters().Length == 0))
                 {
                     Type elemType = collectionDef.GenericTypeArguments[0];

@@ -5,7 +5,7 @@ using System;
 
 namespace Hertzole.ALE
 {
-    public sealed class LevelEditorObjectDataFormatter : MessagePackFormatter<LevelEditorObjectData>
+    public sealed class LevelEditorObjectDataFormatter : IMessagePackFormatter<LevelEditorObjectData>
     {
         private static ReadOnlySpan<byte> SpanName { get { return new byte[1 + 4] { 164, 110, 97, 109, 101 }; } }
         private static ReadOnlySpan<byte> SpanActive { get { return new byte[1 + 6] { 166, 97, 99, 116, 105, 118, 101 }; } }
@@ -13,9 +13,9 @@ namespace Hertzole.ALE
         private static ReadOnlySpan<byte> SpanInstanceID { get { return new byte[1 + 10] { 170, 105, 110, 115, 116, 97, 110, 99, 101, 73, 100 }; } }
         private static ReadOnlySpan<byte> SpanComponents { get { return new byte[1 + 10] { 170, 99, 111, 109, 112, 111, 110, 101, 110, 116, 115 }; } }
 
-        public override void Serialize(ref MessagePackWriter writer, LevelEditorObjectData value, MessagePackSerializerOptions options)
+        public void Serialize(ref MessagePackWriter writer, LevelEditorObjectData value, MessagePackSerializerOptions options)
         {
-            MessagePackFormatter<string> stringFormatter = options.Resolver.GetFormatterWithVerify<string>();
+            IMessagePackFormatter<string> stringFormatter = options.Resolver.GetFormatterWithVerify<string>();
             writer.WriteMapHeader(5);
 
             writer.WriteRaw(SpanName);
@@ -34,7 +34,7 @@ namespace Hertzole.ALE
             options.Resolver.GetFormatterWithVerify<LevelEditorComponentData[]>().Serialize(ref writer, value.components, options);
         }
 
-        public override LevelEditorObjectData Deserialize(ref MessagePackReader reader, MessagePackSerializerOptions options)
+        public LevelEditorObjectData Deserialize(ref MessagePackReader reader, MessagePackSerializerOptions options)
         {
             options.Security.DepthStep(ref reader);
 
