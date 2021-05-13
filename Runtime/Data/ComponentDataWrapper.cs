@@ -1,5 +1,6 @@
 ﻿using System;
 using UnityEngine;
+using Object = UnityEngine.Object;
 
 namespace Hertzole.ALE
 {
@@ -39,6 +40,11 @@ namespace Hertzole.ALE
 		public static bool IsComponent(Type type)
 		{
 			return type.IsSubclassOf(typeof(Component)) || type == typeof(GameObject);
+		}
+
+		public T GetObject<T>() where T : Object
+		{
+			return LevelEditorWorld.TryGetObject(instanceId, out T value) ? value : null;
 		}
 
 		public bool Equals(Component component)

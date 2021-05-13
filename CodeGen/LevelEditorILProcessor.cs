@@ -1,8 +1,8 @@
-﻿using Mono.Cecil;
-using Mono.Cecil.Cil;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using Mono.Cecil;
+using Mono.Cecil.Cil;
 using Unity.CompilationPipeline.Common.Diagnostics;
 using Unity.CompilationPipeline.Common.ILPostProcessing;
 
@@ -14,7 +14,7 @@ namespace Hertzole.ALE.CodeGen
 
         private readonly List<DiagnosticMessage> diagnostics = new List<DiagnosticMessage>();
         private Weaver weaver;
-
+        
         public override ILPostProcessor GetInstance()
         {
             return this;

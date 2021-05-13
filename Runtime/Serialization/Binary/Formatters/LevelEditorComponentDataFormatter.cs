@@ -55,7 +55,6 @@ namespace Hertzole.ALE
                         }
 
                         ((LevelEditorResolver) LevelEditorResolver.Instance).DeserializeWrapper(actualType, ref reader, options, out wrapper);
-                        Debug.Log(wrapper);
                         continue;
                 }
             }

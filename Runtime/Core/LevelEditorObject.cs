@@ -106,16 +106,7 @@ namespace Hertzole.ALE
                 {
                     if (components[i].type == exposedComponents[j].TypeName)
                     {
-                        // LevelEditorPropertyData[] properties = components[i].properties;
-                        // for (int k = 0; k < properties.Length; k++)
-                        // {
-                        //     if (properties[k].type == null)
-                        //     {
-                        //         continue;
-                        //     }
-                        //
-                        //     exposedComponents[j].SetValue(properties[k].id, properties[k].value, false);
-                        // }
+                        exposedComponents[j].ApplyWrapper(components[i].wrapper);
                     }
                 }
             }

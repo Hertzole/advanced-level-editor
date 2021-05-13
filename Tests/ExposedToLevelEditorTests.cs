@@ -120,28 +120,28 @@ namespace Hertzole.ALE.Tests
             }
         }
 
-        [UnityTest]
-        public IEnumerator TestGetValueType()
-        {
-            AssertIsExposed(out IExposedToLevelEditor exposed);
-
-            Assert.AreEqual(typeof(string), exposed.GetValueType(0));
-            Assert.AreEqual(typeof(int), exposed.GetValueType(1));
-            Assert.AreEqual(typeof(Vector3), exposed.GetValueType(2));
-            Assert.AreEqual(typeof(Color), exposed.GetValueType(3));
-            Assert.AreEqual(typeof(Color32), exposed.GetValueType(4));
-            Assert.AreEqual(typeof(Transform), exposed.GetValueType(5));
-            Assert.AreEqual(typeof(string), exposed.GetValueType(6));
-            Assert.AreEqual(typeof(string[]), exposed.GetValueType(7));
-            Assert.AreEqual(typeof(string[]), exposed.GetValueType(8));
-            Assert.AreEqual(typeof(int[]), exposed.GetValueType(9));
-            Assert.AreEqual(typeof(List<string>), exposed.GetValueType(10));
-            Assert.AreEqual(typeof(GameObject), exposed.GetValueType(11));
-            Assert.AreEqual(typeof(List<Transform>), exposed.GetValueType(12));
-            Assert.AreEqual(typeof(List<TestExposedBehavior>), exposed.GetValueType(13));
-
-            yield break;
-        }
+        // [UnityTest]
+        // public IEnumerator TestGetValueType()
+        // {
+        //     AssertIsExposed(out IExposedToLevelEditor exposed);
+        //
+        //     Assert.AreEqual(typeof(string), exposed.GetValueType(0));
+        //     Assert.AreEqual(typeof(int), exposed.GetValueType(1));
+        //     Assert.AreEqual(typeof(Vector3), exposed.GetValueType(2));
+        //     Assert.AreEqual(typeof(Color), exposed.GetValueType(3));
+        //     Assert.AreEqual(typeof(Color32), exposed.GetValueType(4));
+        //     Assert.AreEqual(typeof(Transform), exposed.GetValueType(5));
+        //     Assert.AreEqual(typeof(string), exposed.GetValueType(6));
+        //     Assert.AreEqual(typeof(string[]), exposed.GetValueType(7));
+        //     Assert.AreEqual(typeof(string[]), exposed.GetValueType(8));
+        //     Assert.AreEqual(typeof(int[]), exposed.GetValueType(9));
+        //     Assert.AreEqual(typeof(List<string>), exposed.GetValueType(10));
+        //     Assert.AreEqual(typeof(GameObject), exposed.GetValueType(11));
+        //     Assert.AreEqual(typeof(List<Transform>), exposed.GetValueType(12));
+        //     Assert.AreEqual(typeof(List<TestExposedBehavior>), exposed.GetValueType(13));
+        //
+        //     yield break;
+        // }
 
         private void AssertIsExposed(out IExposedToLevelEditor exposed)
         {

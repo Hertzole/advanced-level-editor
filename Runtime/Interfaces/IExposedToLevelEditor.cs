@@ -20,8 +20,8 @@ namespace Hertzole.ALE
 
         void SetValue(int id, object value, bool notify);
 
-        Type GetValueType(int id);
-
         IExposedWrapper GetWrapper();
+
+        void ApplyWrapper(IExposedWrapper wrapper);
     }
 }
