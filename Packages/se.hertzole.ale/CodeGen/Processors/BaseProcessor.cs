@@ -9,6 +9,7 @@ namespace Hertzole.ALE.CodeGen
         public ModuleDefinition Module { get; set; }
         public TypeDefinition Type { get; set; }
         public RegisterTypeProcessor TypeRegister { get; set; }
+        public ResolverProcessor Resolver { get; set; }
 
         public abstract bool IsValidClass(TypeDefinition type);
 
@@ -73,6 +74,23 @@ namespace Hertzole.ALE.CodeGen
             }
         }
 
+        public static Instruction GetLdarg(int index, ParameterDefinition parameter)
+        {
+            switch (index)
+            {
+                case 0:
+                    return Instruction.Create(OpCodes.Ldarg_0);
+                case 1:
+                    return Instruction.Create(OpCodes.Ldarg_1);
+                case 2:
+                    return Instruction.Create(OpCodes.Ldarg_2);
+                case 3:
+                    return Instruction.Create(OpCodes.Ldarg_3);
+                default:
+                    return Instruction.Create(OpCodes.Ldarg_S, parameter);
+            }
+        }
+
         public static Instruction GetIntInstruction(int value)
         {
             if (value == 0)
@@ -123,13 +141,13 @@ namespace Hertzole.ALE.CodeGen
 
         public static Instruction[] GetDefaultInstructions(TypeReference type)
         {
-            if (type.Is<bool>() || type.Is<int>() || type.Is<uint>() || type.Is<short>() || type.Is<ushort>() || type.Is<byte>() || type.Is<sbyte>())
+            if (type.Is<bool>() || type.Is<int>() || type.Is<uint>() || type.Is<short>() || type.Is<ushort>() || type.Is<byte>() || type.Is<sbyte>() || type.Is<char>() || (type.Resolve() != null && type.Resolve().IsEnum))
             {
                 return new Instruction[] { Instruction.Create(OpCodes.Ldc_I4_0) };
             }
             else if (type.Is<long>() || type.Is<ulong>())
             {
-                return new Instruction[] { Instruction.Create(OpCodes.Conv_I8), Instruction.Create(OpCodes.Ldc_I4_0) };
+                return new Instruction[] { Instruction.Create(OpCodes.Ldc_I4_0), Instruction.Create(OpCodes.Conv_I8) };
             }
             else if (type.Is<float>())
             {

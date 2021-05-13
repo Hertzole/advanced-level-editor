@@ -23,12 +23,14 @@ namespace Hertzole.ALE.CodeGen
         public void ProcessAssembly(ModuleDefinition module)
         {
             RegisterTypeProcessor typeRegister = new RegisterTypeProcessor(module);
-
+            ResolverProcessor resolver = new ResolverProcessor(module);
+            
             for (int i = 0; i < processors.Length; i++)
             {
                 processors[i].Weaver = this;
                 processors[i].Module = module;
                 processors[i].TypeRegister = typeRegister;
+                processors[i].Resolver = resolver;
             }
 
             IEnumerable<TypeDefinition> types = module.GetTypes();

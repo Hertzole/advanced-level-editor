@@ -1,6 +1,3 @@
-using System;
-using System.Collections;
-using System.Collections.Generic;
 using Hertzole.ALE;
 using MessagePack;
 using MessagePack.Formatters;
@@ -26,21 +23,20 @@ public class NewSerializeTestFormatter : IMessagePackFormatter<NewSerializeTestS
         options.Security.DepthStep(ref reader);
 
         int length = reader.ReadArrayHeader();
-        string testString = default;
-        int testInt = default;
-        Vector3 testVector3 = default;
-        ComponentDataWrapper reference = default;
+        string testString = null;
+        int testInt = 0;
+        Vector3 testVector3 = new Vector3();
+        ComponentDataWrapper reference = new ComponentDataWrapper();
         for (int i = 0; i < length; i++)
         {
             if(i % 2 == 0)
             {
-                Debug.Log(i);
                 int id = reader.ReadInt32();
-                if (id == 0)
+                if (id == 200)
                 {
                     testString = reader.ReadString();
                 }
-                else if (id == 1)
+                else if (id == 0)
                 {
                     testInt = reader.ReadInt32();
                 }

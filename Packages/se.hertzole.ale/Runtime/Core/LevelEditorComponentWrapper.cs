@@ -53,6 +53,11 @@ namespace Hertzole.ALE
             throw new NotImplementedException();
         }
 
+        public void ApplyWrapper(IExposedWrapper wrapper)
+        {
+            throw new NotImplementedException();
+        }
+
         public abstract void SetValue(int id, object value, bool notify);
 
         protected void InvokeOnValueChanged(int id, object value)

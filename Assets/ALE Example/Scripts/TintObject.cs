@@ -1,8 +1,19 @@
-﻿using Hertzole.ALE;
+﻿using System;
+using Hertzole.ALE;
 using UnityEngine;
 
 public class TintObject : MonoBehaviour
 {
+    public struct Wrapper
+    {
+        public Wrapper(Color32 color)
+        {
+            Color = (0, color);
+        }
+
+        public readonly ValueTuple<int, Color32> Color;
+    }
+    
     [SerializeField]
     [HideInInspector]
     private Renderer ren = null;

@@ -1,6 +1,8 @@
 ﻿using Mono.Cecil;
 using Mono.Cecil.Cil;
 using System;
+using System.Reflection;
+using UnityEditor.PackageManager;
 using UnityEngine;
 
 namespace Hertzole.ALE.CodeGen
@@ -411,9 +413,7 @@ namespace Hertzole.ALE.CodeGen
         {
             if (m.Module == null)
             {
-                Debug.LogError("This method has yet to be added to the assembly and doesn't have a module. Please provide a module.");
-                index = 0;
-                return null;
+                throw new NullReferenceException($"This method has yet to be added to the assembly and doesn't have a module. Please provide a module.");
             }
 
             return m.AddLocalVariable(m.Module, m.Module.ImportReference(typeof(T)), out index);
@@ -423,9 +423,7 @@ namespace Hertzole.ALE.CodeGen
         {
             if (m.Module == null)
             {
-                Debug.LogError("This method has yet to be added to the assembly and doesn't have a module. Please provide a module.");
-                index = 0;
-                return null;
+                throw new NullReferenceException($"This method has yet to be added to the assembly and doesn't have a module. Please provide a module.");
             }
 
             return m.AddLocalVariable(m.Module, type, out index);
@@ -444,6 +442,36 @@ namespace Hertzole.ALE.CodeGen
             m.Body.Variables.Add(variable);
 
             return variable;
+        }
+
+        public static void SetVariableName(this MethodDefinition m, VariableDefinition variableDefinition, string name)
+        {
+            if (m.DebugInformation.Scope == null)
+            {
+                ScopeDebugInformation scope = new ScopeDebugInformation(m.Body.Instructions[0], m.Body.Instructions[m.Body.Instructions.Count - 1]);
+                m.DebugInformation.Scope = scope;
+            }
+
+            m.DebugInformation.Scope.Variables.Add(new VariableDebugInformation(variableDefinition, name));
+        }
+        
+        public static ParameterDefinition AddParameter(this MethodDefinition m, TypeReference type, out int index)
+        {
+            if (m.Module == null)
+            {
+                throw new NullReferenceException($"This method has yet to be added to the assembly and doesn't have a module. Please provide a module.");
+            }
+
+            return m.AddParameter(m.Module, type, out index);
+        }
+
+        public static ParameterDefinition AddParameter(this MethodDefinition m, ModuleDefinition module, TypeReference type, out int index)
+        {
+            index = m.Parameters.Count + 1;
+            ParameterDefinition parameter = new ParameterDefinition(module.ImportReference(type));
+            m.Parameters.Add(parameter);
+
+            return parameter;
         }
     }
 }

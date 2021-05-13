@@ -42,11 +42,8 @@ public class NewSerializerTestResolver : IFormatterResolver, IWrapperSerializer
 
     public bool SerializeWrapper(Type type, ref MessagePackWriter writer, IExposedWrapper value, MessagePackSerializerOptions options)
     {
-        Debug.Log(value);
-        
         if (value is NewSerializeTestScript.Wrapper wrapper)
         {
-            Debug.Log("Serialize wrapper");
             GetFormatter<NewSerializeTestScript.Wrapper>().Serialize(ref writer, wrapper, options);
             return true;
         }

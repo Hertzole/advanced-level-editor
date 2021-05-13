@@ -91,7 +91,7 @@ public class TypesTest : MonoBehaviour
 {
     public enum TestEnum { Test1 = -10, Test3 = 66, Consistency = 520, No = 1 }
 
-    [ExposeToLevelEditor(0)]
+    [ExposeToLevelEditor(100)]
     [SerializeField]
     private string stringTest;
     [ExposeToLevelEditor(1)]

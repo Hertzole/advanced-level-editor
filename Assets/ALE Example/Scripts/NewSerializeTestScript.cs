@@ -4,7 +4,7 @@ using System.Collections.ObjectModel;
 using Hertzole.ALE;
 using UnityEngine;
 
-public class NewSerializeTestScript : MonoBehaviour, IExposedToLevelEditor
+public class NewSerializeTestScript : MonoBehaviour
 {
     public struct Wrapper : IExposedWrapper
     {
@@ -28,16 +28,16 @@ public class NewSerializeTestScript : MonoBehaviour, IExposedToLevelEditor
     }
     
     [SerializeField] 
-    // [ExposeToLevelEditor(0)]
+    [ExposeToLevelEditor(220)]
     private string testString = "Hello world";
     [SerializeField] 
-    // [ExposeToLevelEditor(1)]
+    [ExposeToLevelEditor(1)]
     private int testInt = 42;
     [SerializeField] 
-    // [ExposeToLevelEditor(2)]
+    [ExposeToLevelEditor(2)]
     private Vector3 testVector3 = new Vector3(1, 2, 3);
     [SerializeField] 
-    // [ExposeToLevelEditor(100)]
+    [ExposeToLevelEditor(100)]
     private TestScript reference = null;
 
     public string ComponentName { get; } = nameof(NewSerializeTestScript);
@@ -110,5 +110,16 @@ public class NewSerializeTestScript : MonoBehaviour, IExposedToLevelEditor
     public IExposedWrapper GetWrapper()
     {
         return new Wrapper(testString, testInt, testVector3, new ComponentDataWrapper(reference));
+    }
+
+    public void ApplyWrapper(IExposedWrapper wrapper)
+    {
+        if (wrapper is Wrapper w)
+        {
+            testString = w.testString.Item2;
+            testInt = w.testInt.Item2;
+            testVector3 = w.testVector3.Item2;
+            reference = w.reference.Item2.GetObject<TestScript>();
+        }
     }
 }

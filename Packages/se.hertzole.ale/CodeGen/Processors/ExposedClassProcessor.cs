@@ -5,6 +5,8 @@ using System.Linq;
 using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Threading;
+using MessagePack;
+using MessagePack.Formatters;
 using Mono.Cecil;
 using Mono.Cecil.Cil;
 using Mono.Cecil.Rocks;
@@ -15,6 +17,7 @@ using MethodAttributes = Mono.Cecil.MethodAttributes;
 using Object = UnityEngine.Object;
 using ParameterAttributes = Mono.Cecil.ParameterAttributes;
 using PropertyAttributes = Mono.Cecil.PropertyAttributes;
+using TypeAttributes = Mono.Cecil.TypeAttributes;
 
 namespace Hertzole.ALE.CodeGen
 {
@@ -40,12 +43,36 @@ namespace Hertzole.ALE.CodeGen
                     else { return property.Module.ImportReference(property.PropertyType); }
                 }
             }
-            public TypeDefinition FieldTypeDefinition
+            public TypeDefinition FieldTypeResolved
+            {
+                get { return field != null ? field.FieldType.Resolve() : property.PropertyType.Resolve(); }
+            }
+            
+            public TypeDefinition FieldTypeResolvedComponentAware
+            {
+                get { return FieldTypeComponentAware.Resolve(); }
+            }
+            
+            public TypeReference FieldTypeComponentAware
             {
                 get
                 {
-                    if (field != null) { return field.FieldType.Resolve(); }
-                    else { return property.PropertyType.Resolve(); }
+                    TypeReference fieldType = FieldType;
+
+                    if (fieldType.Is<GameObject>())
+                    {
+                        fieldType = (IsProperty ? property.Module : field.Module).GetTypeReference<ComponentDataWrapper>();
+                    }
+                    else
+                    {
+                        TypeDefinition resolved = FieldType.Resolve();
+                        if (resolved != null && resolved.IsSubclassOf<Component>())
+                        {
+                            fieldType = (IsProperty ? property.Module : field.Module).GetTypeReference<ComponentDataWrapper>();
+                        }
+                    }
+
+                    return fieldType;
                 }
             }
             public bool IsProperty { get { return field == null && property != null; } }
@@ -53,8 +80,9 @@ namespace Hertzole.ALE.CodeGen
             public bool IsArray { get { return FieldType.IsArray; } }
             public bool IsList { get { return FieldType.Is(typeof(List<>)); } }
             public bool IsDictionary { get { return FieldType.Is(typeof(Dictionary<,>)); } }
-            public bool IsClass { get { return FieldTypeDefinition.IsClass; } }
-            public bool IsValueType { get { return FieldTypeDefinition.IsValueType; } }
+            public bool IsClass { get { return FieldTypeResolvedComponentAware.IsClass; } }
+            public bool IsValueType { get { return FieldTypeComponentAware.IsValueType; } }
+            public bool IsPrimitive { get { return FieldTypeComponentAware.IsPrimitive; } }
             public bool IsComponent
             {
                 get
@@ -76,7 +104,7 @@ namespace Hertzole.ALE.CodeGen
 
             public bool IsEnum
             {
-                get { return FieldTypeDefinition.IsSubclassOf<Enum>(); }
+                get { return FieldTypeResolved.IsSubclassOf<Enum>(); }
             }
 
             public Instruction GetLoadInstruction()
@@ -138,6 +166,9 @@ namespace Hertzole.ALE.CodeGen
         private static MethodReference stringEquality;
         private static MethodReference argumentException;
         private static MethodReference getType;
+
+        private TypeDefinition wrapper;
+        private MethodReference wrapperCtor;
 
         private const string NO_EXPOSED_FIELDS = "There's no exposed property with the ID '{0}'.";
 
@@ -297,15 +328,18 @@ namespace Hertzole.ALE.CodeGen
             targetType.Properties.Add(order);
             targetType.Properties.Add(componentType);
             targetType.Properties.Add(hasVisibleFieldsProperty);
+            
+            CreateWrapper(exposedFields);
+            CreateFormatter(exposedFields);
 
             MethodDefinition getPropertiesMethod = CreateGetProperties(exposedFields);
             MethodDefinition getValueMethod = CreateGetValue(exposedFields);
             CreateSetValue(exposedFields);
-            MethodDefinition getValueTypeMethod = CreateGetValueType(exposedFields);
+            // MethodDefinition getValueTypeMethod = CreateGetValueType(exposedFields);
 
             targetType.Methods.Add(getPropertiesMethod);
             targetType.Methods.Add(getValueMethod);
-            targetType.Methods.Add(getValueTypeMethod);
+            // targetType.Methods.Add(getValueTypeMethod);
         }
 
         private void CreateLockObject(TypeDefinition type)
@@ -516,6 +550,414 @@ namespace Hertzole.ALE.CodeGen
             prop.GetMethod = propGet;
 
             return prop;
+        }
+
+        private void CreateWrapper(IReadOnlyList<FieldOrProperty> exposedFields)
+        {
+            wrapper = new TypeDefinition(Type.Namespace, "Wrapper", TypeAttributes.Public | TypeAttributes.SequentialLayout | 
+                                                                    TypeAttributes.AnsiClass | TypeAttributes.Sealed | 
+                                                                    TypeAttributes.BeforeFieldInit, 
+                Module.GetTypeReference<ValueType>());
+            wrapper.Interfaces.Add(new InterfaceImplementation(Module.GetTypeReference<IExposedWrapper>()));
+
+            MethodDefinition ctor = new MethodDefinition(".ctor", MethodAttributes.Public | MethodAttributes.HideBySig |
+                                                                  MethodAttributes.SpecialName | MethodAttributes.RTSpecialName,
+                Module.GetTypeReference(typeof(void)));
+
+            wrapper.Methods.Add(ctor);
+            Type.NestedTypes.Add(wrapper);
+
+            ILProcessor il = ctor.Body.GetILProcessor();
+            
+            for (int i = 0; i < exposedFields.Count; i++)
+            {
+                FieldDefinition field = CreateField(exposedFields[i]);
+                wrapper.Fields.Add(field);
+
+                ParameterDefinition p = ctor.AddParameter(exposedFields[i].FieldTypeComponentAware, out int pIndex);
+                il.Emit(OpCodes.Ldarg_0);
+                il.Append(GetIntInstruction(exposedFields[i].id));
+                il.Append(GetLdarg(pIndex, p));
+
+                MethodReference fieldCtor = Module.ImportReference(field.FieldType.Resolve().GetConstructors().First(c => c.Parameters.Count == 2).MakeHostInstanceGeneric((GenericInstanceType) field.FieldType));
+                il.Emit(OpCodes.Newobj, fieldCtor);
+                il.Emit(OpCodes.Stfld, field);
+            }
+            
+            il.Emit(OpCodes.Ret);
+
+            ctor.Body.Optimize();
+            wrapperCtor = ctor;
+
+            FieldDefinition CreateField(FieldOrProperty field)
+            {
+                TypeReference tuple = Module.ImportReference(typeof(ValueTuple<,>)).MakeGenericInstanceType(Module.GetTypeReference<int>(), field.FieldTypeComponentAware);
+
+                FieldDefinition f = new FieldDefinition(field.Name, FieldAttributes.Public, tuple);
+                return f;
+            }
+        }
+
+        private void CreateFormatter(IReadOnlyList<FieldOrProperty> fields)
+        {
+            TypeDefinition formatter = new TypeDefinition("Hertzole.ALE.Generated.Formatters", $"{Type.Namespace.Replace('.', '_')}_{Type.Name}_Formatter",
+                TypeAttributes.Public | TypeAttributes.AnsiClass | TypeAttributes.BeforeFieldInit, Module.GetTypeReference<object>());
+            
+            formatter.Interfaces.Add(new InterfaceImplementation(Module.GetTypeReference(typeof(IMessagePackFormatter<>)).MakeGenericInstanceType(wrapper)));
+            formatter.Interfaces.Add(new InterfaceImplementation(Module.GetTypeReference(typeof(IMessagePackFormatter))));
+
+            Module.Types.Add(formatter);
+
+            formatter.Methods.Add(CreateSerializeMethod());
+            formatter.Methods.Add(CreateDeserializeMethod());
+
+            MethodDefinition CreateSerializeMethod()
+            {
+                MethodDefinition m = new MethodDefinition("Serialize", MethodAttributes.Public | MethodAttributes.Final |
+                                                                       MethodAttributes.HideBySig | MethodAttributes.NewSlot |
+                                                                       MethodAttributes.Virtual, Module.GetTypeReference(typeof(void)));
+
+                ParameterDefinition writer = m.AddParameter(Module, Module.GetTypeReference(typeof(MessagePackWriter).MakeByRefType()), out int writerIndex);
+                ParameterDefinition value = m.AddParameter(Module, wrapper, out int valueIndex);
+                ParameterDefinition options = m.AddParameter(Module, Module.GetTypeReference<MessagePackSerializerOptions>(), out int optionsIndex);
+
+                ILProcessor il = m.Body.GetILProcessor();
+                
+                il.Append(GetLdarg(valueIndex, value));
+                il.Append(GetIntInstruction(fields.Count * 2));
+                il.Emit(OpCodes.Call, Module.GetMethod(typeof(MessagePackWriter), "WriteArrayHeader", new Type[] { typeof(int) }));
+
+                MethodReference getResolver = Module.GetMethod<MessagePackSerializerOptions>("get_Resolver");
+                
+                for (int i = 0; i < fields.Count; i++)
+                {
+                    il.Emit(OpCodes.Ldarg_1);
+                    il.Emit(OpCodes.Ldarg_2);
+                    il.Emit(OpCodes.Ldfld, wrapper.GetField(fields[i].Name));
+                    GenericInstanceType item1Type = Module.ImportReference(typeof(ValueTuple<,>)).MakeGenericInstanceType(Module.GetTypeReference<int>(), fields[i].FieldTypeComponentAware);
+                    FieldReference item1 = new FieldReference("Item1", Module.GetTypeReference<int>(), item1Type);
+                    il.Emit(OpCodes.Ldfld, item1);
+                    il.Emit(OpCodes.Call, Module.GetMethod(typeof(MessagePackWriter), "WriteInt32", new Type[] { typeof(int) }));
+                    il.Append(WriteValue(fields[i].FieldTypeComponentAware, fields[i]));
+                }
+                
+                il.Emit(OpCodes.Ret);
+
+                return m;
+
+                Instruction[] WriteValue(TypeReference type, FieldOrProperty field)
+                {
+                    List<Instruction> ins = new List<Instruction>();
+                    
+                    bool isStandard = type.Is<byte>() | type.Is<sbyte>() | type.Is<short>() | type.Is<ushort>() | type.Is<int>() | type.Is<uint>() | type.Is<long>() | type.Is<ulong>();
+
+                    if (!isStandard)
+                    {
+                        ins.Add(Instruction.Create(OpCodes.Ldarg_3));
+                        ins.Add(Instruction.Create(OpCodes.Call, getResolver));
+                        ins.Add(Instruction.Create(OpCodes.Call, Module.ImportReference(typeof(IFormatterResolver).GetMethod("GetFormatter")).MakeGenericMethod(type)));
+                    }
+                    
+                    ins.Add(Instruction.Create(OpCodes.Ldarg_1));
+                    ins.Add(Instruction.Create(OpCodes.Ldarg_2));
+                    ins.Add(Instruction.Create(OpCodes.Ldfld, wrapper.GetField(field.Name)));
+                    GenericInstanceType item2Type = Module.ImportReference(typeof(ValueTuple<,>)).MakeGenericInstanceType(Module.GetTypeReference<int>(), field.FieldTypeComponentAware);
+                    FieldReference item2 = new FieldReference("Item2", Module.GetTypeReference<int>(), item2Type);
+                    ins.Add(Instruction.Create(OpCodes.Ldfld, item2));
+
+                    MethodReference writeMethod;
+                    
+                    if (type.Is<byte>())
+                    {
+                        writeMethod = Module.GetMethod(typeof(MessagePackWriter), "WriteUInt8", new Type[] { typeof(byte) });
+                    }
+                    else if (type.Is<sbyte>())
+                    {
+                        writeMethod = Module.GetMethod(typeof(MessagePackWriter), "WriteInt8", new Type[] { typeof(sbyte) });
+                    }
+                    else if (type.Is<short>())
+                    {
+                        writeMethod = Module.GetMethod(typeof(MessagePackWriter), "WriteInt16", new Type[] { typeof(short) });
+                    }
+                    else if (type.Is<ushort>())
+                    {
+                        writeMethod = Module.GetMethod(typeof(MessagePackWriter), "WriteUInt16", new Type[] { typeof(ushort) });
+                    }
+                    else if (type.Is<int>())
+                    {
+                        writeMethod = Module.GetMethod(typeof(MessagePackWriter), "WriteInt32", new Type[] { typeof(int) });
+                    }
+                    else if (type.Is<uint>())
+                    {
+                        writeMethod = Module.GetMethod(typeof(MessagePackWriter), "WriteUInt32", new Type[] { typeof(uint) });
+                    }
+                    else if (type.Is<long>())
+                    {
+                        writeMethod = Module.GetMethod(typeof(MessagePackWriter), "WriteInt64", new Type[] { typeof(long) });
+                    }
+                    else if (type.Is<ulong>())
+                    {
+                        writeMethod = Module.GetMethod(typeof(MessagePackWriter), "WriteUInt64", new Type[] { typeof(ulong) });
+                    }
+                    else
+                    {
+                        ins.Add(Instruction.Create(OpCodes.Ldarg_3));
+                        writeMethod = Module.ImportReference(typeof(IMessagePackFormatter<>).GetMethod("Serialize")).MakeHostInstanceGeneric(Module.ImportReference(typeof(IMessagePackFormatter<>)).MakeGenericInstanceType(field.FieldTypeComponentAware));
+                    }
+                    
+                    ins.Add(Instruction.Create(isStandard ? OpCodes.Call : OpCodes.Callvirt, writeMethod));
+
+                    return ins.ToArray();
+                }
+            }
+
+            MethodDefinition CreateDeserializeMethod()
+            {
+                MethodDefinition m = new MethodDefinition("Deserialize", MethodAttributes.Public | MethodAttributes.Final | MethodAttributes.HideBySig |
+                                                                         MethodAttributes.NewSlot | MethodAttributes.Virtual, wrapper);
+
+                m.AddParameter(Module, Module.GetTypeReference(typeof(MessagePackReader).MakeByRefType()), out int readerIndex);
+                m.AddParameter(Module, Module.GetTypeReference<MessagePackSerializerOptions>(), out int optionsIndex);
+
+                MethodReference getResolver = Module.GetMethod<MessagePackSerializerOptions>("get_Resolver");
+                
+                VariableDefinition lengthVar = m.AddLocalVariable<int>(Module, out int lengthIndex);
+                
+                ILProcessor il = m.Body.GetILProcessor();
+                Instruction dummy = Instruction.Create(OpCodes.Ret);
+                
+                il.Emit(OpCodes.Ldarg_2);
+                il.Emit(OpCodes.Callvirt, Module.GetMethod<MessagePackSerializerOptions>("get_Security"));
+                il.Emit(OpCodes.Ldarg_1);
+                il.Emit(OpCodes.Callvirt, Module.ImportReference(typeof(MessagePackSecurity).GetMethod("DepthStep", new Type[] { typeof(MessagePackReader).MakeByRefType() })));
+                il.Emit(OpCodes.Ldarg_1);
+                il.Emit(OpCodes.Call, Module.GetMethod(typeof(MessagePackReader), "ReadArrayHeader"));
+                il.Append(GetStloc(lengthIndex, lengthVar));
+
+                List<ValueTuple<int, VariableDefinition>> localFields = new List<(int, VariableDefinition)>();
+                
+                for (int i = 0; i < fields.Count; i++)
+                {
+                    VariableDefinition v = m.AddLocalVariable(Module, fields[i].FieldTypeComponentAware, out int vIndex);
+                    localFields.Add((vIndex, v));
+                    
+                    if (fields[i].IsValueType && !fields[i].IsPrimitive && !fields[i].IsEnum)
+                    {
+                        il.Append(GetLdloc(vIndex, v, true));
+                    }
+
+                    il.Append(GetDefaultInstructions(fields[i].FieldTypeComponentAware));
+
+                    if (!fields[i].IsValueType || fields[i].IsPrimitive || fields[i].IsEnum)
+                    {
+                        il.Append(GetStloc(vIndex, v));
+                    }
+                }
+
+                VariableDefinition loopIndex = m.AddLocalVariable<int>(Module, out int loopVarIndex);
+                VariableDefinition idVar = m.AddLocalVariable<int>(Module, out int idIndex);
+                
+                il.Append(GetIntInstruction(0));
+                il.Append(GetStloc(loopVarIndex, loopIndex));
+
+                Instruction loopFinish = GetLdloc(loopVarIndex, loopIndex);
+                Instruction loopEnd = GetLdloc(loopVarIndex, loopIndex);
+
+                il.Emit(OpCodes.Br, loopEnd);
+
+                Instruction loopStart = GetLdloc(loopVarIndex, loopIndex);
+                
+                il.Append(loopStart);
+                il.Append(GetIntInstruction(2));
+                il.Emit(OpCodes.Rem);
+                il.Emit(OpCodes.Brtrue, loopFinish);
+
+                il.Append(GetReadMethod(idVar.VariableType));
+                il.Append(GetStloc(idIndex, idVar));
+
+                Instruction previous;
+                
+                if (fields[0].id == 0)
+                {
+                    previous = GetLdloc(idIndex, idVar);
+                }
+                else
+                {
+                    il.Append(GetLdloc(idIndex, idVar));
+                    previous = GetIntInstruction(fields[0].id);
+                }
+
+                il.Append(previous);
+                
+                Instruction skipStart = Instruction.Create(OpCodes.Ldarg_1);
+
+                if (fields.Count == 1)
+                {
+                    il.Emit(OpCodes.Brtrue, skipStart);
+                    il.Append(GetReadMethod(fields[0].FieldTypeComponentAware));
+                    il.Append(GetStloc(localFields[0].Item1, localFields[0].Item2));
+                    il.Emit(OpCodes.Br, loopFinish);
+                }
+                else
+                {
+                    for (int i = 0; i < fields.Count; i++)
+                    {
+                        if (i != 0)
+                        {
+                            Instruction ifStart = GetLdloc(idIndex, idVar);
+                            il.InsertAfter(previous, Instruction.Create(fields[i - 1].id == 0 ? OpCodes.Brtrue : OpCodes.Bne_Un, ifStart));
+                        
+                            il.Append(ifStart);
+                            if (fields[i].id != 0)
+                            {
+                                previous = GetIntInstruction(fields[i].id);
+                                il.Append(previous);
+                            }
+                            else
+                            {
+                                previous = ifStart;
+                            }
+
+                            if (i == fields.Count - 1)
+                            {
+                                il.Emit(OpCodes.Bne_Un, skipStart);
+                            }
+                        }
+                    
+                        il.Append(GetReadMethod(fields[i].FieldTypeComponentAware));
+                        il.Append(GetStloc(localFields[i].Item1, localFields[i].Item2));
+                        il.Emit(OpCodes.Br, loopFinish);
+                    }
+                }
+
+                il.Append(skipStart);
+                il.Emit(OpCodes.Call, Module.GetMethod(typeof(MessagePackReader), "Skip"));
+
+                il.Append(loopFinish);
+                il.Append(GetIntInstruction(1));
+                il.Emit(OpCodes.Add);
+                il.Append(GetStloc(loopVarIndex, loopIndex));
+                
+                il.Append(loopEnd);
+                il.Append(GetLdloc(lengthIndex, lengthVar));
+                il.Emit(OpCodes.Blt, loopStart);
+
+                VariableDefinition depthVar = m.AddLocalVariable<int>(Module, out int depthIndex);
+                
+                il.Emit(OpCodes.Ldarg_1);
+                il.Emit(OpCodes.Dup);
+                il.Emit(OpCodes.Call, Module.GetMethod(typeof(MessagePackReader), "get_Depth"));
+                il.Append(GetStloc(depthIndex, depthVar));
+                il.Append(GetLdloc(depthIndex, depthVar));
+                il.Append(GetIntInstruction(1));
+                il.Emit(OpCodes.Sub);
+                il.Emit(OpCodes.Call, Module.GetMethod(typeof(MessagePackReader), "set_Depth", new Type[] { typeof(int) }));
+                for (int i = 0; i < fields.Count; i++)
+                {
+                    il.Append(GetLdloc(localFields[i].Item1, localFields[i].Item2));
+                }
+                il.Emit(OpCodes.Newobj, wrapperCtor);
+                
+                il.Emit(OpCodes.Ret);
+                
+                m.SetVariableName(lengthVar, "length");
+                m.SetVariableName(loopIndex, "i");
+                m.SetVariableName(idVar, "id");
+                m.SetVariableName(depthVar, "depth");
+
+                for (int i = 0; i < fields.Count; i++)
+                {
+                    m.SetVariableName(localFields[i].Item2, fields[i].Name);
+                }
+                
+                il.Body.Optimize();
+
+                return m;
+
+                Instruction[] GetReadMethod(TypeReference type)
+                {
+                     List<Instruction> ins = new List<Instruction>();
+                    
+                    bool isStandard = type.Is<byte>() | type.Is<sbyte>() | type.Is<short>() | type.Is<ushort>() | type.Is<int>() | type.Is<uint>() | type.Is<long>() | type.Is<ulong>() |
+                                      type.Is<string>() | type.Is<char>() | type.Is<bool>() | type.Is<float>() | type.Is<double>();
+
+                    if (!isStandard)
+                    {
+                        ins.Add(Instruction.Create(OpCodes.Ldarg_2));
+                        ins.Add(Instruction.Create(OpCodes.Callvirt, getResolver));
+                        ins.Add(Instruction.Create(OpCodes.Callvirt, Module.ImportReference(typeof(IFormatterResolver).GetMethod("GetFormatter")).MakeGenericMethod(type)));
+                    }
+                    else
+                    {
+                        ins.Add(Instruction.Create(OpCodes.Ldarg_1));
+                    }
+
+                    MethodReference readMethod;
+                    
+                    if (type.Is<byte>())
+                    {
+                        readMethod = Module.GetMethod(typeof(MessagePackReader), nameof(MessagePackReader.ReadByte));
+                    }
+                    else if (type.Is<sbyte>())
+                    {
+                        readMethod = Module.GetMethod(typeof(MessagePackReader), nameof(MessagePackReader.ReadSByte));
+                    }
+                    else if (type.Is<short>())
+                    {
+                        readMethod = Module.GetMethod(typeof(MessagePackReader), nameof(MessagePackReader.ReadInt16));
+                    }
+                    else if (type.Is<ushort>())
+                    {
+                        readMethod = Module.GetMethod(typeof(MessagePackReader), nameof(MessagePackReader.ReadUInt16));
+                    }
+                    else if (type.Is<int>())
+                    {
+                        readMethod = Module.GetMethod(typeof(MessagePackReader), nameof(MessagePackReader.ReadInt32));
+                    }
+                    else if (type.Is<uint>())
+                    {
+                        readMethod = Module.GetMethod(typeof(MessagePackReader), nameof(MessagePackReader.ReadUInt32));
+                    }
+                    else if (type.Is<long>())
+                    {
+                        readMethod = Module.GetMethod(typeof(MessagePackReader), nameof(MessagePackReader.ReadInt64));
+                    }
+                    else if (type.Is<ulong>())
+                    {
+                        readMethod = Module.GetMethod(typeof(MessagePackReader), nameof(MessagePackReader.ReadUInt64));
+                    }
+                    else if (type.Is<string>())
+                    {
+                        readMethod = Module.GetMethod(typeof(MessagePackReader), nameof(MessagePackReader.ReadString));
+                    }
+                    else if (type.Is<char>())
+                    {
+                        readMethod = Module.GetMethod(typeof(MessagePackReader), nameof(MessagePackReader.ReadChar));
+                    }
+                    else if (type.Is<bool>())
+                    {
+                        readMethod = Module.GetMethod(typeof(MessagePackReader), nameof(MessagePackReader.ReadBoolean));
+                    }
+                    else if (type.Is<float>())
+                    {
+                        readMethod = Module.GetMethod(typeof(MessagePackReader), nameof(MessagePackReader.ReadSingle));
+                    }
+                    else if (type.Is<double>())
+                    {
+                        readMethod = Module.GetMethod(typeof(MessagePackReader), nameof(MessagePackReader.ReadDouble));
+                    }
+                    else
+                    {
+                        ins.Add(Instruction.Create(OpCodes.Ldarg_1));
+                        ins.Add(Instruction.Create(OpCodes.Ldarg_2));
+                        readMethod = Module.ImportReference(typeof(IMessagePackFormatter<>).GetMethod("Deserialize")).MakeHostInstanceGeneric(Module.ImportReference(typeof(IMessagePackFormatter<>)).MakeGenericInstanceType(type));
+                    }
+                    
+                    ins.Add(Instruction.Create(isStandard ? OpCodes.Call : OpCodes.Callvirt, readMethod));
+
+                    return ins.ToArray();
+                }
+            }
         }
 
         private MethodDefinition CreateGetProperties(List<FieldOrProperty> exposedFields)
@@ -861,7 +1303,7 @@ namespace Hertzole.ALE.CodeGen
 
                 if (field.IsValueType && !field.IsCollection)
                 {
-                    equals = GetEqualsMethod(field.FieldTypeDefinition, out bool isSameEquals, out bool isInEquality);
+                    equals = GetEqualsMethod(field.FieldTypeResolved, out bool isSameEquals, out bool isInEquality);
 
                     if (isSameEquals)
                     {
