@@ -12,7 +12,7 @@ namespace Hertzole.ALE
 {
     public class LevelEditorResolver : IFormatterResolver, IWrapperSerializer
     {
-        private static bool serializerRegistered = false;
+        private static bool serializerRegistered;
 
         private static List<IFormatterResolver> customResolvers = new List<IFormatterResolver>();
         private static List<IWrapperSerializer> wrapperSerializers = new List<IWrapperSerializer>(); 
@@ -25,10 +25,10 @@ namespace Hertzole.ALE
                 return;
             }
 
+            customResolvers.Add(Instance);
             customResolvers.Add(UnityResolver.Instance);
             customResolvers.Add(UnityBlitResolver.Instance);
             customResolvers.Add(StandardResolver.Instance);
-            customResolvers.Add(Instance);
 
             StaticCompositeResolver.Instance.Register(customResolvers.ToArray());
             MessagePackSerializer.DefaultOptions = MessagePackSerializerOptions.Standard.WithResolver(StaticCompositeResolver.Instance).WithCompression(MessagePackCompression.Lz4Block);
@@ -47,7 +47,8 @@ namespace Hertzole.ALE
 
         public static void RegisterResolver(IFormatterResolver resolver)
         {
-            customResolvers.Add(resolver);
+            // Insert it in the beginning to prioritize new resolvers.
+            customResolvers.Insert(0, resolver);
         }
 
         public static void RegisterWrapperSerializer(IWrapperSerializer serializer)

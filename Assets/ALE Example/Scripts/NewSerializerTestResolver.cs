@@ -11,15 +11,13 @@ public class NewSerializerTestResolver : IFormatterResolver, IWrapperSerializer
     private static void RegisterResolver()
     {
         LevelEditorResolver.RegisterResolver(Instance);
-        LevelEditorResolver.RegisterWrapperSerializer((NewSerializerTestResolver)Instance);
+        LevelEditorResolver.RegisterWrapperSerializer((NewSerializerTestResolver) Instance);
         LevelEditorSerializer.RegisterType<NewSerializeTestScript>();
     }
 
     private static readonly IFormatterResolver Instance = new NewSerializerTestResolver();
 
-    private NewSerializerTestResolver()
-    {
-    }
+    private NewSerializerTestResolver() { }
 
     public IMessagePackFormatter<T> GetFormatter<T>()
     {
@@ -35,7 +33,7 @@ public class NewSerializerTestResolver : IFormatterResolver, IWrapperSerializer
             object f = GeneratedResolverGetFormatterHelper.GetFormatter(typeof(T));
             if (f != null)
             {
-                formatter = (IMessagePackFormatter<T>)f;
+                formatter = (IMessagePackFormatter<T>) f;
             }
         }
     }
@@ -45,6 +43,16 @@ public class NewSerializerTestResolver : IFormatterResolver, IWrapperSerializer
         if (value is NewSerializeTestScript.Wrapper wrapper)
         {
             GetFormatter<NewSerializeTestScript.Wrapper>().Serialize(ref writer, wrapper, options);
+            return true;
+        }
+        if (value is NewSerializeTestScript.Wrapper wrapper2)
+        {
+            GetFormatter<NewSerializeTestScript.Wrapper>().Serialize(ref writer, wrapper2, options);
+            return true;
+        }
+        if (value is NewSerializeTestScript.Wrapper wrapper3)
+        {
+            GetFormatter<NewSerializeTestScript.Wrapper>().Serialize(ref writer, wrapper3, options);
             return true;
         }
 
@@ -58,35 +66,81 @@ public class NewSerializerTestResolver : IFormatterResolver, IWrapperSerializer
             wrapper = GetFormatter<NewSerializeTestScript.Wrapper>().Deserialize(ref reader, options);
             return true;
         }
+        else if (type == typeof(NewSerializeTestScript))
+        {
+            wrapper = GetFormatter<NewSerializeTestScript.Wrapper>().Deserialize(ref reader, options);
+            return true;
+        }
+        else if (type == typeof(NewSerializeTestScript))
+        {
+            wrapper = GetFormatter<NewSerializeTestScript.Wrapper>().Deserialize(ref reader, options);
+            return true;
+        }
+        else if (type == typeof(NewSerializeTestScript))
+        {
+            wrapper = GetFormatter<NewSerializeTestScript.Wrapper>().Deserialize(ref reader, options);
+            return true;
+        }
+        else if (type == typeof(NewSerializeTestScript))
+        {
+            wrapper = GetFormatter<NewSerializeTestScript.Wrapper>().Deserialize(ref reader, options);
+            return true;
+        }
+        else if (type == typeof(NewSerializeTestScript))
+        {
+            wrapper = GetFormatter<NewSerializeTestScript.Wrapper>().Deserialize(ref reader, options);
+            return true;
+        }
+        else if (type == typeof(NewSerializeTestScript))
+        {
+            wrapper = GetFormatter<NewSerializeTestScript.Wrapper>().Deserialize(ref reader, options);
+            return true;
+        }
 
         wrapper = null;
         return false;
     }
-}
-
-internal static class GeneratedResolverGetFormatterHelper
-{
-    private static readonly Dictionary<Type, int> lookup;
-
-    static GeneratedResolverGetFormatterHelper()
+    
+    internal static class GeneratedResolverGetFormatterHelper
     {
-        lookup = new Dictionary<Type, int>(2)
-        {
-            { typeof(NewSerializeTestScript.Wrapper), 0 },
-        };
-    }
+        private static readonly Dictionary<Type, int> lookup;
 
-    internal static object GetFormatter(Type t)
-    {
-        if (!lookup.TryGetValue(t, out int key))
+        static GeneratedResolverGetFormatterHelper()
         {
-            return null;
+            lookup = new Dictionary<Type, int>
+            {
+                { typeof(NewSerializeTestScript.Wrapper), 0 },
+                { typeof(NewSerializeTestScript.Wrapper), 1 },
+                { typeof(NewSerializeTestScript.Wrapper), 2 },
+                { typeof(NewSerializeTestScript.Wrapper), 3 },
+                { typeof(NewSerializeTestScript.Wrapper), 4 },
+                { typeof(NewSerializeTestScript.Wrapper), 5 },
+                { typeof(NewSerializeTestScript.Wrapper), 6 },
+                { typeof(NewSerializeTestScript.Wrapper), 7 },
+                { typeof(NewSerializeTestScript.Wrapper), 8 },
+            };
         }
 
-        switch (key)
+        internal static object GetFormatter(Type t)
         {
-            case 0: return new NewSerializeTestFormatter();
-            default: return null;
+            if (!lookup.TryGetValue(t, out int key))
+            {
+                return null;
+            }
+
+            switch (key)
+            {
+                case 0: return new NewSerializeTestFormatter();
+                case 1: return new NewSerializeTestFormatter();
+                case 2: return new NewSerializeTestFormatter();
+                case 3: return new NewSerializeTestFormatter();
+                case 4: return new NewSerializeTestFormatter();
+                case 5: return new NewSerializeTestFormatter();
+                case 6: return new NewSerializeTestFormatter();
+                case 7: return new NewSerializeTestFormatter();
+                case 8: return new NewSerializeTestFormatter();
+                default: return null;
+            }
         }
     }
 }

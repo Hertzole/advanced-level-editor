@@ -1,4 +1,5 @@
-﻿using Mono.Cecil;
+﻿using System;
+using Mono.Cecil;
 using Mono.Cecil.Cil;
 using Mono.Collections.Generic;
 using System.Collections.Generic;
@@ -48,74 +49,65 @@ namespace Hertzole.ALE.CodeGen
             }
         }
 
-        public static Instruction EmitBoolean(this ILProcessor il, bool value)
+        public static void EmitBoolean(this ILProcessor il, bool value)
         {
-            Instruction i = Instruction.Create(value ? OpCodes.Ldc_I4_1 : OpCodes.Ldc_I4_0);
-            il.Append(i);
-
-            return i;
+            il.Emit(value ? OpCodes.Ldc_I4_1 : OpCodes.Ldc_I4_0);
         }
 
-        public static Instruction[] EmitBoolean(this ILProcessor il, bool value, VariableDefinition variable, int variableIndex)
+        public static void EmitBoolean(this ILProcessor il, bool value, VariableDefinition variable, int variableIndex)
         {
-            Instruction b = EmitBoolean(il, value);
-            Instruction stloc = EmitStloc(il, variableIndex, variable);
-
-            return new Instruction[] { b, stloc };
+            il.EmitBoolean(value);
+            il.EmitStloc(variableIndex, variable);
         }
 
-        public static Instruction EmitStloc(this ILProcessor il, int index, VariableDefinition variable)
+        public static void EmitStloc(this ILProcessor il, int index, VariableDefinition variable)
         {
-            Instruction result;
+            switch (index)
+            {
+                case 0:
+                    il.Append(Instruction.Create(OpCodes.Stloc_0));
+                    break;
+                case 1:
+                    il.Append(Instruction.Create(OpCodes.Stloc_1));
+                    break;
+                case 2:
+                    il.Append(Instruction.Create(OpCodes.Stloc_2));
+                    break;
+                case 3:
+                    il.Append(Instruction.Create(OpCodes.Stloc_3));
+                    break;
+                default:
+                    il.Append(Instruction.Create(OpCodes.Stloc_S, variable));
+                    break;
+            }
+        }
+
+        public static void EmitLdloc(this ILProcessor il, int index, VariableDefinition variable, bool ldloc_a = false)
+        {
+            if (ldloc_a)
+            {
+                il.Append(Instruction.Create(OpCodes.Ldloca_S, variable));
+                return;
+            }
 
             switch (index)
             {
                 case 0:
-                    result = Instruction.Create(OpCodes.Stloc_0);
+                    il.Append(Instruction.Create(OpCodes.Ldloc_0));
                     break;
                 case 1:
-                    result = Instruction.Create(OpCodes.Stloc_1);
+                    il.Append(Instruction.Create(OpCodes.Ldloc_1));
                     break;
                 case 2:
-                    result = Instruction.Create(OpCodes.Stloc_2);
+                    il.Append(Instruction.Create(OpCodes.Ldloc_2));
                     break;
                 case 3:
-                    result = Instruction.Create(OpCodes.Stloc_3);
+                    il.Append(Instruction.Create(OpCodes.Ldloc_3));
                     break;
                 default:
-                    result = Instruction.Create(OpCodes.Stloc_S, variable);
+                    il.Append(Instruction.Create(OpCodes.Ldloc_S, variable));
                     break;
             }
-
-            il.Append(result);
-            return result;
-        }
-
-        public static Instruction EmitLdloc(this ILProcessor il, int index, VariableDefinition variable, bool ldloc_a = false)
-        {
-            Instruction result;
-
-            switch (index)
-            {
-                case 0:
-                    result = Instruction.Create(OpCodes.Ldloc_0);
-                    break;
-                case 1:
-                    result = Instruction.Create(OpCodes.Ldloc_1);
-                    break;
-                case 2:
-                    result = Instruction.Create(OpCodes.Ldloc_2);
-                    break;
-                case 3:
-                    result = Instruction.Create(OpCodes.Ldloc_3);
-                    break;
-                default:
-                    result = Instruction.Create(ldloc_a ? OpCodes.Ldloca_S : OpCodes.Ldloc_S, variable);
-                    break;
-            }
-
-            il.Append(result);
-            return result;
         }
 
         public static Instruction EmitIntInstruction(this ILProcessor il, int value)
@@ -186,6 +178,27 @@ namespace Hertzole.ALE.CodeGen
             {
                 return new Instruction[] { Instruction.Create(OpCodes.Ldnull) };
             }
+        }
+
+        public static void EmitSwitch<T>(this ILProcessor il, IList<T> items, Action<T, ILProcessor> buildCase, Action<ILProcessor> buildDefault)
+        {
+            int startIndex = il.Body.Instructions.Count - 1;
+
+            Instruction[] switchTargets = new Instruction[items.Count];
+            
+            for (int i = 0; i < items.Count; i++)
+            {
+                int startAmount = il.Body.Instructions.Count;
+                buildCase(items[i], il);
+
+                switchTargets[i] = il.Body.Instructions[startAmount];
+            }
+
+            int defaultIndex = il.Body.Instructions.Count + 1;
+            buildDefault(il);
+            
+            il.InsertAfter(il.Body.Instructions[startIndex], Instruction.Create(OpCodes.Switch, switchTargets));
+            il.InsertAfter(il.Body.Instructions[startIndex + 1], Instruction.Create(OpCodes.Br, il.Body.Instructions[defaultIndex]));
         }
     }
 }

@@ -56,6 +56,7 @@ namespace Hertzole.ALE.CodeGen
             }
 
             typeRegister.EndEditing();
+            resolver.EndEditing();
         }
     }
 }
