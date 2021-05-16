@@ -552,6 +552,7 @@ namespace Hertzole.ALE.CodeGen
             return prop;
         }
 
+        //TODO: Box wrapper beforehand. 
         private void CreateWrapper(IReadOnlyList<FieldOrProperty> exposedFields)
         {
             wrapper = new TypeDefinition(Type.Namespace, "Wrapper", TypeAttributes.Public | TypeAttributes.SequentialLayout | 
@@ -608,6 +609,17 @@ namespace Hertzole.ALE.CodeGen
 
             Module.Types.Add(formatter);
 
+            MethodDefinition ctor = new MethodDefinition(".ctor", MethodAttributes.Public | MethodAttributes.HideBySig |
+                                                                  MethodAttributes.SpecialName | MethodAttributes.RTSpecialName,
+                Module.GetTypeReference(typeof(void)));
+            
+            ILProcessor ctorIl = ctor.Body.GetILProcessor();
+            ctorIl.Emit(OpCodes.Ldarg_0);
+            ctorIl.Emit(OpCodes.Call, Module.GetConstructor<object>());
+            ctorIl.Emit(OpCodes.Ret);
+           
+            formatter.Methods.Add(ctor);
+
             formatter.Methods.Add(CreateSerializeMethod());
             formatter.Methods.Add(CreateDeserializeMethod());
 
@@ -642,6 +654,8 @@ namespace Hertzole.ALE.CodeGen
                 }
                 
                 il.Emit(OpCodes.Ret);
+
+                Resolver.AddWrapperFormatter(formatter, wrapper, Type);
 
                 return m;
 

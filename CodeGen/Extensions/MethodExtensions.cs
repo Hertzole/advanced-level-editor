@@ -454,6 +454,21 @@ namespace Hertzole.ALE.CodeGen
 
             m.DebugInformation.Scope.Variables.Add(new VariableDebugInformation(variableDefinition, name));
         }
+
+        public static ParameterDefinition AddParameter<T>(this MethodDefinition m, out int index)
+        {
+            if (m.Module == null)
+            {
+                throw new NullReferenceException($"This method has yet to be added to the assembly and doesn't have a module. Please provide a module.");
+            }
+
+            return m.AddParameter<T>(m.Module, out index);
+        }
+
+        public static ParameterDefinition AddParameter<T>(this MethodDefinition m, ModuleDefinition module, out int index)
+        {
+            return m.AddParameter(module, module.ImportReference(typeof(T)), out index);
+        }
         
         public static ParameterDefinition AddParameter(this MethodDefinition m, TypeReference type, out int index)
         {
