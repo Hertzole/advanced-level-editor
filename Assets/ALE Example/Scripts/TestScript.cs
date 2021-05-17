@@ -54,11 +54,10 @@ public struct MyGooderStruct : IEquatable<MyGooderStruct>
     }
 }
 
-public class TestScript : MonoBehaviour, ILevelEditorGizmos
+public class TestScript : MonoBehaviour
 {
-    public struct WrapperTemplate : IExposedWrapper
+	public struct WrapperTemplate : IExposedWrapper
 	{
-		// Token: 0x06000077 RID: 119 RVA: 0x00004968 File Offset: 0x00002B68
 		public WrapperTemplate(char A_1, string A_2, byte A_3, sbyte A_4, short A_5, ushort A_6, int A_7, uint A_8, long A_9, ulong A_10, float A_11, double A_12, decimal A_13, Vector2 A_14, Vector2Int A_15, Vector3 A_16, Vector3Int A_17, bool A_18, Color A_19, Color32 A_20, ComponentDataWrapper A_21, string[] A_22, global::MyCustomStruct A_23, Vector2 A_24, Vector2 A_25, Vector2 A_26, ComponentDataWrapper A_27, global::MyGooderStruct A_28, global::TestScript.TestEnum A_29, ComponentDataWrapper A_30)
 		{
 			this.charTest = new ValueTuple<int, char>(16, A_1);
@@ -93,94 +92,94 @@ public class TestScript : MonoBehaviour, ILevelEditorGizmos
 			this.gameObjectField = new ValueTuple<int, ComponentDataWrapper>(29, A_30);
 		}
 
-		// Token: 0x04000067 RID: 103
+		// Token: 0x0400007B RID: 123
 		public ValueTuple<int, char> charTest;
 
-		// Token: 0x04000068 RID: 104
+		// Token: 0x0400007C RID: 124
 		public ValueTuple<int, string> testString;
 
-		// Token: 0x04000069 RID: 105
+		// Token: 0x0400007D RID: 125
 		public ValueTuple<int, byte> testByte;
 
-		// Token: 0x0400006A RID: 106
+		// Token: 0x0400007E RID: 126
 		public ValueTuple<int, sbyte> testSByte;
 
-		// Token: 0x0400006B RID: 107
+		// Token: 0x0400007F RID: 127
 		public ValueTuple<int, short> testShort;
 
-		// Token: 0x0400006C RID: 108
+		// Token: 0x04000080 RID: 128
 		public ValueTuple<int, ushort> testUShort;
 
-		// Token: 0x0400006D RID: 109
+		// Token: 0x04000081 RID: 129
 		public ValueTuple<int, int> testInt;
 
-		// Token: 0x0400006E RID: 110
+		// Token: 0x04000082 RID: 130
 		public ValueTuple<int, uint> testUint;
 
-		// Token: 0x0400006F RID: 111
+		// Token: 0x04000083 RID: 131
 		public ValueTuple<int, long> testLong;
 
-		// Token: 0x04000070 RID: 112
+		// Token: 0x04000084 RID: 132
 		public ValueTuple<int, ulong> testULong;
 
-		// Token: 0x04000071 RID: 113
+		// Token: 0x04000085 RID: 133
 		public ValueTuple<int, float> floatTest;
 
-		// Token: 0x04000072 RID: 114
+		// Token: 0x04000086 RID: 134
 		public ValueTuple<int, double> doubleTest;
 
-		// Token: 0x04000073 RID: 115
+		// Token: 0x04000087 RID: 135
 		public ValueTuple<int, decimal> decimalTest;
 
-		// Token: 0x04000074 RID: 116
+		// Token: 0x04000088 RID: 136
 		public ValueTuple<int, Vector2> vector2Test;
 
-		// Token: 0x04000075 RID: 117
+		// Token: 0x04000089 RID: 137
 		public ValueTuple<int, Vector2Int> vector2IntTest;
 
-		// Token: 0x04000076 RID: 118
+		// Token: 0x0400008A RID: 138
 		public ValueTuple<int, Vector3> vector3Test;
 
-		// Token: 0x04000077 RID: 119
+		// Token: 0x0400008B RID: 139
 		public ValueTuple<int, Vector3Int> vector3IntTest;
 
-		// Token: 0x04000078 RID: 120
+		// Token: 0x0400008C RID: 140
 		public ValueTuple<int, bool> boolTest;
 
-		// Token: 0x04000079 RID: 121
+		// Token: 0x0400008D RID: 141
 		public ValueTuple<int, Color> colorField;
 
-		// Token: 0x0400007A RID: 122
+		// Token: 0x0400008E RID: 142
 		public ValueTuple<int, Color32> color32Field;
 
-		// Token: 0x0400007B RID: 123
+		// Token: 0x0400008F RID: 143
 		public ValueTuple<int, ComponentDataWrapper> otherObject;
 
-		// Token: 0x0400007C RID: 124
+		// Token: 0x04000090 RID: 144
 		public ValueTuple<int, string[]> messages;
 
-		// Token: 0x0400007D RID: 125
+		// Token: 0x04000091 RID: 145
 		public ValueTuple<int, global::MyCustomStruct> structTest;
 
-		// Token: 0x0400007E RID: 126
+		// Token: 0x04000092 RID: 146
 		public ValueTuple<int, Vector2> secondVector3;
 
-		// Token: 0x0400007F RID: 127
+		// Token: 0x04000093 RID: 147
 		public ValueTuple<int, Vector2> secondVector4;
 
-		// Token: 0x04000080 RID: 128
+		// Token: 0x04000094 RID: 148
 		public ValueTuple<int, Vector2> secondVector5;
 
-		// Token: 0x04000081 RID: 129
+		// Token: 0x04000095 RID: 149
 		public ValueTuple<int, ComponentDataWrapper> transformArray;
 
-		// Token: 0x04000082 RID: 130
+		// Token: 0x04000096 RID: 150
 		public ValueTuple<int, global::MyGooderStruct> gooderStruct;
 
-		// Token: 0x04000083 RID: 131
+		// Token: 0x04000097 RID: 151
 		public ValueTuple<int, global::TestScript.TestEnum> enumTest;
 
-		// Token: 0x04000084 RID: 132
+		// Token: 0x04000098 RID: 152
 		public ValueTuple<int, ComponentDataWrapper> gameObjectField;
 	}
     
@@ -222,7 +221,7 @@ public class TestScript : MonoBehaviour, ILevelEditorGizmos
     [SerializeField]
     [ExposeToLevelEditor(11)]
     private decimal decimalTest = 0;
-
+    
     [SerializeField]
     [ExposeToLevelEditor(12)]
     private Vector2 vector2Test = Vector2.zero;
@@ -235,15 +234,15 @@ public class TestScript : MonoBehaviour, ILevelEditorGizmos
     [SerializeField]
     [ExposeToLevelEditor(15)]
     private Vector3Int vector3IntTest = Vector3Int.zero;
-
+    //
     [SerializeField]
     [ExposeToLevelEditor(16, order = -1000, customName = "FAAAA", visible = false)]
     private char charTest = 'A';
-
+    
     [SerializeField]
     [ExposeToLevelEditor(17)]
     private bool boolTest = true;
-
+    
     [SerializeField]
     [ExposeToLevelEditor(18)]
     private Color colorField = Color.red;
@@ -256,9 +255,9 @@ public class TestScript : MonoBehaviour, ILevelEditorGizmos
     [SerializeField]
     [ExposeToLevelEditor(21)]
     private string[] messages = null;
-    //[SerializeField]
-    //[ExposeToLevelEditor(33)]
-    //private MyCustomStruct[] structTestArray = null;
+    // //[SerializeField]
+    // //[ExposeToLevelEditor(33)]
+    // //private MyCustomStruct[] structTestArray = null;
     [SerializeField]
     [ExposeToLevelEditor(22)]
     private MyCustomStruct structTest = new MyCustomStruct();
@@ -287,35 +286,53 @@ public class TestScript : MonoBehaviour, ILevelEditorGizmos
     private int[] ints = null;
     private Color32[] colors = null;
 
-    public void DrawLevelEditorGizmos()
+    private void Awake()
     {
-        LevelEditorGizmos.DrawWireCube(transform.position, Vector3.one, transform.rotation, Color.green);
-
-        LevelEditorGizmos.DrawSquare(transform.position + transform.forward * 2, Vector2.one, transform.rotation, Color.blue);
-
-        if (otherObject != null)
-        {
-            LevelEditorGizmos.DrawLine(transform.position, otherObject.position, Color.red);
-        }
+	    Debug.Log("Awake");
     }
+    //
+    // public void DrawLevelEditorGizmos()
+    // {
+    //     LevelEditorGizmos.DrawWireCube(transform.position, Vector3.one, transform.rotation, Color.green);
+    //
+    //     LevelEditorGizmos.DrawSquare(transform.position + transform.forward * 2, Vector2.one, transform.rotation, Color.blue);
+    //
+    //     if (otherObject != null)
+    //     {
+    //         LevelEditorGizmos.DrawLine(transform.position, otherObject.position, Color.red);
+    //     }
+    // }
+    //
+    // private void Template(int id, object value)
+    // {
+    //     if (id == 22)
+    //     {
+    //         if (structTest.Equals((MyCustomStruct)value))
+    //         {
+    //             structTest = (MyCustomStruct)value;
+    //         }
+    //     }
+    //     else if (id == 23)
+    //     {
+    //         if (gooderStruct == (MyGooderStruct)value)
+    //         {
+    //             gooderStruct = (MyGooderStruct)value;
+    //         }
+    //     }
+    // }
 
-    private void Template(int id, object value)
-    {
-        if (id == 22)
-        {
-            if (structTest.Equals((MyCustomStruct)value))
-            {
-                structTest = (MyCustomStruct)value;
-            }
-        }
-        else if (id == 23)
-        {
-            if (gooderStruct == (MyGooderStruct)value)
-            {
-                gooderStruct = (MyGooderStruct)value;
-            }
-        }
-    }
+    // private IExposedWrapper GetWrapperTemplate()
+    // {
+	   //  var wrapper = new global::TestScript.WrapperTemplate(this.charTest, this.testString, this.testByte, this.testSByte, 
+		  //   this.testShort, this.testUShort, this.testInt, this.testUint, this.testLong, this.testULong, this.floatTest,
+		  //   this.doubleTest, this.decimalTest, this.vector2Test, this.vector2IntTest, this.vector3Test, this.vector3IntTest, 
+		  //   this.boolTest, this.colorField, this.color32Field, new ComponentDataWrapper(this.otherObject), this.messages,
+		  //   this.structTest, this.secondVector3, this.secondVector4, this.secondVector5, new ComponentDataWrapper(this.transformArray), 
+		  //   this.gooderStruct, this.enumTest, new ComponentDataWrapper(this.gameObjectField));
+    //
+	   //  return wrapper;
+    // }
+
 #pragma warning restore CS0414
 #pragma warning restore CS0067
 }

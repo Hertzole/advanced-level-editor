@@ -43,6 +43,29 @@ namespace Hertzole.ALE.CodeGen
                     else { return property.Module.ImportReference(property.PropertyType); }
                 }
             }
+            public TypeReference CollectionType
+            {
+                get
+                {
+                    if (!IsCollection)
+                    {
+                        throw new ArgumentException($"{FieldType} is not a collection.");
+                    }
+                    
+                    if (IsList && FieldType is GenericInstanceType generic && generic.GenericArguments.Count == 1)
+                    {
+                        TypeDefinition resolved = generic.GenericArguments[0].GetElementType().Resolve();
+                        if (resolved.Is<GameObject>() || resolved.IsSubclassOf<Component>())
+                        {
+                            ModuleDefinition module = IsProperty ? property.Module : field.Module;
+                            
+                            return module.ImportReference(resolved);
+                        }
+                    }
+
+                    return FieldType;
+                }
+            }
             public TypeDefinition FieldTypeResolved
             {
                 get { return field != null ? field.FieldType.Resolve() : property.PropertyType.Resolve(); }
@@ -57,7 +80,7 @@ namespace Hertzole.ALE.CodeGen
             {
                 get
                 {
-                    TypeReference fieldType = FieldType;
+                    TypeReference fieldType = IsCollection ? CollectionType : FieldType;
 
                     if (fieldType.Is<GameObject>())
                     {
@@ -83,11 +106,12 @@ namespace Hertzole.ALE.CodeGen
             public bool IsClass { get { return FieldTypeResolvedComponentAware.IsClass; } }
             public bool IsValueType { get { return FieldTypeComponentAware.IsValueType; } }
             public bool IsPrimitive { get { return FieldTypeComponentAware.IsPrimitive; } }
+            public bool IsGameObject { get { return IsCollection ? CollectionType.Is<GameObject>() : FieldType.Is<GameObject>(); } }
             public bool IsComponent
             {
                 get
                 {
-                    if (FieldType.Is<GameObject>())
+                    if (IsGameObject)
                     {
                         return true;
                     }
@@ -96,6 +120,15 @@ namespace Hertzole.ALE.CodeGen
                     if (resolved != null && resolved.IsSubclassOf<Component>())
                     {
                         return true;
+                    }
+
+                    if (IsList && FieldType is GenericInstanceType generic && generic.GenericArguments.Count == 1)
+                    {
+                        resolved = generic.GenericArguments[0].GetElementType().Resolve();
+                        if (resolved.Is<GameObject>() || resolved.IsSubclassOf<Component>())
+                        {
+                            return true;
+                        }
                     }
 
                     return false;
@@ -335,6 +368,8 @@ namespace Hertzole.ALE.CodeGen
             MethodDefinition getPropertiesMethod = CreateGetProperties(exposedFields);
             MethodDefinition getValueMethod = CreateGetValue(exposedFields);
             CreateSetValue(exposedFields);
+            CreateGetWrapper(exposedFields);
+            CreateApplyWrapper(exposedFields);
             // MethodDefinition getValueTypeMethod = CreateGetValueType(exposedFields);
 
             targetType.Methods.Add(getPropertiesMethod);
@@ -555,9 +590,22 @@ namespace Hertzole.ALE.CodeGen
         //TODO: Box wrapper beforehand. 
         private void CreateWrapper(IReadOnlyList<FieldOrProperty> exposedFields)
         {
-            wrapper = new TypeDefinition(Type.Namespace, "Wrapper", TypeAttributes.Public | TypeAttributes.SequentialLayout | 
-                                                                    TypeAttributes.AnsiClass | TypeAttributes.Sealed | 
-                                                                    TypeAttributes.BeforeFieldInit, 
+            const string WRAPPER_NAME = "ALE__GeneratedComponentWrapper";
+            
+            if (Type.HasNestedTypes)
+            {
+                for (int i = 0; i < Type.NestedTypes.Count; i++)
+                {
+                    if (Type.NestedTypes[i].Name == WRAPPER_NAME)
+                    {
+                        Error($"{Type.FullName} already has a nested class called 'Wrapper'.");
+                    }
+                }
+            }
+            
+            wrapper = new TypeDefinition(Type.Namespace, WRAPPER_NAME, TypeAttributes.NestedPublic | TypeAttributes.SequentialLayout | 
+                                                                       TypeAttributes.AnsiClass | TypeAttributes.Sealed | 
+                                                                       TypeAttributes.BeforeFieldInit, 
                 Module.GetTypeReference<ValueType>());
             wrapper.Interfaces.Add(new InterfaceImplementation(Module.GetTypeReference<IExposedWrapper>()));
 
@@ -576,11 +624,23 @@ namespace Hertzole.ALE.CodeGen
                 wrapper.Fields.Add(field);
 
                 ParameterDefinition p = ctor.AddParameter(exposedFields[i].FieldTypeComponentAware, out int pIndex);
+                
+#if ALE_DEBUG
+                il.Emit(OpCodes.Ldstr, $"{Type.FullName} wrapper setting value for field {exposedFields[i].id} ({exposedFields[i].Name})");
+                il.Emit(OpCodes.Call, Module.GetMethod(typeof(LevelEditorLogger), "Log", typeof(object)));
+#endif
+                
                 il.Emit(OpCodes.Ldarg_0);
                 il.Append(GetIntInstruction(exposedFields[i].id));
                 il.Append(GetLdarg(pIndex, p));
+                
+                // Error(field.FieldType.ToString());
 
-                MethodReference fieldCtor = Module.ImportReference(field.FieldType.Resolve().GetConstructors().First(c => c.Parameters.Count == 2).MakeHostInstanceGeneric((GenericInstanceType) field.FieldType));
+                MethodReference fieldCtor = Module.ImportReference(typeof(ValueTuple<,>)
+                                                                   .GetConstructors()
+                                                                   .Single(c => c.GetParameters().Length == 2))
+                                                  .MakeHostInstanceGeneric(Module.ImportReference(typeof(ValueTuple<,>))
+                                                                                 .MakeGenericInstanceType(Module.GetTypeReference<int>(), Module.ImportReference(exposedFields[i].FieldTypeComponentAware)));
                 il.Emit(OpCodes.Newobj, fieldCtor);
                 il.Emit(OpCodes.Stfld, field);
             }
@@ -601,7 +661,13 @@ namespace Hertzole.ALE.CodeGen
 
         private void CreateFormatter(IReadOnlyList<FieldOrProperty> fields)
         {
-            TypeDefinition formatter = new TypeDefinition("Hertzole.ALE.Generated.Formatters", $"{Type.Namespace.Replace('.', '_')}_{Type.Name}_Formatter",
+            string name = $"{Type.Namespace.Replace('.', '_')}_{Type.Name}_Formatter";
+            if (name.StartsWith("_"))
+            {
+                name = name.Substring(1);
+            }
+            
+            TypeDefinition formatter = new TypeDefinition("Hertzole.ALE.Generated.Formatters", name,
                 TypeAttributes.Public | TypeAttributes.AnsiClass | TypeAttributes.BeforeFieldInit, Module.GetTypeReference<object>());
             
             formatter.Interfaces.Add(new InterfaceImplementation(Module.GetTypeReference(typeof(IMessagePackFormatter<>)).MakeGenericInstanceType(wrapper)));
@@ -629,15 +695,17 @@ namespace Hertzole.ALE.CodeGen
                                                                        MethodAttributes.HideBySig | MethodAttributes.NewSlot |
                                                                        MethodAttributes.Virtual, Module.GetTypeReference(typeof(void)));
 
-                ParameterDefinition writer = m.AddParameter(Module, Module.GetTypeReference(typeof(MessagePackWriter).MakeByRefType()), out int writerIndex);
-                ParameterDefinition value = m.AddParameter(Module, wrapper, out int valueIndex);
-                ParameterDefinition options = m.AddParameter(Module, Module.GetTypeReference<MessagePackSerializerOptions>(), out int optionsIndex);
+                ParameterDefinition writer = m.AddParameter(Module, Module.GetTypeReference(typeof(MessagePackWriter).MakeByRefType()), out int writerIndex, "writer");
+                ParameterDefinition value = m.AddParameter(Module, wrapper, out int valueIndex, "value");
+                ParameterDefinition options = m.AddParameter(Module, Module.GetTypeReference<MessagePackSerializerOptions>(), out int optionsIndex, "options");
 
                 ILProcessor il = m.Body.GetILProcessor();
+
+                m.Body.InitLocals = true;
                 
-                il.Append(GetLdarg(valueIndex, value));
-                il.Append(GetIntInstruction(fields.Count * 2));
-                il.Emit(OpCodes.Call, Module.GetMethod(typeof(MessagePackWriter), "WriteArrayHeader", new Type[] { typeof(int) }));
+                il.Append(GetLdarg(writerIndex, writer));
+                il.Emit(OpCodes.Ldc_I4, fields.Count * 2);
+                il.Emit(OpCodes.Call, Module.GetMethod(typeof(MessagePackWriter), "WriteArrayHeader", typeof(int)));
 
                 MethodReference getResolver = Module.GetMethod<MessagePackSerializerOptions>("get_Resolver");
                 
@@ -646,16 +714,18 @@ namespace Hertzole.ALE.CodeGen
                     il.Emit(OpCodes.Ldarg_1);
                     il.Emit(OpCodes.Ldarg_2);
                     il.Emit(OpCodes.Ldfld, wrapper.GetField(fields[i].Name));
-                    GenericInstanceType item1Type = Module.ImportReference(typeof(ValueTuple<,>)).MakeGenericInstanceType(Module.GetTypeReference<int>(), fields[i].FieldTypeComponentAware);
-                    FieldReference item1 = new FieldReference("Item1", Module.GetTypeReference<int>(), item1Type);
-                    il.Emit(OpCodes.Ldfld, item1);
-                    il.Emit(OpCodes.Call, Module.GetMethod(typeof(MessagePackWriter), "WriteInt32", new Type[] { typeof(int) }));
+                    FieldReference item1 = Module.ImportReference(typeof(ValueTuple<,>).GetField("Item1"));
+                    item1.DeclaringType = Module.ImportReference(typeof(ValueTuple<,>)).MakeGenericInstanceType(Module.GetTypeReference<int>(), fields[i].FieldTypeComponentAware);
+                    il.Emit(OpCodes.Ldfld, Module.ImportReference(item1));
+                    il.Emit(OpCodes.Call, Module.GetMethod(typeof(MessagePackWriter), "WriteInt32", typeof(int)));
                     il.Append(WriteValue(fields[i].FieldTypeComponentAware, fields[i]));
                 }
                 
                 il.Emit(OpCodes.Ret);
 
                 Resolver.AddWrapperFormatter(formatter, wrapper, Type);
+                
+                m.Body.Optimize();
 
                 return m;
 
@@ -668,53 +738,62 @@ namespace Hertzole.ALE.CodeGen
                     if (!isStandard)
                     {
                         ins.Add(Instruction.Create(OpCodes.Ldarg_3));
-                        ins.Add(Instruction.Create(OpCodes.Call, getResolver));
-                        ins.Add(Instruction.Create(OpCodes.Call, Module.ImportReference(typeof(IFormatterResolver).GetMethod("GetFormatter")).MakeGenericMethod(type)));
+                        ins.Add(Instruction.Create(OpCodes.Callvirt, getResolver));
+                        ins.Add(Instruction.Create(OpCodes.Callvirt, Module.ImportReference(typeof(IFormatterResolver).GetMethod("GetFormatter")).MakeGenericMethod(type)));
                     }
                     
                     ins.Add(Instruction.Create(OpCodes.Ldarg_1));
                     ins.Add(Instruction.Create(OpCodes.Ldarg_2));
                     ins.Add(Instruction.Create(OpCodes.Ldfld, wrapper.GetField(field.Name)));
-                    GenericInstanceType item2Type = Module.ImportReference(typeof(ValueTuple<,>)).MakeGenericInstanceType(Module.GetTypeReference<int>(), field.FieldTypeComponentAware);
-                    FieldReference item2 = new FieldReference("Item2", Module.GetTypeReference<int>(), item2Type);
+                    FieldReference item2 = Module.ImportReference(typeof(ValueTuple<,>).GetField("Item2"));
+                    item2.DeclaringType = Module.ImportReference(typeof(ValueTuple<,>)).MakeGenericInstanceType(Module.GetTypeReference<int>(), field.FieldTypeComponentAware);
                     ins.Add(Instruction.Create(OpCodes.Ldfld, item2));
 
                     MethodReference writeMethod;
                     
                     if (type.Is<byte>())
                     {
-                        writeMethod = Module.GetMethod(typeof(MessagePackWriter), "WriteUInt8", new Type[] { typeof(byte) });
+                        writeMethod = Module.GetMethod(typeof(MessagePackWriter), "WriteUInt8", typeof(byte));
                     }
                     else if (type.Is<sbyte>())
                     {
-                        writeMethod = Module.GetMethod(typeof(MessagePackWriter), "WriteInt8", new Type[] { typeof(sbyte) });
+                        writeMethod = Module.GetMethod(typeof(MessagePackWriter), "WriteInt8", typeof(sbyte));
                     }
                     else if (type.Is<short>())
                     {
-                        writeMethod = Module.GetMethod(typeof(MessagePackWriter), "WriteInt16", new Type[] { typeof(short) });
+                        writeMethod = Module.GetMethod(typeof(MessagePackWriter), "WriteInt16", typeof(short));
                     }
                     else if (type.Is<ushort>())
                     {
-                        writeMethod = Module.GetMethod(typeof(MessagePackWriter), "WriteUInt16", new Type[] { typeof(ushort) });
+                        writeMethod = Module.GetMethod(typeof(MessagePackWriter), "WriteUInt16", typeof(ushort));
                     }
                     else if (type.Is<int>())
                     {
-                        writeMethod = Module.GetMethod(typeof(MessagePackWriter), "WriteInt32", new Type[] { typeof(int) });
+                        writeMethod = Module.GetMethod(typeof(MessagePackWriter), "WriteInt32", typeof(int));
                     }
                     else if (type.Is<uint>())
                     {
-                        writeMethod = Module.GetMethod(typeof(MessagePackWriter), "WriteUInt32", new Type[] { typeof(uint) });
+                        writeMethod = Module.GetMethod(typeof(MessagePackWriter), "WriteUInt32", typeof(uint));
                     }
                     else if (type.Is<long>())
                     {
-                        writeMethod = Module.GetMethod(typeof(MessagePackWriter), "WriteInt64", new Type[] { typeof(long) });
+                        writeMethod = Module.GetMethod(typeof(MessagePackWriter), "WriteInt64", typeof(long));
                     }
                     else if (type.Is<ulong>())
                     {
-                        writeMethod = Module.GetMethod(typeof(MessagePackWriter), "WriteUInt64", new Type[] { typeof(ulong) });
+                        writeMethod = Module.GetMethod(typeof(MessagePackWriter), "WriteUInt64", typeof(ulong));
                     }
                     else
                     {
+                        if (type.Is<float>())
+                        {
+                            ins.Add(Instruction.Create(OpCodes.Conv_R4));
+                        }
+                        else if (type.Is<double>())
+                        {
+                            ins.Add(Instruction.Create(OpCodes.Conv_R8));
+                        }
+                        
                         ins.Add(Instruction.Create(OpCodes.Ldarg_3));
                         writeMethod = Module.ImportReference(typeof(IMessagePackFormatter<>).GetMethod("Serialize")).MakeHostInstanceGeneric(Module.ImportReference(typeof(IMessagePackFormatter<>)).MakeGenericInstanceType(field.FieldTypeComponentAware));
                     }
@@ -739,6 +818,8 @@ namespace Hertzole.ALE.CodeGen
                 
                 ILProcessor il = m.Body.GetILProcessor();
                 Instruction dummy = Instruction.Create(OpCodes.Ret);
+
+                m.Body.InitLocals = true;
                 
                 il.Emit(OpCodes.Ldarg_2);
                 il.Emit(OpCodes.Callvirt, Module.GetMethod<MessagePackSerializerOptions>("get_Security"));
@@ -884,7 +965,7 @@ namespace Hertzole.ALE.CodeGen
                     m.SetVariableName(localFields[i].Item2, fields[i].Name);
                 }
                 
-                il.Body.Optimize();
+                m.Body.Optimize();
 
                 return m;
 
@@ -1277,7 +1358,7 @@ namespace Hertzole.ALE.CodeGen
                     Instruction.Create(OpCodes.Bne_Un_S, dummy),
                 };
 
-                if (field.FieldType.Resolve().IsSubclassOf<Object>())
+                if (field.IsComponent)
                 {
                     WriteComponent();
                     return i.ToArray();
@@ -1477,25 +1558,158 @@ namespace Hertzole.ALE.CodeGen
                     i.Add(GetStloc(wrapperIndex, wrapper));
                     i.Add(GetLdloc(wrapperIndex, wrapper, true));
                     i.Add(Instruction.Create(OpCodes.Ldarg_0));
-                    i.Add(field.GetLoadInstruction());
-                    i.Add(Instruction.Create(OpCodes.Call, Module.GetMethod<ComponentDataWrapper>("Equals", new Type[] 
+                    i.Add(field.IsProperty ? Instruction.Create(OpCodes.Call, field.property.GetMethod) : Instruction.Create(OpCodes.Ldfld, field.field));
+                    if (field.IsCollection)
                     {
-                        field.FieldType.Is<GameObject>() ? typeof(GameObject) : typeof(Component)
-                    })));
+                        if (field.IsDictionary)
+                        {
+                            Error("You can't have a dictionary.");
+                        }
+
+                        i.Add(Instruction.Create(OpCodes.Call, Module.GetMethod<ComponentDataWrapper>("Equals", field.CollectionType.Is<GameObject>() ? typeof(IReadOnlyList<GameObject>) : typeof(IReadOnlyList<Component>))));
+                    }
+                    else
+                    {
+                        i.Add(Instruction.Create(OpCodes.Call, Module.GetMethod<ComponentDataWrapper>("Equals", field.FieldType.Is<GameObject>() ? typeof(GameObject) : typeof(Component))));
+                    }
                     i.Add(Instruction.Create(OpCodes.Brtrue, last));
 
-                    i.Add(GetLdloc(wrapperIndex, wrapper));
-                    i.Add(Instruction.Create(OpCodes.Ldfld, Module.ImportReference(typeof(ComponentDataWrapper).GetField("instanceId", BindingFlags.Public | BindingFlags.Instance))));
-                    i.Add(GetLdloc(valueIndex, value, true));
-                    i.Add(Instruction.Create(OpCodes.Call, Module.GetGenericMethod(typeof(LevelEditorWorld), "TryGetObject", new Type[] { typeof(uint) }, new TypeReference[] { field.FieldType })));
-                    i.Add(Instruction.Create(OpCodes.Brfalse, last));
-                    
                     i.Add(Instruction.Create(OpCodes.Ldarg_0));
-                    i.Add(GetLdloc(valueIndex, value));
-                    i.Add(field.GetSetInstruction());
+                    
+                    if (field.IsCollection)
+                    {
+                        if (field.IsList)
+                        {
+                            i.Add(field.IsProperty ? Instruction.Create(OpCodes.Call, field.property.GetMethod) : Instruction.Create(OpCodes.Ldfld, field.field));
+                            MethodReference clear = Module.GetMethod(typeof(List<>), "Clear").MakeHostInstanceGeneric(Module.GetTypeReference(typeof(List<>)).MakeGenericInstanceType(field.CollectionType));
+                            i.Add(Instruction.Create(OpCodes.Callvirt, clear));
+                            i.Add(Instruction.Create(OpCodes.Ldarg_0));
+                            i.Add(field.IsProperty ? Instruction.Create(OpCodes.Call, field.property.GetMethod) : Instruction.Create(OpCodes.Ldfld, field.field));
+                            i.Add(GetLdloc(wrapperIndex, wrapper, true));
+                            i.Add(Instruction.Create(OpCodes.Call, Module.GetMethod<ComponentDataWrapper>("GetObjects", Array.Empty<Type>()).MakeGenericMethod(field.CollectionType)));
+                            i.Add(Instruction.Create(OpCodes.Callvirt, Module.ImportReference(typeof(List<>).GetMethod("AddRange"))
+                                                                             .MakeGenericMethod(Module.GetTypeReference(typeof(IEnumerable<>))
+                                                                             .MakeGenericInstanceType(field.CollectionType))
+                                                                             .MakeHostInstanceGeneric(Module.GetTypeReference(typeof(List<>))
+                                                                             .MakeGenericInstanceType(field.CollectionType))));
+                        }
+                        else
+                        {
+                            i.Add(GetLdloc(wrapperIndex, wrapper, true));
+                            i.Add(Instruction.Create(OpCodes.Call, Module.GetMethod<ComponentDataWrapper>("GetObjects", Array.Empty<Type>()).MakeGenericMethod(field.CollectionType)));
+                            i.Add(field.GetSetInstruction());
+                        }
+                    }
+                    else
+                    {
+                        i.Add(GetLdloc(wrapperIndex, wrapper, true));
+                        i.Add(Instruction.Create(OpCodes.Call, Module.GetMethod<ComponentDataWrapper>("GetObject", Array.Empty<Type>()).MakeGenericMethod(field.FieldType)));
+                        i.Add(field.GetSetInstruction());
+                    }
+                    
+                    i.Add(Instruction.Create(OpCodes.Ldc_I4_1));
+                    i.Add(GetStloc(changedFlagIndex, changedFlag));
                     i.Add(Instruction.Create(OpCodes.Br, last));
                 }
             }
+        }
+
+        private void CreateGetWrapper(IReadOnlyList<FieldOrProperty> fields)
+        {
+            MethodDefinition m = new MethodDefinition("Hertzole.ALE.IExposedToLevelEditor.GetWrapper", MethodAttributes.Private | MethodAttributes.Final |
+                                                                    MethodAttributes.HideBySig | MethodAttributes.NewSlot | MethodAttributes.Virtual,
+                Module.GetTypeReference<IExposedWrapper>());
+
+            m.Overrides.Add(Module.GetMethod<IExposedToLevelEditor>("GetWrapper"));
+            Type.Methods.Add(m);
+
+            ILProcessor il = m.Body.GetILProcessor();
+            
+#if ALE_DEBUG
+            il.Emit(OpCodes.Ldstr, $"{Type.FullName} Getting wrapper...");
+            il.Emit(OpCodes.Call, Module.GetMethod(typeof(LevelEditorLogger), "Log", typeof(object)));
+#endif
+            
+            for (int i = 0; i < fields.Count; i++)
+            {
+                il.Emit(OpCodes.Ldarg_0);
+                if (fields[i].IsProperty)
+                {
+                    il.Emit(OpCodes.Call, fields[i].property.GetMethod);
+                }
+                else
+                {
+                    il.Emit(OpCodes.Ldfld, fields[i].field);
+                }
+
+                if (fields[i].IsComponent)
+                {
+                    if (fields[i].IsCollection)
+                    {
+                        il.Emit(OpCodes.Newobj, Module.GetConstructor<ComponentDataWrapper>(fields[i].IsGameObject ? typeof(IReadOnlyList<GameObject>) : typeof(IReadOnlyList<Component>)));
+                    }
+                    else
+                    {
+                        il.Emit(OpCodes.Newobj, Module.GetConstructor<ComponentDataWrapper>(fields[i].IsGameObject ? typeof(GameObject) : typeof(Component)));
+                    }
+                }
+            }
+
+            il.Emit(OpCodes.Newobj, wrapperCtor);
+#if ALE_DEBUG
+            il.Emit(OpCodes.Ldstr, $"{Type.FullName} Returning wrapper");
+            il.Emit(OpCodes.Call, Module.GetMethod(typeof(LevelEditorLogger), "Log", typeof(object)));
+#endif
+            il.Emit(OpCodes.Box, wrapper);
+            il.Emit(OpCodes.Ret);
+            
+            m.Body.Optimize();
+        }
+
+        private void CreateApplyWrapper(IReadOnlyList<FieldOrProperty> fields)
+        {
+            MethodDefinition m = new MethodDefinition("Hertzole.ALE.IExposedToLevelEditor.ApplyWrapper",
+                MethodAttributes.Private | MethodAttributes.Final | MethodAttributes.HideBySig | MethodAttributes.NewSlot | MethodAttributes.Virtual,
+                Module.GetTypeReference(typeof(void)));
+            
+            Type.Methods.Add(m);
+            m.Overrides.Add(Module.GetMethod<IExposedToLevelEditor>("ApplyWrapper", typeof(IExposedWrapper)));
+            ParameterDefinition wrapperPar = m.AddParameter<IExposedWrapper>(out int wrapperIndex);
+            VariableDefinition wrapperVar = m.AddLocalVariable<IExposedWrapper>(out int wrapperVarIndex);
+
+            ILProcessor il = m.Body.GetILProcessor();
+
+            il.Emit(OpCodes.Ldarg_1);
+            il.Emit(OpCodes.Isinst, wrapper);
+
+            il.Emit(OpCodes.Ldarg_1);
+            il.Emit(OpCodes.Unbox_Any, wrapper);
+            il.EmitStloc(wrapperVarIndex, wrapperVar);
+
+            for (int i = 0; i < fields.Count; i++)
+            {
+                GenericInstanceType item2Type = Module.ImportReference(typeof(ValueTuple<,>)).MakeGenericInstanceType(Module.GetTypeReference<int>(), fields[i].FieldTypeComponentAware);
+                FieldReference item2 = new FieldReference("Item2", fields[i].FieldTypeComponentAware, item2Type);
+                
+                il.Emit(OpCodes.Ldarg_0);
+                il.EmitLdloc(wrapperVarIndex, wrapperVar);
+                il.Emit(OpCodes.Ldfld, wrapper.GetField(fields[i].Name));
+                il.Emit(OpCodes.Ldfld, item2);
+                if (fields[i].IsProperty)
+                {
+                    il.Emit(OpCodes.Call, fields[i].property.SetMethod);
+                }
+                else
+                {
+                    il.Emit(OpCodes.Stfld, fields[i].field);
+                }
+            }
+
+            Instruction ret = Instruction.Create(OpCodes.Ret);
+            il.Append(ret);
+            il.InsertAfter(il.Body.Instructions[1], Instruction.Create(OpCodes.Brfalse, ret));
+            
+            m.Body.Optimize();
         }
 
         private MethodDefinition CreateGetValueType(List<FieldOrProperty> exposedFields)

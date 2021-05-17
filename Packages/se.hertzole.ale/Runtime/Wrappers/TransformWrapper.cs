@@ -88,7 +88,7 @@ namespace Hertzole.ALE
                 case 3:
                     if (value is ComponentDataWrapper wrapper && !wrapper.Equals(transform.parent))
                     {
-                        if(LevelEditorWorld.TryGetObject(wrapper.instanceId, out ILevelEditorObject parent))
+                        if(wrapper.TryGetObject(out ILevelEditorObject parent))
                         {
                             transform.SetParent(parent.MyGameObject.transform);
                             LevelEditorObject.Parent = parent;

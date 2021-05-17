@@ -45,14 +45,14 @@ namespace Hertzole.ALE
         public virtual LevelEditorSaveData GetLevelData(string levelName)
         {
             LevelEditorSaveData data = new LevelEditorSaveData(levelName);
-
+            
             List<ILevelEditorObject> objects = realObjectManager.GetAllObjects();
             objects.Sort((x, y) => x.MyGameObject.transform.GetSiblingIndex().CompareTo(y.MyGameObject.transform.GetSiblingIndex()));
             for (int i = 0; i < objects.Count; i++)
             {
                 data.objects.Add(new LevelEditorObjectData(objects[i]));
             }
-
+            
             return data;
         }
 
@@ -133,12 +133,12 @@ namespace Hertzole.ALE
         public virtual void SaveLevel(LevelEditorSaveData saveData, string path)
         {
             string saveFolder = Path.GetDirectoryName(path);
-
+            
             if (!Directory.Exists(saveFolder))
             {
                 Directory.CreateDirectory(saveFolder);
             }
-
+            
             LevelSavingLoadingArgs args = new LevelSavingLoadingArgs(saveData, path);
             OnLevelSaving?.Invoke(this, args);
             if (args.Cancel)
@@ -146,21 +146,28 @@ namespace Hertzole.ALE
                 LevelEditorLogger.Log("LevelEditorSaveManager saving was canceled.");
                 return;
             }
-
+            
             saveData.customData = args.GetAllCustomData();
-
-            switch (levelFormat)
+            
+            try
             {
-                case FormatType.JSON:
-                    string json = LevelEditorSerializer.SerializeJson(saveData);
-                    File.WriteAllText(path, json);
-                    break;
-                case FormatType.Binary:
-                    byte[] bytes = LevelEditorSerializer.SerializeBinary(saveData);
-                    File.WriteAllBytes(path, bytes);
-                    break;
+                switch (levelFormat)
+                {
+                    case FormatType.JSON:
+                        string json = LevelEditorSerializer.SerializeJson(saveData);
+                        File.WriteAllText(path, json);
+                        break;
+                    case FormatType.Binary:
+                        byte[] bytes = LevelEditorSerializer.SerializeBinary(saveData);
+                        File.WriteAllBytes(path, bytes);
+                        break;
+                }
             }
-
+            catch (Exception e)
+            {
+                Debug.LogError(e);
+            }
+            
             OnLevelSaved?.Invoke(this, new LevelEventArgs(saveData));
         }
 

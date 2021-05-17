@@ -1,29 +1,30 @@
+#define TEMPLATE
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using Hertzole.ALE;
 using UnityEngine;
 
+
+#if TEMPLATE
+public class NewSerializeTestScript : MonoBehaviour, IExposedToLevelEditor
+#else
 public class NewSerializeTestScript : MonoBehaviour
+#endif
 {
-    public struct Wrapper : IExposedWrapper
+    public struct WrapperTemplate : IExposedWrapper
     {
         public ValueTuple<int, string> testString;
         public ValueTuple<int, int> testInt;
         public ValueTuple<int, Vector3> testVector3;
         public ValueTuple<int, ComponentDataWrapper> reference;
 
-        public Wrapper(string testString, int testInt, Vector3 testVector3, ComponentDataWrapper reference)
+        public WrapperTemplate(string testString, int testInt, Vector3 testVector3, ComponentDataWrapper reference)
         {
-            this.testString = (0, testString);
+            this.testString = (220, testString);
             this.testInt = (1, testInt);
             this.testVector3 = (2, testVector3);
             this.reference = (100, reference);
-        }
-
-        public override string ToString()
-        {
-            return $"{testString.Item2} {testInt.Item2} {testVector3.Item2} {reference.Item2.instanceId}";
         }
     }
     
@@ -40,6 +41,7 @@ public class NewSerializeTestScript : MonoBehaviour
     [ExposeToLevelEditor(100)]
     private TestScript reference = null;
 
+#if TEMPLATE
     public string ComponentName { get; } = nameof(NewSerializeTestScript);
     public string TypeName { get; } = nameof(NewSerializeTestScript);
     public Type ComponentType { get; } = typeof(NewSerializeTestScript);
@@ -89,32 +91,23 @@ public class NewSerializeTestScript : MonoBehaviour
                 testVector3 = (Vector3) value;
                 break;
             case 100:
-                if (LevelEditorWorld.TryGetObject(((ComponentDataWrapper) value).instanceId, out TestScript testScript))
+                if (value is ComponentDataWrapper wrapper && !wrapper.Equals(reference))
                 {
-                    reference = testScript;
-                }
-                else
-                {
-                    reference = null;
+                    reference = wrapper.GetObject<TestScript>();
                 }
 
                 break;
         }
     }
 
-    public Type GetValueType(int id)
+    IExposedWrapper IExposedToLevelEditor.GetWrapper()
     {
-        throw new NotImplementedException();
+        return new WrapperTemplate(testString, testInt, testVector3, new ComponentDataWrapper(reference));
     }
 
-    public IExposedWrapper GetWrapper()
+    void IExposedToLevelEditor.ApplyWrapper(IExposedWrapper wrapper)
     {
-        return new Wrapper(testString, testInt, testVector3, new ComponentDataWrapper(reference));
-    }
-
-    public void ApplyWrapper(IExposedWrapper wrapper)
-    {
-        if (wrapper is Wrapper w)
+        if (wrapper is WrapperTemplate w)
         {
             testString = w.testString.Item2;
             testInt = w.testInt.Item2;
@@ -122,4 +115,5 @@ public class NewSerializeTestScript : MonoBehaviour
             reference = w.reference.Item2.GetObject<TestScript>();
         }
     }
+#endif
 }

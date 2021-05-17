@@ -4,9 +4,9 @@ using UnityEngine;
 
 public class TintObject : MonoBehaviour
 {
-    public struct Wrapper
+    public struct WrapperTemplate
     {
-        public Wrapper(Color32 color)
+        public WrapperTemplate(Color32 color)
         {
             Color = (0, color);
         }

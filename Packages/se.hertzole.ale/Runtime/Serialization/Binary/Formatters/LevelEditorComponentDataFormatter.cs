@@ -15,9 +15,9 @@ namespace Hertzole.ALE
         {
             writer.WriteMapHeader(2);
             writer.WriteRaw(SpanType);
-            options.Resolver.GetFormatterWithVerify<string>().Serialize(ref writer, value.type, options);
+            options.Resolver.GetFormatterWithVerify<string>().Serialize(ref writer, value.type.FullName, options);
             writer.WriteRaw(SpanProperties);
-            ((LevelEditorResolver)LevelEditorResolver.Instance).SerializeWrapper(null, ref writer, value.wrapper, options);
+            ((LevelEditorResolver)LevelEditorResolver.Instance).SerializeWrapper(value.type, ref writer, value.wrapper, options);
         }
 
         public LevelEditorComponentData Deserialize(ref MessagePackReader reader, MessagePackSerializerOptions options)
@@ -61,7 +61,7 @@ namespace Hertzole.ALE
 
             reader.Depth--;
 
-            return new LevelEditorComponentData() { type = type, wrapper = wrapper };
+            return new LevelEditorComponentData() { type = null, wrapper = wrapper };
         }
     }
 }

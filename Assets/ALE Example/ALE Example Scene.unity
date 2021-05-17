@@ -3937,7 +3937,7 @@ MonoBehaviour:
   baseSaveLocation: 1
   saveSuffix: Saved Levels
   fileExtension: .json
-  levelFormat: 1
+  levelFormat: 0
 --- !u!114 &1918987441
 MonoBehaviour:
   m_ObjectHideFlags: 0

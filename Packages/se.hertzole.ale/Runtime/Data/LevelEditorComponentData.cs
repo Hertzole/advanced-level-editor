@@ -1,18 +1,19 @@
 ﻿using System;
 using System.Collections.ObjectModel;
 using System.Linq;
+using UnityEngine;
 
 namespace Hertzole.ALE
 {
     public struct LevelEditorComponentData : IEquatable<LevelEditorComponentData>
     {
-        public string type;
+        public Type type;
         // public LevelEditorPropertyData[] properties;
         public IExposedWrapper wrapper;
 
         public LevelEditorComponentData(IExposedToLevelEditor exposed)
         {
-            type = exposed.TypeName;
+            type = exposed.ComponentType;
             // ReadOnlyCollection<ExposedProperty> exposedProperties = exposed.GetProperties();
             // properties = new LevelEditorPropertyData[exposedProperties.Count];
             // for (int i = 0; i < properties.Length; i++)

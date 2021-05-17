@@ -3,16 +3,16 @@ using MessagePack;
 using MessagePack.Formatters;
 using UnityEngine;
 
-public class TintObjectFormatter : IMessagePackFormatter<TintObject.Wrapper>
+public class TintObjectFormatter : IMessagePackFormatter<TintObject.WrapperTemplate>
 {
-    public void Serialize(ref MessagePackWriter writer, TintObject.Wrapper value, MessagePackSerializerOptions options)
+    public void Serialize(ref MessagePackWriter writer, TintObject.WrapperTemplate value, MessagePackSerializerOptions options)
     {
         writer.WriteArrayHeader(2);
         writer.WriteInt32(value.Color.Item1);
         options.Resolver.GetFormatter<Color32>().Serialize(ref writer, value.Color.Item2, options);
     }
 
-    public TintObject.Wrapper Deserialize(ref MessagePackReader reader, MessagePackSerializerOptions options)
+    public TintObject.WrapperTemplate Deserialize(ref MessagePackReader reader, MessagePackSerializerOptions options)
     {
         options.Security.DepthStep(ref reader);
 
@@ -35,6 +35,6 @@ public class TintObjectFormatter : IMessagePackFormatter<TintObject.Wrapper>
         }
         
         reader.Depth--;
-        return new TintObject.Wrapper(Color);
+        return new TintObject.WrapperTemplate(Color);
     }
 }

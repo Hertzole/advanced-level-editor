@@ -5,7 +5,6 @@ using MessagePack.Formatters;
 using Mono.Cecil;
 using Mono.Cecil.Cil;
 using Mono.Cecil.Rocks;
-using UnityEditor;
 using UnityEngine;
 
 namespace Hertzole.ALE.CodeGen
@@ -52,7 +51,7 @@ namespace Hertzole.ALE.CodeGen
 		
 		private TypeDefinition CreateResolverClass()
 		{
-			TypeDefinition t = new TypeDefinition("Hertzole.ALE.Generated", $"{module.Name.Substring(0, module.Name.Length - 4)}_Resolver",
+			TypeDefinition t = new TypeDefinition("Hertzole.ALE.Generated", $"{module.Name.Substring(0, module.Name.Length - 4).Replace('-', '_')}_Resolver",
 				TypeAttributes.Public | TypeAttributes.AnsiClass | TypeAttributes.BeforeFieldInit, module.GetTypeReference<object>());
 			
 			t.Interfaces.Add(new InterfaceImplementation(module.ImportReference(typeof(IFormatterResolver))));
@@ -97,11 +96,34 @@ namespace Hertzole.ALE.CodeGen
 			a.ConstructorArguments.Add(new CustomAttributeArgument(module.GetTypeReference<RuntimeInitializeLoadType>(), RuntimeInitializeLoadType.BeforeSceneLoad));
 			m.CustomAttributes.Add(a);
 
-			ILProcessor il = m.Body.GetILProcessor();
+			MethodReference cctor = resolver.GetMethod(".cctor");
+			
+			FieldDefinition registeredField = new FieldDefinition("registeredResolver", FieldAttributes.Private | FieldAttributes.Static,
+				module.GetTypeReference<bool>());
+
+			resolver.Fields.Add(registeredField);
+
+			ILProcessor il = cctor.Resolve().Body.GetILProcessor();
+			
+			il.InsertBefore(il.Body.Instructions[0], Instruction.Create(OpCodes.Ldc_I4_0));
+			il.InsertBefore(il.Body.Instructions[1], Instruction.Create(OpCodes.Stsfld, registeredField));
+			
+			cctor.Resolve().Body.Optimize();
+
+			il = m.Body.GetILProcessor();
+
+			il.Emit(OpCodes.Ldsfld, registeredField);
+			il.Emit(OpCodes.Ret);
+
+			Instruction start = Instruction.Create(OpCodes.Ldc_I4_1);
+			il.Append(start);
+			il.InsertAfter(il.Body.Instructions[0], Instruction.Create(OpCodes.Brfalse, start));
+			il.Emit(OpCodes.Stsfld, registeredField);
 			
 			il.Emit(OpCodes.Ldsfld, instanceField);
 			il.Emit(OpCodes.Call, module.GetMethod<LevelEditorResolver>("RegisterResolver", typeof(IFormatterResolver)));
 			il.Emit(OpCodes.Ldsfld, instanceField);
+			il.Emit(OpCodes.Castclass, module.GetTypeReference<IWrapperSerializer>());
 			il.Emit(OpCodes.Call, module.GetMethod<LevelEditorResolver>("RegisterWrapperSerializer", typeof(IWrapperSerializer)));
 
 			for (int i = 0; i < wrapperFormatters.Count; i++)
@@ -111,7 +133,7 @@ namespace Hertzole.ALE.CodeGen
 
 			il.Emit(OpCodes.Ret);
 			
-			il.Body.Optimize();
+			m.Body.Optimize();
 
 			return m;
 		}
