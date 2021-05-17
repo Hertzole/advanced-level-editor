@@ -111,7 +111,7 @@ namespace Hertzole.ALE
             
             if (value is ComponentDataWrapper dataWrapper)
             {
-                LevelEditorWorld.TryGetObject(dataWrapper.instanceId, BoundProperty.Type, out obj);
+                obj = dataWrapper.GetObject(BoundProperty.Type);
             }
             else if (value is UnityObject unityObj)
             {

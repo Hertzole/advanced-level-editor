@@ -15,9 +15,11 @@ namespace Hertzole.ALE
 		private static void ResetStatics()
 		{
 			objects.Clear();
+			getObjectsList.Clear();
 		}
 		
 		private static readonly List<ILevelEditorObject> objects = new List<ILevelEditorObject>();
+		private static readonly List<ILevelEditorObject> getObjectsList = new List<ILevelEditorObject>();
 
 		public static void AddObject(ILevelEditorObject value)
 		{
@@ -41,29 +43,47 @@ namespace Hertzole.ALE
 
 		public static bool TryGetObject(uint instanceId, out ILevelEditorObject value)
 		{
-			if (objects == null || objects.Count == 0)
+			bool result = TryGetObjects(new uint[1] { instanceId }, out ILevelEditorObject[] values);
+			if (values != null && values.Length == 1)
+			{
+				value = values[0];
+			}
+			else
 			{
 				value = null;
+			}
+
+			return result;
+		}
+		
+		public static bool TryGetObjects(uint[] ids, out ILevelEditorObject[] value)
+		{
+			if (objects == null || objects.Count == 0)
+			{
+				value = Array.Empty<ILevelEditorObject>();
 				return false;
 			}
 			
-			for (int i = 0; i < objects.Count; i++)
+			getObjectsList.Clear();
+
+			for (int i = 0; i < ids.Length; i++)
 			{
-				if (objects[i].InstanceID == instanceId)
+				for (int j = 0; j < objects.Count; j++)
 				{
-					value = objects[i];
-					return true;
+					if (objects[j].InstanceID == ids[i])
+					{
+						getObjectsList.Add(objects[j]);
+						break;
+					}
 				}
 			}
 
-			value = null;
-			return false;
+			value = getObjectsList.ToArray();
+			return value.Length > 0;
 		}
 
 		public static bool TryGetObject<T>(uint instanceId, out T value) where T : Object
 		{
-			LevelEditorLogger.Log($"TryGetObject<{typeof(T)}>({instanceId})");
-			
 			if (TryGetObject(instanceId, typeof(T), out Object val))
 			{
 				value = (T) val;
@@ -76,41 +96,70 @@ namespace Hertzole.ALE
 
 		public static bool TryGetObject(uint instanceId, Type type, out Object value)
 		{
+			bool result = TryGetObjects(new uint[1] { instanceId }, type, out Object[] values);
+			if (values != null && values.Length == 1)
+			{
+				value = values[0];
+			}
+			else
+			{
+				value = null;
+			}
+
+			return result;
+		}
+		
+		public static bool TryGetObjects<T>(uint[] ids, out T[] value) where T : Object
+		{
+			if (TryGetObjects(ids, typeof(T), out Object[] val))
+			{
+				value = (T[]) val;
+				return true;
+			}
+
+			value = null;
+			return false;
+		}
+		
+		public static bool TryGetObjects(uint[] ids, Type type, out Object[] value)
+		{
 			if (objects == null || objects.Count == 0)
 			{
 				value = null;
 				return false;
 			}
-			
-			for (int i = 0; i < objects.Count; i++)
+
+			List<Object> values = new List<Object>();
+
+			for (int i = 0; i < ids.Length; i++)
 			{
-				if (objects[i].InstanceID == instanceId)
+				for (int j = 0; j < objects.Count; j++)
 				{
-					if (type == typeof(GameObject))
+					if (objects[j].InstanceID == ids[i])
 					{
-						value = objects[i].MyGameObject;
-						return true;
-					}
+						if (type == typeof(GameObject))
+						{
+							values.Add(objects[j].MyGameObject);
+							break;
+						}
 
-					if (type == typeof(Transform))
-					{
-						value = objects[i].MyGameObject.transform;
-						return true;
-					}
+						if (type == typeof(Transform))
+						{
+							values.Add(objects[j].MyGameObject.transform);
+							break;
+						}
 					
-					if (objects[i].MyGameObject.TryGetComponent(type, out Component val))
-					{
-						value = val;
-						return true;
+						if (objects[j].MyGameObject.TryGetComponent(type, out Component val))
+						{
+							values.Add(val);
+							break;
+						}
 					}
-
-					value = null;
-					return false;
 				}
 			}
 
-			value = null;
-			return false;
+			value = values.ToArray();
+			return values.Count > 0;
 		}
 
 		public static T[] GetObjects<T>() where T : Object

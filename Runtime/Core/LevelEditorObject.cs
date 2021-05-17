@@ -102,9 +102,11 @@ namespace Hertzole.ALE
 
             for (int i = 0; i < components.Length; i++)
             {
+                string compName = components[i].type.FullName;
+                
                 for (int j = 0; j < exposedComponents.Length; j++)
                 {
-                    if (components[i].type == exposedComponents[j].TypeName)
+                    if (compName == exposedComponents[j].TypeName)
                     {
                         exposedComponents[j].ApplyWrapper(components[i].wrapper);
                     }

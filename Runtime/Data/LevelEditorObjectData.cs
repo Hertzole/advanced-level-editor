@@ -19,9 +19,7 @@ namespace Hertzole.ALE
             instanceId = obj.InstanceID;
 
             IExposedToLevelEditor[] objComps = obj.GetExposedComponents();
-
             components = new LevelEditorComponentData[objComps.Length];
-
             for (int i = 0; i < objComps.Length; i++)
             {
                 components[i] = new LevelEditorComponentData(objComps[i]);
