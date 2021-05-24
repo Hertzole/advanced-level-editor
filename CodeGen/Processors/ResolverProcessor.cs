@@ -21,6 +21,7 @@ namespace Hertzole.ALE.CodeGen
 
 		private readonly List<(TypeDefinition, TypeDefinition, TypeDefinition)> wrapperFormatters = new List<(TypeDefinition, TypeDefinition, TypeDefinition)>();
 		private readonly List<(TypeDefinition, TypeDefinition)> typeFormatters = new List<(TypeDefinition, TypeDefinition)>();
+		private readonly List<TypeDefinition> enums = new List<TypeDefinition>();
 		private readonly List<(TypeDefinition, TypeDefinition)> allFormatters = new List<(TypeDefinition, TypeDefinition)>();
 
 		public ResolverProcessor(ModuleDefinition moduleDefinition)
@@ -38,6 +39,11 @@ namespace Hertzole.ALE.CodeGen
 			typeFormatters.Add((formatter, type));
 		}
 
+		public void AddEnum(TypeDefinition type)
+		{
+			enums.Add(type);
+		}
+
 		public void EndEditing()
 		{
 			for (int i = 0; i < wrapperFormatters.Count; i++)
@@ -48,6 +54,11 @@ namespace Hertzole.ALE.CodeGen
 			for (int i = 0; i < typeFormatters.Count; i++)
 			{
 				allFormatters.Add((typeFormatters[i].Item1, typeFormatters[i].Item2));
+			}
+
+			for (int i = 0; i < enums.Count; i++)
+			{
+				allFormatters.Add((null, enums[i]));
 			}
 			
 			if (allFormatters == null || allFormatters.Count == 0)
@@ -68,7 +79,7 @@ namespace Hertzole.ALE.CodeGen
 		
 		private TypeDefinition CreateResolverClass()
 		{
-			TypeDefinition t = new TypeDefinition("Hertzole.ALE.Generated", $"{module.Name.Substring(0, module.Name.Length - 4).Replace('-', '_')}_Resolver",
+			TypeDefinition t = new TypeDefinition("Hertzole.ALE.Generated", $"{module.Name.Substring(0, module.Name.Length - 4).Replace('-', '_')}__ALE__Generated__Resolver",
 				TypeAttributes.Public | TypeAttributes.AnsiClass | TypeAttributes.BeforeFieldInit, module.GetTypeReference<object>());
 			
 			t.Interfaces.Add(new InterfaceImplementation(module.ImportReference(typeof(IFormatterResolver))));
@@ -213,8 +224,17 @@ namespace Hertzole.ALE.CodeGen
 
 			il.EmitSwitch(allFormatters, (formatter, i) => // Case
 			{
-				i.Emit(OpCodes.Newobj, formatter.Item1.GetConstructor());
-				i.Emit(OpCodes.Ret);
+				if (formatter.Item2.IsEnum())
+				{
+					MethodReference ctor = module.GetConstructor(typeof(GenericEnumFormatter<>)).MakeHostInstanceGeneric(module.GetTypeReference(typeof(GenericEnumFormatter<>)).MakeGenericInstanceType(formatter.Item2));
+					i.Emit(OpCodes.Newobj, ctor);
+					i.Emit(OpCodes.Ret);
+				}
+				else
+				{
+					i.Emit(OpCodes.Newobj, formatter.Item1.GetConstructor());
+					i.Emit(OpCodes.Ret);
+				}
 			}, i => // Default
 			{
 				i.Emit(OpCodes.Ldnull);

@@ -78,14 +78,13 @@ namespace Hertzole.ALE.CodeGen
 
             TypeDefinition generatedClass = CreateClass();
             generatedClass.Methods.Add(CreateRegisterMethod());
-            generatedClass.Methods.Add(CreateAOTPreserveMethod());
 
             module.Types.Add(generatedClass);
         }
 
         private TypeDefinition CreateClass()
         {
-            TypeDefinition type = new TypeDefinition("Hertzole.ALE.Generated", "ALE__Generated__RegisterTypes",
+            TypeDefinition type = new TypeDefinition("Hertzole.ALE.Generated", $"{module.Name.Substring(0, module.Name.Length - 4).Replace('-', '_')}__ALE__Generated__RegisterTypes",
                 TypeAttributes.Public | TypeAttributes.AnsiClass | TypeAttributes.Abstract |
                 TypeAttributes.Sealed | TypeAttributes.BeforeFieldInit, module.ImportReference(typeof(object)));
 
@@ -112,33 +111,6 @@ namespace Hertzole.ALE.CodeGen
                 GenericInstanceMethod m = new GenericInstanceMethod(registerType);
                 m.GenericArguments.Add(types[i]);
                 il.Emit(OpCodes.Call, m);
-            }
-
-            il.Emit(OpCodes.Ret);
-
-            return method;
-        }
-
-        private MethodDefinition CreateAOTPreserveMethod()
-        {
-            MethodDefinition method = new MethodDefinition("AOT__Preserve__Generated",
-                MethodAttributes.Private | MethodAttributes.HideBySig | MethodAttributes.Static,
-                module.ImportReference(typeof(void)));
-
-            CustomAttribute attribute = new CustomAttribute(module.ImportReference(typeof(PreserveAttribute).GetConstructor(Type.EmptyTypes)));
-            method.CustomAttributes.Add(attribute);
-
-            ILProcessor il = method.Body.GetILProcessor();
-            FieldReference instance = module.ImportReference(typeof(StaticCompositeResolver).GetField("Instance"));
-            MethodReference getFormatter = module.ImportReference(typeof(StaticCompositeResolver).GetMethod("GetFormatter"));
-
-            for (int i = 0; i < types.Count; i++)
-            {
-                il.Emit(OpCodes.Ldsfld, instance);
-                GenericInstanceMethod m = new GenericInstanceMethod(getFormatter);
-                m.GenericArguments.Add(types[i]);
-                il.Emit(OpCodes.Callvirt, m);
-                il.Emit(OpCodes.Pop);
             }
 
             il.Emit(OpCodes.Ret);

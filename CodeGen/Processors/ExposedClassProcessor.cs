@@ -1430,8 +1430,6 @@ namespace Hertzole.ALE.CodeGen
 								il.Emit(OpCodes.Ldfld, fields[i].field);
 							}
 
-							Console.WriteLine(fields[i].FieldTypeComponentAware);
-
 							il.EmitLdloc(wrapperVar, true);
 							il.Emit(OpCodes.Ldflda, wrapper.GetField(fields[i].Name));
 							il.Emit(OpCodes.Ldflda, item2);
