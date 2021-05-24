@@ -149,23 +149,16 @@ namespace Hertzole.ALE
             
             saveData.customData = args.GetAllCustomData();
             
-            try
+            switch (levelFormat)
             {
-                switch (levelFormat)
-                {
-                    case FormatType.JSON:
-                        string json = LevelEditorSerializer.SerializeJson(saveData);
-                        File.WriteAllText(path, json);
-                        break;
-                    case FormatType.Binary:
-                        byte[] bytes = LevelEditorSerializer.SerializeBinary(saveData);
-                        File.WriteAllBytes(path, bytes);
-                        break;
-                }
-            }
-            catch (Exception e)
-            {
-                Debug.LogError(e);
+                case FormatType.JSON:
+                    string json = LevelEditorSerializer.SerializeJson(saveData);
+                    File.WriteAllText(path, json);
+                    break;
+                case FormatType.Binary:
+                    byte[] bytes = LevelEditorSerializer.SerializeBinary(saveData);
+                    File.WriteAllBytes(path, bytes);
+                    break;
             }
             
             OnLevelSaved?.Invoke(this, new LevelEventArgs(saveData));

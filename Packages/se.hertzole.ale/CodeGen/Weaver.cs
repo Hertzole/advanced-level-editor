@@ -1,6 +1,6 @@
-﻿using Mono.Cecil;
-using System;
+﻿using System;
 using System.Collections.Generic;
+using Mono.Cecil;
 using Unity.CompilationPipeline.Common.Diagnostics;
 
 namespace Hertzole.ALE.CodeGen
@@ -11,8 +11,7 @@ namespace Hertzole.ALE.CodeGen
 
         private readonly BaseProcessor[] processors = new BaseProcessor[]
         {
-            new ExposedClassProcessor(),
-            //new FormatterProcessor()
+            new ExposedClassProcessor()
         };
 
         public Weaver(List<DiagnosticMessage> diagnostics)
@@ -24,6 +23,7 @@ namespace Hertzole.ALE.CodeGen
         {
             RegisterTypeProcessor typeRegister = new RegisterTypeProcessor(module);
             ResolverProcessor resolver = new ResolverProcessor(module);
+            FormatterProcessor formatter = new FormatterProcessor(this, module, resolver);
             
             for (int i = 0; i < processors.Length; i++)
             {
@@ -31,6 +31,7 @@ namespace Hertzole.ALE.CodeGen
                 processors[i].Module = module;
                 processors[i].TypeRegister = typeRegister;
                 processors[i].Resolver = resolver;
+                processors[i].Formatters = formatter;
             }
 
             IEnumerable<TypeDefinition> types = module.GetTypes();
@@ -56,6 +57,7 @@ namespace Hertzole.ALE.CodeGen
             }
 
             typeRegister.EndEditing();
+            formatter.EndEditing(); // Important to be before resolver!
             resolver.EndEditing();
         }
     }

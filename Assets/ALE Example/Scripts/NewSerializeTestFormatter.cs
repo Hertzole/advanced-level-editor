@@ -58,7 +58,7 @@ namespace Hertzole.ALE.Generated
             }
             
             reader.Depth--;
-            return new NewSerializeTestScript.WrapperTemplate(testString, testInt, testVector3, reference);
+            return new NewSerializeTestScript.WrapperTemplate(testString, testInt, testVector3, reference, new ComponentDataWrapper(), new ComponentDataWrapper());
         }
     }
 }

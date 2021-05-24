@@ -12,10 +12,23 @@ using UnityEngine;
 [MessagePackObject]
 public struct MyCustomStruct
 {
-    [Key("str")]
-    public string str;
-    [Key("vec")]
-    public Vector3 vec;
+	[Key("str")]
+	public string str;
+	[Key("vec")]
+	public Vector3 vec;
+
+	[Key("intValue")]
+	public int intValue;
+
+	[Key("veryLongNameThatIsLong")]
+	public long veryLongNameThatIsLong;
+}
+
+[Serializable]
+public struct MyBadderStruct
+{
+	public int intValue;
+	public byte byteValue;
 }
 
 [Serializable]
@@ -282,6 +295,9 @@ public class TestScript : MonoBehaviour
     [SerializeField]
     [ExposeToLevelEditor(29)]
     private GameObject gameObjectField = null;
+    [SerializeField] 
+    // [ExposeToLevelEditor(30)]
+    private MyBadderStruct badStruct = default;
 
     private int[] ints = null;
     private Color32[] colors = null;

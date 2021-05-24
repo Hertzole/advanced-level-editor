@@ -42,7 +42,7 @@ namespace Hertzole.ALE.Generated
 		}
 
 		// Token: 0x0600011C RID: 284 RVA: 0x0000A504 File Offset: 0x00008704
-		public bool SerializeWrapper(Type A_1, ref MessagePackWriter A_2, IExposedWrapper A_3, MessagePackSerializerOptions A_4)
+		public bool SerializeWrapper(ref MessagePackWriter A_2, IExposedWrapper A_3, MessagePackSerializerOptions A_4)
 		{
 			// if (A_3 is global::ArrayScript.Wrapper)
 			// {

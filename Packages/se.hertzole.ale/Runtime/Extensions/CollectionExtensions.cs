@@ -22,12 +22,18 @@ namespace Hertzole.ALE
         // https://stackoverflow.com/a/5899291
         public static string ToDebugString<TKey, TValue>(this IDictionary<TKey, TValue> dictionary)
         {
-            return "{" + string.Join(",", dictionary.Select(kv => kv.Key + ": " + kv.Value).ToArray()) + "}";
+            return $"[{dictionary.Count}] {{{string.Join(", ", dictionary.Select(kv => $"{kv.Key}: {kv.Value}"))}}}";
         }
 
         public static string ToDebugString<T>(this IEnumerable<T> array)
         {
-            return "{" + string.Join(", ", array) + "}";
+            T[] a = array as T[] ?? array.ToArray();
+            return $"[{a.Length}] {{{string.Join(", ", a)}}}";
+        }
+
+        public static string ToDebugString<T>(this ReadOnlySpan<T> span)
+        {
+            return $"[{span.Length}] {{{string.Join(", ", span.ToArray())}}}";
         }
 
         public static bool DictionaryEquals(this IDictionary a, IDictionary b)
@@ -37,7 +43,7 @@ namespace Hertzole.ALE
                 return true;
             }
 
-            if (b == null)
+            if (a == null || b == null)
             {
                 return false;
             }
@@ -85,7 +91,7 @@ namespace Hertzole.ALE
                 return true;
             }
 
-            if (b == null)
+            if (a == null || b == null)
             {
                 return false;
             }

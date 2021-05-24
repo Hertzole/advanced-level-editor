@@ -8,11 +8,12 @@ namespace Hertzole.ALE.Generated
 	{
 		public void Serialize(ref MessagePackWriter writer, TestScript.WrapperTemplate value, MessagePackSerializerOptions options)
 		{
+			LevelEditorLogger.Log("Serialize");
 			writer.WriteArrayHeader(60);
 			writer.WriteInt32(value.charTest.Item1);
-			options.Resolver.GetFormatter<char>().Serialize(ref writer, (char)value.charTest.Item2, options);
+			options.Resolver.GetFormatterWithVerify<char>().Serialize(ref writer, (char)value.charTest.Item2, options);
 			writer.WriteInt32(value.testString.Item1);
-			options.Resolver.GetFormatter<string>().Serialize(ref writer, value.testString.Item2, options);
+			options.Resolver.GetFormatterWithVerify<string>().Serialize(ref writer, value.testString.Item2, options);
 			writer.WriteInt32(value.testByte.Item1);
 			writer.WriteUInt8((byte)value.testByte.Item2);
 			writer.WriteInt32(value.testSByte.Item1);
@@ -30,45 +31,45 @@ namespace Hertzole.ALE.Generated
 			writer.WriteInt32(value.testULong.Item1);
 			writer.WriteUInt64((ulong)value.testULong.Item2);
 			writer.WriteInt32(value.floatTest.Item1);
-			options.Resolver.GetFormatter<float>().Serialize(ref writer, (float)value.floatTest.Item2, options);
+			options.Resolver.GetFormatterWithVerify<float>().Serialize(ref writer, (float)value.floatTest.Item2, options);
 			writer.WriteInt32(value.doubleTest.Item1);
-			options.Resolver.GetFormatter<double>().Serialize(ref writer, (double)value.doubleTest.Item2, options);
+			options.Resolver.GetFormatterWithVerify<double>().Serialize(ref writer, (double)value.doubleTest.Item2, options);
 			writer.WriteInt32(value.decimalTest.Item1);
-			options.Resolver.GetFormatter<decimal>().Serialize(ref writer, value.decimalTest.Item2, options);
+			options.Resolver.GetFormatterWithVerify<decimal>().Serialize(ref writer, value.decimalTest.Item2, options);
 			writer.WriteInt32(value.vector2Test.Item1);
-			options.Resolver.GetFormatter<Vector2>().Serialize(ref writer, value.vector2Test.Item2, options);
+			options.Resolver.GetFormatterWithVerify<Vector2>().Serialize(ref writer, value.vector2Test.Item2, options);
 			writer.WriteInt32(value.vector2IntTest.Item1);
-			options.Resolver.GetFormatter<Vector2Int>().Serialize(ref writer, value.vector2IntTest.Item2, options);
+			options.Resolver.GetFormatterWithVerify<Vector2Int>().Serialize(ref writer, value.vector2IntTest.Item2, options);
 			writer.WriteInt32(value.vector3Test.Item1);
-			options.Resolver.GetFormatter<Vector3>().Serialize(ref writer, value.vector3Test.Item2, options);
+			options.Resolver.GetFormatterWithVerify<Vector3>().Serialize(ref writer, value.vector3Test.Item2, options);
 			writer.WriteInt32(value.vector3IntTest.Item1);
-			options.Resolver.GetFormatter<Vector3Int>().Serialize(ref writer, value.vector3IntTest.Item2, options);
+			options.Resolver.GetFormatterWithVerify<Vector3Int>().Serialize(ref writer, value.vector3IntTest.Item2, options);
 			writer.WriteInt32(value.boolTest.Item1);
-			options.Resolver.GetFormatter<bool>().Serialize(ref writer, value.boolTest.Item2, options);
+			options.Resolver.GetFormatterWithVerify<bool>().Serialize(ref writer, value.boolTest.Item2, options);
 			writer.WriteInt32(value.colorField.Item1);
-			options.Resolver.GetFormatter<Color>().Serialize(ref writer, value.colorField.Item2, options);
+			options.Resolver.GetFormatterWithVerify<Color>().Serialize(ref writer, value.colorField.Item2, options);
 			writer.WriteInt32(value.color32Field.Item1);
-			options.Resolver.GetFormatter<Color32>().Serialize(ref writer, value.color32Field.Item2, options);
+			options.Resolver.GetFormatterWithVerify<Color32>().Serialize(ref writer, value.color32Field.Item2, options);
 			writer.WriteInt32(value.otherObject.Item1);
-			options.Resolver.GetFormatter<ComponentDataWrapper>().Serialize(ref writer, value.otherObject.Item2, options);
+			options.Resolver.GetFormatterWithVerify<ComponentDataWrapper>().Serialize(ref writer, value.otherObject.Item2, options);
 			writer.WriteInt32(value.messages.Item1);
-			options.Resolver.GetFormatter<string[]>().Serialize(ref writer, value.messages.Item2, options);
+			options.Resolver.GetFormatterWithVerify<string[]>().Serialize(ref writer, value.messages.Item2, options);
 			writer.WriteInt32(value.structTest.Item1);
-			options.Resolver.GetFormatter<global::MyCustomStruct>().Serialize(ref writer, value.structTest.Item2, options);
+			options.Resolver.GetFormatterWithVerify<global::MyCustomStruct>().Serialize(ref writer, value.structTest.Item2, options);
 			writer.WriteInt32(value.secondVector3.Item1);
-			options.Resolver.GetFormatter<Vector2>().Serialize(ref writer, value.secondVector3.Item2, options);
+			options.Resolver.GetFormatterWithVerify<Vector2>().Serialize(ref writer, value.secondVector3.Item2, options);
 			writer.WriteInt32(value.secondVector4.Item1);
-			options.Resolver.GetFormatter<Vector2>().Serialize(ref writer, value.secondVector4.Item2, options);
+			options.Resolver.GetFormatterWithVerify<Vector2>().Serialize(ref writer, value.secondVector4.Item2, options);
 			writer.WriteInt32(value.secondVector5.Item1);
-			options.Resolver.GetFormatter<Vector2>().Serialize(ref writer, value.secondVector5.Item2, options);
+			options.Resolver.GetFormatterWithVerify<Vector2>().Serialize(ref writer, value.secondVector5.Item2, options);
 			writer.WriteInt32(value.transformArray.Item1);
-			options.Resolver.GetFormatter<ComponentDataWrapper>().Serialize(ref writer, value.transformArray.Item2, options);
+			options.Resolver.GetFormatterWithVerify<ComponentDataWrapper>().Serialize(ref writer, value.transformArray.Item2, options);
 			writer.WriteInt32(value.gooderStruct.Item1);
-			options.Resolver.GetFormatter<global::MyGooderStruct>().Serialize(ref writer, value.gooderStruct.Item2, options);
+			options.Resolver.GetFormatterWithVerify<global::MyGooderStruct>().Serialize(ref writer, value.gooderStruct.Item2, options);
 			writer.WriteInt32(value.enumTest.Item1);
-			options.Resolver.GetFormatter<global::TestScript.TestEnum>().Serialize(ref writer, (global::TestScript.TestEnum)value.enumTest.Item2, options);
+			options.Resolver.GetFormatterWithVerify<global::TestScript.TestEnum>().Serialize(ref writer, (global::TestScript.TestEnum)value.enumTest.Item2, options);
 			writer.WriteInt32(value.gameObjectField.Item1);
-			options.Resolver.GetFormatter<ComponentDataWrapper>().Serialize(ref writer, value.gameObjectField.Item2, options);
+			options.Resolver.GetFormatterWithVerify<ComponentDataWrapper>().Serialize(ref writer, value.gameObjectField.Item2, options);
 		}
 
 		public TestScript.WrapperTemplate Deserialize(ref MessagePackReader reader, MessagePackSerializerOptions options)
@@ -161,23 +162,23 @@ namespace Hertzole.ALE.Generated
 					}
 					else if (id == 11)
 					{
-						decimalTest = options.Resolver.GetFormatter<decimal>().Deserialize(ref reader, options);
+						decimalTest = options.Resolver.GetFormatterWithVerify<decimal>().Deserialize(ref reader, options);
 					}
 					else if (id == 12)
 					{
-						vector2Test = options.Resolver.GetFormatter<Vector2>().Deserialize(ref reader, options);
+						vector2Test = options.Resolver.GetFormatterWithVerify<Vector2>().Deserialize(ref reader, options);
 					}
 					else if (id == 13)
 					{
-						vector2IntTest = options.Resolver.GetFormatter<Vector2Int>().Deserialize(ref reader, options);
+						vector2IntTest = options.Resolver.GetFormatterWithVerify<Vector2Int>().Deserialize(ref reader, options);
 					}
 					else if (id == 14)
 					{
-						vector3Test = options.Resolver.GetFormatter<Vector3>().Deserialize(ref reader, options);
+						vector3Test = options.Resolver.GetFormatterWithVerify<Vector3>().Deserialize(ref reader, options);
 					}
 					else if (id == 15)
 					{
-						vector3IntTest = options.Resolver.GetFormatter<Vector3Int>().Deserialize(ref reader, options);
+						vector3IntTest = options.Resolver.GetFormatterWithVerify<Vector3Int>().Deserialize(ref reader, options);
 					}
 					else if (id == 17)
 					{
@@ -185,51 +186,51 @@ namespace Hertzole.ALE.Generated
 					}
 					else if (id == 18)
 					{
-						colorField = options.Resolver.GetFormatter<Color>().Deserialize(ref reader, options);
+						colorField = options.Resolver.GetFormatterWithVerify<Color>().Deserialize(ref reader, options);
 					}
 					else if (id == 19)
 					{
-						color32Field = options.Resolver.GetFormatter<Color32>().Deserialize(ref reader, options);
+						color32Field = options.Resolver.GetFormatterWithVerify<Color32>().Deserialize(ref reader, options);
 					}
 					else if (id == 20)
 					{
-						otherObject = options.Resolver.GetFormatter<ComponentDataWrapper>().Deserialize(ref reader, options);
+						otherObject = options.Resolver.GetFormatterWithVerify<ComponentDataWrapper>().Deserialize(ref reader, options);
 					}
 					else if (id == 21)
 					{
-						messages = options.Resolver.GetFormatter<string[]>().Deserialize(ref reader, options);
+						messages = options.Resolver.GetFormatterWithVerify<string[]>().Deserialize(ref reader, options);
 					}
 					else if (id == 22)
 					{
-						structTest = options.Resolver.GetFormatter<MyCustomStruct>().Deserialize(ref reader, options);
+						structTest = options.Resolver.GetFormatterWithVerify<MyCustomStruct>().Deserialize(ref reader, options);
 					}
 					else if (id == 23)
 					{
-						secondVector3 = options.Resolver.GetFormatter<Vector2>().Deserialize(ref reader, options);
+						secondVector3 = options.Resolver.GetFormatterWithVerify<Vector2>().Deserialize(ref reader, options);
 					}
 					else if (id == 24)
 					{
-						secondVector4 = options.Resolver.GetFormatter<Vector2>().Deserialize(ref reader, options);
+						secondVector4 = options.Resolver.GetFormatterWithVerify<Vector2>().Deserialize(ref reader, options);
 					}
 					else if (id == 25)
 					{
-						secondVector5 = options.Resolver.GetFormatter<Vector2>().Deserialize(ref reader, options);
+						secondVector5 = options.Resolver.GetFormatterWithVerify<Vector2>().Deserialize(ref reader, options);
 					}
 					else if (id == 26)
 					{
-						transformArray = options.Resolver.GetFormatter<ComponentDataWrapper>().Deserialize(ref reader, options);
+						transformArray = options.Resolver.GetFormatterWithVerify<ComponentDataWrapper>().Deserialize(ref reader, options);
 					}
 					else if (id == 27)
 					{
-						gooderStruct = options.Resolver.GetFormatter<MyGooderStruct>().Deserialize(ref reader, options);
+						gooderStruct = options.Resolver.GetFormatterWithVerify<MyGooderStruct>().Deserialize(ref reader, options);
 					}
 					else if (id == 28)
 					{
-						enumTest = options.Resolver.GetFormatter<TestScript.TestEnum>().Deserialize(ref reader, options);
+						enumTest = options.Resolver.GetFormatterWithVerify<TestScript.TestEnum>().Deserialize(ref reader, options);
 					}
 					else if (id == 29)
 					{
-						gameObjectField = options.Resolver.GetFormatter<ComponentDataWrapper>().Deserialize(ref reader, options);
+						gameObjectField = options.Resolver.GetFormatterWithVerify<ComponentDataWrapper>().Deserialize(ref reader, options);
 					}
 					else
 					{

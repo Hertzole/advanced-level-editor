@@ -109,21 +109,21 @@ public class TypesTest : MonoBehaviour
     [ExposeToLevelEditor(5)]
     [SerializeField]
     private Transform referenceTest;
-    [ExposeToLevelEditor(6)]
-    [SerializeField]
-    private SimpleClass simpleClass;
-    [ExposeToLevelEditor(7)]
-    [SerializeField]
-    private AdvancedClass advancedClass;
+    // [ExposeToLevelEditor(6)]
+    // [SerializeField]
+    // private SimpleClass simpleClass;
+    // [ExposeToLevelEditor(7)]
+    // [SerializeField]
+    // private AdvancedClass advancedClass;
     [ExposeToLevelEditor(8)]
     [SerializeField]
     private SimpleStruct simpleStruct;
     [ExposeToLevelEditor(9)]
     [SerializeField]
     private AdvancedStruct advancedStruct;
-    [ExposeToLevelEditor(10)]
-    [SerializeField]
-    private SimpleClass[] classArray;
+    // [ExposeToLevelEditor(10)]
+    // [SerializeField]
+    // private SimpleClass[] classArray;
     [ExposeToLevelEditor(11)]
     [SerializeField]
     private SimpleStruct[] structArray;
@@ -145,16 +145,16 @@ public class TypesTest : MonoBehaviour
     public Vector3 VectorTest { get { return vectorTest; } set { vectorTest = value; } }
     [ExposeToLevelEditor(19)]
     public Transform ReferenceTest { get { return referenceTest; } set { referenceTest = value; } }
-    [ExposeToLevelEditor(20)]
-    public SimpleClass SimpleClass { get { return simpleClass; } set { simpleClass = value; } }
-    [ExposeToLevelEditor(21)]
-    public AdvancedClass AdvancedClass { get { return advancedClass; } set { advancedClass = value; } }
+    // [ExposeToLevelEditor(20)]
+    // public SimpleClass SimpleClass { get { return simpleClass; } set { simpleClass = value; } }
+    // [ExposeToLevelEditor(21)]
+    // public AdvancedClass AdvancedClass { get { return advancedClass; } set { advancedClass = value; } }
     [ExposeToLevelEditor(22)]
     public SimpleStruct SimpleStruct { get { return simpleStruct; } set { simpleStruct = value; } }
     [ExposeToLevelEditor(23)]
     public AdvancedStruct AdvancedStruct { get { return advancedStruct; } set { advancedStruct = value; } }
-    [ExposeToLevelEditor(24)]
-    public SimpleClass[] ClassArray { get { return classArray; } set { classArray = value; } }
+    // [ExposeToLevelEditor(24)]
+    // public SimpleClass[] ClassArray { get { return classArray; } set { classArray = value; } }
     [ExposeToLevelEditor(25)]
     public SimpleStruct[] StructArray { get { return structArray; } set { structArray = value; } }
     [ExposeToLevelEditor(26)]
@@ -285,22 +285,22 @@ public class TypesTest : MonoBehaviour
                 changed = true;
             }
         }
-        else if (id == 6)
-        {
-            if (value is SimpleClass value_6 && simpleClass != value_6)
-            {
-                simpleClass = value_6;
-                changed = true;
-            }
-        }
-        else if (id == 7)
-        {
-            if (((IExposedToLevelEditor)this).ClassEquals(value, advancedClass, out AdvancedClass value_7))
-            {
-                advancedClass = value_7;
-                changed = true;
-            }
-        }
+        // else if (id == 6)
+        // {
+        //     if (value is SimpleClass value_6 && simpleClass != value_6)
+        //     {
+        //         simpleClass = value_6;
+        //         changed = true;
+        //     }
+        // }
+        // else if (id == 7)
+        // {
+        //     if (((IExposedToLevelEditor)this).ClassEquals(value, advancedClass, out AdvancedClass value_7))
+        //     {
+        //         advancedClass = value_7;
+        //         changed = true;
+        //     }
+        // }
         else if (id == 8)
         {
             if (value is SimpleStruct value_8 && !simpleStruct.Equals(value_8))
@@ -317,14 +317,14 @@ public class TypesTest : MonoBehaviour
                 changed = true;
             }
         }
-        else if (id == 10)
-        {
-            if (!((IExposedToLevelEditor)this).CollectionEquals(value, classArray, out SimpleClass[] value_10))
-            {
-                classArray = value_10;
-                changed = true;
-            }
-        }
+        // else if (id == 10)
+        // {
+        //     if (!((IExposedToLevelEditor)this).CollectionEquals(value, classArray, out SimpleClass[] value_10))
+        //     {
+        //         classArray = value_10;
+        //         changed = true;
+        //     }
+        // }
         else if (id == 11)
         {
             if (value is SimpleStruct[] value_11 && !structArray.IsSameAs(value_11))
@@ -389,14 +389,14 @@ public class TypesTest : MonoBehaviour
                 changed = true;
             }
         }
-        else if (id == 24)
-        {
-            if (value is SimpleClass[] value_24 && !ClassArray.IsSameAs(value_24))
-            {
-                ClassArray = value_24;
-                changed = true;
-            }
-        }
+        // else if (id == 24)
+        // {
+        //     if (value is SimpleClass[] value_24 && !ClassArray.IsSameAs(value_24))
+        //     {
+        //         ClassArray = value_24;
+        //         changed = true;
+        //     }
+        // }
         else if (id == 101)
         {
             if (value is int value_101 && !intTest.Equals(value_101))
@@ -436,12 +436,12 @@ public class TypesTest : MonoBehaviour
     IExposedWrapper GetWrapper()
     {
         return new global::TypesTest.Wrapper(this.stringTest, this.intTest, this.colorTest, this.color32Test,
-            this.vectorTest, new ComponentDataWrapper(this.referenceTest), this.simpleClass, this.advancedClass,
-            this.simpleStruct, this.advancedStruct, this.classArray, this.structArray, this.advancedList, this.dic, 
+            this.vectorTest, new ComponentDataWrapper(this.referenceTest), null, null,
+            this.simpleStruct, this.advancedStruct, null, this.structArray, this.advancedList, this.dic, 
             this.enumTest, new ComponentDataWrapper(this.referenceArray), new ComponentDataWrapper(this.referenceList), 
             this.StringTest, this.IntTest, this.ColorTest, this.Color32Test, 
-            this.VectorTest, new ComponentDataWrapper(this.ReferenceTest), this.SimpleClass, this.AdvancedClass, 
-            this.SimpleStruct, this.AdvancedStruct, this.ClassArray, this.StructArray, this.AdvancedList, 
+            this.VectorTest, new ComponentDataWrapper(this.ReferenceTest), null, null, 
+            this.SimpleStruct, this.AdvancedStruct, null, this.StructArray, this.AdvancedList, 
             this.Dic, this.EnumTest);
     }
 

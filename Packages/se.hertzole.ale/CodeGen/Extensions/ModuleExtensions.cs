@@ -17,6 +17,11 @@ namespace Hertzole.ALE.CodeGen
         {
             return module.ImportReference(type);
         }
+
+        public static TypeReference Void(this ModuleDefinition module)
+        {
+            return module.ImportReference(typeof(void));
+        }
         
         public static MethodReference GetMethod<T>(this ModuleDefinition module, string methodName)
         {
@@ -49,6 +54,11 @@ namespace Hertzole.ALE.CodeGen
                     resultMethod = methods[i];
                     break;
                 }
+            }
+
+            if (resultMethod == null)
+            {
+                throw new ArgumentException($"There's no method called {methodName} in {type.FullName}.", nameof(methodName));
             }
 
             return module.ImportReference(resultMethod).MakeGenericMethod(genericParameters);

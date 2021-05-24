@@ -10,8 +10,8 @@ namespace Hertzole.ALE.CodeGen
 {
     public class RegisterTypeProcessor
     {
-        private ModuleDefinition module;
-        private List<TypeReference> types;
+        private readonly ModuleDefinition module;
+        private readonly List<TypeReference> types;
 
         public RegisterTypeProcessor(ModuleDefinition module)
         {
@@ -19,10 +19,10 @@ namespace Hertzole.ALE.CodeGen
             types = new List<TypeReference>();
         }
 
-        public void AddType(TypeReference type)
+        public void AddType(TypeDefinition type)
         {
-            type = ResolveType(type);
-
+            Console.WriteLine($"Register type {type.FullName} || {type.Resolve()}");
+            
             if (!ContainsType(type))
             {
                 types.Add(type);

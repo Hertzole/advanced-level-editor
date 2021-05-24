@@ -17,14 +17,13 @@ namespace Hertzole.ALE
             writer.WriteRaw(SpanType);
             options.Resolver.GetFormatterWithVerify<string>().Serialize(ref writer, value.type.FullName, options);
             writer.WriteRaw(SpanProperties);
-            ((LevelEditorResolver)LevelEditorResolver.Instance).SerializeWrapper(value.type, ref writer, value.wrapper, options);
+            ((LevelEditorResolver)LevelEditorResolver.Instance).SerializeWrapper(ref writer, value.wrapper, options);
         }
 
         public LevelEditorComponentData Deserialize(ref MessagePackReader reader, MessagePackSerializerOptions options)
         {
             options.Security.DepthStep(ref reader);
 
-            string type = null;
             Type actualType = null;
             IExposedWrapper wrapper = null;
 
@@ -45,7 +44,7 @@ namespace Hertzole.ALE
                             goto FAIL;
                         }
 
-                        type = options.Resolver.GetFormatterWithVerify<string>().Deserialize(ref reader, options);
+                        string type = options.Resolver.GetFormatterWithVerify<string>().Deserialize(ref reader, options);
                         actualType = LevelEditorSerializer.GetType(type);
                         continue;
                     case 10:
@@ -61,7 +60,7 @@ namespace Hertzole.ALE
 
             reader.Depth--;
 
-            return new LevelEditorComponentData() { type = null, wrapper = wrapper };
+            return new LevelEditorComponentData() { type = actualType, wrapper = wrapper };
         }
     }
 }

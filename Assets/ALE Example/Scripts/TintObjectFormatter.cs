@@ -25,7 +25,7 @@ public class TintObjectFormatter : IMessagePackFormatter<TintObject.WrapperTempl
                 int id = reader.ReadInt32();
                 if (id == 0)
                 {
-                    Color = options.Resolver.GetFormatter<Color32>().Deserialize(ref reader, options);
+                    Color = options.Resolver.GetFormatterWithVerify<Color32>().Deserialize(ref reader, options);
                 }
                 else
                 {

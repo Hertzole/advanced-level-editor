@@ -409,35 +409,33 @@ namespace Hertzole.ALE.CodeGen
             return result;
         }
 
-        public static VariableDefinition AddLocalVariable<T>(this MethodDefinition m, out int index)
+        public static VariableDefinition AddLocalVariable<T>(this MethodDefinition m)
         {
             if (m.Module == null)
             {
                 throw new NullReferenceException($"This method has yet to be added to the assembly and doesn't have a module. Please provide a module.");
             }
 
-            return m.AddLocalVariable(m.Module, m.Module.ImportReference(typeof(T)), out index);
+            return m.AddLocalVariable(m.Module, m.Module.ImportReference(typeof(T)));
         }
 
-        public static VariableDefinition AddLocalVariable(this MethodDefinition m, TypeReference type, out int index)
+        public static VariableDefinition AddLocalVariable(this MethodDefinition m, TypeReference type)
         {
             if (m.Module == null)
             {
                 throw new NullReferenceException($"This method has yet to be added to the assembly and doesn't have a module. Please provide a module.");
             }
 
-            return m.AddLocalVariable(m.Module, type, out index);
+            return m.AddLocalVariable(m.Module, type);
         }
 
-        public static VariableDefinition AddLocalVariable<T>(this MethodDefinition m, ModuleDefinition module, out int index)
+        public static VariableDefinition AddLocalVariable<T>(this MethodDefinition m, ModuleDefinition module)
         {
-            return m.AddLocalVariable(module, module.ImportReference(typeof(T)), out index);
+            return m.AddLocalVariable(module, module.ImportReference(typeof(T)));
         }
 
-        public static VariableDefinition AddLocalVariable(this MethodDefinition m, ModuleDefinition module, TypeReference type, out int index)
+        public static VariableDefinition AddLocalVariable(this MethodDefinition m, ModuleDefinition module, TypeReference type)
         {
-            index = m.Body.Variables.Count;
-
             VariableDefinition variable = new VariableDefinition(module.ImportReference(type));
             m.Body.Variables.Add(variable);
 
@@ -455,34 +453,33 @@ namespace Hertzole.ALE.CodeGen
             m.DebugInformation.Scope.Variables.Add(new VariableDebugInformation(variableDefinition, name));
         }
 
-        public static ParameterDefinition AddParameter<T>(this MethodDefinition m, out int index, string name = null)
+        public static ParameterDefinition AddParameter<T>(this MethodDefinition m, string name = null)
         {
             if (m.Module == null)
             {
                 throw new NullReferenceException($"This method has yet to be added to the assembly and doesn't have a module. Please provide a module.");
             }
 
-            return m.AddParameter<T>(m.Module, out index, name);
+            return m.AddParameter<T>(m.Module, name);
         }
 
-        public static ParameterDefinition AddParameter<T>(this MethodDefinition m, ModuleDefinition module, out int index, string name = null)
+        public static ParameterDefinition AddParameter<T>(this MethodDefinition m, ModuleDefinition module, string name = null)
         {
-            return m.AddParameter(module, module.ImportReference(typeof(T)), out index, name);
+            return m.AddParameter(module, module.ImportReference(typeof(T)), name);
         }
         
-        public static ParameterDefinition AddParameter(this MethodDefinition m, TypeReference type, out int index, string name = null)
+        public static ParameterDefinition AddParameter(this MethodDefinition m, TypeReference type, string name = null)
         {
             if (m.Module == null)
             {
                 throw new NullReferenceException($"This method has yet to be added to the assembly and doesn't have a module. Please provide a module.");
             }
 
-            return m.AddParameter(m.Module, type, out index, name);
+            return m.AddParameter(m.Module, type, name);
         }
 
-        public static ParameterDefinition AddParameter(this MethodDefinition m, ModuleDefinition module, TypeReference type, out int index, string name = null)
+        public static ParameterDefinition AddParameter(this MethodDefinition m, ModuleDefinition module, TypeReference type, string name = null)
         {
-            index = m.Parameters.Count + 1;
             ParameterDefinition parameter = new ParameterDefinition(module.ImportReference(type));
             m.Parameters.Add(parameter);
 
