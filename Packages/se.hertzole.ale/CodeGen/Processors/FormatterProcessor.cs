@@ -83,7 +83,7 @@ namespace Hertzole.ALE.CodeGen
 			{
 				if (typesToGenerate[i].IsEnum())
 				{
-					//TODO: Add enums to resolver with GenericEnum formatter.
+					resolver.AddEnum(typesToGenerate[i]);
 					continue;
 				}
 
