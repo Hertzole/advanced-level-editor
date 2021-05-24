@@ -1,5 +1,10 @@
 ﻿using Mono.Cecil;
 using System;
+using System.Collections.Generic;
+using Mono.Cecil.Cil;
+using Mono.Cecil.Rocks;
+using UnityEditor;
+using UnityEngine;
 
 namespace Hertzole.ALE.CodeGen
 {
@@ -83,6 +88,91 @@ namespace Hertzole.ALE.CodeGen
             }
 
             return true;
+        }
+        
+        public static TypeReference GetCollectionType(this TypeReference type)
+        {
+            if (!type.IsCollection())
+            {
+                return type;
+            }
+
+            if (type.IsArray())
+            {
+                return type.Module.ImportReference(type.Resolve());
+            }
+            
+            if (type.IsList() && type is GenericInstanceType generic && generic.GenericArguments.Count == 1)
+            {
+                TypeDefinition resolved = generic.GenericArguments[0].GetElementType().Resolve();
+                if (resolved.Is<GameObject>() || resolved.IsSubclassOf<Component>())
+                {
+                    return type.Module.ImportReference(resolved);
+                }
+            }
+
+            return type;
+        }
+
+        public static bool IsCollection(this TypeReference type)
+        {
+            return type.IsArray() || type.IsList() || type.IsDictionary();
+        }
+
+        public static bool IsArray(this TypeReference type)
+        {
+            return type.IsArray;
+        }
+
+        public static bool IsList(this TypeReference type)
+        {
+            return type.Is(typeof(List<>));
+        }
+
+        public static bool IsDictionary(this TypeReference type)
+        {
+            return type.Is(typeof(Dictionary<,>));
+        }
+
+        public static bool IsGameObject(this TypeReference type)
+        {
+            return type.GetCollectionType().Is<GameObject>();
+        }
+
+        public static bool IsComponent(this TypeReference type)
+        {
+            if (type.IsGameObject())
+            {
+                return true;
+            }
+
+            TypeDefinition resolved = type.Resolve();
+            if (resolved != null && resolved.IsSubclassOf<Component>())
+            {
+                return true;
+            }
+
+            if (type.IsList() && type is GenericInstanceType generic && generic.GenericArguments.Count == 1)
+            {
+                resolved = generic.GenericArguments[0].GetElementType().Resolve();
+                if (resolved.Is<GameObject>() || resolved.IsSubclassOf<Component>())
+                {
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
+        public static bool IsEnum(this TypeReference type)
+        {
+            TypeDefinition resolved = type.Resolve();
+            if (resolved == null)
+            {
+                return false;
+            }
+
+            return resolved.IsEnum || resolved.Is<Enum>() || resolved.IsSubclassOf<Enum>();
         }
 
         public static PropertyDefinition GetProperty(this TypeDefinition type, string property)
@@ -199,6 +289,29 @@ namespace Hertzole.ALE.CodeGen
             }
 
             return null;
+        }
+
+        public static MethodDefinition CreateConstructor(this TypeDefinition type)
+        {
+            if (type.IsValueType)
+            {
+                throw new NotSupportedException($"Can't add a constructor to {type.FullName} because it's a value type.");
+            }
+            
+            MethodDefinition m = new MethodDefinition(".ctor",
+                MethodAttributes.Public | MethodAttributes.HideBySig | MethodAttributes.SpecialName | MethodAttributes.RTSpecialName,
+                type.Module.Void());
+
+            type.Methods.Add(m);
+
+            ILProcessor il = m.Body.GetILProcessor();
+            il.Emit(OpCodes.Ldarg_0);
+            il.Emit(OpCodes.Call, type.Module.GetConstructor<object>());
+            il.Emit(OpCodes.Ret);
+				
+            m.Body.Optimize();
+
+            return m;
         }
     }
 }

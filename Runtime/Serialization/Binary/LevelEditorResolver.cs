@@ -56,11 +56,11 @@ namespace Hertzole.ALE
             wrapperSerializers.Add(serializer);
         }
         
-        public bool SerializeWrapper(Type type, ref MessagePackWriter writer, IExposedWrapper value, MessagePackSerializerOptions options)
+        public bool SerializeWrapper(ref MessagePackWriter writer, IExposedWrapper value, MessagePackSerializerOptions options)
         {
             for (int i = 0; i < wrapperSerializers.Count; i++)
             {
-                if (wrapperSerializers[i].SerializeWrapper(type, ref writer, value, options))
+                if (wrapperSerializers[i].SerializeWrapper(ref writer, value, options))
                 {
                     return true;
                 }
