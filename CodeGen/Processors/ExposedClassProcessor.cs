@@ -573,6 +573,27 @@ namespace Hertzole.ALE.CodeGen
 					item1.DeclaringType = Module.ImportReference(typeof(ValueTuple<,>)).MakeGenericInstanceType(Module.GetTypeReference<int>(), fields[i].FieldTypeComponentAware);
 					il.Emit(OpCodes.Ldfld, Module.ImportReference(item1));
 					il.Emit(OpCodes.Call, Module.GetMethod(typeof(MessagePackWriter), "WriteInt32", typeof(int)));
+					
+#if ALE_DEBUG
+					// LevelEditorLogger.Log
+					il.Emit(OpCodes.Ldstr, "Writing value | ID: {0} | Value: {1}");
+					il.EmitLdarg(value);
+					il.Emit(OpCodes.Ldfld, wrapper.GetField(fields[i].Name));
+					il.Emit(OpCodes.Ldfld, item1);
+					il.Emit(OpCodes.Box, Module.GetTypeReference<int>());
+					il.EmitLdarg(value);
+					FieldReference item2 = Module.ImportReference(typeof(ValueTuple<,>).GetField("Item2"));
+					item2.DeclaringType = Module.ImportReference(typeof(ValueTuple<,>)).MakeGenericInstanceType(Module.GetTypeReference<int>(), fields[i].FieldTypeComponentAware);
+					il.Emit(OpCodes.Ldfld, wrapper.GetField(fields[i].Name));
+					il.Emit(OpCodes.Ldfld, item2);
+					if (fields[i].FieldTypeComponentAware.IsValueType)
+					{
+						il.Emit(OpCodes.Box, fields[i].FieldTypeComponentAware);
+					}
+					il.Emit(OpCodes.Call, Module.GetMethod<string>("Format", typeof(string), typeof(object), typeof(object)));
+					il.Emit(OpCodes.Call, Module.GetMethod(typeof(LevelEditorLogger), "Log", typeof(object)));
+#endif
+					
 					il.Append(FormatterHelper.GetWriteValue(fields[i].FieldTypeComponentAware, wrapper.GetField(fields[i].Name), getResolver, true));
 				}
 
@@ -668,7 +689,14 @@ namespace Hertzole.ALE.CodeGen
 				}
 				else
 				{
-					previous = idRead[idRead.Length - 1];
+					if (fields[0].id == 0)
+					{
+						previous = idRead[idRead.Length - 1];
+					}
+					else
+					{
+						previous = il.EmitInt(fields[0].id);
+					}
 				}
 
 				if (fields.Count == 1)
@@ -699,7 +727,7 @@ namespace Hertzole.ALE.CodeGen
 				il.Emit(OpCodes.Call, Module.GetMethod(typeof(MessagePackReader), "Skip"));
 
 				// Insert jump to skip on last if check.
-				il.InsertAfter(previous, Instruction.Create(fields.Count > 1 ? fields[fields.Count - 1].id == 0 ? OpCodes.Brtrue : OpCodes.Bne_Un : OpCodes.Brtrue, skipStart));
+				il.InsertAfter(previous, Instruction.Create(fields[fields.Count - 1].id == 0 ? OpCodes.Brtrue : OpCodes.Bne_Un, skipStart));
 
 				Instruction loopFinish = il.EmitLdloc(loopIndex);
 				il.EmitInt(1);

@@ -84,7 +84,7 @@ namespace Hertzole.ALE.CodeGen
 
         private TypeDefinition CreateClass()
         {
-            TypeDefinition type = new TypeDefinition("Hertzole.ALE.Generated", $"{module.Name.Substring(0, module.Name.Length - 4).Replace('-', '_')}__ALE__Generated__RegisterTypes",
+            TypeDefinition type = new TypeDefinition("Hertzole.ALE.Generated", $"{module.Name.Substring(0, module.Name.Length - 4).Replace('-', '_').Replace('.', '_')}__ALE__Generated__RegisterTypes",
                 TypeAttributes.Public | TypeAttributes.AnsiClass | TypeAttributes.Abstract |
                 TypeAttributes.Sealed | TypeAttributes.BeforeFieldInit, module.ImportReference(typeof(object)));
 

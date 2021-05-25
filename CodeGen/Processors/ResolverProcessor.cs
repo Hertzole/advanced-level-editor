@@ -79,7 +79,7 @@ namespace Hertzole.ALE.CodeGen
 		
 		private TypeDefinition CreateResolverClass()
 		{
-			TypeDefinition t = new TypeDefinition("Hertzole.ALE.Generated", $"{module.Name.Substring(0, module.Name.Length - 4).Replace('-', '_')}__ALE__Generated__Resolver",
+			TypeDefinition t = new TypeDefinition("Hertzole.ALE.Generated", $"{module.Name.Substring(0, module.Name.Length - 4).Replace('-', '_').Replace('.', '_')}__ALE__Generated__Resolver",
 				TypeAttributes.Public | TypeAttributes.AnsiClass | TypeAttributes.BeforeFieldInit, module.GetTypeReference<object>());
 			
 			t.Interfaces.Add(new InterfaceImplementation(module.ImportReference(typeof(IFormatterResolver))));

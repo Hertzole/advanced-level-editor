@@ -60,7 +60,7 @@ namespace Hertzole.ALE
 
             reader.Depth--;
 
-            return new LevelEditorComponentData() { type = actualType, wrapper = wrapper };
+            return new LevelEditorComponentData(actualType, wrapper);
         }
     }
 }

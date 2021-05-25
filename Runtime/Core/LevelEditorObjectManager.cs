@@ -12,6 +12,8 @@ namespace Hertzole.ALE
     //TODO: Make pooling toggleable.
     public class LevelEditorObjectManager : MonoBehaviour, ILevelEditorObjectManager
     {
+        [SerializeField] 
+        private bool poolObjects = true;
         [SerializeField]
         private ScriptableObject resources = null;
         [SerializeField, RequireType(typeof(ILevelEditorUndo))]
@@ -29,6 +31,8 @@ namespace Hertzole.ALE
         private Dictionary<string, int> objectCount = new Dictionary<string, int>();
         private Dictionary<uint, ILevelEditorObject> objectsWithId = new Dictionary<uint, ILevelEditorObject>();
 
+        public bool PoolObjects { get { return poolObjects; } set { poolObjects = value; } }
+        
         public ScriptableObject ResourcesObject
         {
             get { return resources; }
@@ -102,7 +106,7 @@ namespace Hertzole.ALE
 
                 ILevelEditorObject obj;
 
-                if (pooledObjects.ContainsKey(resource.ID) && pooledObjects[resource.ID].Count > 0)
+                if (poolObjects && pooledObjects.ContainsKey(resource.ID) && pooledObjects[resource.ID].Count > 0)
                 {
                     obj = pooledObjects[resource.ID].Pop();
                     obj.MyGameObject.transform.SetPositionAndRotation(position, rotation);
@@ -265,8 +269,6 @@ namespace Hertzole.ALE
                 target.Parent.RemoveChild(target);
             }
 
-            target.MyGameObject.SetActive(false);
-
             if (target.HasChildren())
             {
                 //TODO: If deleting children, register delete multiple undo.
@@ -276,6 +278,15 @@ namespace Hertzole.ALE
                 }
 
                 target.Children.Clear();
+            }
+
+            if (poolObjects)
+            {
+                target.MyGameObject.SetActive(false);
+            }
+            else
+            {
+                Destroy(target.MyGameObject);
             }
 
             //TODO: Apply undo.
