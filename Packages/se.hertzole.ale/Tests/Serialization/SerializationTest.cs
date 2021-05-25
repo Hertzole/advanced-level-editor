@@ -1,262 +1,409 @@
-﻿using NUnit.Framework;
+﻿using System.Collections;
 using System.Collections.Generic;
+using Hertzole.ALE.Tests.TestScripts;
 using UnityEngine;
+using UnityEngine.Assertions;
+using UnityEngine.TestTools;
+using UnityEngine.Windows;
 
 namespace Hertzole.ALE.Tests
 {
-    public abstract class SerializationTest
-    {
-        [Test]
-        public void SaveDataSerialization()
-        {
-            LevelEditorSaveData data = BuildSaveData();
+	public abstract class SerializationTest
+	{
+		private readonly List<GameObject> sceneObjects = new List<GameObject>();
+		private LevelEditorResourceList resources;
+		private LevelEditorObjectManager objectManager;
+		protected LevelEditorSaveManager saveManager;
 
-            LevelEditorSaveData newData = SerializeAndDeserialize(data);
-            Assert.AreEqual(data, newData);
-        }
+		private GameObject cube;
+		private GameObject sphere;
+		private GameObject capsule;
+		private GameObject cylinder;
 
-        [Test]
-        public void CustomDataSerialization()
-        {
-            LevelEditorCustomData data = BuildCustomData();
+		private string filePath;
 
-            LevelEditorCustomData newData = SerializeAndDeserialize(data);
-            Assert.AreEqual(data, newData);
-        }
+		[UnitySetUp]
+		public IEnumerator SetUp()
+		{
+			filePath = $"{Application.dataPath}/generated__test__save__file.temp";
+			
+			CreateResources();
+			CreateManagers();
+			
+			OnSetUp();
 
-        [Test]
-        public void CustomDataArraySerialization()
-        {
-            LevelEditorCustomData data = BuildCustomData();
-            data.type = typeof(string[]);
-            data.typeName = typeof(string[]).FullName;
-            data.value = new string[] { "Hello", "World" };
+			yield return null;
+		}
 
-            LevelEditorSerializer.RegisterType<string[]>();
+		protected virtual void OnSetUp() { }
 
-            LevelEditorCustomData newData = SerializeAndDeserialize(data);
-            Assert.AreEqual(data, newData);
-        }
+		private void CreateResources()
+		{
+			resources = ScriptableObject.CreateInstance<LevelEditorResourceList>();
 
-        [Test]
-        public void ObjectDataSerialization()
-        {
-            LevelEditorObjectData data = BuildObjectData();
+			cube = GameObject.CreatePrimitive(PrimitiveType.Cube);
+			sphere = GameObject.CreatePrimitive(PrimitiveType.Sphere);
+			capsule = GameObject.CreatePrimitive(PrimitiveType.Capsule);
+			cylinder = GameObject.CreatePrimitive(PrimitiveType.Cylinder);
 
-            LevelEditorObjectData newData = SerializeAndDeserialize(data);
-            Assert.AreEqual(data, newData);
-        }
+			sceneObjects.Add(cube);
+			sceneObjects.Add(sphere);
+			sceneObjects.Add(capsule);
+			sceneObjects.Add(cylinder);
 
-        [Test]
-        public void ComponentDataSerialization()
-        {
-            LevelEditorComponentData data = BuildComponentData();
+			LevelEditorResource cubeResource = new LevelEditorResource
+			{
+				Name = "Cube",
+				Asset = cube,
+				ID = "cube"
+			};
 
-            LevelEditorComponentData newData = SerializeAndDeserialize(data);
-            Assert.AreEqual(data, newData);
-        }
+			LevelEditorResource sphereResource = new LevelEditorResource
+			{
+				Name = "Sphere",
+				Asset = sphere,
+				ID = "sphere"
+			};
+			
+			LevelEditorResource capsuleResource = new LevelEditorResource
+			{
+				Name = "Capsule",
+				Asset = capsule,
+				ID = "capsule"
+			};
+			
+			LevelEditorResource cylinderResource = new LevelEditorResource
+			{
+				Name = "Cylinder",
+				Asset = cylinder,
+				ID = "cylinder"
+			};
 
-        [Test]
-        public void PropertyDataSerialization()
-        {
-            LevelEditorPropertyData data = BuildPropertyData();
+			resources.AddResource(cubeResource);
+			resources.AddResource(sphereResource);
+			resources.AddResource(capsuleResource);
+			resources.AddResource(cylinderResource);
+		}
 
-            LevelEditorPropertyData newData = SerializeAndDeserialize(data);
-            Assert.AreEqual(data, newData);
-        }
+		private void CreateManagers()
+		{
+			GameObject objectManagerGo = new GameObject("Object Manager");
+			objectManager = objectManagerGo.AddComponent<LevelEditorObjectManager>();
+			objectManager.Resources = resources;
+			objectManager.PoolObjects = false;
 
-        [Test]
-        public void PropertyDataStringSerialization()
-        {
-            LevelEditorPropertyData data = BuildPropertyData();
-            data.typeName = typeof(string).FullName;
-            data.type = typeof(string);
-            data.value = "Hello world";
+			sceneObjects.Add(objectManagerGo);
 
-            LevelEditorPropertyData newData = SerializeAndDeserialize(data);
-            Assert.AreEqual(data, newData);
-        }
+			GameObject saveManagerGo = new GameObject("Save Manager");
+			saveManager = saveManagerGo.AddComponent<LevelEditorSaveManager>();
+			saveManager.ObjectManager = objectManager;
+			
+			sceneObjects.Add(saveManagerGo);
+		}
 
-        [Test]
-        public void PropertyDataIntSerialization()
-        {
-            LevelEditorPropertyData data = BuildPropertyData();
-            data.typeName = typeof(int).FullName;
-            data.type = typeof(int);
-            data.value = 65;
+		[UnityTearDown]
+		public IEnumerator TearDown()
+		{
+			if (File.Exists(filePath))
+			{
+				File.Delete(filePath);
+			}
 
-            LevelEditorPropertyData newData = SerializeAndDeserialize(data);
-            Assert.AreEqual(data, newData);
-        }
+			objectManager.DeleteAllObjects(false);
+			
+			Object.DestroyImmediate(resources);
 
-        // [Test]
-        // public void PropertyDataComponentSerialization()
-        // {
-        //     LevelEditorPropertyData data = BuildPropertyData();
-        //     data.typeName = typeof(Component).FullName;
-        //     data.type = typeof(Component);
-        //     data.value = null;
-        //
-        //     LevelEditorPropertyData newData = SerializeAndDeserialize(data);
-        //     Assert.AreEqual(data, newData);
-        // }
+			for (int i = 0; i < sceneObjects.Count; i++)
+			{
+				Object.DestroyImmediate(sceneObjects[i]);
+			}
 
-        [Test]
-        public void PropertyDataArraySerialization()
-        {
-            ExposedArray array = new ExposedArray(0, typeof(string[]), "test", null, true, typeof(string));
-            LevelEditorPropertyData data = new LevelEditorPropertyData(array, null)
-            {
-                value = new string[] { "Hello", "World" }
-            };
+			sceneObjects.Clear();
 
-            LevelEditorSerializer.RegisterType<string[]>();
+			yield return null;
+		}
 
-            LevelEditorPropertyData newData = SerializeAndDeserialize(data);
-            Assert.AreEqual(data, newData);
-        }
+		[UnityTest]
+		public IEnumerator SaveByte()
+		{
+			cube.AddComponent<ByteTest1>();
+			cube.AddComponent<ByteTest2>();
+			cube.AddComponent<ByteTest3>();
+			cube.AddComponent<ByteTest4>();
+			cube.AddComponent<ByteTest5>();
+			cube.AddComponent<ByteTest6>();
+			cube.AddComponent<ByteTest7>();
+			cube.AddComponent<ByteTest8>();
 
-        [Test]
-        public void PropertyDataListSerialization()
-        {
-            ExposedArray array = new ExposedArray(0, typeof(List<string>), "test", null, true, typeof(string));
-            LevelEditorPropertyData data = new LevelEditorPropertyData(array, null)
-            {
-                value = new List<string>() { "Hello", "World" }
-            };
+			ILevelEditorObject newCube = objectManager.CreateObject(resources.GetResource("cube"));
+			uint cubeId = newCube.InstanceID;
+			
+			ByteTest1 byte1 = newCube.MyGameObject.AddComponent<ByteTest1>();
+			byte1.value = 5;
+			ByteTest2 byte2 = newCube.MyGameObject.AddComponent<ByteTest2>();
+			byte2.value = 6;
+			ByteTest3 byte3 = newCube.MyGameObject.AddComponent<ByteTest3>();
+			byte3.value1 = 3;
+			byte3.value2 = 4;
+			ByteTest4 byte4 = newCube.MyGameObject.AddComponent<ByteTest4>();
+			byte4.value1 = 10;
+			byte4.value2 = 20;
+			ByteTest5 byte5 = newCube.MyGameObject.AddComponent<ByteTest5>();
+			byte5.Value = 5;
+			ByteTest6 byte6 = newCube.MyGameObject.AddComponent<ByteTest6>();
+			byte6.Value = 6;
+			ByteTest7 byte7 = newCube.MyGameObject.AddComponent<ByteTest7>();
+			byte7.Value1 = 3;
+			byte7.Value2 = 4;
+			ByteTest8 byte8 = newCube.MyGameObject.AddComponent<ByteTest8>();
+			byte8.Value1 = 10;
+			byte8.Value2 = 20;
 
-            LevelEditorSerializer.RegisterType<List<string>>();
+			yield return null;
+			
+			Save();
+			objectManager.DeleteAllObjects();
+			
+			yield return null;
+			
+			Load();
 
-            LevelEditorPropertyData newData = SerializeAndDeserialize(data);
-            Assert.AreEqual(data, newData);
-        }
+			yield return null;
 
-        // [Test]
-        // public void PropertyDataComponentArraySerialization()
-        // {
-        //     ExposedArray array = new ExposedArray(0, typeof(Component[]), "test", null, true, typeof(Component));
-        //     LevelEditorPropertyData data = new LevelEditorPropertyData(array, null)
-        //     {
-        //         value = new ComponentDataWrapper[0]
-        //     };
-        //
-        //     LevelEditorSerializer.RegisterType<ComponentDataWrapper[]>();
-        //
-        //     LevelEditorPropertyData newData = SerializeAndDeserialize(data);
-        //     Assert.AreEqual(data, newData);
-        // }
-        //
-        // [Test]
-        // public void PropertyDataComponentListSerialization()
-        // {
-        //     ExposedArray array = new ExposedArray(0, typeof(List<Component>), "test", null, true, typeof(List<Component>));
-        //     LevelEditorPropertyData data = new LevelEditorPropertyData(array, null)
-        //     {
-        //         value = new List<ComponentDataWrapper>()
-        //     };
-        //
-        //     LevelEditorSerializer.RegisterType<List<ComponentDataWrapper>>();
-        //
-        //     LevelEditorPropertyData newData = SerializeAndDeserialize(data);
-        //     Assert.AreEqual(data, newData);
-        // }
-        //
-        // [Test]
-        // public void PropertyDataTransformArraySerialization()
-        // {
-        //     ExposedArray array = new ExposedArray(0, typeof(Transform[]), "test", null, true, typeof(Transform));
-        //     LevelEditorPropertyData data = new LevelEditorPropertyData(array, null)
-        //     {
-        //         value = new ComponentDataWrapper[1]
-        //     };
-        //
-        //     LevelEditorSerializer.RegisterType<ComponentDataWrapper[]>();
-        //
-        //     LevelEditorPropertyData newData = SerializeAndDeserialize(data);
-        //     Assert.AreEqual(data, newData);
-        // }
-        //
-        // [Test]
-        // public void PropertyDataGameObjectArraySerialization()
-        // {
-        //     ExposedArray array = new ExposedArray(0, typeof(GameObject[]), "test", null, true, typeof(GameObject));
-        //     LevelEditorPropertyData data = new LevelEditorPropertyData(array, null)
-        //     {
-        //         value = new ComponentDataWrapper[1]
-        //     };
-        //
-        //     LevelEditorSerializer.RegisterType<ComponentDataWrapper[]>();
-        //
-        //     LevelEditorPropertyData newData = SerializeAndDeserialize(data);
-        //     Assert.AreEqual(data, newData);
-        // }
-        //
-        // [Test]
-        // public void PropertyDataGameObjectListSerialization()
-        // {
-        //     ExposedArray array = new ExposedArray(0, typeof(List<GameObject>), "test", null, true, typeof(GameObject));
-        //     LevelEditorPropertyData data = new LevelEditorPropertyData(array, null)
-        //     {
-        //         value = new List<ComponentDataWrapper>()
-        //     };
-        //
-        //     LevelEditorSerializer.RegisterType<List<ComponentDataWrapper>>();
-        //
-        //     LevelEditorPropertyData newData = SerializeAndDeserialize(data);
-        //     Assert.AreEqual(data, newData);
-        // }
+			newCube = objectManager.GetObject(cubeId);
+			Assert.IsNotNull(newCube);
 
-        protected abstract T SerializeAndDeserialize<T>(T data);
+			byte1 = newCube.MyGameObject.GetComponent<ByteTest1>();
+			Assert.AreEqual<byte>(5, byte1.value, "Byte 1 field value failed.");
+			byte2 = newCube.MyGameObject.GetComponent<ByteTest2>();
+			Assert.AreEqual<byte>(6, byte2.value, "Byte 2 field value failed.");
+			byte3 = newCube.MyGameObject.GetComponent<ByteTest3>();
+			Assert.AreEqual<byte>(3, byte3.value1, "Byte 3 field value 1 failed.");
+			Assert.AreEqual<byte>(4, byte3.value2, "Byte 3 field value 2 failed.");
+			byte4 = newCube.MyGameObject.GetComponent<ByteTest4>();
+			Assert.AreEqual<byte>(10, byte4.value1, "Byte 4 field value 1 failed.");
+			Assert.AreEqual<byte>(20, byte4.value2, "Byte 4 field value 2 failed.");
+			
+			byte5 = newCube.MyGameObject.GetComponent<ByteTest5>();
+			Assert.AreEqual<byte>(5, byte5.Value, "Byte 5 property value failed.");
+			byte6 = newCube.MyGameObject.GetComponent<ByteTest6>();
+			Assert.AreEqual<byte>(6, byte6.Value, "Byte 6 property value failed.");
+			byte7 = newCube.MyGameObject.GetComponent<ByteTest7>();
+			Assert.AreEqual<byte>(3, byte7.Value1, "Byte 7 property value 1 failed.");
+			Assert.AreEqual<byte>(4, byte7.Value2, "Byte 7 property value 2 failed.");
+			byte8 = newCube.MyGameObject.GetComponent<ByteTest8>();
+			Assert.AreEqual<byte>(10, byte8.Value1, "Byte 8 property value 1 failed.");
+			Assert.AreEqual<byte>(20, byte8.Value2, "Byte 8 property value 2 failed.");
+		}
 
-        public static LevelEditorSaveData BuildSaveData()
-        {
-            return new LevelEditorSaveData()
-            {
-                name = "Test Level",
-                objects = new List<LevelEditorObjectData>() { BuildObjectData(), BuildObjectData() },
-                customData = new Dictionary<string, LevelEditorCustomData>()
-                {
-                    { "data1", new LevelEditorCustomData(typeof(string), "Hello world") },
-                    { "data2", new LevelEditorCustomData(typeof(int), 42) }
-                }
-            };
-        }
+		// [Test]
+		// public void SaveDataSerialization()
+		// {
+		//     LevelEditorSaveData data = BuildSaveData();
+		//
+		//     LevelEditorSaveData newData = SerializeAndDeserialize(data);
+		//     Assert.AreEqual(data, newData);
+		// }
+		//
+		// [Test]
+		// public void CustomDataSerialization()
+		// {
+		//     LevelEditorCustomData data = BuildCustomData();
+		//
+		//     LevelEditorCustomData newData = SerializeAndDeserialize(data);
+		//     Assert.AreEqual(data, newData);
+		// }
+		//
+		// [Test]
+		// public void CustomDataArraySerialization()
+		// {
+		//     LevelEditorCustomData data = BuildCustomData();
+		//     data.type = typeof(string[]);
+		//     data.typeName = typeof(string[]).FullName;
+		//     data.value = new string[] { "Hello", "World" };
+		//
+		//     LevelEditorSerializer.RegisterType<string[]>();
+		//
+		//     LevelEditorCustomData newData = SerializeAndDeserialize(data);
+		//     Assert.AreEqual(data, newData);
+		// }
+		//
+		// [Test]
+		// public void ObjectDataSerialization()
+		// {
+		//     LevelEditorObjectData data = BuildObjectData();
+		//
+		//     LevelEditorObjectData newData = SerializeAndDeserialize(data);
+		//     Assert.AreEqual(data, newData);
+		// }
+		//
+		// [Test]
+		// public void ComponentDataSerialization()
+		// {
+		//     LevelEditorComponentData data = BuildComponentData();
+		//
+		//     LevelEditorComponentData newData = SerializeAndDeserialize(data);
+		//     Assert.AreEqual(data, newData);
+		// }
+		//
+		// [Test]
+		// public void PropertyDataSerialization()
+		// {
+		//     LevelEditorPropertyData data = BuildPropertyData();
+		//
+		//     LevelEditorPropertyData newData = SerializeAndDeserialize(data);
+		//     Assert.AreEqual(data, newData);
+		// }
+		//
+		// [Test]
+		// public void PropertyDataStringSerialization()
+		// {
+		//     LevelEditorPropertyData data = BuildPropertyData();
+		//     data.typeName = typeof(string).FullName;
+		//     data.type = typeof(string);
+		//     data.value = "Hello world";
+		//
+		//     LevelEditorPropertyData newData = SerializeAndDeserialize(data);
+		//     Assert.AreEqual(data, newData);
+		// }
+		//
+		// [Test]
+		// public void PropertyDataIntSerialization()
+		// {
+		//     LevelEditorPropertyData data = BuildPropertyData();
+		//     data.typeName = typeof(int).FullName;
+		//     data.type = typeof(int);
+		//     data.value = 65;
+		//
+		//     LevelEditorPropertyData newData = SerializeAndDeserialize(data);
+		//     Assert.AreEqual(data, newData);
+		// }
 
-        public static LevelEditorCustomData BuildCustomData()
-        {
-            return new LevelEditorCustomData(typeof(string), "Hello world");
-        }
+		// [Test]
+		// public void PropertyDataComponentSerialization()
+		// {
+		//     LevelEditorPropertyData data = BuildPropertyData();
+		//     data.typeName = typeof(Component).FullName;
+		//     data.type = typeof(Component);
+		//     data.value = null;
+		//
+		//     LevelEditorPropertyData newData = SerializeAndDeserialize(data);
+		//     Assert.AreEqual(data, newData);
+		// }
 
-        public static LevelEditorObjectData BuildObjectData()
-        {
-            return new LevelEditorObjectData()
-            {
-                active = true,
-                name = "Test Object",
-                id = "test_object",
-                instanceId = 1,
-                components = new LevelEditorComponentData[2] { BuildComponentData(), BuildComponentData() }
-            };
-        }
+		// [Test]
+		// public void PropertyDataArraySerialization()
+		// {
+		//     ExposedArray array = new ExposedArray(0, typeof(string[]), "test", null, true, typeof(string));
+		//     LevelEditorPropertyData data = new LevelEditorPropertyData(array, null)
+		//     {
+		//         value = new string[] { "Hello", "World" }
+		//     };
+		//
+		//     LevelEditorSerializer.RegisterType<string[]>();
+		//
+		//     LevelEditorPropertyData newData = SerializeAndDeserialize(data);
+		//     Assert.AreEqual(data, newData);
+		// }
+		//
+		// [Test]
+		// public void PropertyDataListSerialization()
+		// {
+		//     ExposedArray array = new ExposedArray(0, typeof(List<string>), "test", null, true, typeof(string));
+		//     LevelEditorPropertyData data = new LevelEditorPropertyData(array, null)
+		//     {
+		//         value = new List<string>() { "Hello", "World" }
+		//     };
+		//
+		//     LevelEditorSerializer.RegisterType<List<string>>();
+		//
+		//     LevelEditorPropertyData newData = SerializeAndDeserialize(data);
+		//     Assert.AreEqual(data, newData);
+		// }
 
-        public static LevelEditorComponentData BuildComponentData()
-        {
-            return new LevelEditorComponentData()
-            {
-                type = typeof(Transform),
-                // properties = new LevelEditorPropertyData[2] { BuildPropertyData(), BuildPropertyData() }
-            };
-        }
+		// [Test]
+		// public void PropertyDataComponentArraySerialization()
+		// {
+		//     ExposedArray array = new ExposedArray(0, typeof(Component[]), "test", null, true, typeof(Component));
+		//     LevelEditorPropertyData data = new LevelEditorPropertyData(array, null)
+		//     {
+		//         value = new ComponentDataWrapper[0]
+		//     };
+		//
+		//     LevelEditorSerializer.RegisterType<ComponentDataWrapper[]>();
+		//
+		//     LevelEditorPropertyData newData = SerializeAndDeserialize(data);
+		//     Assert.AreEqual(data, newData);
+		// }
+		//
+		// [Test]
+		// public void PropertyDataComponentListSerialization()
+		// {
+		//     ExposedArray array = new ExposedArray(0, typeof(List<Component>), "test", null, true, typeof(List<Component>));
+		//     LevelEditorPropertyData data = new LevelEditorPropertyData(array, null)
+		//     {
+		//         value = new List<ComponentDataWrapper>()
+		//     };
+		//
+		//     LevelEditorSerializer.RegisterType<List<ComponentDataWrapper>>();
+		//
+		//     LevelEditorPropertyData newData = SerializeAndDeserialize(data);
+		//     Assert.AreEqual(data, newData);
+		// }
+		//
+		// [Test]
+		// public void PropertyDataTransformArraySerialization()
+		// {
+		//     ExposedArray array = new ExposedArray(0, typeof(Transform[]), "test", null, true, typeof(Transform));
+		//     LevelEditorPropertyData data = new LevelEditorPropertyData(array, null)
+		//     {
+		//         value = new ComponentDataWrapper[1]
+		//     };
+		//
+		//     LevelEditorSerializer.RegisterType<ComponentDataWrapper[]>();
+		//
+		//     LevelEditorPropertyData newData = SerializeAndDeserialize(data);
+		//     Assert.AreEqual(data, newData);
+		// }
+		//
+		// [Test]
+		// public void PropertyDataGameObjectArraySerialization()
+		// {
+		//     ExposedArray array = new ExposedArray(0, typeof(GameObject[]), "test", null, true, typeof(GameObject));
+		//     LevelEditorPropertyData data = new LevelEditorPropertyData(array, null)
+		//     {
+		//         value = new ComponentDataWrapper[1]
+		//     };
+		//
+		//     LevelEditorSerializer.RegisterType<ComponentDataWrapper[]>();
+		//
+		//     LevelEditorPropertyData newData = SerializeAndDeserialize(data);
+		//     Assert.AreEqual(data, newData);
+		// }
+		//
+		// [Test]
+		// public void PropertyDataGameObjectListSerialization()
+		// {
+		//     ExposedArray array = new ExposedArray(0, typeof(List<GameObject>), "test", null, true, typeof(GameObject));
+		//     LevelEditorPropertyData data = new LevelEditorPropertyData(array, null)
+		//     {
+		//         value = new List<ComponentDataWrapper>()
+		//     };
+		//
+		//     LevelEditorSerializer.RegisterType<List<ComponentDataWrapper>>();
+		//
+		//     LevelEditorPropertyData newData = SerializeAndDeserialize(data);
+		//     Assert.AreEqual(data, newData);
+		// }
 
-        public static LevelEditorPropertyData BuildPropertyData()
-        {
-            return new LevelEditorPropertyData()
-            {
-                id = 0,
-                type = typeof(Vector3),
-                typeName = typeof(Vector3).FullName,
-                value = new Vector3(1.5f, 25f, 33.33f)
-            };
-        }
-    }
+		private void Save()
+		{
+			saveManager.SaveLevel("Test Level", filePath);
+		}
+
+		private void Load()
+		{
+			saveManager.LoadLevel(filePath);
+		}
+	}
 }

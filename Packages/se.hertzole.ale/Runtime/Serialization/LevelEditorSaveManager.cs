@@ -25,6 +25,8 @@ namespace Hertzole.ALE
         private string loadLocation;
 
         private ILevelEditorObjectManager realObjectManager;
+        
+        public FormatType LevelFormat { get { return levelFormat; } set { levelFormat = value; } }
 
         public ILevelEditorObjectManager ObjectManager { get { return realObjectManager; } set { realObjectManager = value; } }
 

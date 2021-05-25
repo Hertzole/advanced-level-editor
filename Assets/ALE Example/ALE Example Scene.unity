@@ -3907,6 +3907,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: e6293b40ccc96764788abe270454dbae, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  poolObjects: 0
   resources: {fileID: 11400000, guid: f8e6803bd4fa1ce41bbcc408fab2cb53, type: 2}
   undo: {fileID: 1918987434}
 --- !u!114 &1918987439

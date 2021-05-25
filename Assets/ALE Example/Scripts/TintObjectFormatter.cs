@@ -23,7 +23,7 @@ public class TintObjectFormatter : IMessagePackFormatter<TintObject.WrapperTempl
             if(i % 2 == 0)
             {
                 int id = reader.ReadInt32();
-                if (id == 0)
+                if (id == 100)
                 {
                     Color = options.Resolver.GetFormatterWithVerify<Color32>().Deserialize(ref reader, options);
                 }

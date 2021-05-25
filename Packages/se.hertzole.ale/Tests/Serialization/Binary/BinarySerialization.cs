@@ -2,11 +2,9 @@
 {
     public class BinarySerialization : SerializationTest
     {
-        protected override T SerializeAndDeserialize<T>(T data)
+        protected override void OnSetUp()
         {
-            byte[] bytes = LevelEditorSerializer.SerializeBinary(data);
-
-            return LevelEditorSerializer.DeserializeBinary<T>(bytes);
+            saveManager.LevelFormat = LevelEditorSaveManager.FormatType.Binary;
         }
     }
 }

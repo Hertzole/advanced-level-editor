@@ -2,10 +2,9 @@
 {
     public class JsonSerialization : SerializationTest
     {
-        protected override T SerializeAndDeserialize<T>(T data)
+        protected override void OnSetUp()
         {
-            string json = LevelEditorSerializer.SerializeJson(data);
-            return LevelEditorSerializer.DeserializeJson<T>(json);
+            saveManager.LevelFormat = LevelEditorSaveManager.FormatType.JSON;
         }
     }
 }

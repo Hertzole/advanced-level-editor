@@ -11,8 +11,10 @@ namespace Hertzole.ALE.Generated
         {
             writer.WriteArrayHeader(8);
             writer.WriteInt32(value.testString.Item1);
+            Debug.Log($"Write value {value.testString.Item1} {value.testString.Item2}");
             options.Resolver.GetFormatter<string>().Serialize(ref writer, value.testString.Item2, options);
             writer.WriteInt32(value.testInt.Item1);
+            Debug.Log(value.testInt.Item2);
             writer.WriteInt32(value.testInt.Item2);
             writer.WriteInt32(value.testVector3.Item1);
             options.Resolver.GetFormatter<Vector3>().Serialize(ref writer, value.testVector3.Item2, options);
