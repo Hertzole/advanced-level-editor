@@ -35,7 +35,7 @@ namespace Hertzole.ALE.Tests.TestScripts
 	public class ByteTest5 : MonoBehaviour
 	{
 		[ExposeToLevelEditor(0)]
-		public byte Value { get; set; } = default;
+		public byte Value { get; set; }
 	}
 
 	public class ByteTest6 : MonoBehaviour

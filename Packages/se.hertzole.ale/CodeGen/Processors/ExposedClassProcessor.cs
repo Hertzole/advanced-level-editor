@@ -86,7 +86,7 @@ namespace Hertzole.ALE.CodeGen
 
 						usedIds.Add(id);
 
-						int customOrder = attribute.GetField("order", 0);
+						int customOrder = attribute.GetField(nameof(ExposeToLevelEditorAttribute.order), 0);
 						if (customOrder > 0)
 						{
 							customOrder += targetType.Fields.Count + targetType.Properties.Count;
@@ -130,7 +130,7 @@ namespace Hertzole.ALE.CodeGen
 
 						usedIds.Add(id);
 
-						int customOrder = attribute.GetField("order", 0);
+						int customOrder = attribute.GetField(nameof(ExposeToLevelEditorAttribute.order), 0);
 						if (customOrder > 0)
 						{
 							customOrder += targetType.Fields.Count + targetType.Properties.Count;
@@ -1641,8 +1641,8 @@ namespace Hertzole.ALE.CodeGen
 				property = null;
 
 				id = attribute.GetConstructorArgument(0, 0);
-				customName = attribute.GetField<string>("customName", null);
-				visible = attribute.GetField("visible", true);
+				customName = attribute.GetField<string>(nameof(ExposeToLevelEditorAttribute.customName), null);
+				visible = attribute.GetField(nameof(ExposeToLevelEditorAttribute.visible), true);
 				order = 0;
 			}
 

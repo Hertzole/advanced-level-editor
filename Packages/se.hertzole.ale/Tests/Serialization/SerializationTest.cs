@@ -195,206 +195,79 @@ namespace Hertzole.ALE.Tests
 			Assert.AreEqual<byte>(10, byte8.Value1, "Byte 8 property value 1 failed.");
 			Assert.AreEqual<byte>(20, byte8.Value2, "Byte 8 property value 2 failed.");
 		}
+		
+		[UnityTest]
+		public IEnumerator SaveVector3()
+		{
+			cube.AddComponent<Vector3Test1>();
+			cube.AddComponent<Vector3Test2>();
+			cube.AddComponent<Vector3Test3>();
+			cube.AddComponent<Vector3Test4>();
+			cube.AddComponent<Vector3Test5>();
+			cube.AddComponent<Vector3Test6>();
+			cube.AddComponent<Vector3Test7>();
+			cube.AddComponent<Vector3Test8>();
 
-		// [Test]
-		// public void SaveDataSerialization()
-		// {
-		//     LevelEditorSaveData data = BuildSaveData();
-		//
-		//     LevelEditorSaveData newData = SerializeAndDeserialize(data);
-		//     Assert.AreEqual(data, newData);
-		// }
-		//
-		// [Test]
-		// public void CustomDataSerialization()
-		// {
-		//     LevelEditorCustomData data = BuildCustomData();
-		//
-		//     LevelEditorCustomData newData = SerializeAndDeserialize(data);
-		//     Assert.AreEqual(data, newData);
-		// }
-		//
-		// [Test]
-		// public void CustomDataArraySerialization()
-		// {
-		//     LevelEditorCustomData data = BuildCustomData();
-		//     data.type = typeof(string[]);
-		//     data.typeName = typeof(string[]).FullName;
-		//     data.value = new string[] { "Hello", "World" };
-		//
-		//     LevelEditorSerializer.RegisterType<string[]>();
-		//
-		//     LevelEditorCustomData newData = SerializeAndDeserialize(data);
-		//     Assert.AreEqual(data, newData);
-		// }
-		//
-		// [Test]
-		// public void ObjectDataSerialization()
-		// {
-		//     LevelEditorObjectData data = BuildObjectData();
-		//
-		//     LevelEditorObjectData newData = SerializeAndDeserialize(data);
-		//     Assert.AreEqual(data, newData);
-		// }
-		//
-		// [Test]
-		// public void ComponentDataSerialization()
-		// {
-		//     LevelEditorComponentData data = BuildComponentData();
-		//
-		//     LevelEditorComponentData newData = SerializeAndDeserialize(data);
-		//     Assert.AreEqual(data, newData);
-		// }
-		//
-		// [Test]
-		// public void PropertyDataSerialization()
-		// {
-		//     LevelEditorPropertyData data = BuildPropertyData();
-		//
-		//     LevelEditorPropertyData newData = SerializeAndDeserialize(data);
-		//     Assert.AreEqual(data, newData);
-		// }
-		//
-		// [Test]
-		// public void PropertyDataStringSerialization()
-		// {
-		//     LevelEditorPropertyData data = BuildPropertyData();
-		//     data.typeName = typeof(string).FullName;
-		//     data.type = typeof(string);
-		//     data.value = "Hello world";
-		//
-		//     LevelEditorPropertyData newData = SerializeAndDeserialize(data);
-		//     Assert.AreEqual(data, newData);
-		// }
-		//
-		// [Test]
-		// public void PropertyDataIntSerialization()
-		// {
-		//     LevelEditorPropertyData data = BuildPropertyData();
-		//     data.typeName = typeof(int).FullName;
-		//     data.type = typeof(int);
-		//     data.value = 65;
-		//
-		//     LevelEditorPropertyData newData = SerializeAndDeserialize(data);
-		//     Assert.AreEqual(data, newData);
-		// }
+			ILevelEditorObject newCube = objectManager.CreateObject(resources.GetResource("cube"));
+			uint cubeId = newCube.InstanceID;
+			
+			Vector3Test1 vector1 = newCube.MyGameObject.AddComponent<Vector3Test1>();
+			vector1.value = Vector3.one;
+			Vector3Test2 vector2 = newCube.MyGameObject.AddComponent<Vector3Test2>();
+			vector2.value = Vector3.one;
+			Vector3Test3 vector3 = newCube.MyGameObject.AddComponent<Vector3Test3>();
+			vector3.value1 = Vector3.one;
+			vector3.value2 = Vector3.one;
+			Vector3Test4 vector4 = newCube.MyGameObject.AddComponent<Vector3Test4>();
+			vector4.value1 = Vector3.one;
+			vector4.value2 = Vector3.one;
+			Vector3Test5 vector5 = newCube.MyGameObject.AddComponent<Vector3Test5>();
+			vector5.Value = Vector3.one;
+			Vector3Test6 vector6 = newCube.MyGameObject.AddComponent<Vector3Test6>();
+			vector6.Value = Vector3.one;
+			Vector3Test7 vector7 = newCube.MyGameObject.AddComponent<Vector3Test7>();
+			vector7.Value1 = Vector3.one;
+			vector7.Value2 = Vector3.one;
+			Vector3Test8 vector8 = newCube.MyGameObject.AddComponent<Vector3Test8>();
+			vector8.Value1 = Vector3.one;
+			vector8.Value2 = Vector3.one;
 
-		// [Test]
-		// public void PropertyDataComponentSerialization()
-		// {
-		//     LevelEditorPropertyData data = BuildPropertyData();
-		//     data.typeName = typeof(Component).FullName;
-		//     data.type = typeof(Component);
-		//     data.value = null;
-		//
-		//     LevelEditorPropertyData newData = SerializeAndDeserialize(data);
-		//     Assert.AreEqual(data, newData);
-		// }
+			yield return null;
+			
+			Save();
+			objectManager.DeleteAllObjects();
+			
+			yield return null;
+			
+			Load();
 
-		// [Test]
-		// public void PropertyDataArraySerialization()
-		// {
-		//     ExposedArray array = new ExposedArray(0, typeof(string[]), "test", null, true, typeof(string));
-		//     LevelEditorPropertyData data = new LevelEditorPropertyData(array, null)
-		//     {
-		//         value = new string[] { "Hello", "World" }
-		//     };
-		//
-		//     LevelEditorSerializer.RegisterType<string[]>();
-		//
-		//     LevelEditorPropertyData newData = SerializeAndDeserialize(data);
-		//     Assert.AreEqual(data, newData);
-		// }
-		//
-		// [Test]
-		// public void PropertyDataListSerialization()
-		// {
-		//     ExposedArray array = new ExposedArray(0, typeof(List<string>), "test", null, true, typeof(string));
-		//     LevelEditorPropertyData data = new LevelEditorPropertyData(array, null)
-		//     {
-		//         value = new List<string>() { "Hello", "World" }
-		//     };
-		//
-		//     LevelEditorSerializer.RegisterType<List<string>>();
-		//
-		//     LevelEditorPropertyData newData = SerializeAndDeserialize(data);
-		//     Assert.AreEqual(data, newData);
-		// }
+			yield return null;
 
-		// [Test]
-		// public void PropertyDataComponentArraySerialization()
-		// {
-		//     ExposedArray array = new ExposedArray(0, typeof(Component[]), "test", null, true, typeof(Component));
-		//     LevelEditorPropertyData data = new LevelEditorPropertyData(array, null)
-		//     {
-		//         value = new ComponentDataWrapper[0]
-		//     };
-		//
-		//     LevelEditorSerializer.RegisterType<ComponentDataWrapper[]>();
-		//
-		//     LevelEditorPropertyData newData = SerializeAndDeserialize(data);
-		//     Assert.AreEqual(data, newData);
-		// }
-		//
-		// [Test]
-		// public void PropertyDataComponentListSerialization()
-		// {
-		//     ExposedArray array = new ExposedArray(0, typeof(List<Component>), "test", null, true, typeof(List<Component>));
-		//     LevelEditorPropertyData data = new LevelEditorPropertyData(array, null)
-		//     {
-		//         value = new List<ComponentDataWrapper>()
-		//     };
-		//
-		//     LevelEditorSerializer.RegisterType<List<ComponentDataWrapper>>();
-		//
-		//     LevelEditorPropertyData newData = SerializeAndDeserialize(data);
-		//     Assert.AreEqual(data, newData);
-		// }
-		//
-		// [Test]
-		// public void PropertyDataTransformArraySerialization()
-		// {
-		//     ExposedArray array = new ExposedArray(0, typeof(Transform[]), "test", null, true, typeof(Transform));
-		//     LevelEditorPropertyData data = new LevelEditorPropertyData(array, null)
-		//     {
-		//         value = new ComponentDataWrapper[1]
-		//     };
-		//
-		//     LevelEditorSerializer.RegisterType<ComponentDataWrapper[]>();
-		//
-		//     LevelEditorPropertyData newData = SerializeAndDeserialize(data);
-		//     Assert.AreEqual(data, newData);
-		// }
-		//
-		// [Test]
-		// public void PropertyDataGameObjectArraySerialization()
-		// {
-		//     ExposedArray array = new ExposedArray(0, typeof(GameObject[]), "test", null, true, typeof(GameObject));
-		//     LevelEditorPropertyData data = new LevelEditorPropertyData(array, null)
-		//     {
-		//         value = new ComponentDataWrapper[1]
-		//     };
-		//
-		//     LevelEditorSerializer.RegisterType<ComponentDataWrapper[]>();
-		//
-		//     LevelEditorPropertyData newData = SerializeAndDeserialize(data);
-		//     Assert.AreEqual(data, newData);
-		// }
-		//
-		// [Test]
-		// public void PropertyDataGameObjectListSerialization()
-		// {
-		//     ExposedArray array = new ExposedArray(0, typeof(List<GameObject>), "test", null, true, typeof(GameObject));
-		//     LevelEditorPropertyData data = new LevelEditorPropertyData(array, null)
-		//     {
-		//         value = new List<ComponentDataWrapper>()
-		//     };
-		//
-		//     LevelEditorSerializer.RegisterType<List<ComponentDataWrapper>>();
-		//
-		//     LevelEditorPropertyData newData = SerializeAndDeserialize(data);
-		//     Assert.AreEqual(data, newData);
-		// }
+			newCube = objectManager.GetObject(cubeId);
+			Assert.IsNotNull(newCube);
+
+			vector1 = newCube.MyGameObject.GetComponent<Vector3Test1>();
+			Assert.AreEqual<Vector3>(Vector3.one, vector1.value, "Vector3 1 field value failed.");
+			vector2 = newCube.MyGameObject.GetComponent<Vector3Test2>();
+			Assert.AreEqual<Vector3>(Vector3.one, vector2.value, "Vector3 2 field value failed.");
+			vector3 = newCube.MyGameObject.GetComponent<Vector3Test3>();
+			Assert.AreEqual<Vector3>(Vector3.one, vector3.value1, "Vector3 3 field value 1 failed.");
+			Assert.AreEqual<Vector3>(Vector3.one, vector3.value2, "Vector3 3 field value 2 failed.");
+			vector4 = newCube.MyGameObject.GetComponent<Vector3Test4>();
+			Assert.AreEqual<Vector3>(Vector3.one, vector4.value1, "Vector3 4 field value 1 failed.");
+			Assert.AreEqual<Vector3>(Vector3.one, vector4.value2, "Vector3 4 field value 2 failed.");
+			
+			vector5 = newCube.MyGameObject.GetComponent<Vector3Test5>();
+			Assert.AreEqual<Vector3>(Vector3.one, vector5.Value, "Vector3 5 property value failed.");
+			vector6 = newCube.MyGameObject.GetComponent<Vector3Test6>();
+			Assert.AreEqual<Vector3>(Vector3.one, vector6.Value, "Vector3 6 property value failed.");
+			vector7 = newCube.MyGameObject.GetComponent<Vector3Test7>();
+			Assert.AreEqual<Vector3>(Vector3.one, vector7.Value1, "Vector3 7 property value 1 failed.");
+			Assert.AreEqual<Vector3>(Vector3.one, vector7.Value2, "Vector3 7 property value 2 failed.");
+			vector8 = newCube.MyGameObject.GetComponent<Vector3Test8>();
+			Assert.AreEqual<Vector3>(Vector3.one, vector8.Value1, "Vector3 8 property value 1 failed.");
+			Assert.AreEqual<Vector3>(Vector3.one, vector8.Value2, "Vector3 8 property value 2 failed.");
+		}
 
 		private void Save()
 		{
