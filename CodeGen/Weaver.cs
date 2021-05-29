@@ -1,13 +1,14 @@
 ﻿using System;
 using System.Collections.Generic;
 using Mono.Cecil;
+using Mono.Cecil.Cil;
 using Unity.CompilationPipeline.Common.Diagnostics;
 
 namespace Hertzole.ALE.CodeGen
 {
     public class Weaver
     {
-        public readonly List<DiagnosticMessage> diagnostics;
+        private readonly List<DiagnosticMessage> diagnostics;
 
         private readonly BaseProcessor[] processors = new BaseProcessor[]
         {
@@ -18,13 +19,29 @@ namespace Hertzole.ALE.CodeGen
         {
             this.diagnostics = diagnostics;
         }
+        
+        public void Error(string message)
+        {
+            diagnostics.AddError(message);
+        }
+
+        public void Error(MethodDefinition methodDefinition, string message)
+        {
+            diagnostics.AddError(methodDefinition, message);
+        }
+
+        public void Error(SequencePoint sequencePoint, string message)
+        {
+            diagnostics.AddError(sequencePoint, message);
+        }
 
         public void ProcessAssembly(ModuleDefinition module)
         {
             RegisterTypeProcessor typeRegister = new RegisterTypeProcessor(module);
             ResolverProcessor resolver = new ResolverProcessor(module);
             FormatterProcessor formatter = new FormatterProcessor(this, module, resolver);
-            
+            CustomDataProcessor customData = new CustomDataProcessor(this, module, typeRegister, resolver, formatter);
+
             for (int i = 0; i < processors.Length; i++)
             {
                 processors[i].Weaver = this;
@@ -56,6 +73,7 @@ namespace Hertzole.ALE.CodeGen
                 }
             }
 
+            customData.EndEditing();
             typeRegister.EndEditing();
             formatter.EndEditing(); // Important to be before resolver!
             resolver.EndEditing();

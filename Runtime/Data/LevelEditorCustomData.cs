@@ -1,17 +1,19 @@
 ﻿using System;
 using System.Collections.Generic;
+using MessagePack;
 
 namespace Hertzole.ALE
 {
+    [MessagePackObject()]
     public struct LevelEditorCustomData : IEquatable<LevelEditorCustomData>
     {
-        public string typeName;
+        [Key("value")]
         public object value;
+        [Key("type")]
         public Type type;
 
         public LevelEditorCustomData(Type type, object value)
         {
-            typeName = type.FullName;
             this.type = type;
             this.value = value;
         }
@@ -23,13 +25,13 @@ namespace Hertzole.ALE
 
         public bool Equals(LevelEditorCustomData other)
         {
-            return typeName == other.typeName && value.AdvancedEquals(other.value);
+            return type == other.type && value.AdvancedEquals(other.value);
         }
 
         public override int GetHashCode()
         {
             int hashCode = 1148455455;
-            hashCode = hashCode * -1521134295 + EqualityComparer<string>.Default.GetHashCode(typeName);
+            hashCode = hashCode * -1521134295 + EqualityComparer<Type>.Default.GetHashCode(type);
             hashCode = hashCode * -1521134295 + EqualityComparer<object>.Default.GetHashCode(value);
             return hashCode;
         }
@@ -46,7 +48,7 @@ namespace Hertzole.ALE
 
         public override string ToString()
         {
-            return $"{nameof(LevelEditorCustomData)} ({typeName}, {type}, {value})";
+            return $"{nameof(LevelEditorCustomData)} ({type}, {value})";
         }
     }
 }

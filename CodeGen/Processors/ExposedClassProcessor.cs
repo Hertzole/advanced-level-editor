@@ -594,7 +594,7 @@ namespace Hertzole.ALE.CodeGen
 					il.Emit(OpCodes.Call, Module.GetMethod(typeof(LevelEditorLogger), "Log", typeof(object)));
 #endif
 					
-					il.Append(FormatterHelper.GetWriteValue(fields[i].FieldTypeComponentAware, wrapper.GetField(fields[i].Name), getResolver, true));
+					il.Append(FormatterHelper.GetWriteValue(fields[i].FieldTypeComponentAware, wrapper.GetField(fields[i].Name), false, getResolver, true));
 				}
 
 #if ALE_DEBUG

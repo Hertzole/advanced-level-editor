@@ -19,17 +19,17 @@ namespace Hertzole.ALE.CodeGen
 
         protected void Error(string message)
         {
-            Weaver.diagnostics.AddError(message);
+            Weaver.Error(message);
         }
 
         protected void Error(MethodDefinition methodDefinition, string message)
         {
-            Weaver.diagnostics.AddError(methodDefinition, message);
+            Weaver.Error(methodDefinition, message);
         }
 
         protected void Error(SequencePoint sequencePoint, string message)
         {
-            Weaver.diagnostics.AddError(sequencePoint, message);
+            Weaver.Error(sequencePoint, message);
         }
     }
 }

@@ -150,7 +150,7 @@ namespace Hertzole.ALE.CodeGen.Helpers
 						return module.ImportReference(customSpanType);
 				}
 			}
-			
+
 			return m;
 		}
 
@@ -159,8 +159,15 @@ namespace Hertzole.ALE.CodeGen.Helpers
 			return type.Is<byte>() | type.Is<sbyte>() | type.Is<short>() | type.Is<ushort>() | type.Is<int>() | type.Is<uint>() | type.Is<long>() | type.Is<ulong>();
 		}
 
-		public static Instruction[] GetKeyCheck(MethodDefinition method, VariableDefinition key, VariableDefinition stringKey, VariableDefinition keyLength, FieldDefinition field, MethodDefinition fieldSpan, 
-			out Instruction lengthLast, out Instruction checkLast, out bool isAdvanced)
+		public static Instruction[] GetKeyCheck(MethodDefinition method,
+			VariableDefinition key,
+			VariableDefinition stringKey,
+			VariableDefinition keyLength,
+			FieldDefinition field,
+			MethodDefinition fieldSpan,
+			out Instruction lengthLast,
+			out Instruction checkLast,
+			out bool isAdvanced)
 		{
 			Span<byte> binary = utf8.GetBytes(field.Name).AsSpan();
 			switch (binary.Length)
@@ -191,12 +198,12 @@ namespace Hertzole.ALE.CodeGen.Helpers
 
 				List<Instruction> i = new List<Instruction>
 				{
-					ILHelper.Ldloc(keyLength),
+					ILHelper.Ldloc(keyLength)
 				};
 
 				length = ILHelper.Int(field.Name.Length);
 				i.Add(length);
-				
+
 				i.Add(ILHelper.Ldloc(key));
 				i.Add(ILHelper.ULong(id));
 
@@ -237,7 +244,7 @@ namespace Hertzole.ALE.CodeGen.Helpers
 
 				length = ILHelper.Int(field.Name.Length);
 				i.Add(length);
-				
+
 				i.Add(ILHelper.Ldloc(stringKey));
 				i.Add(Instruction.Create(OpCodes.Call, fieldSpan));
 				i.Add(ILHelper.Stloc(v));
@@ -252,7 +259,7 @@ namespace Hertzole.ALE.CodeGen.Helpers
 			}
 		}
 
-		public static Instruction[] GetWriteValue(TypeReference type, FieldDefinition field, MethodReference getResolver = null, bool isComponentFormatter = false)
+		public static Instruction[] GetWriteValue(TypeReference type, FieldDefinition field, bool isLastField, MethodReference getResolver = null, bool isComponentFormatter = false)
 		{
 			ModuleDefinition module = type.Module;
 
@@ -270,6 +277,11 @@ namespace Hertzole.ALE.CodeGen.Helpers
 				}
 				else
 				{
+					if (!isLastField)
+					{
+						ins.Add(Instruction.Create(OpCodes.Dup));
+					}
+
 					ins.Add(Instruction.Create(OpCodes.Call, module.ImportReference(typeof(FormatterResolverExtensions).GetMethod("GetFormatterWithVerify")).MakeGenericMethod(type)));
 				}
 			}
@@ -338,14 +350,63 @@ namespace Hertzole.ALE.CodeGen.Helpers
 			return ins.ToArray();
 		}
 
+		public static Instruction GetWriteStandardValue(TypeReference type, ModuleDefinition module)
+		{
+			MethodReference writeMethod;
+
+			if (type.Is<byte>())
+			{
+				writeMethod = module.GetMethod(typeof(MessagePackWriter), "WriteUInt8", typeof(byte));
+			}
+			else if (type.Is<sbyte>())
+			{
+				writeMethod = module.GetMethod(typeof(MessagePackWriter), "WriteInt8", typeof(sbyte));
+			}
+			else if (type.Is<short>())
+			{
+				writeMethod = module.GetMethod(typeof(MessagePackWriter), "WriteInt16", typeof(short));
+			}
+			else if (type.Is<ushort>())
+			{
+				writeMethod = module.GetMethod(typeof(MessagePackWriter), "WriteUInt16", typeof(ushort));
+			}
+			else if (type.Is<int>())
+			{
+				writeMethod = module.GetMethod(typeof(MessagePackWriter), "WriteInt32", typeof(int));
+			}
+			else if (type.Is<uint>())
+			{
+				writeMethod = module.GetMethod(typeof(MessagePackWriter), "WriteUInt32", typeof(uint));
+			}
+			else if (type.Is<long>())
+			{
+				writeMethod = module.GetMethod(typeof(MessagePackWriter), "WriteInt64", typeof(long));
+			}
+			else if (type.Is<ulong>())
+			{
+				writeMethod = module.GetMethod(typeof(MessagePackWriter), "WriteUInt64", typeof(ulong));
+			}
+			else
+			{
+				throw new NotSupportedException($"{type.FullName} is not a standard type.");
+			}
+
+			return Instruction.Create(OpCodes.Call, writeMethod);
+		}
+
+		public static bool IsStandardReadType(TypeReference type)
+		{
+			return type.Is<byte>() | type.Is<sbyte>() | type.Is<short>() | type.Is<ushort>() | type.Is<int>() | type.Is<uint>() | type.Is<long>() | type.Is<ulong>() |
+			       type.Is<string>() | type.Is<char>() | type.Is<bool>() | type.Is<float>() | type.Is<double>();
+		}
+
 		public static Instruction[] GetReadValue(TypeReference type, MethodReference getResolver = null, VariableDefinition resolverVariable = null)
 		{
 			ModuleDefinition module = type.Module;
 
 			List<Instruction> ins = new List<Instruction>();
 
-			bool isStandard = type.Is<byte>() | type.Is<sbyte>() | type.Is<short>() | type.Is<ushort>() | type.Is<int>() | type.Is<uint>() | type.Is<long>() | type.Is<ulong>() |
-			                  type.Is<string>() | type.Is<char>() | type.Is<bool>() | type.Is<float>() | type.Is<double>();
+			bool isStandard = IsStandardReadType(type);
 
 			if (!isStandard)
 			{
@@ -435,6 +496,70 @@ namespace Hertzole.ALE.CodeGen.Helpers
 			ins.Add(Instruction.Create(isStandard ? OpCodes.Call : OpCodes.Callvirt, readMethod));
 
 			return ins.ToArray();
+		}
+
+		public static Instruction GetReadStandardValue(TypeReference type, ModuleDefinition module)
+		{
+			MethodReference readMethod;
+
+			if (type.Is<byte>())
+			{
+				readMethod = module.GetMethod(typeof(MessagePackReader), nameof(MessagePackReader.ReadByte));
+			}
+			else if (type.Is<sbyte>())
+			{
+				readMethod = module.GetMethod(typeof(MessagePackReader), nameof(MessagePackReader.ReadSByte));
+			}
+			else if (type.Is<short>())
+			{
+				readMethod = module.GetMethod(typeof(MessagePackReader), nameof(MessagePackReader.ReadInt16));
+			}
+			else if (type.Is<ushort>())
+			{
+				readMethod = module.GetMethod(typeof(MessagePackReader), nameof(MessagePackReader.ReadUInt16));
+			}
+			else if (type.Is<int>())
+			{
+				readMethod = module.GetMethod(typeof(MessagePackReader), nameof(MessagePackReader.ReadInt32));
+			}
+			else if (type.Is<uint>())
+			{
+				readMethod = module.GetMethod(typeof(MessagePackReader), nameof(MessagePackReader.ReadUInt32));
+			}
+			else if (type.Is<long>())
+			{
+				readMethod = module.GetMethod(typeof(MessagePackReader), nameof(MessagePackReader.ReadInt64));
+			}
+			else if (type.Is<ulong>())
+			{
+				readMethod = module.GetMethod(typeof(MessagePackReader), nameof(MessagePackReader.ReadUInt64));
+			}
+			else if (type.Is<string>())
+			{
+				readMethod = module.GetMethod(typeof(MessagePackReader), nameof(MessagePackReader.ReadString));
+			}
+			else if (type.Is<char>())
+			{
+				readMethod = module.GetMethod(typeof(MessagePackReader), nameof(MessagePackReader.ReadChar));
+			}
+			else if (type.Is<bool>())
+			{
+				readMethod = module.GetMethod(typeof(MessagePackReader), nameof(MessagePackReader.ReadBoolean));
+			}
+			else if (type.Is<float>())
+			{
+				readMethod = module.GetMethod(typeof(MessagePackReader), nameof(MessagePackReader.ReadSingle));
+			}
+			else if (type.Is<double>())
+			{
+				readMethod = module.GetMethod(typeof(MessagePackReader), nameof(MessagePackReader.ReadDouble));
+			}
+			else
+			{
+				throw new NotSupportedException($"{type.FullName} is not a standard type.");
+			}
+
+			return Instruction.Create(OpCodes.Call, readMethod);
 		}
 	}
 }

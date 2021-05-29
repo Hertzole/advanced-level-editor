@@ -46,7 +46,7 @@ namespace Hertzole.ALE.CodeGen
                 diagnostics.AddError($"Cannot read assembly definition: {compiledAssembly.Name}");
                 return null;
             }
-
+            
             ModuleDefinition mainModule = assemblyDefinition.MainModule;
             if (mainModule != null)
             {
