@@ -1,4 +1,6 @@
-﻿using Hertzole.ALE;
+﻿using System;
+using System.Collections.Generic;
+using Hertzole.ALE;
 using UnityEngine;
 
 public class CustomDataTest : MonoBehaviour
@@ -32,7 +34,9 @@ public class CustomDataTest : MonoBehaviour
     private void OnLevelSaving(object sender, LevelSavingLoadingArgs e)
     {
         e.AddCustomData("test", 32);
-        e.AddCustomData("messages", new string[] { "hello", "world" });
+        // e.AddCustomData("messages", new string[] { "hello", "world" });
+        e.AddCustomData("byte", byte.MaxValue);
+        e.AddCustomData("lit", new MyLitStruct() { stringValue = "Hello world", goodDic = new Dictionary<int, byte>(), ints = Array.Empty<int>()});
     }
 
     // Update is called once per frame
@@ -40,4 +44,12 @@ public class CustomDataTest : MonoBehaviour
     {
 
     }
+}
+
+[Serializable]
+public struct MyLitStruct
+{
+    public string stringValue;
+    public int[] ints;
+    public Dictionary<int, byte> goodDic;
 }

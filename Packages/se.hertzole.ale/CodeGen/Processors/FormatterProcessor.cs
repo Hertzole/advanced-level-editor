@@ -57,11 +57,6 @@ namespace Hertzole.ALE.CodeGen
 			};
 		}
 
-		private void Error(string message)
-		{
-			weaver.diagnostics.AddError(message);
-		}
-
 		public void AddTypeToGenerate(TypeDefinition type)
 		{
 			if (standardTypes.Contains(type) || typesToGenerate.Contains(type) || type.IsCollection() || type.IsComponent())
@@ -71,7 +66,7 @@ namespace Hertzole.ALE.CodeGen
 
 			if (type.IsClass && !type.IsValueType && !type.IsComponent())
 			{
-				Error($"{type.FullName} is a normal class and can not be serialized yet. Only structs can be automatically serialized.");
+				weaver.Error($"{type.FullName} is a normal class and can not be serialized yet. Only structs can be automatically serialized.");
 			}
 
 			typesToGenerate.Add(type);
@@ -193,17 +188,30 @@ namespace Hertzole.ALE.CodeGen
 					il.Emit(OpCodes.Ldarg_1);
 					il.Emit(OpCodes.Call, fields[i].Item2);
 					il.Emit(OpCodes.Call, module.GetMethod(typeof(MessagePackWriter), "WriteRaw", typeof(ReadOnlySpan<byte>)));
-					if (i == 0 && hasNonStandardType)
-					{
-						il.Emit(OpCodes.Dup);
-					}
-
-					il.Append(FormatterHelper.GetWriteValue(fields[i].Item1.FieldType, fields[i].Item1));
+					il.Append(FormatterHelper.GetWriteValue(fields[i].Item1.FieldType, fields[i].Item1, IsLastField(i)));
 				}
 
 				il.Emit(OpCodes.Ret);
 
 				m.Body.Optimize();
+
+				bool IsLastField(int index)
+				{
+					if (index == fields.Count - 1)
+					{
+						return true;
+					}
+
+					for (int i = index + 1; i < fields.Count; i++)
+					{
+						if (!FormatterHelper.IsStandardWriteType(fields[i].Item1.FieldType))
+						{
+							return false;
+						}
+					}
+
+					return true;
+				}
 			}
 
 			void CreateDeserializeMethod()

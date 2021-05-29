@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using Hertzole.ALE.CodeGen.Helpers;
 using MessagePack;
 using MessagePack.Formatters;
 using Mono.Cecil;
@@ -11,18 +12,19 @@ namespace Hertzole.ALE.CodeGen
 {
 	public class ResolverProcessor
 	{
+		private readonly List<(TypeDefinition, TypeDefinition)> allFormatters = new List<(TypeDefinition, TypeDefinition)>();
+		private readonly List<TypeReference> customDataTypes = new List<TypeReference>();
+		private readonly List<TypeDefinition> enums = new List<TypeDefinition>();
 		private readonly ModuleDefinition module;
+		private readonly List<(TypeDefinition, TypeDefinition)> typeFormatters = new List<(TypeDefinition, TypeDefinition)>();
 
-		private TypeDefinition resolver;
-		private FieldDefinition instanceField;
+		private readonly List<(TypeDefinition, TypeDefinition, TypeDefinition)> wrapperFormatters = new List<(TypeDefinition, TypeDefinition, TypeDefinition)>();
 		private FieldDefinition formatterField;
 		private MethodDefinition getFormatterHelperMethod;
 		private MethodDefinition getFormatterMethod;
+		private FieldDefinition instanceField;
 
-		private readonly List<(TypeDefinition, TypeDefinition, TypeDefinition)> wrapperFormatters = new List<(TypeDefinition, TypeDefinition, TypeDefinition)>();
-		private readonly List<(TypeDefinition, TypeDefinition)> typeFormatters = new List<(TypeDefinition, TypeDefinition)>();
-		private readonly List<TypeDefinition> enums = new List<TypeDefinition>();
-		private readonly List<(TypeDefinition, TypeDefinition)> allFormatters = new List<(TypeDefinition, TypeDefinition)>();
+		private TypeDefinition resolver;
 
 		public ResolverProcessor(ModuleDefinition moduleDefinition)
 		{
@@ -37,6 +39,16 @@ namespace Hertzole.ALE.CodeGen
 		public void AddTypeFormatter(TypeDefinition formatter, TypeDefinition type)
 		{
 			typeFormatters.Add((formatter, type));
+		}
+
+		public void AddCustomDataType(TypeReference type)
+		{
+			if (customDataTypes.Contains(type))
+			{
+				return;
+			}
+
+			customDataTypes.Add(type);
 		}
 
 		public void AddEnum(TypeDefinition type)
@@ -60,7 +72,7 @@ namespace Hertzole.ALE.CodeGen
 			{
 				allFormatters.Add((null, enums[i]));
 			}
-			
+
 			if (allFormatters == null || allFormatters.Count == 0)
 			{
 				return;
@@ -75,19 +87,22 @@ namespace Hertzole.ALE.CodeGen
 			resolver.Methods.Add(CreateGetFormatter());
 			resolver.Methods.Add(CreateSerializeWrapperMethod());
 			resolver.Methods.Add(CreateDeserializeWrapperMethod());
+			resolver.Methods.Add(CreateSerializeDynamicMethod());
+			resolver.Methods.Add(CreateDeserializeDynamicMethod());
 		}
-		
+
 		private TypeDefinition CreateResolverClass()
 		{
 			TypeDefinition t = new TypeDefinition("Hertzole.ALE.Generated", $"{module.Name.Substring(0, module.Name.Length - 4).Replace('-', '_').Replace('.', '_')}__ALE__Generated__Resolver",
 				TypeAttributes.Public | TypeAttributes.AnsiClass | TypeAttributes.BeforeFieldInit, module.GetTypeReference<object>());
-			
+
 			t.Interfaces.Add(new InterfaceImplementation(module.ImportReference(typeof(IFormatterResolver))));
 			t.Interfaces.Add(new InterfaceImplementation(module.ImportReference(typeof(IWrapperSerializer))));
+			t.Interfaces.Add(new InterfaceImplementation(module.ImportReference(typeof(IDynamicResolver))));
 
 			instanceField = new FieldDefinition("instance", FieldAttributes.Private | FieldAttributes.Static | FieldAttributes.InitOnly, module.GetTypeReference<IFormatterResolver>());
 			t.Fields.Add(instanceField);
-			
+
 			MethodDefinition ctor = new MethodDefinition(".ctor", MethodAttributes.Private | MethodAttributes.HideBySig |
 			                                                      MethodAttributes.SpecialName | MethodAttributes.RTSpecialName,
 				module.ImportReference(typeof(void)));
@@ -98,7 +113,7 @@ namespace Hertzole.ALE.CodeGen
 			il.Emit(OpCodes.Ldarg_0);
 			il.Emit(OpCodes.Call, module.GetConstructor<object>());
 			il.Emit(OpCodes.Ret);
-			
+
 			il.Body.Optimize();
 
 			MethodDefinition cctor = new MethodDefinition(".cctor", MethodAttributes.Private | MethodAttributes.HideBySig |
@@ -125,17 +140,17 @@ namespace Hertzole.ALE.CodeGen
 			m.CustomAttributes.Add(a);
 
 			MethodReference cctor = resolver.GetMethod(".cctor");
-			
+
 			FieldDefinition registeredField = new FieldDefinition("registeredResolver", FieldAttributes.Private | FieldAttributes.Static,
 				module.GetTypeReference<bool>());
 
 			resolver.Fields.Add(registeredField);
 
 			ILProcessor il = cctor.Resolve().Body.GetILProcessor();
-			
+
 			il.InsertBefore(il.Body.Instructions[0], Instruction.Create(OpCodes.Ldc_I4_0));
 			il.InsertBefore(il.Body.Instructions[1], Instruction.Create(OpCodes.Stsfld, registeredField));
-			
+
 			cctor.Resolve().Body.Optimize();
 
 			il = m.Body.GetILProcessor();
@@ -147,12 +162,15 @@ namespace Hertzole.ALE.CodeGen
 			il.Append(start);
 			il.InsertAfter(il.Body.Instructions[0], Instruction.Create(OpCodes.Brfalse, start));
 			il.Emit(OpCodes.Stsfld, registeredField);
-			
+
 			il.Emit(OpCodes.Ldsfld, instanceField);
 			il.Emit(OpCodes.Call, module.GetMethod<LevelEditorResolver>("RegisterResolver", typeof(IFormatterResolver)));
 			il.Emit(OpCodes.Ldsfld, instanceField);
 			il.Emit(OpCodes.Castclass, module.GetTypeReference<IWrapperSerializer>());
 			il.Emit(OpCodes.Call, module.GetMethod<LevelEditorResolver>("RegisterWrapperSerializer", typeof(IWrapperSerializer)));
+			il.Emit(OpCodes.Ldsfld, instanceField);
+			il.Emit(OpCodes.Castclass, module.GetTypeReference<IDynamicResolver>());
+			il.Emit(OpCodes.Call, module.GetMethod<LevelEditorResolver>("RegisterDynamicResolver", typeof(IDynamicResolver)));
 
 			for (int i = 0; i < wrapperFormatters.Count; i++)
 			{
@@ -160,7 +178,7 @@ namespace Hertzole.ALE.CodeGen
 			}
 
 			il.Emit(OpCodes.Ret);
-			
+
 			m.Body.Optimize();
 
 			return m;
@@ -190,7 +208,7 @@ namespace Hertzole.ALE.CodeGen
 			for (int i = 0; i < allFormatters.Count; i++)
 			{
 				il.Emit(OpCodes.Dup);
-				il.Emit(OpCodes.Ldtoken, allFormatters[i].Item2); 
+				il.Emit(OpCodes.Ldtoken, allFormatters[i].Item2);
 				il.Emit(OpCodes.Call, getType);
 				il.Emit(OpCodes.Ldc_I4, i);
 				il.Emit(OpCodes.Callvirt, module.ImportReference(typeof(Dictionary<Type, int>).GetMethod("Add")));
@@ -198,24 +216,24 @@ namespace Hertzole.ALE.CodeGen
 
 			il.Emit(OpCodes.Stsfld, lookup);
 			il.Emit(OpCodes.Ret);
-			
+
 			cctor.Body.Optimize();
 
 			getFormatterHelperMethod = new MethodDefinition("GetFormatter", MethodAttributes.Assembly | MethodAttributes.HideBySig | MethodAttributes.Static,
 				module.GetTypeReference<object>());
-			
+
 			t.Methods.Add(getFormatterHelperMethod);
 
 			getFormatterHelperMethod.AddParameter<Type>(module);
 			VariableDefinition keyVar = getFormatterHelperMethod.AddLocalVariable<int>(module);
-			
+
 			il = getFormatterHelperMethod.Body.GetILProcessor();
-			
+
 			il.Emit(OpCodes.Ldsfld, lookup);
 			il.Emit(OpCodes.Ldarg_0);
 			il.EmitLdloc(keyVar, true);
 			il.Emit(OpCodes.Callvirt, module.ImportReference(typeof(Dictionary<Type, int>).GetMethod("TryGetValue")));
-			
+
 			il.Emit(OpCodes.Ldnull);
 			il.Emit(OpCodes.Ret);
 
@@ -242,7 +260,7 @@ namespace Hertzole.ALE.CodeGen
 			});
 
 			getFormatterHelperMethod.SetVariableName(keyVar, "key");
-			
+
 			getFormatterHelperMethod.Body.Optimize();
 
 			return t;
@@ -251,21 +269,21 @@ namespace Hertzole.ALE.CodeGen
 		private TypeDefinition CreateFormatterCache()
 		{
 			TypeDefinition t = new TypeDefinition(string.Empty, "FormatterCache`1", TypeAttributes.NestedPrivate |
-			                                                                      TypeAttributes.AnsiClass | TypeAttributes.Abstract | TypeAttributes.Sealed,
+			                                                                        TypeAttributes.AnsiClass | TypeAttributes.Abstract | TypeAttributes.Sealed,
 				module.GetTypeReference<object>());
-			
+
 			t.GenericParameters.Add(new GenericParameter("T", t));
 
 			GenericInstanceType fieldType = module.GetTypeReference(typeof(IMessagePackFormatter<>)).MakeGenericInstanceType(t.GenericParameters[0].GetElementType());
-			
+
 			formatterField = new FieldDefinition("formatter", FieldAttributes.Assembly | FieldAttributes.Static | FieldAttributes.InitOnly, fieldType);
-			
+
 			t.Fields.Add(formatterField);
 
 			MethodDefinition cctor = new MethodDefinition(".cctor", MethodAttributes.Private | MethodAttributes.HideBySig |
 			                                                        MethodAttributes.SpecialName | MethodAttributes.RTSpecialName | MethodAttributes.Static,
 				module.GetTypeReference(typeof(void)));
-			
+
 			t.Methods.Add(cctor);
 
 			VariableDefinition formatterVar = cctor.AddLocalVariable(module, module.GetTypeReference<object>());
@@ -273,23 +291,23 @@ namespace Hertzole.ALE.CodeGen
 			cctor.Body.InitLocals = true;
 
 			ILProcessor il = cctor.Body.GetILProcessor();
-			
+
 			il.Emit(OpCodes.Ldtoken, t.GenericParameters[0].GetElementType());
 			il.Emit(OpCodes.Call, module.GetMethod<Type>("GetTypeFromHandle", typeof(RuntimeTypeHandle)));
 			il.Emit(OpCodes.Call, getFormatterHelperMethod);
 			il.EmitStloc(formatterVar);
 			il.EmitLdloc(formatterVar);
-			
+
 			il.EmitLdloc(formatterVar);
 			il.Emit(OpCodes.Castclass, fieldType);
 
 			FieldReference formatterFieldRef = new FieldReference(formatterField.Name, formatterField.FieldType, formatterField.DeclaringType.MakeGenericInstanceType(t.GenericParameters[0].GetElementType()));
 			il.Emit(OpCodes.Stsfld, formatterFieldRef);
-			
+
 			Instruction end = Instruction.Create(OpCodes.Ret);
 			il.Append(end);
 			il.InsertAfter(il.Body.Instructions[il.Body.Instructions.Count - 5], Instruction.Create(OpCodes.Brfalse, end));
-			
+
 			cctor.Body.Optimize();
 
 			return t;
@@ -298,8 +316,9 @@ namespace Hertzole.ALE.CodeGen
 		private MethodDefinition CreateGetFormatter()
 		{
 			getFormatterMethod = new MethodDefinition("GetFormatter", MethodAttributes.Public | MethodAttributes.Final |
-			                                                         MethodAttributes.HideBySig | MethodAttributes.NewSlot | MethodAttributes.Virtual,
+			                                                          MethodAttributes.HideBySig | MethodAttributes.NewSlot | MethodAttributes.Virtual,
 				module.ImportReference(typeof(void)));
+
 			getFormatterMethod.GenericParameters.Add(new GenericParameter("T", getFormatterMethod));
 			GenericInstanceType returnType = module.GetTypeReference(typeof(IMessagePackFormatter<>)).MakeGenericInstanceType(getFormatterMethod.GenericParameters[0].GetElementType());
 
@@ -308,7 +327,7 @@ namespace Hertzole.ALE.CodeGen
 			ILProcessor il = getFormatterMethod.Body.GetILProcessor();
 
 			FieldReference formatterFieldRef = new FieldReference(formatterField.Name, formatterField.FieldType, formatterField.DeclaringType.MakeGenericInstanceType(getFormatterMethod.GenericParameters[0].GetElementType()));
-			
+
 			il.Emit(OpCodes.Ldsfld, formatterFieldRef);
 			il.Emit(OpCodes.Ret);
 
@@ -353,9 +372,9 @@ namespace Hertzole.ALE.CodeGen
 				i.EmitBool(false);
 				i.Emit(OpCodes.Ret);
 			});
-			
+
 			m.Body.Optimize();
-			
+
 			return m;
 		}
 
@@ -375,7 +394,7 @@ namespace Hertzole.ALE.CodeGen
 
 			MethodReference getType = module.GetMethod<Type>("GetTypeFromHandle", typeof(RuntimeTypeHandle));
 			MethodReference equality = module.GetMethod<Type>("op_Equality", typeof(Type), typeof(Type));
-				
+
 			CreateSerializeBlock(il, wrapperFormatters, (x, i) => // If check
 			{
 				i.Emit(OpCodes.Ldarg_1);
@@ -402,34 +421,188 @@ namespace Hertzole.ALE.CodeGen
 				i.EmitBool(false);
 				i.Emit(OpCodes.Ret);
 			});
-			
+
 			m.Body.Optimize();
-			
+
+			return m;
+		}
+
+		private MethodDefinition CreateSerializeDynamicMethod()
+		{
+			MethodDefinition m = new MethodDefinition("SerializeDynamic", MethodAttributes.Public | MethodAttributes.Final |
+			                                                              MethodAttributes.HideBySig | MethodAttributes.NewSlot | MethodAttributes.Virtual,
+				module.GetTypeReference<bool>());
+
+			ParameterDefinition type = m.AddParameter<Type>(module, "type");
+			ParameterDefinition writer = m.AddParameter(module, module.ImportReference(typeof(MessagePackWriter).MakeByRefType()), "writer");
+			ParameterDefinition value = m.AddParameter<object>(module, "value");
+			ParameterDefinition options = m.AddParameter<MessagePackSerializerOptions>(module, "options");
+
+			ILProcessor il = m.Body.GetILProcessor();
+
+			MethodReference getTypeHandle = module.GetMethod<Type>("GetTypeFromHandle", typeof(RuntimeTypeHandle));
+			MethodReference typeEquals = module.GetMethod<Type>("op_Equality", typeof(Type), typeof(Type));
+
+			if (customDataTypes.Count > 0)
+			{
+				CreateSerializeBlock(il, customDataTypes, (t, i) => // If check
+				{
+					i.EmitLdarg(type);
+					i.Emit(OpCodes.Ldtoken, module.ImportReference(t));
+					i.Emit(OpCodes.Call, getTypeHandle);
+					i.Emit(OpCodes.Call, typeEquals);
+				}, (t, i) => // Block
+				{
+					if (FormatterHelper.IsStandardWriteType(t))
+					{
+						i.EmitLdarg(writer);
+						i.EmitLdarg(value);
+						i.Emit(OpCodes.Unbox_Any, module.ImportReference(t));
+						i.Append(FormatterHelper.GetWriteStandardValue(t, module));
+						i.EmitBool(true);
+						i.Emit(OpCodes.Ret);
+					}
+					else
+					{
+						i.EmitLdarg(options);
+						i.Emit(OpCodes.Callvirt, module.GetMethod<MessagePackSerializerOptions>("get_Resolver"));
+						i.Emit(OpCodes.Call, module.ImportReference(typeof(FormatterResolverExtensions).GetMethod("GetFormatterWithVerify")).MakeGenericMethod(t));
+						i.EmitLdarg(writer);
+						i.EmitLdarg(value);
+						i.Emit(OpCodes.Unbox_Any, module.ImportReference(t));
+						i.EmitLdarg(options);
+						i.Emit(OpCodes.Callvirt, module.ImportReference(typeof(IMessagePackFormatter<>).GetMethod("Serialize")).MakeHostInstanceGeneric(module.ImportReference(typeof(IMessagePackFormatter<>)).MakeGenericInstanceType(t)));
+						i.EmitBool(true);
+						i.Emit(OpCodes.Ret);
+					}
+				}, i =>
+				{
+					i.EmitBool(false);
+					i.Emit(OpCodes.Ret);
+				});
+			}
+			else
+			{
+				il.EmitBool(false);
+				il.Emit(OpCodes.Ret);
+			}
+
+			m.Body.Optimize();
+
+			return m;
+		}
+
+		private MethodDefinition CreateDeserializeDynamicMethod()
+		{
+			MethodDefinition m = new MethodDefinition("DeserializeDynamic", MethodAttributes.Public | MethodAttributes.Final |
+			                                                                MethodAttributes.HideBySig | MethodAttributes.NewSlot | MethodAttributes.Virtual,
+				module.GetTypeReference<bool>());
+
+			ParameterDefinition type = m.AddParameter<Type>(module, "type");
+			ParameterDefinition reader = m.AddParameter(module, module.ImportReference(typeof(MessagePackReader).MakeByRefType()), "writer");
+			ParameterDefinition value = m.AddParameter(module, module.ImportReference(typeof(object).MakeByRefType()), "value");
+			ParameterDefinition options = m.AddParameter<MessagePackSerializerOptions>(module, "options");
+
+			value.IsOut = true;
+
+			ILProcessor il = m.Body.GetILProcessor();
+
+			MethodReference getTypeHandle = module.GetMethod<Type>("GetTypeFromHandle", typeof(RuntimeTypeHandle));
+			MethodReference typeEquals = module.GetMethod<Type>("op_Equality", typeof(Type), typeof(Type));
+
+			if (customDataTypes.Count > 0)
+			{
+				CreateSerializeBlock(il, customDataTypes, (t, i) => // If check
+				{
+					i.EmitLdarg(type);
+					i.Emit(OpCodes.Ldtoken, module.ImportReference(t));
+					i.Emit(OpCodes.Call, getTypeHandle);
+					i.Emit(OpCodes.Call, typeEquals);
+				}, (t, i) => // Block
+				{
+					if (FormatterHelper.IsStandardWriteType(t))
+					{
+						// value = reader.ReadX();
+						i.EmitLdarg(value);
+						i.EmitLdarg(reader);
+						i.Append(FormatterHelper.GetReadStandardValue(t, module));
+						if (t.IsValueType)
+						{
+							i.Emit(OpCodes.Box, module.ImportReference(t));
+						}
+
+						i.Emit(OpCodes.Stind_Ref);
+						// return true;
+						i.EmitBool(true);
+						i.Emit(OpCodes.Ret);
+					}
+					else
+					{
+						i.EmitLdarg(value);
+						i.EmitLdarg(options);
+						i.Emit(OpCodes.Callvirt, module.GetMethod<MessagePackSerializerOptions>("get_Resolver"));
+						i.Emit(OpCodes.Call, module.ImportReference(typeof(FormatterResolverExtensions).GetMethod("GetFormatterWithVerify")).MakeGenericMethod(t));
+						i.EmitLdarg(reader);
+						i.EmitLdarg(options);
+						i.Emit(OpCodes.Callvirt, module.ImportReference(typeof(IMessagePackFormatter<>).GetMethod("Deserialize")).MakeHostInstanceGeneric(module.ImportReference(typeof(IMessagePackFormatter<>)).MakeGenericInstanceType(t)));
+						i.Emit(OpCodes.Box, module.ImportReference(t));
+						i.Emit(OpCodes.Stind_Ref);
+						// return true;
+						i.EmitBool(true);
+						i.Emit(OpCodes.Ret);
+					}
+				}, i =>
+				{
+					// value = null;
+					i.EmitLdarg(value);
+					i.Emit(OpCodes.Ldnull);
+					i.Emit(OpCodes.Stind_Ref);
+					// return false;
+					i.EmitBool(false);
+					i.Emit(OpCodes.Ret);
+				});
+			}
+			else
+			{
+				// value = null;
+				il.EmitLdarg(value);
+				il.Emit(OpCodes.Ldnull);
+				il.Emit(OpCodes.Stind_Ref);
+				// return false;
+				il.EmitBool(false);
+				il.Emit(OpCodes.Ret);
+			}
+
+			m.Body.Optimize();
+
 			return m;
 		}
 
 		private static void CreateSerializeBlock<T>(ILProcessor il, IList<T> items, Action<T, ILProcessor> ifCheck, Action<T, ILProcessor> block, Action<ILProcessor> last)
 		{
 			int ifEnd = 0;
-			
+
 			for (int i = 0; i < items.Count; i++)
 			{
 				int ifStart = il.Body.Instructions.Count;
 				ifCheck(items[i], il);
-				
+
 				if (i > 0)
 				{
 					il.InsertAfter(il.Body.Instructions[ifEnd], Instruction.Create(OpCodes.Brfalse, il.Body.Instructions[ifStart]));
 				}
-				
+
 				ifEnd = il.Body.Instructions.Count - 1;
-				
+
 				block(items[i], il);
 			}
 
-			int lastStart = il.Body.Instructions.Count;
-			last(il);
-			il.InsertAfter(il.Body.Instructions[ifEnd], Instruction.Create(OpCodes.Brfalse, il.Body.Instructions[lastStart]));
+			if (last != null)
+			{
+				int lastStart = il.Body.Instructions.Count;
+				last(il);
+				il.InsertAfter(il.Body.Instructions[ifEnd], Instruction.Create(OpCodes.Brfalse, il.Body.Instructions[lastStart]));
+			}
 		}
 	}
 }

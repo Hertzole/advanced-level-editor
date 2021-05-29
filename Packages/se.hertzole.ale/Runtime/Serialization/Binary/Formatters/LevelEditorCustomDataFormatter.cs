@@ -7,16 +7,16 @@ namespace Hertzole.ALE
 {
     public class LevelEditorCustomDataFormatter : IMessagePackFormatter<LevelEditorCustomData>
     {
-        private static ReadOnlySpan<byte> SpanTypeName { get { return new byte[1 + 4] { 164, 116, 121, 112, 101 }; } }
+        private static ReadOnlySpan<byte> SpanType { get { return new byte[1 + 4] { 164, 116, 121, 112, 101 }; } }
         private static ReadOnlySpan<byte> SpanValue { get { return new byte[1 + 5] { 165, 118, 97, 108, 117, 101 }; } }
 
         public void Serialize(ref MessagePackWriter writer, LevelEditorCustomData value, MessagePackSerializerOptions options)
         {
             writer.WriteMapHeader(2);
-            writer.WriteRaw(SpanTypeName);
-            options.Resolver.GetFormatterWithVerify<string>().Serialize(ref writer, value.typeName, options);
+            writer.WriteRaw(SpanType);
+            options.Resolver.GetFormatterWithVerify<string>().Serialize(ref writer, value.type.FullName, options);
             writer.WriteRaw(SpanValue);
-            // options.Resolver.GetFormatterDynamic(value.type).SerializeObject(ref writer, value.value, options);
+            ((LevelEditorResolver) LevelEditorResolver.Instance).SerializeDynamic(value.type, ref writer, value.value, options);
         }
 
         public LevelEditorCustomData Deserialize(ref MessagePackReader reader, MessagePackSerializerOptions options)
@@ -48,9 +48,9 @@ namespace Hertzole.ALE
                         if (AutomataKeyGen.GetKey(ref stringKey) != 435761734006UL)
                         {
                             goto FAIL;
-                        }
-
-                        // value = options.Resolver.GetFormatterDynamic(type).DeserializeObject(ref reader, options);
+                        } 
+                        
+                        ((LevelEditorResolver) LevelEditorResolver.Instance).DeserializeDynamic(type, ref reader, out value, options);
                         continue;
                 }
             }

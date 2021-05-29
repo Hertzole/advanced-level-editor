@@ -10,12 +10,13 @@ using UnityEngine.Scripting;
 
 namespace Hertzole.ALE
 {
-    public class LevelEditorResolver : IFormatterResolver, IWrapperSerializer
+    public class LevelEditorResolver : IFormatterResolver, IWrapperSerializer, IDynamicResolver
     {
         private static bool serializerRegistered;
 
         private static List<IFormatterResolver> customResolvers = new List<IFormatterResolver>();
         private static List<IWrapperSerializer> wrapperSerializers = new List<IWrapperSerializer>(); 
+        private static List<IDynamicResolver> dynamicResolvers = new List<IDynamicResolver>(); 
 
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
         private static void RegisterResolvers()
@@ -55,6 +56,11 @@ namespace Hertzole.ALE
         {
             wrapperSerializers.Add(serializer);
         }
+
+        public static void RegisterDynamicResolver(IDynamicResolver resolver)
+        {
+            dynamicResolvers.Add(resolver);
+        }
         
         public bool SerializeWrapper(ref MessagePackWriter writer, IExposedWrapper value, MessagePackSerializerOptions options)
         {
@@ -82,6 +88,32 @@ namespace Hertzole.ALE
             wrapper = null;
             return false;
         }
+        
+        public bool SerializeDynamic(Type type, ref MessagePackWriter writer, object value, MessagePackSerializerOptions options)
+        {
+            for (int i = 0; i < dynamicResolvers.Count; i++)
+            {
+                if (dynamicResolvers[i].SerializeDynamic(type, ref writer, value, options))
+                {
+                    return true;
+                }
+            }
+
+            throw new NotImplementedException($"Found no formatter for type {type}.");
+        }
+
+        public bool DeserializeDynamic(Type type, ref MessagePackReader reader, out object value, MessagePackSerializerOptions options)
+        {
+            for (int i = 0; i < dynamicResolvers.Count; i++)
+            {
+                if (dynamicResolvers[i].DeserializeDynamic(type, ref reader, out value, options))
+                {
+                    return true;
+                }
+            }
+
+            throw new NotImplementedException($"Found no formatter for type {type}.");
+        }
 
         private static class FormatterCache<T>
         {
@@ -97,7 +129,7 @@ namespace Hertzole.ALE
             }
         }
 
-        internal static class LevelEditorResolverGetFormatterHelper
+        private static class LevelEditorResolverGetFormatterHelper
         {
             private static readonly Dictionary<Type, int> lookup;
 
@@ -157,17 +189,6 @@ namespace Hertzole.ALE
                         return null;
                 }
             }
-        }
-
-        // Used only for making sure methods are generated in AOT.
-        [Preserve]
-        private static void AOTPreserve()
-        {
-            StaticCompositeResolver.Instance.GetFormatter<LevelEditorSaveData>();
-            StaticCompositeResolver.Instance.GetFormatter<LevelEditorObjectData>();
-            StaticCompositeResolver.Instance.GetFormatter<LevelEditorComponentData>();
-            StaticCompositeResolver.Instance.GetFormatter<LevelEditorPropertyData>();
-            StaticCompositeResolver.Instance.GetFormatter<LevelEditorCustomData>();
         }
     }
 }

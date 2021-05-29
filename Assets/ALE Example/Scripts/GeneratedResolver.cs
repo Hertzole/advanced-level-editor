@@ -7,7 +7,7 @@ using UnityEngine;
 namespace Hertzole.ALE.Generated
 {
 	// Token: 0x02000034 RID: 52
-	public class GeneratedResolver : IFormatterResolver, IWrapperSerializer
+	public class GeneratedResolver : IFormatterResolver, IWrapperSerializer, IDynamicResolver
 	{
 		// Token: 0x06000118 RID: 280 RVA: 0x00008A2B File Offset: 0x00006C2B
 		private GeneratedResolver()
@@ -198,6 +198,41 @@ namespace Hertzole.ALE.Generated
 
 			// Token: 0x04000102 RID: 258
 			internal static readonly IMessagePackFormatter<T> formatter;
+		}
+
+		public bool SerializeDynamic(Type type, ref MessagePackWriter writer, object value, MessagePackSerializerOptions options)
+		{
+			// if (type == typeof(int))
+			// {
+			// 	writer.WriteInt32((int) value);
+			// 	return true;
+			// }
+			//
+			// if (type == typeof(MyLitStruct))
+			// {
+			// 	options.Resolver.GetFormatterWithVerify<MyLitStruct>().Serialize(ref writer, (MyLitStruct)value, options);
+			// 	return true;
+			// }
+
+			return false;
+		}
+
+		public bool DeserializeDynamic(Type type, ref MessagePackReader reader, out object value, MessagePackSerializerOptions options)
+		{
+			if (type == typeof(int))
+			{
+				value = reader.ReadInt32(); 
+				return true;
+			}
+
+			if (type == typeof(MyLitStruct))
+			{
+				value = options.Resolver.GetFormatterWithVerify<MyLitStruct>().Deserialize(ref reader, options);
+				return true;
+			}
+
+			value = null;
+			return false;
 		}
 	}
 }

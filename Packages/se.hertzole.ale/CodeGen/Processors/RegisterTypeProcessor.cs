@@ -19,7 +19,7 @@ namespace Hertzole.ALE.CodeGen
             types = new List<TypeReference>();
         }
 
-        public void AddType(TypeDefinition type)
+        public void AddType(TypeReference type)
         {
             Console.WriteLine($"Register type {type.FullName} || {type.Resolve()}");
             
