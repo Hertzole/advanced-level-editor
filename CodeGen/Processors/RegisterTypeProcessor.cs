@@ -21,8 +21,6 @@ namespace Hertzole.ALE.CodeGen
 
         public void AddType(TypeReference type)
         {
-            Console.WriteLine($"Register type {type.FullName} || {type.Resolve()}");
-            
             if (!ContainsType(type))
             {
                 types.Add(type);
@@ -103,13 +101,14 @@ namespace Hertzole.ALE.CodeGen
                 typeof(RuntimeInitializeLoadType)), RuntimeInitializeLoadType.BeforeSceneLoad));
             method.CustomAttributes.Add(attribute);
 
-            MethodReference registerType = module.ImportReference(typeof(LevelEditorSerializer).GetMethod("RegisterType"));
-
+            MethodReference registerType = module.GetMethod(typeof(LevelEditorSerializer), "RegisterType", typeof(int));
+            
             ILProcessor il = method.Body.GetILProcessor();
             for (int i = 0; i < types.Count; i++)
             {
                 GenericInstanceMethod m = new GenericInstanceMethod(registerType);
                 m.GenericArguments.Add(types[i]);
+                il.EmitInt(types[i].FullName.GetStableHashCode());
                 il.Emit(OpCodes.Call, m);
             }
 

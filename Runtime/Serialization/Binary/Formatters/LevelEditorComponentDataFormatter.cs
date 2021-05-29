@@ -2,7 +2,6 @@
 using MessagePack;
 using MessagePack.Formatters;
 using MessagePack.Internal;
-using UnityEngine;
 
 namespace Hertzole.ALE
 {
@@ -15,7 +14,7 @@ namespace Hertzole.ALE
         {
             writer.WriteMapHeader(2);
             writer.WriteRaw(SpanType);
-            options.Resolver.GetFormatterWithVerify<string>().Serialize(ref writer, value.type.FullName, options);
+            writer.WriteInt32(value.type.FullName.GetStableHashCode());
             writer.WriteRaw(SpanProperties);
             ((LevelEditorResolver)LevelEditorResolver.Instance).SerializeWrapper(ref writer, value.wrapper, options);
         }
@@ -24,7 +23,7 @@ namespace Hertzole.ALE
         {
             options.Security.DepthStep(ref reader);
 
-            Type actualType = null;
+            Type type = null;
             IExposedWrapper wrapper = null;
 
             int count = reader.ReadMapHeader();
@@ -44,8 +43,7 @@ namespace Hertzole.ALE
                             goto FAIL;
                         }
 
-                        string type = options.Resolver.GetFormatterWithVerify<string>().Deserialize(ref reader, options);
-                        actualType = LevelEditorSerializer.GetType(type);
+                        type = LevelEditorSerializer.GetType(reader.ReadInt32());
                         continue;
                     case 10:
                         if (!MemoryExtensions.SequenceEqual(stringKey, SpanProperties.Slice(1)))
@@ -53,14 +51,14 @@ namespace Hertzole.ALE
                             goto FAIL;
                         }
 
-                        ((LevelEditorResolver) LevelEditorResolver.Instance).DeserializeWrapper(actualType, ref reader, options, out wrapper);
+                        ((LevelEditorResolver) LevelEditorResolver.Instance).DeserializeWrapper(type, ref reader, options, out wrapper);
                         continue;
                 }
             }
 
             reader.Depth--;
 
-            return new LevelEditorComponentData(actualType, wrapper);
+            return new LevelEditorComponentData(type, wrapper);
         }
     }
 }
