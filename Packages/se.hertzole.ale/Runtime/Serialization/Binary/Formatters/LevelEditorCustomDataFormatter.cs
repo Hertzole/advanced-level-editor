@@ -14,7 +14,7 @@ namespace Hertzole.ALE
         {
             writer.WriteMapHeader(2);
             writer.WriteRaw(SpanType);
-            options.Resolver.GetFormatterWithVerify<string>().Serialize(ref writer, value.type.FullName, options);
+            writer.WriteInt32(value.type.FullName.GetStableHashCode());
             writer.WriteRaw(SpanValue);
             ((LevelEditorResolver) LevelEditorResolver.Instance).SerializeDynamic(value.type, ref writer, value.value, options);
         }
@@ -42,7 +42,7 @@ namespace Hertzole.ALE
                             goto FAIL;
                         }
 
-                        type = LevelEditorSerializer.GetType(options.Resolver.GetFormatterWithVerify<string>().Deserialize(ref reader, options));
+                        type = LevelEditorSerializer.GetType(reader.ReadInt32());
                         continue;
                     case 5:
                         if (AutomataKeyGen.GetKey(ref stringKey) != 435761734006UL)

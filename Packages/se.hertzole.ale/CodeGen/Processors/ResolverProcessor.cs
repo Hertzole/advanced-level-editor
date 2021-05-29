@@ -174,7 +174,8 @@ namespace Hertzole.ALE.CodeGen
 
 			for (int i = 0; i < wrapperFormatters.Count; i++)
 			{
-				il.Emit(OpCodes.Call, module.GetMethod(typeof(LevelEditorSerializer), "RegisterType").MakeGenericMethod(wrapperFormatters[i].Item3));
+				il.EmitInt(wrapperFormatters[i].Item3.FullName.GetStableHashCode());
+				il.Emit(OpCodes.Call, module.GetMethod(typeof(LevelEditorSerializer), "RegisterType", typeof(int)).MakeGenericMethod(wrapperFormatters[i].Item3));
 			}
 
 			il.Emit(OpCodes.Ret);

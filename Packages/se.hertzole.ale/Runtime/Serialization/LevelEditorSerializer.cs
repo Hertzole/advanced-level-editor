@@ -6,11 +6,16 @@ namespace Hertzole.ALE
 {
     public static class LevelEditorSerializer
     {
-        private static readonly Dictionary<string, Type> typeMap = new Dictionary<string, Type>();
+        private static readonly Dictionary<int, Type> typeMap = new Dictionary<int, Type>();
 
         public static void RegisterType<T>()
         {
-            typeMap[typeof(T).FullName ?? throw new InvalidOperationException()] = typeof(T);
+            typeMap[typeof(T).FullName.GetStableHashCode()] = typeof(T);
+        }
+        
+        public static void RegisterType<T>(int hash)
+        {
+            typeMap[hash] = typeof(T);
         }
 
         public static byte[] SerializeBinary<T>(T data)
@@ -37,22 +42,19 @@ namespace Hertzole.ALE
 
         public static Type GetType(string typeName)
         {
-            if (!typeMap.ContainsKey(typeName))
+            int hash = typeName.GetStableHashCode();
+            
+            if (!typeMap.ContainsKey(hash))
             {
                 throw new ArgumentException($"{typeName} has not been registered. Register it using LevelEditorSerializer.RegisterType<{typeName}>().");
             }
 
-            return typeMap[typeName];
+            return GetType(hash);
         }
 
-        public static bool HasType(string typeName)
+        public static Type GetType(int hash)
         {
-            return typeMap.ContainsKey(typeName);
-        }
-
-        public static bool HasType(Type type)
-        {
-            return HasType(type.FullName);
+            return typeMap[hash];
         }
     }
 }
