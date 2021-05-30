@@ -5,6 +5,7 @@ using MessagePack.Unity;
 using MessagePack.Unity.Extension;
 using System;
 using System.Collections.Generic;
+using Hertzole.ALE.Formatters;
 using UnityEngine;
 using UnityEngine.Scripting;
 
@@ -85,8 +86,7 @@ namespace Hertzole.ALE
                 }
             }
 
-            wrapper = null;
-            return false;
+            throw new NotImplementedException($"Found no wrapper formatter for type {type}.");
         }
         
         public bool SerializeDynamic(Type type, ref MessagePackWriter writer, object value, MessagePackSerializerOptions options)
@@ -140,15 +140,16 @@ namespace Hertzole.ALE
                     { typeof(LevelEditorSaveData), 0 },
                     { typeof(LevelEditorObjectData), 1 },
                     { typeof(LevelEditorComponentData), 2 },
-                    // { typeof(LevelEditorPropertyData), 3 },
-                    { typeof(LevelEditorCustomData), 4 },
-                    { typeof(List<LevelEditorObjectData>), 5 },
-                    { typeof(LevelEditorComponentData[]), 6 },
-                    { typeof(LevelEditorPropertyData[]), 7 },
-                    { typeof(Dictionary<string, LevelEditorCustomData>), 8 },
-                    { typeof(ComponentDataWrapper), 9 },
-                    { typeof(ComponentDataWrapper[]), 10 },
-                    { typeof(List<ComponentDataWrapper>), 11 }
+                    { typeof(LevelEditorCustomData), 3 },
+                    { typeof(List<LevelEditorObjectData>), 4 },
+                    { typeof(LevelEditorComponentData[]), 5 },
+                    { typeof(LevelEditorPropertyData[]), 6 },
+                    { typeof(Dictionary<string, LevelEditorCustomData>), 7 },
+                    { typeof(ComponentDataWrapper), 8 },
+                    { typeof(ComponentDataWrapper[]), 9 },
+                    { typeof(List<ComponentDataWrapper>), 10 },
+                    { typeof(TransformWrapper.Wrapper), 11 },
+                    { typeof(RigidbodyWrapper.Wrapper), 12 },
                 };
             }
 
@@ -167,24 +168,26 @@ namespace Hertzole.ALE
                         return new LevelEditorObjectDataFormatter();
                     case 2:
                         return new LevelEditorComponentDataFormatter();
-                    // case 3:
-                    //     return new LevelEditorPropertyDataFormatter();
-                    case 4:
+                    case 3:
                         return new LevelEditorCustomDataFormatter();
-                    case 5:
+                    case 4:
                         return new ListFormatter<LevelEditorObjectData>();
-                    case 6:
+                    case 5:
                         return new ArrayFormatter<LevelEditorComponentData>();
-                    case 7:
+                    case 6:
                         return new ArrayFormatter<LevelEditorPropertyData>();
-                    case 8:
+                    case 7:
                         return new DictionaryFormatter<string, LevelEditorCustomData>();
-                    case 9:
+                    case 8:
                         return new ComponentDataWrapperFormatter();
-                    case 10:
+                    case 9:
                         return new ArrayFormatter<ComponentDataWrapper>();
-                    case 11:
+                    case 10:
                         return new ListFormatter<ComponentDataWrapper>();
+                    case 11:
+                        return new TransformWrapperFormatter();
+                    case 12:
+                        return new RigidbodyWrapperFormatter();
                     default:
                         return null;
                 }

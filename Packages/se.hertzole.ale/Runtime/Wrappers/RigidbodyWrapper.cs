@@ -9,6 +9,8 @@ namespace Hertzole.ALE
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
         private static void RegisterRigidbodyWrapper()
         {
+            LevelEditorSerializer.RegisterType<Rigidbody>();
+
             if (ALESettings.Get().ApplyRigidbodyWrapper)
             {
                 RegisterWrapper<Rigidbody, RigidbodyWrapper>();
@@ -57,22 +59,6 @@ namespace Hertzole.ALE
                     return useGravity;
                 case 4:
                     return isKinematic;
-                default:
-                    throw new ArgumentException($"There's no exposed field with the ID '{id}'.");
-            }
-        }
-
-        public override Type GetValueType(int id)
-        {
-            switch (id)
-            {
-                case 0:
-                case 1:
-                case 2:
-                    return typeof(float);
-                case 3:
-                case 4:
-                    return typeof(bool);
                 default:
                     throw new ArgumentException($"There's no exposed field with the ID '{id}'.");
             }
@@ -130,6 +116,23 @@ namespace Hertzole.ALE
             }
         }
 
+        public override IExposedWrapper GetWrapper()
+        {
+            return new Wrapper(Target.mass, Target.drag, Target.angularDrag, Target.useGravity, Target.isKinematic);
+        }
+
+        public override void ApplyWrapper(IExposedWrapper wrapper)
+        {
+            if (wrapper is Wrapper w)
+            {
+                Target.mass = w.mass;
+                Target.drag = w.drag;
+                Target.angularDrag = w.angularDrag;
+                Target.useGravity = w.useGravity;
+                Target.isKinematic = w.isKinematic;
+            }
+        }
+
         void ILevelEditorPlayModeObject.OnStartPlayMode()
         {
             Target.useGravity = useGravity;
@@ -140,6 +143,57 @@ namespace Hertzole.ALE
         {
             Target.useGravity = false;
             Target.isKinematic = true;
+        }
+
+        public readonly struct Wrapper : IExposedWrapper, IEquatable<Wrapper>
+        {
+            public readonly float mass;
+            public readonly float drag;
+            public readonly float angularDrag;
+            public readonly bool useGravity;
+            public readonly bool isKinematic;
+
+            public Wrapper(float mass, float drag, float angularDrag, bool useGravity, bool isKinematic)
+            {
+                this.mass = mass;
+                this.drag = drag;
+                this.angularDrag = angularDrag;
+                this.useGravity = useGravity;
+                this.isKinematic = isKinematic;
+            }
+            
+            public bool Equals(Wrapper other)
+            {
+                return mass.Equals(other.mass) && drag.Equals(other.drag) && angularDrag.Equals(other.angularDrag) && useGravity == other.useGravity && isKinematic == other.isKinematic;
+            }
+
+            public override bool Equals(object obj)
+            {
+                return obj is Wrapper other && Equals(other);
+            }
+
+            public override int GetHashCode()
+            {
+                unchecked
+                {
+                    int hashCode = mass.GetHashCode();
+                    hashCode = (hashCode * 397) ^ drag.GetHashCode();
+                    hashCode = (hashCode * 397) ^ angularDrag.GetHashCode();
+                    hashCode = (hashCode * 397) ^ useGravity.GetHashCode();
+                    hashCode = (hashCode * 397) ^ isKinematic.GetHashCode();
+                    return hashCode;
+                }
+            }
+
+            public static bool operator ==(Wrapper left, Wrapper right)
+            {
+                return left.Equals(right);
+            }
+
+            public static bool operator !=(Wrapper left, Wrapper right)
+            {
+                return !left.Equals(right);
+            }
         }
     }
 }

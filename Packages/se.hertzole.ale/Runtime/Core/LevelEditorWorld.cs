@@ -111,14 +111,43 @@ namespace Hertzole.ALE
 		
 		public static bool TryGetObjects<T>(uint[] ids, out T[] value) where T : Object
 		{
-			if (TryGetObjects(ids, typeof(T), out Object[] val))
+			if (objects == null || objects.Count == 0)
 			{
-				value = (T[]) val;
-				return true;
+				value = Array.Empty<T>();
+				return false;
 			}
 
-			value = null;
-			return false;
+			List<T> values = new List<T>();
+
+			for (int i = 0; i < ids.Length; i++)
+			{
+				for (int j = 0; j < objects.Count; j++)
+				{
+					if (objects[j].InstanceID == ids[i])
+					{
+						if (typeof(T) == typeof(GameObject))
+						{
+							values.Add(objects[j].MyGameObject as T);
+							break;
+						}
+
+						if (typeof(T) == typeof(Transform))
+						{
+							values.Add(objects[j].MyGameObject.transform as T);
+							break;
+						}
+					
+						if (objects[j].MyGameObject.TryGetComponent(out T val))
+						{
+							values.Add(val);
+							break;
+						}
+					}
+				}
+			}
+			
+			value = values.ToArray();
+			return values.Count > 0;
 		}
 		
 		public static bool TryGetObjects(uint[] ids, Type type, out Object[] value)

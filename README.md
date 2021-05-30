@@ -37,7 +37,7 @@ What needs to be done before 1.0.0 verified.
 - [x] Level editor gizmos
 - [x] Play mode
 - [x] Save all exposed values in play mode
-- [ ] Auto serialize unknown types
+- [ ] Auto serialize unknown types³
 - [ ] Auto expose unknown types
 - [x] Integrate custom serializers
 - [ ] Menu items
@@ -78,7 +78,8 @@ The supported inspector fields.
 - [x] Enum field
 
 ¹ Doesn't work 100% with Unity objects yet. **May appear to work during runtime but most likely won't work in build!**  
-² While technically it will serialize dictionaries, it won't serialize exposed field dictionaries.
+² While technically it will serialize dictionaries, it won't serialize exposed field dictionaries.  
+³ It will automatically serialize structs but not classes.
 
 ## 📦 Installation 
 #### Without package manager
@@ -122,8 +123,8 @@ ALE itself is licensed under MIT. However, it contains some code that is under U
 [yasirkula](https://github.com/yasirkula) - [Runtime Inspector & Hierarchy for Unity 3D](https://github.com/yasirkula/UnityRuntimeInspector) for tree control  
 Unity Technologies/ProBuilder team - [GILES](https://github.com/Unity-Technologies/giles) for editor camera  
 [judah4](https://github.com/judah4) - [HSV Color Picker](https://github.com/judah4/HSV-Color-Picker-Unity) for color picker  
-The [MirrorNG team](https://github.com/MirrorNG) - Lots of weaving code from [MirrorNG](https://github.com/MirrorNG/MirrorNG)  
+[Mirage team](https://github.com/MirageNet) - Lots of weaving code from [Mirage](https://github.com/MirageNet/Mirage)  
 [paulpach](https://github.com/paulpach) - Helped me with weaver related questions  
-[Yoshifumi Kawai](https://github.com/neuecc) - [MessagePack for C#](https://github.com/neuecc/MessagePack-CSharp) 
+[Yoshifumi Kawai](https://github.com/neuecc) - [MessagePack for C#](https://github.com/neuecc/MessagePack-CSharp) for serialization  
 
-❤ Developed with love and support from [Limit Break Studio](https://main.limitbreakstudio.com/) ❤
+❤ Developed with love and support from [Aurora Punks](https://www.aurorapunks.com/) ❤

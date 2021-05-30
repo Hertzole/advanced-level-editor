@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using UnityEngine;
 
@@ -11,6 +10,8 @@ namespace Hertzole.ALE
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
         private static void RegisterTransformWrapper()
         {
+            LevelEditorSerializer.RegisterType<Transform>();
+            
             if (ALESettings.Get().ApplyTransformWrapper)
             {
                 RegisterWrapper<Transform, TransformWrapper>();
@@ -88,16 +89,7 @@ namespace Hertzole.ALE
                 case 3:
                     if (value is ComponentDataWrapper wrapper && !wrapper.Equals(transform.parent))
                     {
-                        if(wrapper.TryGetObject(out ILevelEditorObject parent))
-                        {
-                            transform.SetParent(parent.MyGameObject.transform);
-                            LevelEditorObject.Parent = parent;
-                            parent.AddChild(LevelEditorObject);
-                        }
-                        else
-                        {
-                            transform.SetParent(null);
-                        }
+                        SetParent(wrapper);
                     }
                     
                     break;
@@ -111,18 +103,80 @@ namespace Hertzole.ALE
             }
         }
 
-        public override Type GetValueType(int id)
+        private void SetParent(ComponentDataWrapper wrapper)
         {
-            switch (id)
+            if(wrapper.TryGetObject(out ILevelEditorObject parent))
             {
-                case 0:
-                case 1:
-                case 2:
-                    return typeof(Vector3);
-                case 3:
-                    return typeof(Transform);
-                default:
-                    throw new ArgumentException($"No exposed property with the ID '{id}'.");
+                Target.SetParent(parent.MyGameObject.transform);
+                LevelEditorObject.Parent = parent;
+                parent.AddChild(LevelEditorObject);
+            }
+            else
+            {
+                Target.SetParent(null);
+            }
+        }
+
+        public override IExposedWrapper GetWrapper()
+        {
+            return new Wrapper(Target.position, Target.eulerAngles, Target.localScale, new ComponentDataWrapper(Target.parent));
+        }
+
+        public override void ApplyWrapper(IExposedWrapper wrapper)
+        {
+            if (wrapper is Wrapper w)
+            {
+                Target.SetPositionAndRotation(w.position, Quaternion.Euler(w.rotation));
+                Target.localScale = w.scale;
+                SetParent(w.parent);
+            }
+        }
+
+        public readonly struct Wrapper : IExposedWrapper, IEquatable<Wrapper>
+        {
+            public readonly Vector3 position;
+            public readonly Vector3 rotation;
+            public readonly Vector3 scale;
+            public readonly ComponentDataWrapper parent;
+
+            public Wrapper(Vector3 position, Vector3 rotation, Vector3 scale, ComponentDataWrapper parent)
+            {
+                this.position = position;
+                this.rotation = rotation;
+                this.scale = scale;
+                this.parent = parent;
+            }
+            
+            public bool Equals(Wrapper other)
+            {
+                return position.Equals(other.position) && rotation.Equals(other.rotation) && scale.Equals(other.scale) && parent.Equals(other.parent);
+            }
+
+            public override bool Equals(object obj)
+            {
+                return obj is Wrapper other && Equals(other);
+            }
+
+            public override int GetHashCode()
+            {
+                unchecked
+                {
+                    int hashCode = position.GetHashCode();
+                    hashCode = (hashCode * 397) ^ rotation.GetHashCode();
+                    hashCode = (hashCode * 397) ^ scale.GetHashCode();
+                    hashCode = (hashCode * 397) ^ parent.GetHashCode();
+                    return hashCode;
+                }
+            }
+
+            public static bool operator ==(Wrapper left, Wrapper right)
+            {
+                return left.Equals(right);
+            }
+
+            public static bool operator !=(Wrapper left, Wrapper right)
+            {
+                return !left.Equals(right);
             }
         }
     }
