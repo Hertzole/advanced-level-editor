@@ -20,6 +20,11 @@ namespace Hertzole.ALE
             return wrappers.TryGetValue(type, out wrapper);
         }
 
+        public static bool HasWrapper<T>()
+        {
+            return wrappers.ContainsKey(typeof(T));
+        }
+
         public static void RegisterWrapper<TType, TWrapper>() where TType : Component where TWrapper : LevelEditorComponentWrapper
         {
             wrappers[typeof(TType)] = typeof(TWrapper);
@@ -46,19 +51,9 @@ namespace Hertzole.ALE
 
         public abstract ReadOnlyCollection<ExposedProperty> GetProperties();
         public abstract object GetValue(int id);
-        public abstract Type GetValueType(int id);
-
-        public IExposedWrapper GetWrapper()
-        {
-            throw new NotImplementedException();
-        }
-
-        public void ApplyWrapper(IExposedWrapper wrapper)
-        {
-            throw new NotImplementedException();
-        }
-
         public abstract void SetValue(int id, object value, bool notify);
+        public abstract IExposedWrapper GetWrapper();
+        public abstract void ApplyWrapper(IExposedWrapper wrapper);
 
         protected void InvokeOnValueChanged(int id, object value)
         {
