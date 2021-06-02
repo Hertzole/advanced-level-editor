@@ -11,17 +11,17 @@ namespace Hertzole.ALE
 #endif
     public class LevelEditorObject : MonoBehaviour, ILevelEditorObject, IEquatable<LevelEditorObject>, IEquatable<ILevelEditorObject>, ILevelEditorPoolable
     {
-        private struct ValueInfo
-        {
-            public int id;
-            public object value;
-
-            public ValueInfo(int id, object value)
-            {
-                this.id = id;
-                this.value = value;
-            }
-        }
+        // private struct ValueInfo
+        // {
+        //     public int id;
+        //     public object value;
+        //
+        //     public ValueInfo(int id, object value)
+        //     {
+        //         this.id = id;
+        //         this.value = value;
+        //     }
+        // }
 
         private bool gotComponents = false;
         private bool gotPlayModeObjects = false;
@@ -30,7 +30,7 @@ namespace Hertzole.ALE
         private ILevelEditorPlayModeObject[] playModeObjects;
         private ILevelEditorGizmos[] gizmos;
 
-        private Dictionary<int, ValueInfo[]> savedValues = new Dictionary<int, ValueInfo[]>();
+        // private Dictionary<int, ValueInfo[]> savedValues = new Dictionary<int, ValueInfo[]>();
 
         public string Name
         {
@@ -119,14 +119,15 @@ namespace Hertzole.ALE
             CachePlayModeObjects();
             CacheExposedComponents();
 
-            for (int i = 0; i < exposedComponents.Length; i++)
-            {
-                ReadOnlyCollection<ExposedProperty> properties = exposedComponents[i].GetProperties();
-                for (int ii = 0; ii < properties.Count; ii++)
-                {
-                    savedValues[i][ii] = new ValueInfo(ii, exposedComponents[i].GetValue(ii));
-                }
-            }
+            //TODO: Save exposed values in play mode.
+            // for (int i = 0; i < exposedComponents.Length; i++)
+            // {
+            //     ReadOnlyCollection<ExposedProperty> properties = exposedComponents[i].GetProperties();
+            //     for (int ii = 0; ii < properties.Count; ii++)
+            //     {
+            //         savedValues[i][ii] = new ValueInfo(ii, exposedComponents[i].GetValue(ii));
+            //     }
+            // }
 
             if (playModeObjects != null)
             {
@@ -142,14 +143,14 @@ namespace Hertzole.ALE
             CachePlayModeObjects();
             CacheExposedComponents();
 
-            for (int i = 0; i < exposedComponents.Length; i++)
-            {
-                ReadOnlyCollection<ExposedProperty> properties = exposedComponents[i].GetProperties();
-                for (int ii = 0; ii < properties.Count; ii++)
-                {
-                    exposedComponents[i].SetValue(savedValues[i][ii].id, savedValues[i][ii].value, true);
-                }
-            }
+            // for (int i = 0; i < exposedComponents.Length; i++)
+            // {
+            //     ReadOnlyCollection<ExposedProperty> properties = exposedComponents[i].GetProperties();
+            //     for (int ii = 0; ii < properties.Count; ii++)
+            //     {
+            //         exposedComponents[i].SetValue(savedValues[i][ii].id, savedValues[i][ii].value, true);
+            //     }
+            // }
 
             if (playModeObjects != null)
             {

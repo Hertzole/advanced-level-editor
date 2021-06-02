@@ -83,6 +83,7 @@ namespace Hertzole.ALE.CodeGen
                 AssemblyResolver = assemblyResolver,
                 ReflectionImporterProvider = new PostProcessorReflectionImporterProvider(),
                 ReadingMode = ReadingMode.Immediate,
+                ReadSymbols = true
             };
 
             AssemblyDefinition assemblyDefinition = AssemblyDefinition.ReadAssembly(new MemoryStream(compiledAssembly.InMemoryAssembly.PeData), readerParameters);
