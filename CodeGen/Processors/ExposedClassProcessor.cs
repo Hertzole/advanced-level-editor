@@ -81,7 +81,8 @@ namespace Hertzole.ALE.CodeGen
 						int id = attribute.GetConstructorArgument(0, 0);
 						if (usedIds.Contains(id))
 						{
-							Error($"{targetType.Name}.{targetType.Fields[i].Name} has a duplicate ID ({id}). IDs need to be unique.");
+							Error(attribute.Constructor.Resolve(), $"{targetType.Name}.{targetType.Fields[i].Name} has a duplicate ID ({id}). IDs need to be unique.");
+							continue;
 						}
 
 						usedIds.Add(id);
