@@ -13,8 +13,14 @@ namespace Hertzole.ALE
         private Button saveButton = null;
         [SerializeField]
         private Button closeButton = null;
+        
+        [Space]
+        
+        [SerializeField] 
+        private bool applyLevelNameOnLoad = true;
 
-        public string LevelName { get { return nameField.text; } }
+        public bool ApplyLevelNameOnLoad { get { return applyLevelNameOnLoad; } }
+        public string LevelName { get { return nameField.text; } set { nameField.text = value; } }
 
         public event Action<string> OnClickSave;
         public event Action OnClickClose;

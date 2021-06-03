@@ -121,6 +121,7 @@ namespace Hertzole.ALE
         public void Initialize(ILevelEditor levelEditor)
         {
             this.levelEditor = levelEditor;
+            levelEditor.SaveManager.OnLevelLoaded += OnLevelLoaded;
 
             if (!ReferenceEquals(levelEditor.Selection, null))
             {
@@ -252,8 +253,16 @@ namespace Hertzole.ALE
         {
             ToggleLoadModal(false);
         }
+        
+        protected virtual void OnLevelLoaded(object sender, LevelEventArgs e)
+        {
+            if (realSaveModal != null && realSaveModal.ApplyLevelNameOnLoad)
+            {
+                realSaveModal.LevelName = e.Data.name;
+            }
+        }
 
-        public void ClickNewLevel()
+        public virtual void ClickNewLevel()
         {
             if (levelEditor.IsDirty)
             {
@@ -261,13 +270,13 @@ namespace Hertzole.ALE
             }
         }
 
-        private void ConfirmNewLevel()
+        protected virtual void ConfirmNewLevel()
         {
             levelEditor.NewLevel();
             CloseNotification();
         }
 
-        public void ClickPlayLevel()
+        public virtual void ClickPlayLevel()
         {
             if (!levelEditor.StartPlayMode(out string failReason))
             {
@@ -311,7 +320,7 @@ namespace Hertzole.ALE
 
         protected virtual void UpdateModalBackground()
         {
-            modalsBackground.IfExists(x => x.SetActive(saveModal.activeSelf || loadModal.activeSelf));
+            modalsBackground.IfExists(x => x.SetActive(saveModal.activeSelf || loadModal.activeSelf || notificationModal.activeSelf));
         }
 
         public virtual void ToggleInspectorPanel(bool toggle)
@@ -323,11 +332,13 @@ namespace Hertzole.ALE
         {
             realNotificationModal.Show(title, text, yesButton, noButton, onClickYes, onClickNo);
             notificationModal.gameObject.SetActive(true);
+            UpdateModalBackground();
         }
 
         public virtual void CloseNotification()
         {
             notificationModal.gameObject.SetActive(false);
+            UpdateModalBackground();
         }
 
         public virtual void OnPlayModeStart()

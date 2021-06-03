@@ -144,10 +144,7 @@ namespace Hertzole.ALE
                 objectCount[resource.ID]++;
                 allObjects.Add(obj);
 
-                if (obj.MyGameObject.TryGetComponent(out ILevelEditorPoolable poolable))
-                {
-                    poolable.OnLevelEditorUnpooled();
-                }
+                obj.OnUnPooled();
 
                 objectsWithId[obj.InstanceID] = obj;
 
@@ -254,10 +251,7 @@ namespace Hertzole.ALE
             activeObjects[target.ID].Remove(target);
             objectCount[target.ID]--;
 
-            if (target.MyGameObject.TryGetComponent(out ILevelEditorPoolable poolable))
-            {
-                poolable.OnLevelEditorPooled();
-            }
+            target.OnPooled();
 
             if (target.MyGameObject.TryGetComponent(out ILevelEditorGizmos gizmos))
             {
