@@ -47,7 +47,10 @@ namespace Hertzole.ALE
             {
                 instance = this;
 
-                LevelEditorGizmos.Initialize(this);
+                if (!LevelEditorGizmos.IsInitialized)
+                {
+                    LevelEditorGizmos.Initialize(this);
+                }
             }
         }
 

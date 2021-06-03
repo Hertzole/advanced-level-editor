@@ -193,7 +193,10 @@ namespace Hertzole.ALE
             set { markTextureNonReadable = value; }
         }
 
-        static RuntimePreviewGenerator()
+        public static Vector3 PositionOffset { get; set; }
+
+        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
+        private static void ResetStatics()
         {
             PreviewRenderCamera = null;
             PreviewDirection = new Vector3(-1f, -1f, -1f);
@@ -201,7 +204,11 @@ namespace Hertzole.ALE
             BackgroundColor = new Color(0.3f, 0.3f, 0.3f, 1f);
             OrthographicMode = false;
             MarkTextureNonReadable = true;
-
+            PositionOffset = Vector3.zero;
+        }
+        
+        static RuntimePreviewGenerator()
+        {
 #if DEBUG_BOUNDS
             boundsMaterial = new Material( Shader.Find( "Legacy Shaders/Diffuse" ) )
             {
@@ -260,7 +267,7 @@ namespace Hertzole.ALE
             Transform previewObject;
             if (shouldCloneModel)
             {
-                previewObject = Object.Instantiate(model, null, false);
+                previewObject = Object.Instantiate(model, PositionOffset, Quaternion.identity, null);
                 previewObject.gameObject.hideFlags = HideFlags.HideAndDontSave;
             }
             else
@@ -331,7 +338,7 @@ namespace Hertzole.ALE
                 renderCamera.transform.rotation = Quaternion.LookRotation(previewDir, previewObject.up);
 
 #if DEBUG_BOUNDS
-            boundsDebugCubes.Clear();
+                boundsDebugCubes.Clear();
 #endif
 
                 float distance;
@@ -389,9 +396,9 @@ namespace Hertzole.ALE
                     distance = (1f + padding * 2f) * Mathf.Sqrt(maxDistance);
                 }
 
-                renderCamera.transform.position = boundsCenter - previewDir * distance;
+                renderCamera.transform.position = (boundsCenter - previewDir * distance);
                 renderCamera.farClipPlane = distance * 4f;
-
+                
                 RenderTexture temp = RenderTexture.active;
                 RenderTexture renderTex = RenderTexture.GetTemporary(width, height, 16);
                 RenderTexture.active = renderTex;

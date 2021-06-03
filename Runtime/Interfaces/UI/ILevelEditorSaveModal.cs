@@ -5,7 +5,8 @@ namespace Hertzole.ALE
 {
     public interface ILevelEditorSaveModal
     {
-        string LevelName { get; }
+        bool ApplyLevelNameOnLoad { get; }
+        string LevelName { get; set; }
 
         event Action<string> OnClickSave;
         event Action OnClickClose;

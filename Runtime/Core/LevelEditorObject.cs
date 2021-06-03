@@ -9,7 +9,7 @@ namespace Hertzole.ALE
     [DisallowMultipleComponent]
     [AddComponentMenu("")]
 #endif
-    public class LevelEditorObject : MonoBehaviour, ILevelEditorObject, IEquatable<LevelEditorObject>, IEquatable<ILevelEditorObject>, ILevelEditorPoolable
+    public class LevelEditorObject : MonoBehaviour, ILevelEditorObject, IEquatable<LevelEditorObject>, IEquatable<ILevelEditorObject>
     {
         // private struct ValueInfo
         // {
@@ -29,6 +29,7 @@ namespace Hertzole.ALE
         private IExposedToLevelEditor[] exposedComponents;
         private ILevelEditorPlayModeObject[] playModeObjects;
         private ILevelEditorGizmos[] gizmos;
+        private ILevelEditorPoolable[] poolables;
 
         // private Dictionary<int, ValueInfo[]> savedValues = new Dictionary<int, ValueInfo[]>();
 
@@ -71,6 +72,7 @@ namespace Hertzole.ALE
         private void Awake()
         {
             gizmos = GetComponentsInChildren<ILevelEditorGizmos>();
+            poolables = GetComponentsInChildren<ILevelEditorPoolable>();
         }
 
         private void OnEnable()
@@ -231,14 +233,24 @@ namespace Hertzole.ALE
             return other != null && other.InstanceID == InstanceID && other.ID == ID;
         }
 
-        public void OnLevelEditorPooled()
+        public void OnPooled()
         {
             LevelEditorWorld.RemoveObject(this);
+
+            for (int i = 0; i < poolables.Length; i++)
+            {
+                poolables[i].OnLevelEditorPooled();
+            }
         }
 
-        public void OnLevelEditorUnpooled()
+        public void OnUnPooled()
         {
             LevelEditorWorld.AddObject(this);
+
+            for (int i = 0; i < poolables.Length; i++)
+            {
+                poolables[i].OnLevelEditorUnpooled();
+            }
         }
     }
 }

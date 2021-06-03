@@ -42,5 +42,9 @@ namespace Hertzole.ALE
         void AddChild(ILevelEditorObject child);
 
         void RemoveChild(ILevelEditorObject child);
+
+        void OnPooled();
+
+        void OnUnPooled();
     }
 }
