@@ -42,6 +42,7 @@ What needs to be done before 1.0.0 verified.
 - [x] Integrate custom serializers
 - [ ] Menu items
 - [ ] Add component menus
+- [x] Fast enter play mode support
 - [x] Custom component wrappers
 - [x] Serialize arrays¹
 - [x] Serialize lists¹

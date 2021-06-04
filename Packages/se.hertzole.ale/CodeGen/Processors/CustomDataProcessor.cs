@@ -1,6 +1,9 @@
-﻿using Hertzole.ALE.CodeGen.Helpers;
+﻿using System.Collections.Generic;
+using Hertzole.ALE.CodeGen.Helpers;
+using MessagePack.Formatters;
 using Mono.Cecil;
 using Mono.Cecil.Cil;
+using Mono.Cecil.Rocks;
 
 namespace Hertzole.ALE.CodeGen
 {
@@ -80,6 +83,9 @@ namespace Hertzole.ALE.CodeGen
 					resolverProcessor.AddCustomDataType(dataType);
 					registerTypeProcessor.AddType(dataType);
 					formatterProcessor.AddTypeToGenerate(dataType.Resolve());
+					resolverProcessor.AddTypeFormatter(
+						module.GetTypeReference(typeof(DictionaryFormatter<,>)).MakeGenericInstanceType(module.GetTypeReference<string>(), dataType),
+						module.GetTypeReference(typeof(Dictionary<,>)).MakeGenericInstanceType(module.GetTypeReference<string>(), dataType));
 				}
 			}
 

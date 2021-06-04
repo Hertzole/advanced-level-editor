@@ -12,11 +12,11 @@ namespace Hertzole.ALE.CodeGen
 {
 	public class ResolverProcessor
 	{
-		private readonly List<(TypeDefinition, TypeDefinition)> allFormatters = new List<(TypeDefinition, TypeDefinition)>();
+		private readonly List<(TypeReference, TypeReference)> allFormatters = new List<(TypeReference, TypeReference)>();
 		private readonly List<TypeReference> customDataTypes = new List<TypeReference>();
 		private readonly List<TypeDefinition> enums = new List<TypeDefinition>();
 		private readonly ModuleDefinition module;
-		private readonly List<(TypeDefinition, TypeDefinition)> typeFormatters = new List<(TypeDefinition, TypeDefinition)>();
+		private readonly List<(TypeReference, TypeReference)> typeFormatters = new List<(TypeReference, TypeReference)>();
 
 		private readonly List<(TypeDefinition, TypeDefinition, TypeDefinition)> wrapperFormatters = new List<(TypeDefinition, TypeDefinition, TypeDefinition)>();
 		private FieldDefinition formatterField;
@@ -36,7 +36,7 @@ namespace Hertzole.ALE.CodeGen
 			wrapperFormatters.Add((formatter, wrapperType, baseClass));
 		}
 
-		public void AddTypeFormatter(TypeDefinition formatter, TypeDefinition type)
+		public void AddTypeFormatter(TypeReference formatter, TypeReference type)
 		{
 			typeFormatters.Add((formatter, type));
 		}
@@ -251,7 +251,20 @@ namespace Hertzole.ALE.CodeGen
 				}
 				else
 				{
-					i.Emit(OpCodes.Newobj, formatter.Item1.GetConstructor());
+					MethodReference constructor = formatter.Item1.Resolve().GetConstructor();
+
+					if (formatter.Item1 is GenericInstanceType genericType)
+					{
+						TypeReference[] genericTypes = new TypeReference[genericType.GenericArguments.Count];
+						for (int j = 0; j < genericTypes.Length; j++)
+						{
+							genericTypes[j] = genericType.GenericArguments[j].GetElementType();
+						}
+						
+						constructor = constructor.MakeHostInstanceGeneric(formatter.Item1.Resolve().MakeGenericInstanceType(genericTypes));
+					}
+					
+					i.Emit(OpCodes.Newobj, module.ImportReference(constructor));
 					i.Emit(OpCodes.Ret);
 				}
 			}, i => // Default
