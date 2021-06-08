@@ -20,6 +20,7 @@ namespace Hertzole.ALE.Editor
     {
 #if !OBSOLETE
         private SerializedProperty actionAsset;
+        private SerializedProperty playerInput;
         private SerializedProperty autoEnableInput;
         private SerializedProperty autoDisableInput;
         private SerializedProperty actions;
@@ -44,6 +45,7 @@ namespace Hertzole.ALE.Editor
         private void GetProperties()
         {
             actionAsset = serializedObject.FindProperty("inputAsset");
+            playerInput = serializedObject.FindProperty("playerInput");
             autoEnableInput = serializedObject.FindProperty("autoEnableInput");
             autoDisableInput = serializedObject.FindProperty("autoDisableInput");
             actions = serializedObject.FindProperty("actions");
@@ -74,6 +76,12 @@ namespace Hertzole.ALE.Editor
 
             DoCreateActions();
 
+            EditorGUILayout.Space();
+            
+            EditorGUILayout.PropertyField(playerInput);
+            
+            EditorGUILayout.Space();
+            
             EditorGUILayout.PropertyField(autoEnableInput);
             EditorGUILayout.PropertyField(autoDisableInput);
 
