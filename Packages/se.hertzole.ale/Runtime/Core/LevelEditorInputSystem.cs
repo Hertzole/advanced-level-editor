@@ -32,6 +32,9 @@ namespace Hertzole.ALE
         [FormerlySerializedAs("input")]
         [Tooltip("The input asset to get all actions from.")]
         private InputActionAsset inputAsset = null;
+        [SerializeField] 
+        [Tooltip("Optional player input to hook into.")]
+        private PlayerInput playerInput = default;
         [SerializeField]
         [Tooltip("All the available actions.")]
         private InputSystemItem[] actions = null;
@@ -43,11 +46,12 @@ namespace Hertzole.ALE
         [Tooltip("If true, all actions will be disabled on disable.")]
         private bool autoDisableInput = true;
 
-        private bool enabledInput = false;
+        private bool enabledInput;
+        private bool hasPlayerInput;
 
 #if !OBSOLETE
 #if UNITY_EDITOR
-        [System.Obsolete("Use 'InputAsset' instead. This will be removed on build.", true)]
+        [Obsolete("Use 'InputAsset' instead. This will be removed on build.", true)]
         public InputActionAsset Input { get { return InputAsset; } set { InputAsset = value; } }
 #endif
         /// <summary> The input asset to get all actions from. </summary>
@@ -62,6 +66,21 @@ namespace Hertzole.ALE
         /// <summary> If true, all actions will be disabled on disable. </summary>
         public bool AutoDisableInput { get { return autoDisableInput; } set { autoDisableInput = value; } }
 
+        /// <summary> Optional player input to hook into. </summary>
+        public PlayerInput PlayerInput 
+        { 
+            get { return playerInput; } 
+            set 
+            {
+                if (playerInput != value)
+                {
+                    playerInput = value; 
+                    hasPlayerInput = value != null;
+                    UpdateActions();
+                }
+            } 
+        }
+        
         public Vector2 MousePosition { get { return Mouse.current.position.ReadValue(); } }
 
 #if !OBSOLETE
@@ -69,10 +88,15 @@ namespace Hertzole.ALE
         public InputSystemItem[] Actions { get { return actions; } set { actions = value; } }
 #endif
 
+        private void Awake()
+        {
+            hasPlayerInput = playerInput != null;
+        }
+
         private void Start()
         {
 #if OBSOLETE
-            Debug.LogError(gameObject.name + " has LevelEditorInputSystem added. It does not work on the legacy input manager.");
+            Debug.LogError($"{gameObject.name} has LevelEditorInputSystem added. It does not work on the legacy input manager.");
 #else
             UpdateActions();
 #endif
@@ -93,11 +117,18 @@ namespace Hertzole.ALE
                     // If the action doesn't exist, complain.
                     if (actions[i].action == null)
                     {
-                        Debug.LogWarning("There's no action asset present on " + actions[i].actionName + ". It will not be enabled.", gameObject);
+                        Debug.LogWarning($"There's no action asset present on {actions[i].actionName}. It will not be enabled.", gameObject);
                         continue;
                     }
 #endif
-                    actions[i].action.action.Enable();
+                    if (playerInput != null)
+                    {
+                        playerInput.actions[actions[i].action.action.name].Enable();
+                    }
+                    else
+                    {
+                        actions[i].action.action.Enable();
+                    }
                 }
                 enabledInput = true;
             }
@@ -119,11 +150,18 @@ namespace Hertzole.ALE
                     // If the action doesn't exist, complain.
                     if (actions[i].action == null)
                     {
-                        Debug.LogWarning("There's no action asset present on " + actions[i].actionName + ". It will not be disabled.", gameObject);
+                        Debug.LogWarning($"There's no action asset present on {actions[i].actionName}. It will not be disabled.", gameObject);
                         continue;
                     }
 #endif
-                    actions[i].action.action.Disable();
+                    if (playerInput != null)
+                    {
+                        playerInput.actions[actions[i].action.action.name].Disable();
+                    }
+                    else
+                    {
+                        actions[i].action.action.Disable();
+                    }
                 }
                 enabledInput = false;
             }
@@ -142,13 +180,13 @@ namespace Hertzole.ALE
             // If the action doesn't exist, complain.
             if (!actionsDictionary.ContainsKey(actionName))
             {
-                throw new System.ArgumentException("There's no action called '" + actionName + "' on " + gameObject.name + ".");
+                throw new ArgumentException($"There's no action called '{actionName}' on {gameObject.name}.");
             }
 
             // If there's no action, complain.
             if (actionsDictionary[actionName] == null)
             {
-                Debug.LogWarning("There's no action asset present on " + actionsDictionary[actionName] + ".", gameObject);
+                Debug.LogWarning($"There's no action asset present on {actionsDictionary[actionName]}.", gameObject);
                 return;
             }
 #endif // DEBUG || UNITY_EDITOR
@@ -168,13 +206,13 @@ namespace Hertzole.ALE
             // If the index is out of range, complain.
             if (actionIndex < 0 || actionIndex >= actions.Length)
             {
-                throw new System.ArgumentOutOfRangeException("actionIndex");
+                throw new ArgumentOutOfRangeException(nameof(actionIndex));
             }
 
             // If there's no action, complain.
             if (actions[actionIndex].action == null)
             {
-                Debug.LogWarning("There's no action asset present on " + actions[actionIndex].actionName + ".", gameObject);
+                Debug.LogWarning($"There's no action asset present on {actions[actionIndex].actionName}.", gameObject);
                 return;
             }
 #endif // DEBUG || UNITY_EDITOR
@@ -194,13 +232,13 @@ namespace Hertzole.ALE
             // If the action doesn't exist, complain.
             if (!actionsDictionary.ContainsKey(actionName))
             {
-                throw new System.ArgumentException("There's no action called '" + actionName + "' on " + gameObject.name + ".");
+                throw new ArgumentException($"There's no action called '{actionName}' on {gameObject.name}.");
             }
 
             // If there's no action, complain.
             if (actionsDictionary[actionName] == null)
             {
-                Debug.LogWarning("There's no action asset present on " + actionsDictionary[actionName] + ".", gameObject);
+                Debug.LogWarning($"There's no action asset present on {actionsDictionary[actionName]}.", gameObject);
                 return;
             }
 #endif // DEBUG || UNITY_EDITOR
@@ -220,13 +258,13 @@ namespace Hertzole.ALE
             // If the index is out of range, complain.
             if (actionIndex < 0 || actionIndex >= actions.Length)
             {
-                throw new System.ArgumentOutOfRangeException("actionIndex");
+                throw new ArgumentOutOfRangeException(nameof(actionIndex));
             }
 
             // If there's no action, complain.
             if (actions[actionIndex].action == null)
             {
-                Debug.LogWarning("There's no action asset present on " + actions[actionIndex].actionName + ".", gameObject);
+                Debug.LogWarning($"There's no action asset present on {actions[actionIndex].actionName}.", gameObject);
                 return;
             }
 #endif // DEBUG || UNITY_EDITOR
@@ -261,10 +299,18 @@ namespace Hertzole.ALE
                 return;
             }
 
-            actionsDictionary = new Dictionary<string, InputAction>();
+            if (actionsDictionary == null)
+            {
+                actionsDictionary = new Dictionary<string, InputAction>(actions.Length);
+            }
+            else
+            {
+                actionsDictionary.Clear();
+            }
+            
             for (int i = 0; i < actions.Length; i++)
             {
-                actionsDictionary.Add(actions[i].actionName, actions[i].action);
+                actionsDictionary.Add(actions[i].actionName, hasPlayerInput ? playerInput.actions[actions[i].action.name] : actions[i].action);
             }
         }
 #endif // !OBSOLETE
@@ -281,7 +327,7 @@ namespace Hertzole.ALE
             {
                 return false;
             }
-
+            
             return actionsDictionary[buttonName].activeControl is ButtonControl button && button.isPressed;
 #else
             return false;
@@ -371,7 +417,7 @@ namespace Hertzole.ALE
 #if DEBUG || UNITY_EDITOR
             if (inputAsset == null)
             {
-                Debug.LogWarning("There is no input asset on " + gameObject.name + ".", gameObject);
+                Debug.LogWarning($"There is no input asset on {gameObject.name}.", gameObject);
                 return false;
             }
 #endif
@@ -386,14 +432,14 @@ namespace Hertzole.ALE
             // If there's no action, complain.
             if (!actionsDictionary.ContainsKey(action))
             {
-                Debug.LogError("Can't find action '" + action + "' in " + inputAsset.name + ".");
+                Debug.LogError($"Can't find action '{action}' in {inputAsset.name}.");
                 return false;
             }
 
             // Check if there's an action asset assigned.
             if (actionsDictionary[action] == null)
             {
-                Debug.LogError("There's no action assigned on '" + action + "'.", gameObject);
+                Debug.LogError($"There's no action assigned on '{action}'.", gameObject);
                 return false;
             }
 #endif
@@ -409,7 +455,7 @@ namespace Hertzole.ALE
             {
                 if (!(actionsDictionary[action].activeControl is AxisControl))
                 {
-                    Debug.LogError(action + " is not an axis type.");
+                    Debug.LogError($"{action} is not an axis type.");
                     return false;
                 }
             }
@@ -429,6 +475,8 @@ namespace Hertzole.ALE
         {
             if (Application.isPlaying)
             {
+                hasPlayerInput = playerInput != null;
+                
                 UpdateActions();
 
                 if (enabledInput)
