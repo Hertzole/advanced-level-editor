@@ -148,6 +148,8 @@ namespace Hertzole.ALE.Generated
 				// 	return new Hertzole.ALE.Generated.Formatters._TintObject_Formatter();
 				// case 5:
 				// 	return new Hertzole.ALE.Generated.Formatters._TypesTest_Formatter();
+				case 1:
+					return new DictionaryFormatter<string, string>();
 				default:
 					return null;
 				}
@@ -156,6 +158,10 @@ namespace Hertzole.ALE.Generated
 			// Token: 0x04000101 RID: 257
 			private static readonly Dictionary<Type, int> lookup = new Dictionary<Type, int>
 			{
+				{
+					typeof(Dictionary<string, string>),
+					0
+				}
 				// {
 				// 	typeof(global::ArrayScript.Wrapper),
 				// 	0

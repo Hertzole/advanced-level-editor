@@ -3829,6 +3829,7 @@ GameObject:
   - component: {fileID: 1918987442}
   - component: {fileID: 1918987441}
   - component: {fileID: 1918987443}
+  - component: {fileID: 1918987444}
   m_Layer: 0
   m_Name: Level Editor
   m_TagString: Untagged
@@ -4037,6 +4038,23 @@ MonoBehaviour:
     mustBeActive: 1
   playerPrefab: {fileID: 416850483939662357, guid: 793a24b3d4788e94d855dd8f17cb58e6, type: 3}
   spawnpointTag: Respawn
+--- !u!114 &1918987444
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1918987434}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 74f805b74b4b8544b8113871fb46299f, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  inputAsset: {fileID: 0}
+  playerInput: {fileID: 0}
+  actions: []
+  autoEnableInput: 1
+  autoDisableInput: 1
 --- !u!224 &1922205037 stripped
 RectTransform:
   m_CorrespondingSourceObject: {fileID: 7876597587132607473, guid: b710a2d7ade41714298e4e67eef18342, type: 3}
@@ -4403,6 +4421,7 @@ MonoBehaviour:
   nameField: {fileID: 551511574}
   saveButton: {fileID: 2054787181}
   closeButton: {fileID: 641636020}
+  applyLevelNameOnLoad: 1
 --- !u!114 &2007701581 stripped
 MonoBehaviour:
   m_CorrespondingSourceObject: {fileID: 3929326819928647551, guid: 10902f01addff5545876c7a4dee44aec, type: 3}
