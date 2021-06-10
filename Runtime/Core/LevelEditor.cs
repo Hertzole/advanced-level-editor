@@ -10,11 +10,6 @@ namespace Hertzole.ALE
     [DefaultExecutionOrder(-10000)]
     public class LevelEditor : MonoBehaviour, ILevelEditor
     {
-        [SerializeField]
-        private ScriptableObject resources = null;
-
-        [Space]
-
         [SerializeField, RequireType(typeof(ILevelEditorCamera))]
         private GameObject editorCamera = null;
         [SerializeField, RequireType(typeof(ILevelEditorUI))]
@@ -43,7 +38,6 @@ namespace Hertzole.ALE
 
         private ILevelEditorMode[] editorModes;
 
-        private ILevelEditorResources realResources;
         private ILevelEditorCamera editorCameraComp;
         private ILevelEditorUI uiComp;
         private ILevelEditorSaveManager saveManagerComp;
@@ -54,43 +48,28 @@ namespace Hertzole.ALE
         private ILevelEditorUndo undoComp;
 
         public ILevelEditorSnapping Snapping { get { return snapSettings; } }
-        public ILevelEditorCamera LevelEditorCamera { get { return editorCameraComp; } }
-        public ILevelEditorUI UI { get { return uiComp; } }
-        public ILevelEditorSaveManager SaveManager { get { return saveManagerComp; } }
-        public ILevelEditorObjectManager ObjectManager { get { return objectManagerComp; } }
-        public ILevelEditorPlayMode PlayMode { get { return playModeComp; } }
-        public ILevelEditorInput Input { get { return inputComp; } }
-        public ILevelEditorSelection Selection { get { return selectionComp; } }
-        public ILevelEditorUndo Undo { get { return undoComp; } }
+        public ILevelEditorCamera LevelEditorCamera { get { return editorCameraComp; } set { editorCameraComp = value; } }
+        public ILevelEditorUI UI { get { return uiComp; } set { uiComp = value; } }
+        public ILevelEditorSaveManager SaveManager { get { return saveManagerComp; } set { saveManagerComp = value; } }
+        public ILevelEditorObjectManager ObjectManager { get { return objectManagerComp; } set { objectManagerComp = value; } }
+        public ILevelEditorPlayMode PlayMode { get { return playModeComp; } set { playModeComp = value; } }
+        public ILevelEditorInput Input { get { return inputComp; } set { inputComp = value; } }
+        public ILevelEditorSelection Selection { get { return selectionComp; } set { selectionComp = value; } }
+        public ILevelEditorUndo Undo { get { return undoComp; } set { undoComp = value; } }
 
         public bool IsDirty { get { return isDirty; } }
 
         private void Awake()
         {
-#if !ALE_STRIP_SAFETY || UNITY_EDITOR
-            if (!resources.ExistsAndImplements<ILevelEditorResources>(nameof(resources), this))
-            {
-                return;
-            }
-#endif
-
-            realResources = resources as ILevelEditorResources;
-            editorCameraComp = editorCamera.NeedComponent<ILevelEditorCamera>();
-            uiComp = ui.NeedComponent<ILevelEditorUI>();
-            saveManagerComp = saveManager.NeedComponent<ILevelEditorSaveManager>();
-            objectManagerComp = objectManager.NeedComponent<ILevelEditorObjectManager>();
-            inputComp = input.NeedComponent<ILevelEditorInput>();
-            selectionComp = selection.NeedComponent<ILevelEditorSelection>();
-            if (undo != null)
-            {
-                undoComp = undo.NeedComponent<ILevelEditorUndo>();
-            }
-
-            if (playMode != null) // Play mode is not required.
-            {
-                playModeComp = playMode.NeedComponent<ILevelEditorPlayMode>();
-            }
-
+            if (editorCamera != null) { editorCameraComp = editorCamera.NeedComponent<ILevelEditorCamera>(); }
+            if (ui != null) { uiComp = ui.NeedComponent<ILevelEditorUI>(); } 
+            if (saveManager != null) { saveManagerComp = saveManager.NeedComponent<ILevelEditorSaveManager>(); }
+            if (objectManager != null) { objectManagerComp = objectManager.NeedComponent<ILevelEditorObjectManager>(); }
+            if (input != null) { inputComp = input.NeedComponent<ILevelEditorInput>(); }
+            if (selection != null) { selectionComp = selection.NeedComponent<ILevelEditorSelection>(); }
+            if (undo != null) { undoComp = undo.NeedComponent<ILevelEditorUndo>(); }
+            if (playMode != null) { playModeComp = playMode.NeedComponent<ILevelEditorPlayMode>(); }
+            
             editorModes = GetComponents<ILevelEditorMode>();
 
             if (editorModes != null && editorModes.Length > 0)
@@ -107,22 +86,10 @@ namespace Hertzole.ALE
 
         private void Start()
         {
-#if DEBUG
-            if (uiComp == null)
+            if (uiComp != null)
             {
-                LevelEditorLogger.DebugLogError("LevelEditor Start stopped because there's no ILevelEditorUI assigned.");
-                return;
+                uiComp.Initialize(this);
             }
-
-            if (resources == null)
-            {
-                LevelEditorLogger.DebugLogError("LevelEditor Start stopped because there's no ILevelEditorResources assigned.");
-                return;
-            }
-#endif
-
-            uiComp.Initialize(this);
-            uiComp.InitializeResources(realResources.GetResources());
 
             if (editorModes != null && editorModes.Length > 0)
             {
@@ -133,10 +100,10 @@ namespace Hertzole.ALE
 
                 SetMode(0);
             }
-            else
-            {
-                LevelEditorLogger.DebugLogError("There are no editor mode components (Extends LevelEditorMode or implements ILevelEditorMode) attached on the level editor object. At least one must be present to function.");
-            }
+            // else
+            // {
+            //     LevelEditorLogger.DebugLogError("There are no editor mode components (Extends LevelEditorMode or implements ILevelEditorMode) attached on the level editor object. At least one must be present to function.");
+            // }
         }
 
         private void OnEnable()
@@ -149,7 +116,10 @@ namespace Hertzole.ALE
             }
 #endif
 
-            objectManagerComp.OnCreatedObject += OnCreateDeleteObject;
+            if (objectManagerComp != null)
+            {
+                objectManagerComp.OnCreatedObject += OnCreateDeleteObject;
+            }
 
             if (playModeComp != null)
             {
@@ -168,7 +138,10 @@ namespace Hertzole.ALE
             }
 #endif
 
-            objectManagerComp.OnCreatedObject -= OnCreateDeleteObject;
+            if (objectManagerComp != null)
+            {
+                objectManagerComp.OnCreatedObject -= OnCreateDeleteObject;
+            }
 
             if (playModeComp != null)
             {
@@ -352,25 +325,5 @@ namespace Hertzole.ALE
             uiComp.OnPlayModeStop();
             editorModes[selectedMode].OnModeEnable();
         }
-
-#if UNITY_EDITOR
-        private void OnValidate()
-        {
-            GetStandardComponents();
-        }
-
-        private void Reset()
-        {
-            GetStandardComponents();
-        }
-
-        private void GetStandardComponents()
-        {
-            if (!resources.ExistsAndImplements<ILevelEditorResources>(nameof(resources), this, false))
-            {
-                resources = null;
-            }
-        }
-#endif
     }
 }

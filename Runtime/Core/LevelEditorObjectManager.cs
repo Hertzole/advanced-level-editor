@@ -119,6 +119,7 @@ namespace Hertzole.ALE
                     obj.ID = resource.ID;
 
                     LevelEditorComponentWrapper.AddWrappers(objGo);
+                    obj.GetExposedComponents();
                 }
 
                 obj.MyGameObject.name = resource.Name;
@@ -181,22 +182,6 @@ namespace Hertzole.ALE
                 for (int i = 0; i < allObjects.Length; i++)
                 {
                     LevelEditorComponentData[] components = data.objects[i].components;
-                    for (int j = 0; j < components.Length; j++)
-                    {
-                        // LevelEditorPropertyData[] properties = components[j].properties;
-                        // for (int k = 0; k < properties.Length; k++)
-                        // {
-                        //     if (properties[k].typeName == "UnityEngine.Component")
-                        //     {
-                        //         ILevelEditorObject targetObj = null;
-                        //         if (properties[k].value != null)
-                        //         {
-                        //             // targetObj = GetObject((uint)properties[k].value);
-                        //         }
-                        //         properties[k].value = targetObj ?? null;
-                        //     }
-                        // }
-                    }
 
                     allObjects[i].ApplyExposedData(components);
                     OnCreatedObjectFromSaveData?.Invoke(this, new LevelEditorObjectEvent(allObjects[i]));

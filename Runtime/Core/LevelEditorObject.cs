@@ -30,8 +30,8 @@ namespace Hertzole.ALE
         private ILevelEditorPlayModeObject[] playModeObjects;
         private ILevelEditorGizmos[] gizmos;
         private ILevelEditorPoolable[] poolables;
-
-        // private Dictionary<int, ValueInfo[]> savedValues = new Dictionary<int, ValueInfo[]>();
+        private IExposedWrapper[] originalValues;
+        private IExposedWrapper[] playModeValues;
 
         public string Name
         {
@@ -60,6 +60,7 @@ namespace Hertzole.ALE
 
         public string ID { get; set; }
         public uint InstanceID { get; set; }
+
 
         public ILevelEditorObject Parent { get; set; }
 
@@ -101,7 +102,7 @@ namespace Hertzole.ALE
         public void ApplyExposedData(LevelEditorComponentData[] components)
         {
             CacheExposedComponents();
-
+            
             for (int i = 0; i < components.Length; i++)
             {
                 string compName = components[i].type.FullName;
@@ -120,16 +121,11 @@ namespace Hertzole.ALE
         {
             CachePlayModeObjects();
             CacheExposedComponents();
-
-            //TODO: Save exposed values in play mode.
-            // for (int i = 0; i < exposedComponents.Length; i++)
-            // {
-            //     ReadOnlyCollection<ExposedProperty> properties = exposedComponents[i].GetProperties();
-            //     for (int ii = 0; ii < properties.Count; ii++)
-            //     {
-            //         savedValues[i][ii] = new ValueInfo(ii, exposedComponents[i].GetValue(ii));
-            //     }
-            // }
+            
+            for (int i = 0; i < exposedComponents.Length; i++)
+            {
+                playModeValues[i] = exposedComponents[i].GetWrapper();
+            }
 
             if (playModeObjects != null)
             {
@@ -145,14 +141,10 @@ namespace Hertzole.ALE
             CachePlayModeObjects();
             CacheExposedComponents();
 
-            // for (int i = 0; i < exposedComponents.Length; i++)
-            // {
-            //     ReadOnlyCollection<ExposedProperty> properties = exposedComponents[i].GetProperties();
-            //     for (int ii = 0; ii < properties.Count; ii++)
-            //     {
-            //         exposedComponents[i].SetValue(savedValues[i][ii].id, savedValues[i][ii].value, true);
-            //     }
-            // }
+            for (int i = 0; i < exposedComponents.Length; i++)
+            {
+                exposedComponents[i].ApplyWrapper(playModeValues[i]);
+            }
 
             if (playModeObjects != null)
             {
@@ -190,7 +182,7 @@ namespace Hertzole.ALE
 
             Children.Remove(child);
         }
-
+        
         private void CacheExposedComponents()
         {
             if (gotComponents)
@@ -204,11 +196,18 @@ namespace Hertzole.ALE
                 Array.Sort(exposedComponents, (x, y) => x.Order.CompareTo(y.Order));
             }
 
-            // for (int i = 0; i < exposedComponents.Length; i++)
-            // {
-            //     savedValues.Add(i, new ValueInfo[exposedComponents[i].GetProperties().Count]);
-            // }
+            if (exposedComponents != null && exposedComponents.Length > 0)
+            {
+                originalValues = new IExposedWrapper[exposedComponents.Length];
 
+                for (int i = 0; i < originalValues.Length; i++)
+                {
+                    originalValues[i] = exposedComponents[i].GetWrapper();
+                }
+
+                playModeValues = new IExposedWrapper[exposedComponents.Length];
+            }
+            
             gotComponents = true;
         }
 
@@ -236,6 +235,14 @@ namespace Hertzole.ALE
         public void OnPooled()
         {
             LevelEditorWorld.RemoveObject(this);
+            
+            if (originalValues != null)
+            {
+                for (int i = 0; i < originalValues.Length; i++)
+                {
+                    exposedComponents[i].ApplyWrapper(originalValues[i]);
+                }
+            }
 
             for (int i = 0; i < poolables.Length; i++)
             {
