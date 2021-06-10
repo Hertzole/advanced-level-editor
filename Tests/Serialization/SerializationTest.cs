@@ -8,132 +8,25 @@ using UnityEngine.TestTools;
 
 namespace Hertzole.ALE.Tests
 {
-	public abstract class SerializationTest
+	public abstract class SerializationTest : LevelEditorTest
 	{
-		private readonly List<GameObject> sceneObjects = new List<GameObject>();
-		private GameObject capsule;
-
-		private GameObject cube;
-		private GameObject cylinder;
-
 		private string filePath;
-		private LevelEditorObjectManager objectManager;
-		private LevelEditorResourceList resources;
-		protected LevelEditorSaveManager saveManager;
-		private GameObject sphere;
 
-		[UnitySetUp]
-		public IEnumerator SetUp()
+		protected override void OnSceneSetup(List<GameObject> objects)
 		{
 			filePath = $"{Application.dataPath}/generated__test__save__file.temp";
-
-			CreateResources();
-			CreateManagers();
-			SetUpWrappers();
-
-			OnSetUp();
-			yield return null;
-		}
-
-		protected virtual void OnSetUp() { }
-
-		private void CreateResources()
-		{
-			resources = ScriptableObject.CreateInstance<LevelEditorResourceList>();
-
-			cube = GameObject.CreatePrimitive(PrimitiveType.Cube);
-			sphere = GameObject.CreatePrimitive(PrimitiveType.Sphere);
-			capsule = GameObject.CreatePrimitive(PrimitiveType.Capsule);
-			cylinder = GameObject.CreatePrimitive(PrimitiveType.Cylinder);
-
-			sceneObjects.Add(cube);
-			sceneObjects.Add(sphere);
-			sceneObjects.Add(capsule);
-			sceneObjects.Add(cylinder);
-
-			LevelEditorResource cubeResource = new LevelEditorResource
-			{
-				Name = "Cube",
-				Asset = cube,
-				ID = "cube"
-			};
-
-			LevelEditorResource sphereResource = new LevelEditorResource
-			{
-				Name = "Sphere",
-				Asset = sphere,
-				ID = "sphere"
-			};
-
-			LevelEditorResource capsuleResource = new LevelEditorResource
-			{
-				Name = "Capsule",
-				Asset = capsule,
-				ID = "capsule"
-			};
-
-			LevelEditorResource cylinderResource = new LevelEditorResource
-			{
-				Name = "Cylinder",
-				Asset = cylinder,
-				ID = "cylinder"
-			};
-
-			resources.AddResource(cubeResource);
-			resources.AddResource(sphereResource);
-			resources.AddResource(capsuleResource);
-			resources.AddResource(cylinderResource);
-		}
-
-		private void CreateManagers()
-		{
-			GameObject objectManagerGo = new GameObject("Object Manager");
-			objectManager = objectManagerGo.AddComponent<LevelEditorObjectManager>();
-			objectManager.Resources = resources;
 			objectManager.PoolObjects = false;
-
-			sceneObjects.Add(objectManagerGo);
-
-			GameObject saveManagerGo = new GameObject("Save Manager");
-			saveManager = saveManagerGo.AddComponent<LevelEditorSaveManager>();
-			saveManager.ObjectManager = objectManager;
-
-			sceneObjects.Add(saveManagerGo);
+			OnSetUp();
 		}
 
-		private void SetUpWrappers()
-		{
-			if (!LevelEditorComponentWrapper.HasWrapper<Transform>())
-			{
-				LevelEditorComponentWrapper.RegisterWrapper<Transform, TransformWrapper>();
-			}
+		protected abstract void OnSetUp();
 
-			if (!LevelEditorComponentWrapper.HasWrapper<Rigidbody>())
-			{
-				LevelEditorComponentWrapper.RegisterWrapper<Rigidbody, RigidbodyWrapper>();
-			}
-		}
-
-		[UnityTearDown]
-		public IEnumerator TearDown()
+		protected override void OnTearDownScene()
 		{
 			if (File.Exists(filePath))
 			{
 				File.Delete(filePath);
 			}
-
-			objectManager.DeleteAllObjects(false);
-
-			Object.DestroyImmediate(resources);
-
-			for (int i = 0; i < sceneObjects.Count; i++)
-			{
-				Object.DestroyImmediate(sceneObjects[i]);
-			}
-
-			sceneObjects.Clear();
-
-			yield return null;
 		}
 
 		[UnityTest]
@@ -751,20 +644,6 @@ namespace Hertzole.ALE.Tests
 		private void Load()
 		{
 			saveManager.LoadLevel(filePath);
-		}
-
-		private void AreApproximatelyEqual(Vector3 expected, Vector3 actual)
-		{
-			Assert.AreApproximatelyEqual(expected.x, actual.x);
-			Assert.AreApproximatelyEqual(expected.y, actual.y);
-			Assert.AreApproximatelyEqual(expected.z, actual.z);
-		}
-
-		private void AreApproximatelyEqual(Vector3 expected, Vector3 actual, float tolerance)
-		{
-			Assert.AreApproximatelyEqual(expected.x, actual.x, tolerance);
-			Assert.AreApproximatelyEqual(expected.y, actual.y, tolerance);
-			Assert.AreApproximatelyEqual(expected.z, actual.z, tolerance);
 		}
 	}
 }

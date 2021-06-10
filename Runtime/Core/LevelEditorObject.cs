@@ -157,17 +157,10 @@ namespace Hertzole.ALE
 
         public void AddChild(ILevelEditorObject child)
         {
-            if (child == null)
+            if (child == null || Children.Contains(child))
             {
                 return;
             }
-
-#if !ALE_STRIP_SAFETY
-            if (Children.Contains(child))
-            {
-                throw new NotSupportedException("There can not be any duplicate children in the childrens list.");
-            }
-#endif
 
             Children.Add(child);
             child.MyGameObject.transform.SetParent(transform);

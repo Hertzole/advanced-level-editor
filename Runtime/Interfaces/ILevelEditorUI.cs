@@ -16,8 +16,6 @@ namespace Hertzole.ALE
 
         void Initialize(ILevelEditor levelEditor);
 
-        void InitializeResources(ILevelEditorResource[] resources);
-
         void ToggleSaveModal(bool toggle);
 
         void ToggleLoadModal(bool toggle);

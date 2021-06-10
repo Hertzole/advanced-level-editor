@@ -10,6 +10,11 @@ namespace Hertzole.ALE
     public class LevelEditorUGUI : MonoBehaviour, ILevelEditorUI
     {
         [SerializeField]
+        private ScriptableObject resources = null;
+        
+        [Space]
+        
+        [SerializeField]
         private GameObject editorRoot = null;
         [SerializeField]
         private GameObject playModeRoot = null;
@@ -40,6 +45,7 @@ namespace Hertzole.ALE
         [RequireType(typeof(ILevelEditorObjectPickerWindow))]
         private GameObject objectPickerWindow = null;
 
+        private ILevelEditorResources realResources;
         private ILevelEditor levelEditor;
         private ILevelEditorSaveModal realSaveModal;
         private ILevelEditorLoadModal realLoadModal;
@@ -152,6 +158,13 @@ namespace Hertzole.ALE
             {
                 realObjectPickerWindow.Initialize(levelEditor);
             }
+
+            if (resources is ILevelEditorResources r)
+            {
+                realResources = r;
+            }
+            
+            InitializeResources(realResources.GetResources());
 
             OnInitialize();
         }
@@ -374,5 +387,16 @@ namespace Hertzole.ALE
                 realInspectorPanel.BindObject(e.NewObject);
             }
         }
+        
+#if UNITY_EDITOR
+        private void OnValidate()
+        {
+            if (resources != null && !(resources is ILevelEditorResources))
+            {
+                Debug.LogError("Resources needs to implement ILevelEditorResources!");
+                resources = null;
+            }
+        }
+#endif
     }
 }
