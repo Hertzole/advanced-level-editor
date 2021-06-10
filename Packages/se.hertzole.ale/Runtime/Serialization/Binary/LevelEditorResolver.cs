@@ -1,13 +1,12 @@
-﻿using MessagePack;
+﻿using System;
+using System.Collections.Generic;
+using Hertzole.ALE.Formatters;
+using MessagePack;
 using MessagePack.Formatters;
 using MessagePack.Resolvers;
 using MessagePack.Unity;
 using MessagePack.Unity.Extension;
-using System;
-using System.Collections.Generic;
-using Hertzole.ALE.Formatters;
 using UnityEngine;
-using UnityEngine.Scripting;
 
 namespace Hertzole.ALE
 {
