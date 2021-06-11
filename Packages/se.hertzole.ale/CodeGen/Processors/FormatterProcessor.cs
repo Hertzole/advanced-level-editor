@@ -342,7 +342,7 @@ namespace Hertzole.ALE.CodeGen
 
 				for (int i = 0; i < fields.Count; i++)
 				{
-					Instruction[] keyCheck = FormatterHelper.GetKeyCheck(module, m, key, stringKey, keyLength, fields[i].Item1,
+					Instruction[] keyCheck = FormatterHelper.GetKeyCheck(m, key, stringKey, keyLength, fields[i].Item1,
 						fields[i].Item2, out Instruction lengthLast, out Instruction checkLast, out bool isAdvanced);
 
 					if (previous.Count > 0)
