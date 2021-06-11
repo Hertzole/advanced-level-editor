@@ -7,7 +7,6 @@ using MessagePack.Internal;
 using Mono.Cecil;
 using Mono.Cecil.Cil;
 using Mono.Cecil.Rocks;
-using Mono.Collections.Generic;
 using UnityEngine;
 
 namespace Hertzole.ALE.CodeGen
@@ -124,6 +123,18 @@ namespace Hertzole.ALE.CodeGen
 				
 					MethodDefinition nameSpan = FormatterHelper.CreateSpanMethod(module, type.Fields[i].Name, formatter);
 					fields.Add((type.Fields[i], nameSpan));
+					if (type.Fields[i].FieldType.IsArray())
+					{
+						resolver.AddTypeFormatter(module.GetTypeReference(typeof(ArrayFormatter<>)).MakeGenericInstanceType(type.Fields[i].FieldType.GetCollectionType()), type.Fields[i].FieldType);
+					}
+					else if (type.Fields[i].FieldType.IsList())
+					{
+						resolver.AddTypeFormatter(module.GetTypeReference(typeof(ListFormatter<>)).MakeGenericInstanceType(type.Fields[i].FieldType.GetCollectionType()), type.Fields[i].FieldType);
+					}
+					else if (type.Fields[i].FieldType.IsDictionary() && type.Fields[i].FieldType is GenericInstanceType genDic)
+					{
+						resolver.AddTypeFormatter(module.GetTypeReference(typeof(DictionaryFormatter<,>)).MakeGenericInstanceType(genDic.GenericArguments[0], genDic.GenericArguments[1]), type.Fields[i].FieldType);
+					}
 				}
 			}
 
