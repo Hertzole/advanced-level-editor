@@ -969,7 +969,20 @@ namespace Hertzole.ALE.CodeGen
 
 			Instruction CreateNewComponentWrapper(TypeReference typeReference)
 			{
-				MethodReference ctor = Module.GetConstructor<ComponentDataWrapper>(typeReference.Is<GameObject>() ? typeof(GameObject) : typeof(Component));
+				MethodReference ctor;
+				
+				if (typeReference.IsArray())
+				{
+					ctor = Module.GetConstructor<ComponentDataWrapper>(typeof(IReadOnlyList<>).MakeGenericType(typeReference.Resolve().Is<GameObject>() ? typeof(GameObject) : typeof(Component)));
+				}
+				else if (typeReference.IsList())
+				{
+					ctor = Module.GetConstructor<ComponentDataWrapper>(typeof(IReadOnlyList<>).MakeGenericType(typeReference.GetCollectionType().Is<GameObject>() ? typeof(GameObject) : typeof(Component)));
+				}
+				else
+				{
+					ctor = Module.GetConstructor<ComponentDataWrapper>(typeReference.Is<GameObject>() ? typeof(GameObject) : typeof(Component));
+				}
 				return Instruction.Create(OpCodes.Newobj, ctor);
 			}
 		}
@@ -1587,18 +1600,18 @@ namespace Hertzole.ALE.CodeGen
 
 					if (fieldType.Is<GameObject>())
 					{
-						fieldType = (IsProperty ? property.Module : field.Module).GetTypeReference<ComponentDataWrapper>();
+						return (IsProperty ? property.Module : field.Module).GetTypeReference<ComponentDataWrapper>();
 					}
 					else
 					{
 						TypeDefinition resolved = fieldType.Resolve();
 						if (resolved != null && resolved.IsSubclassOf<Component>())
 						{
-							fieldType = (IsProperty ? property.Module : field.Module).GetTypeReference<ComponentDataWrapper>();
+							return (IsProperty ? property.Module : field.Module).GetTypeReference<ComponentDataWrapper>();
 						}
 					}
 
-					return fieldType;
+					return FieldType;
 				}
 			}
 			public bool IsProperty { get { return field == null && property != null; } }

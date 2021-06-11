@@ -1,185 +1,150 @@
 ﻿using System.Collections;
-using System.Collections.Generic;
+using Hertzole.ALE.Tests.TestScripts;
 using UnityEngine;
 using UnityEngine.Assertions;
 using UnityEngine.TestTools;
 
 namespace Hertzole.ALE.Tests
 {
-    public class ExposedToLevelEditorTests : LevelEditorTest
-    {
-        private TestExposedBehavior testObject;
+	public class ExposedToLevelEditorTests : LevelEditorTest
+	{
+		[UnityTest]
+		public IEnumerator SetValueByte()
+		{
+			cube.AddComponent<ByteTest1>();
+			cube.AddComponent<ByteTest5>();
 
-        protected override void OnSceneSetup(List<GameObject> sceneObjects)
-        {
-            testObject = new GameObject().AddComponent<TestExposedBehavior>();
+			ILevelEditorObject newCube = objectManager.CreateObject("cube");
+			IExposedToLevelEditor exposed1 = newCube.MyGameObject.GetComponent<ByteTest1>() as IExposedToLevelEditor;
+			IExposedToLevelEditor exposed2 = newCube.MyGameObject.GetComponent<ByteTest5>() as IExposedToLevelEditor;
+			Assert.IsNotNull(exposed1);
+			Assert.IsNotNull(exposed2);
 
-            sceneObjects.Add(testObject.gameObject);
-        }
+			exposed1.SetValue(0, (byte) 10, true);
+			exposed2.SetValue(0, (byte) 20, true);
 
-        [UnityTest]
-        public IEnumerator TestName()
-        {
-            AssertIsExposed(out IExposedToLevelEditor exposed);
+			yield return null;
 
-            Assert.AreEqual(exposed.ComponentName, nameof(TestExposedBehavior));
+			Assert.AreEqual<byte>((byte) exposed1.GetValue(0), 10);
+			Assert.AreEqual<byte>((byte) exposed2.GetValue(0), 20);
 
-            yield break;
-        }
+			yield return null;
+		}
+		
+		[UnityTest]
+		public IEnumerator SetValueVector()
+		{
+			cube.AddComponent<Vector3Test1>();
+			cube.AddComponent<Vector3Test5>();
 
-        [UnityTest]
-        public IEnumerator TestOrder()
-        {
-            AssertIsExposed(out IExposedToLevelEditor exposed);
+			ILevelEditorObject newCube = objectManager.CreateObject("cube");
+			IExposedToLevelEditor exposed1 = newCube.MyGameObject.GetComponent<Vector3Test1>() as IExposedToLevelEditor;
+			IExposedToLevelEditor exposed2 = newCube.MyGameObject.GetComponent<Vector3Test5>() as IExposedToLevelEditor;
+			Assert.IsNotNull(exposed1);
+			Assert.IsNotNull(exposed2);
 
-            Assert.AreEqual(exposed.Order, 0);
+			exposed1.SetValue(0, new Vector3(1, 2, 3), true);
+			exposed2.SetValue(0, new Vector3(4, 5, 6), true);
 
-            yield break;
-        }
+			yield return null;
 
-        [UnityTest]
-        public IEnumerator TestType()
-        {
-            AssertIsExposed(out IExposedToLevelEditor exposed);
+			Assert.AreEqual((Vector3) exposed1.GetValue(0), new Vector3(1, 2, 3));
+			Assert.AreEqual((Vector3) exposed2.GetValue(0), new Vector3(4, 5, 6));
 
-            Assert.AreEqual(exposed.ComponentType, typeof(TestExposedBehavior));
+			yield return null;
+		}
+		
+		[UnityTest]
+		public IEnumerator SetValueReferences()
+		{
+			cube.AddComponent<TransformReferenceScript>();
+			cube.AddComponent<GameObjectReferenceScript>();
 
-            yield break;
-        }
+			ILevelEditorObject newCube = objectManager.CreateObject("cube");
+			ILevelEditorObject newSphere = objectManager.CreateObject("sphere");
+			ILevelEditorObject newCapsule = objectManager.CreateObject("capsule");
+			IExposedToLevelEditor exposed1 = newCube.MyGameObject.GetComponent<TransformReferenceScript>() as IExposedToLevelEditor;
+			IExposedToLevelEditor exposed2 = newCube.MyGameObject.GetComponent<GameObjectReferenceScript>() as IExposedToLevelEditor;
+			Assert.IsNotNull(exposed1);
+			Assert.IsNotNull(exposed2);
 
-        [UnityTest]
-        public IEnumerator TestVisibleFields()
-        {
-            AssertIsExposed(out IExposedToLevelEditor exposed);
+			exposed1.SetValue(0, new ComponentDataWrapper(newSphere.MyGameObject.transform), true);
+			exposed2.SetValue(0, new ComponentDataWrapper(newCapsule.MyGameObject), true);
 
-            Assert.IsTrue(exposed.HasVisibleFields);
+			yield return null;
 
-            yield break;
-        }
+			Assert.AreEqual(((ComponentDataWrapper) exposed1.GetValue(0)).GetObject<Transform>(), newSphere.MyGameObject.transform);
+			Assert.AreEqual(((ComponentDataWrapper) exposed2.GetValue(0)).GetObject<GameObject>(), newCapsule.MyGameObject);
 
-        [UnityTest]
-        public IEnumerator TestSetValue()
-        {
-            AssertIsExposed(out IExposedToLevelEditor exposed);
+			yield return null;
+		}
+		
+		[UnityTest]
+		public IEnumerator SetValueReferenceArray()
+		{
+			cube.AddComponent<TransformReferenceArrayScript>();
+			cube.AddComponent<GameObjectReferenceArrayScript>();
 
-            int lastChanged = -1;
-            object lastValue = null;
-            bool second = false;
+			ILevelEditorObject newCube = objectManager.CreateObject("cube");
+			ILevelEditorObject newSphere = objectManager.CreateObject("sphere");
+			ILevelEditorObject newCapsule = objectManager.CreateObject("capsule");
+			IExposedToLevelEditor exposed1 = newCube.MyGameObject.GetComponent<TransformReferenceArrayScript>() as IExposedToLevelEditor;
+			IExposedToLevelEditor exposed2 = newCube.MyGameObject.GetComponent<GameObjectReferenceArrayScript>() as IExposedToLevelEditor;
+			Assert.IsNotNull(exposed1);
+			Assert.IsNotNull(exposed2);
 
-            exposed.OnValueChanged += (i, o) =>
-            {
-                lastChanged = i;
-                lastValue = o;
-            };
+			exposed1.SetValue(0, new ComponentDataWrapper(new Component[] { newSphere.MyGameObject.transform, newCapsule.MyGameObject.transform }), true);
+			exposed2.SetValue(0, new ComponentDataWrapper(new GameObject[] { newCapsule.MyGameObject, newSphere.MyGameObject }), true);
 
-            AssertValueChanged<string>(0, "New string");
-            AssertValueChanged<int>(1, 42);
-            AssertValueChanged<Vector3>(2, new Vector3(1, 2, 3));
-            AssertValueChanged<Color>(3, new Color(0.25f, 0.5f, 0.75f, 1f));
-            // AssertValueChanged<Transform>(5, testObject.transform);
-            AssertValueChanged<Color32>(4, new Color32(10, 20, 30, 40));
-            AssertValueChanged<string>(6, "New value");
-            AssertValueChanged<string[]>(7, new string[] { "Hello", "World!" });
-            AssertValueChanged<string[]>(8, new string[] { "Hello from other side" });
-            AssertValueChanged<int[]>(9, new int[] { 0, 1, 2, 3 });
-            AssertValueChanged<List<string>>(10, new List<string> { "Hello", "World" });
-            // AssertValueChanged<GameObject>(11, testObject.gameObject);
-            // AssertValueChanged<List<Transform>>(12, new List<Transform>(){ testObject.transform });
-            // AssertValueChanged<List<TestExposedBehavior>>(13, new List<TestExposedBehavior>(){ testObject });
+			yield return null;
 
-            yield break;
+			Transform[] transforms = ((ComponentDataWrapper) exposed1.GetValue(0)).GetObjects<Transform>();
+			GameObject[] gameObjects = ((ComponentDataWrapper) exposed2.GetValue(0)).GetObjects<GameObject>();
 
-            void AssertValueChanged<T>(int id, object value)
-            {
-                lastChanged = -1;
-                lastValue = null;
+			Assert.AreEqual(transforms.Length, 2);
+			Assert.AreEqual(gameObjects.Length, 2);
 
-                exposed.SetValue(id, value, true);
+			Assert.AreEqual(transforms[0], newSphere.MyGameObject.transform);
+			Assert.AreEqual(transforms[1], newCapsule.MyGameObject.transform);
 
-                Assert.AreEqual(lastChanged, id, $"{id} ID did not match the last changed ({lastChanged}).");
-                if (value == null)
-                {
-                    Assert.IsNull(lastValue, "Last value was not null when a null value was set.");
-                }
-                else
-                {
-                    Assert.IsTrue(lastValue is T, $"{lastValue} is not {typeof(T)}.");
-                }
+			Assert.AreEqual(gameObjects[0], newCapsule.MyGameObject);
+			Assert.AreEqual(gameObjects[1], newSphere.MyGameObject);
 
-                Assert.AreEqual(lastValue, value, $"{lastValue} is not the same as {value}");
+			yield return null;
+		}
+		
+		[UnityTest]
+		public IEnumerator SetValueReferenceList()
+		{
+			cube.AddComponent<TransformReferenceListScript>();
+			cube.AddComponent<GameObjectReferenceListScript>();
 
-                if (!second)
-                {
-                    second = true;
-                    AssertValueChanged<T>(id, default(T));
-                }
-                else
-                {
-                    second = false;
-                }
-            }
-        }
+			ILevelEditorObject newCube = objectManager.CreateObject("cube");
+			ILevelEditorObject newSphere = objectManager.CreateObject("sphere");
+			ILevelEditorObject newCapsule = objectManager.CreateObject("capsule");
+			IExposedToLevelEditor exposed1 = newCube.MyGameObject.GetComponent<TransformReferenceListScript>() as IExposedToLevelEditor;
+			IExposedToLevelEditor exposed2 = newCube.MyGameObject.GetComponent<GameObjectReferenceListScript>() as IExposedToLevelEditor;
+			Assert.IsNotNull(exposed1);
+			Assert.IsNotNull(exposed2);
 
-        // [UnityTest]
-        // public IEnumerator TestGetValueType()
-        // {
-        //     AssertIsExposed(out IExposedToLevelEditor exposed);
-        //
-        //     Assert.AreEqual(typeof(string), exposed.GetValueType(0));
-        //     Assert.AreEqual(typeof(int), exposed.GetValueType(1));
-        //     Assert.AreEqual(typeof(Vector3), exposed.GetValueType(2));
-        //     Assert.AreEqual(typeof(Color), exposed.GetValueType(3));
-        //     Assert.AreEqual(typeof(Color32), exposed.GetValueType(4));
-        //     Assert.AreEqual(typeof(Transform), exposed.GetValueType(5));
-        //     Assert.AreEqual(typeof(string), exposed.GetValueType(6));
-        //     Assert.AreEqual(typeof(string[]), exposed.GetValueType(7));
-        //     Assert.AreEqual(typeof(string[]), exposed.GetValueType(8));
-        //     Assert.AreEqual(typeof(int[]), exposed.GetValueType(9));
-        //     Assert.AreEqual(typeof(List<string>), exposed.GetValueType(10));
-        //     Assert.AreEqual(typeof(GameObject), exposed.GetValueType(11));
-        //     Assert.AreEqual(typeof(List<Transform>), exposed.GetValueType(12));
-        //     Assert.AreEqual(typeof(List<TestExposedBehavior>), exposed.GetValueType(13));
-        //
-        //     yield break;
-        // }
+			exposed1.SetValue(0, new ComponentDataWrapper(new Component[] { newSphere.MyGameObject.transform, newCapsule.MyGameObject.transform }), true);
+			exposed2.SetValue(0, new ComponentDataWrapper(new GameObject[] { newCapsule.MyGameObject, newSphere.MyGameObject }), true);
 
-        private void AssertIsExposed(out IExposedToLevelEditor exposed)
-        {
-            exposed = testObject.GetComponent<IExposedToLevelEditor>();
+			yield return null;
 
-            Assert.IsNotNull(exposed, "ExposedBehavior has not been exposed.");
-        }
+			Transform[] transforms = ((ComponentDataWrapper) exposed1.GetValue(0)).GetObjects<Transform>();
+			GameObject[] gameObjects = ((ComponentDataWrapper) exposed2.GetValue(0)).GetObjects<GameObject>();
 
-        private class TestExposedBehavior : MonoBehaviour
-        {
-            [ExposeToLevelEditor(0)]
-            public string stringValue = "";
-            [ExposeToLevelEditor(1)]
-            public int intValue;
-            [ExposeToLevelEditor(2)]
-            public Vector3 vector3Value;
-            [ExposeToLevelEditor(3)]
-            public Color colorValue;
-            [ExposeToLevelEditor(4)]
-            public Color32 color32Value;
-            [ExposeToLevelEditor(5)]
-            public Transform transformValue;
-            [ExposeToLevelEditor(6)]
-            public string nullStringValue;
-            [ExposeToLevelEditor(7)]
-            public string[] nullStringArray;
-            [ExposeToLevelEditor(8)]
-            public string[] stringArray = new string[] { "Hello", "World" };
-            [ExposeToLevelEditor(9)]
-            public int[] intArray;
-            [ExposeToLevelEditor(10)]
-            public List<string> stringList = new List<string>();
-            [ExposeToLevelEditor(11)]
-            public GameObject gameObjectField;
-            [ExposeToLevelEditor(12)]
-            public List<Transform> transformList = new List<Transform>();
-            [ExposeToLevelEditor(13)]
-            public List<TestExposedBehavior> exposedList = new List<TestExposedBehavior>();
-        }
-    }
+			Assert.AreEqual(transforms.Length, 2);
+			Assert.AreEqual(gameObjects.Length, 2);
+
+			Assert.AreEqual(transforms[0], newSphere.MyGameObject.transform);
+			Assert.AreEqual(transforms[1], newCapsule.MyGameObject.transform);
+
+			Assert.AreEqual(gameObjects[0], newCapsule.MyGameObject);
+			Assert.AreEqual(gameObjects[1], newSphere.MyGameObject);
+
+			yield return null;
+		}
+	}
 }

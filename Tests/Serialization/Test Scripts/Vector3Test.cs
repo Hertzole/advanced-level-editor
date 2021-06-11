@@ -1,4 +1,5 @@
-﻿using UnityEngine;
+﻿using System.Collections.Generic;
+using UnityEngine;
 
 namespace Hertzole.ALE.Tests.TestScripts
 {
@@ -60,5 +61,17 @@ namespace Hertzole.ALE.Tests.TestScripts
 
 		[ExposeToLevelEditor(10)]
 		public Vector3 Value2 { get; set; }
+	}
+
+	public class Vector3ArrayTest : MonoBehaviour
+	{
+		[ExposeToLevelEditor(0)]
+		public Vector3[] value;
+	}
+
+	public class Vector3ListTest : MonoBehaviour
+	{
+		[ExposeToLevelEditor(0)]
+		public List<Vector3> value;
 	}
 }

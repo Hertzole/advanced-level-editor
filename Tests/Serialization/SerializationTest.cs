@@ -194,6 +194,66 @@ namespace Hertzole.ALE.Tests
 			Assert.AreEqual<byte>(20, byte8.Value2, "Byte 8 property value 2 failed.");
 		}
 
+		// Works but possible bug in MessagePack with Json deserialization?
+		// [UnityTest]
+		// public IEnumerator SaveByteArray()
+		// {
+		// 	cube.AddComponent<ByteArrayTest>();
+		//
+		// 	ILevelEditorObject newCube = objectManager.CreateObject("cube");
+		// 	uint cubeId = newCube.InstanceID;
+		//
+		// 	ByteArrayTest bytes = newCube.MyGameObject.GetComponent<ByteArrayTest>();
+		// 	bytes.value = new byte[] { 1, 2, 3, 4, 5, 6, 7, 8, 9 };
+		//
+		// 	yield return null;
+		//
+		// 	Save();
+		// 	objectManager.DeleteAllObjects();
+		//
+		// 	yield return null;
+		//
+		// 	Load();
+		//
+		// 	yield return null;
+		//
+		// 	newCube = objectManager.GetObject(cubeId);
+		// 	Assert.IsNotNull(newCube);
+		//
+		// 	bytes = newCube.MyGameObject.GetComponent<ByteArrayTest>();
+		// 	
+		// 	Assert.IsTrue(new byte[] { 1, 2, 3, 4, 5, 6, 7, 8, 9 }.IsSameAs(bytes.value));
+		// }
+
+		[UnityTest]
+		public IEnumerator SaveByteList()
+		{
+			cube.AddComponent<ByteListTest>();
+
+			ILevelEditorObject newCube = objectManager.CreateObject("cube");
+			uint cubeId = newCube.InstanceID;
+
+			ByteListTest bytes = newCube.MyGameObject.GetComponent<ByteListTest>();
+			bytes.value = new List<byte> { 1, 2, 3, 4, 5, 6, 7, 8, 9 };
+
+			yield return null;
+
+			Save();
+			objectManager.DeleteAllObjects();
+
+			yield return null;
+
+			Load();
+
+			yield return null;
+
+			newCube = objectManager.GetObject(cubeId);
+			Assert.IsNotNull(newCube);
+
+			bytes = newCube.MyGameObject.GetComponent<ByteListTest>();
+			Assert.IsTrue(bytes.value.IsSameAs(new List<byte> { 1, 2, 3, 4, 5, 6, 7, 8, 9 }));
+		}
+
 		[UnityTest]
 		public IEnumerator SaveVector3()
 		{
@@ -265,6 +325,64 @@ namespace Hertzole.ALE.Tests
 			vector8 = newCube.MyGameObject.GetComponent<Vector3Test8>();
 			Assert.AreEqual(Vector3.one, vector8.Value1, "Vector3 8 property value 1 failed.");
 			Assert.AreEqual(Vector3.one, vector8.Value2, "Vector3 8 property value 2 failed.");
+		}
+
+		[UnityTest]
+		public IEnumerator SaveVectorArray()
+		{
+			cube.AddComponent<Vector3ArrayTest>();
+
+			ILevelEditorObject newCube = objectManager.CreateObject("cube");
+			uint cubeId = newCube.InstanceID;
+
+			Vector3ArrayTest vector = newCube.MyGameObject.GetComponent<Vector3ArrayTest>();
+			vector.value = new[] { new Vector3(0, 1, 2), new Vector3(3, 4, 5) };
+
+			yield return null;
+
+			Save();
+			objectManager.DeleteAllObjects();
+
+			yield return null;
+
+			Load();
+
+			yield return null;
+
+			newCube = objectManager.GetObject(cubeId);
+			Assert.IsNotNull(newCube);
+
+			vector = newCube.MyGameObject.GetComponent<Vector3ArrayTest>();
+			Assert.IsTrue(new[] { new Vector3(0, 1, 2), new Vector3(3, 4, 5) }.IsSameAs(vector.value));
+		}
+
+		[UnityTest]
+		public IEnumerator SaveVectorList()
+		{
+			cube.AddComponent<Vector3ListTest>();
+
+			ILevelEditorObject newCube = objectManager.CreateObject("cube");
+			uint cubeId = newCube.InstanceID;
+
+			Vector3ListTest vector = newCube.MyGameObject.GetComponent<Vector3ListTest>();
+			vector.value = new List<Vector3> { new Vector3(0, 1, 2), new Vector3(3, 4, 5) };
+
+			yield return null;
+
+			Save();
+			objectManager.DeleteAllObjects();
+
+			yield return null;
+
+			Load();
+
+			yield return null;
+
+			newCube = objectManager.GetObject(cubeId);
+			Assert.IsNotNull(newCube);
+
+			vector = newCube.MyGameObject.GetComponent<Vector3ListTest>();
+			Assert.IsTrue(vector.value.IsSameAs(new List<Vector3> { new Vector3(0, 1, 2), new Vector3(3, 4, 5) }));
 		}
 
 		[UnityTest]
@@ -553,7 +671,7 @@ namespace Hertzole.ALE.Tests
 			sphere.AddComponent<TempTestScript>();
 			capsule.AddComponent<TempTestScript>();
 			cylinder.AddComponent<TempTestScript>();
-			
+
 			ILevelEditorObject newCube = objectManager.CreateObject(resources.GetResource("cube"));
 			ILevelEditorObject newSphere = objectManager.CreateObject(resources.GetResource("sphere"));
 			ILevelEditorObject newCapsule = objectManager.CreateObject(resources.GetResource("capsule"));
@@ -594,7 +712,7 @@ namespace Hertzole.ALE.Tests
 			sphere.AddComponent<TempTestScript>();
 			capsule.AddComponent<TempTestScript>();
 			cylinder.AddComponent<TempTestScript>();
-			
+
 			ILevelEditorObject newCube = objectManager.CreateObject(resources.GetResource("cube"));
 			ILevelEditorObject newSphere = objectManager.CreateObject(resources.GetResource("sphere"));
 			ILevelEditorObject newCapsule = objectManager.CreateObject(resources.GetResource("capsule"));
