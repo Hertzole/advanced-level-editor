@@ -36,6 +36,12 @@ namespace Hertzole.ALE
 					}
 					else
 					{
+#if DEBUG
+						if (component[i] != null)
+						{
+							Debug.LogWarning($"{component[i]} doesn't have a ILevelEditorObject component attached when adding it to a collection.");
+						}
+#endif
 						objects[i] = 0;
 					}
 				}
@@ -62,6 +68,12 @@ namespace Hertzole.ALE
 					}
 					else
 					{
+#if DEBUG
+						if (go[i] != null)
+						{
+							Debug.LogWarning($"{go[i]} doesn't have a ILevelEditorObject component attached when adding it to a collection.");
+						}
+#endif
 						objects[i] = 0;
 					}
 				}
