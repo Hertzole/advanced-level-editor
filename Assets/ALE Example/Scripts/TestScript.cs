@@ -29,6 +29,8 @@ public struct MyBadderStruct
 {
 	public int intValue;
 	public byte byteValue;
+	[NonSerialized]
+	public string dontSerialize;
 }
 
 [Serializable]
@@ -296,7 +298,7 @@ public class TestScript : MonoBehaviour
     [ExposeToLevelEditor(29)]
     private GameObject gameObjectField = null;
     [SerializeField] 
-    // [ExposeToLevelEditor(30)]
+    [ExposeToLevelEditor(30)]
     private MyBadderStruct badStruct = default;
 
     private int[] ints = null;

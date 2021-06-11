@@ -1976,6 +1976,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 5d77692fd8a8f844dbf59eb0e34c754d, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  resources: {fileID: 11400000, guid: f8e6803bd4fa1ce41bbcc408fab2cb53, type: 2}
   editorRoot: {fileID: 642268944}
   playModeRoot: {fileID: 0}
   resourcePanel: {fileID: 970688937}
@@ -3849,7 +3850,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: baf22d96541988e4c9687f1cf30f7c15, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  resources: {fileID: 11400000, guid: f8e6803bd4fa1ce41bbcc408fab2cb53, type: 2}
   editorCamera: {fileID: 1687258581}
   ui: {fileID: 1049410937}
   saveManager: {fileID: 1918987434}
