@@ -66,6 +66,7 @@ namespace Hertzole.ALE
         /// <summary> If true, all actions will be disabled on disable. </summary>
         public bool AutoDisableInput { get { return autoDisableInput; } set { autoDisableInput = value; } }
 
+#if !OBSOLETE
         /// <summary> Optional player input to hook into. </summary>
         public PlayerInput PlayerInput 
         { 
@@ -82,16 +83,19 @@ namespace Hertzole.ALE
         }
         
         public Vector2 MousePosition { get { return Mouse.current.position.ReadValue(); } }
+#else
+        public Vector2 MousePosition { get { return Vector2.zero; } }
+#endif
 
 #if !OBSOLETE
         /// <summary> All the available actions. </summary>
         public InputSystemItem[] Actions { get { return actions; } set { actions = value; } }
-#endif
 
         private void Awake()
         {
             hasPlayerInput = playerInput != null;
         }
+#endif
 
         private void Start()
         {
@@ -462,13 +466,13 @@ namespace Hertzole.ALE
 #endif
             return true;
         }
+#endif // !OBSOLETE
 
         public bool IsMouseOverUI()
         {
             return EventSystem.current.IsPointerOverGameObject();
         }
 
-#endif // !OBSOLETE
 
 #if UNITY_EDITOR && !OBSOLETE
         private void OnValidate()
