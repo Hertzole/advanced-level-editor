@@ -33,12 +33,12 @@ namespace Hertzole.ALE.CodeGen
                 return null;
             }
 
+            diagnostics.Clear();
+            
             if (weaver == null)
             {
                 weaver = new Weaver(diagnostics);
             }
-
-            diagnostics.Clear();
 
             AssemblyDefinition assemblyDefinition = AssemblyDefinitionFor(compiledAssembly);
             if (assemblyDefinition == null)

@@ -16,7 +16,10 @@
         "Mono.Cecil.Pdb.dll",
         "Mono.Cecil.Mdb.dll",
         "Mono.Cecil.Rocks.dll",
-        "System.Memory.dll"
+        "System.Buffers.dll",
+        "System.Memory.dll",
+        "System.Runtime.CompilerServices.Unsafe.dll",
+        "System.Threading.Tasks.Extensions.dll"
     ],
     "autoReferenced": false,
     "defineConstraints": [],

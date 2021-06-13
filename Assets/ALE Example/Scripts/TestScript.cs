@@ -69,7 +69,7 @@ public struct MyGooderStruct : IEquatable<MyGooderStruct>
     }
 }
 
-public class TestScript : MonoBehaviour
+public class TestScript : MonoBehaviour, ILevelEditorGizmos
 {
 	public struct WrapperTemplate : IExposedWrapper
 	{
@@ -303,23 +303,18 @@ public class TestScript : MonoBehaviour
 
     private int[] ints = null;
     private Color32[] colors = null;
-
-    private void Awake()
+    
+    public void DrawLevelEditorGizmos()
     {
-	    Debug.Log("Awake");
+        LevelEditorGizmos.DrawWireCube(transform.position, Vector3.one, transform.rotation, Color.green);
+    
+        LevelEditorGizmos.DrawSquare(transform.position + transform.forward * 2, Vector2.one, transform.rotation, Color.blue);
+    
+        if (otherObject != null)
+        {
+            LevelEditorGizmos.DrawLine(transform.position, otherObject.position, Color.red);
+        }
     }
-    //
-    // public void DrawLevelEditorGizmos()
-    // {
-    //     LevelEditorGizmos.DrawWireCube(transform.position, Vector3.one, transform.rotation, Color.green);
-    //
-    //     LevelEditorGizmos.DrawSquare(transform.position + transform.forward * 2, Vector2.one, transform.rotation, Color.blue);
-    //
-    //     if (otherObject != null)
-    //     {
-    //         LevelEditorGizmos.DrawLine(transform.position, otherObject.position, Color.red);
-    //     }
-    // }
     //
     // private void Template(int id, object value)
     // {

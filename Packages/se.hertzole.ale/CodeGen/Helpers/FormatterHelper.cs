@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Reflection;
 using System.Text;
 using MessagePack;
 using MessagePack.Formatters;
@@ -7,7 +8,9 @@ using MessagePack.Internal;
 using Mono.Cecil;
 using Mono.Cecil.Cil;
 using Mono.Cecil.Rocks;
-using Mono.Collections.Generic;
+using FieldAttributes = Mono.Cecil.FieldAttributes;
+using MethodAttributes = Mono.Cecil.MethodAttributes;
+using TypeAttributes = Mono.Cecil.TypeAttributes;
 
 namespace Hertzole.ALE.CodeGen.Helpers
 {
@@ -222,13 +225,19 @@ namespace Hertzole.ALE.CodeGen.Helpers
 				VariableDefinition v = method.AddLocalVariable(method.Module.ImportReference(typeof(ReadOnlySpan<byte>)));
 
 				MethodReference seqEqual = null;
-				Collection<MethodDefinition> methods = method.Module.GetTypeReference(typeof(MemoryExtensions)).Resolve().Methods;
-				for (int j = 0; j < methods.Count; j++)
+
+				MethodInfo[] methods = typeof(MemoryExtensions).GetMethods();
+				for (int j = 0; j < methods.Length; j++)
 				{
-					if (methods[j].Name == "SequenceEqual" && methods[j].Parameters[0].ParameterType.Resolve().Is(typeof(ReadOnlySpan<>)))
+					if (methods[j].Name == "SequenceEqual")
 					{
-						seqEqual = method.Module.ImportReference(methods[j].MakeGenericMethod(method.Module.GetTypeReference<byte>()));
-						break;
+						ParameterInfo[] para = methods[j].GetParameters();
+						if (para.Length == 2 && IsSameType(para[0].ParameterType, typeof(ReadOnlySpan<>)) && IsSameType(para[1].ParameterType, typeof(ReadOnlySpan<>)))
+						{
+							Console.WriteLine($"FOUND RIGHT METHOD {methods[j]} {para[0].ParameterType.Namespace}.{para[0].ParameterType.Name} == {typeof(Span<>).FullName} = {para[0].ParameterType.FullName == typeof(Span<>).FullName}!");
+							seqEqual = method.Module.ImportReference(methods[j]).MakeGenericMethod(method.Module.GetTypeReference<byte>());
+							break;
+						}
 					}
 				}
 
@@ -256,6 +265,11 @@ namespace Hertzole.ALE.CodeGen.Helpers
 				last = i[i.Count - 1];
 
 				return i.ToArray();
+
+				bool IsSameType(Type typeA, Type typeB)
+				{
+					return $"{typeA.Namespace}.{typeA.Name}" == typeB.FullName;
+				}
 			}
 		}
 
