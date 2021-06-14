@@ -229,6 +229,13 @@ namespace Hertzole.ALE.CodeGen
 			VariableDefinition keyVar = getFormatterHelperMethod.AddLocalVariable<int>(module);
 
 			il = getFormatterHelperMethod.Body.GetILProcessor();
+			
+#if ALE_DEBUG
+			il.Emit(OpCodes.Ldstr, "GetFormatterHelper :: GetFormatter {0}");
+			il.Emit(OpCodes.Ldarg_0);
+			il.Emit(OpCodes.Call, module.GetMethod<string>("Format", typeof(string), typeof(object)));
+			il.Emit(OpCodes.Call, module.GetMethod(typeof(LevelEditorLogger), "Log", typeof(object)));
+#endif
 
 			il.Emit(OpCodes.Ldsfld, lookup);
 			il.Emit(OpCodes.Ldarg_0);
@@ -258,7 +265,7 @@ namespace Hertzole.ALE.CodeGen
 						TypeReference[] genericTypes = new TypeReference[genericType.GenericArguments.Count];
 						for (int j = 0; j < genericTypes.Length; j++)
 						{
-							genericTypes[j] = genericType.GenericArguments[j].GetElementType();
+							genericTypes[j] = GetGenericParameterType(genericType.GenericArguments[j]);
 						}
 						
 						constructor = constructor.MakeHostInstanceGeneric(formatter.Item1.Resolve().MakeGenericInstanceType(genericTypes));
@@ -266,6 +273,22 @@ namespace Hertzole.ALE.CodeGen
 					
 					i.Emit(OpCodes.Newobj, module.ImportReference(constructor));
 					i.Emit(OpCodes.Ret);
+
+					TypeReference GetGenericParameterType(TypeReference targetType)
+					{
+						if (targetType.HasGenericParameters)
+						{
+							TypeReference[] gTypes = new TypeReference[targetType.GenericParameters.Count];
+							for (int j = 0; j < gTypes.Length; j++)
+							{
+								gTypes[j] = GetGenericParameterType(targetType.GenericParameters[j]);
+							}
+
+							targetType = targetType.MakeGenericInstanceType(gTypes);
+						}
+
+						return targetType;
+					}
 				}
 			}, i => // Default
 			{
@@ -306,6 +329,15 @@ namespace Hertzole.ALE.CodeGen
 
 			ILProcessor il = cctor.Body.GetILProcessor();
 
+#if ALE_DEBUG
+			// LevelEditorLogger.Log((object)$"FormatterCache :: {typeof(T)}");
+			il.Emit(OpCodes.Ldstr, "FormatterCache :: {0}");
+			il.Emit(OpCodes.Ldtoken, t.GenericParameters[0].GetElementType());
+			il.Emit(OpCodes.Call, module.GetMethod<Type>("GetTypeFromHandle", typeof(RuntimeTypeHandle)));
+			il.Emit(OpCodes.Call, module.GetMethod<string>("Format", typeof(string), typeof(object)));
+			il.Emit(OpCodes.Call, module.GetMethod(typeof(LevelEditorLogger), "Log", typeof(object)));
+#endif
+			
 			il.Emit(OpCodes.Ldtoken, t.GenericParameters[0].GetElementType());
 			il.Emit(OpCodes.Call, module.GetMethod<Type>("GetTypeFromHandle", typeof(RuntimeTypeHandle)));
 			il.Emit(OpCodes.Call, getFormatterHelperMethod);
