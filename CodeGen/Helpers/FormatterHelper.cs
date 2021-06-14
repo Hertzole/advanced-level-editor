@@ -8,6 +8,7 @@ using MessagePack.Internal;
 using Mono.Cecil;
 using Mono.Cecil.Cil;
 using Mono.Cecil.Rocks;
+using Mono.Collections.Generic;
 using FieldAttributes = Mono.Cecil.FieldAttributes;
 using MethodAttributes = Mono.Cecil.MethodAttributes;
 using TypeAttributes = Mono.Cecil.TypeAttributes;
@@ -225,7 +226,6 @@ namespace Hertzole.ALE.CodeGen.Helpers
 				VariableDefinition v = method.AddLocalVariable(method.Module.ImportReference(typeof(ReadOnlySpan<byte>)));
 
 				MethodReference seqEqual = null;
-
 				MethodInfo[] methods = typeof(MemoryExtensions).GetMethods();
 				for (int j = 0; j < methods.Length; j++)
 				{

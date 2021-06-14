@@ -163,8 +163,11 @@ namespace Hertzole.ALE
             {
                 realResources = r;
             }
-            
-            InitializeResources(realResources.GetResources());
+
+            if (realResourcePanel != null)
+            {
+                InitializeResources(realResources.GetResources());
+            }
 
             OnInitialize();
         }
