@@ -10,6 +10,11 @@
 using System;
 using TMPro;
 using UnityEngine;
+#if ALE_LOCALIZATION
+using UnityEngine.Localization;
+using UnityEngine.Localization.Components;
+using UnityEngine.Localization.Tables;
+#endif
 
 namespace Hertzole.ALE
 {
@@ -27,6 +32,10 @@ namespace Hertzole.ALE
 
         private ExposedProperty property;
         private IExposedToLevelEditor exposed;
+        
+#if ALE_LOCALIZATION
+        private LocalizeStringEvent localStringComp;
+#endif
 
         public int Index { get; set; }
         public int Depth
@@ -64,6 +73,10 @@ namespace Hertzole.ALE
             Debug.LogError($"{gameObject.name} is still using {nameof(LevelEditorInspectorField)} and it will be stripped on build. Remove it.");
 #endif
 
+#if ALE_LOCALIZATION
+            localStringComp = GetComponentInChildren<LocalizeStringEvent>();
+#endif
+            
             OnAwake();
         }
 
@@ -74,8 +87,23 @@ namespace Hertzole.ALE
             exposed.OnValueChanged += OnExposedValueChanged;
 
             this.property = property;
-            Label = string.IsNullOrEmpty(property.CustomName) ? TextUtility.FormatVariableLabel(property.Name) : property.CustomName;
             this.exposed = exposed;
+            
+#if ALE_LOCALIZATION
+            if (!string.IsNullOrWhiteSpace(property.CustomName) && localStringComp != null)
+            {
+                Label = TextUtility.FormatVariableLabel(property.Name);
+                LocalizedString result = UI.InspectorPanel.GetLocalizedInspectorField(property.CustomName);
+                if (result != null)
+                {
+                    localStringComp.StringReference = result;
+                }
+            }
+            else
+#endif
+            {
+                Label = string.IsNullOrEmpty(property.CustomName) ? TextUtility.FormatVariableLabel(property.Name) : property.CustomName;
+            }
 
             OnBound(property, exposed);
             SetFieldValue(exposed.GetValue(property.ID));
