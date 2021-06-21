@@ -108,14 +108,6 @@ namespace Hertzole.ALE
 
         private void OnEnable()
         {
-#if DEBUG
-            if (objectManagerComp == null)
-            {
-                LevelEditorLogger.LogError("LevelEditor OnEnable stopped because no object manager.");
-                return;
-            }
-#endif
-
             if (objectManagerComp != null)
             {
                 objectManagerComp.OnCreatedObject += OnCreateDeleteObject;
@@ -130,14 +122,6 @@ namespace Hertzole.ALE
 
         private void OnDisable()
         {
-#if DEBUG
-            if (objectManagerComp == null)
-            {
-                LevelEditorLogger.LogError("LevelEditor OnDisable stopped because no object manager.");
-                return;
-            }
-#endif
-
             if (objectManagerComp != null)
             {
                 objectManagerComp.OnCreatedObject -= OnCreateDeleteObject;

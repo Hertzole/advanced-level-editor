@@ -40,6 +40,8 @@ namespace Hertzole.ALE.CodeGen
 
 		private TypeDefinition wrapper;
 		private MethodReference wrapperCtor;
+		private TypeDefinition dirtyMaskType;
+		private FieldDefinition dirtyMaskField;
 
 		public override bool IsValidClass(TypeDefinition type)
 		{
@@ -154,6 +156,12 @@ namespace Hertzole.ALE.CodeGen
 			// There were no exposed fields so there's no reason to continue.
 			if (exposedFields.Count == 0)
 			{
+				return;
+			}
+
+			if (exposedFields.Count > 64)
+			{
+				Error("A single component can't have more than 64 exposed properties.");
 				return;
 			}
 
@@ -449,7 +457,8 @@ namespace Hertzole.ALE.CodeGen
 				{
 					if (Type.NestedTypes[i].Name == WRAPPER_NAME)
 					{
-						Error($"{Type.FullName} already has a nested class called 'Wrapper'.");
+						Error($"{Type.FullName} already has a nested class called '{WRAPPER_NAME}'.");
+						return;
 					}
 				}
 			}
@@ -460,6 +469,10 @@ namespace Hertzole.ALE.CodeGen
 				Module.GetTypeReference<ValueType>());
 
 			wrapper.Interfaces.Add(new InterfaceImplementation(Module.GetTypeReference<IExposedWrapper>()));
+			dirtyMaskType = CreateDirtyMask();
+			wrapper.NestedTypes.Add(dirtyMaskType);
+			dirtyMaskField = new FieldDefinition("ALE__Generated__dirtyMaskField", FieldAttributes.Public, dirtyMaskType);
+			wrapper.Fields.Add(dirtyMaskField);
 
 			MethodDefinition ctor = new MethodDefinition(".ctor", MethodAttributes.Public | MethodAttributes.HideBySig |
 			                                                      MethodAttributes.SpecialName | MethodAttributes.RTSpecialName,
@@ -470,19 +483,30 @@ namespace Hertzole.ALE.CodeGen
 
 			ILProcessor il = ctor.Body.GetILProcessor();
 
+			ParameterDefinition dirtyMaskParameter = ctor.AddParameter(Module, dirtyMaskType);
+
+			il.EmitLdarg();
+			il.EmitLdarg(dirtyMaskParameter);
+			il.Emit(OpCodes.Stfld, dirtyMaskField);
+
 			for (int i = 0; i < exposedFields.Count; i++)
 			{
 				FieldDefinition field = CreateField(exposedFields[i]);
 				wrapper.Fields.Add(field);
 
 				ParameterDefinition p = ctor.AddParameter(exposedFields[i].FieldTypeComponentAware);
+#if ALE_DEBUG
+				p.Name = exposedFields[i].Name;
+#else
+
+#endif
 
 #if ALE_DEBUG
 				il.Emit(OpCodes.Ldstr, $"{Type.FullName} wrapper setting value for field {exposedFields[i].id} ({exposedFields[i].Name})");
 				il.Emit(OpCodes.Call, Module.GetMethod(typeof(LevelEditorLogger), "Log", typeof(object)));
 #endif
 
-				il.Emit(OpCodes.Ldarg_0);
+				il.EmitLdarg();
 				il.EmitInt(exposedFields[i].id);
 				il.EmitLdarg(p);
 
@@ -500,6 +524,32 @@ namespace Hertzole.ALE.CodeGen
 
 			ctor.Body.Optimize();
 			wrapperCtor = ctor;
+
+			TypeDefinition CreateDirtyMask()
+			{
+				TypeDefinition mask = new TypeDefinition(string.Empty, "DirtyMask", TypeAttributes.NestedPublic | TypeAttributes.AnsiClass | TypeAttributes.Sealed, Module.GetTypeReference<Enum>());
+
+				mask.Fields.Add(new FieldDefinition("value__", FieldAttributes.Public | FieldAttributes.SpecialName | FieldAttributes.RTSpecialName, Module.GetTypeReference<long>()));
+				FieldDefinition noneField = new FieldDefinition("None", FieldAttributes.Public | FieldAttributes.Static | FieldAttributes.Literal, mask)
+				{
+					Constant = 0L
+				};
+
+				mask.Fields.Add(noneField);
+				
+				for (int i = 0; i < exposedFields.Count; i++)
+				{
+					FieldDefinition field = new FieldDefinition(exposedFields[i].Name, FieldAttributes.Public | FieldAttributes.Static | FieldAttributes.Literal, mask)
+					{
+						Constant = 1L << i
+					};
+
+					mask.Fields.Add(field);
+					
+				}
+				
+				return mask;
+			}
 
 			FieldDefinition CreateField(FieldOrProperty field)
 			{
@@ -637,6 +687,11 @@ namespace Hertzole.ALE.CodeGen
 				il.Emit(OpCodes.Call, Module.GetMethod(typeof(MessagePackReader), "ReadArrayHeader"));
 				il.EmitStloc(lengthVar);
 
+				VariableDefinition maskVar = m.AddLocalVariable(Module, dirtyMaskType);
+				il.EmitInt(0);
+				il.Emit(OpCodes.Conv_I8);
+				il.EmitStloc(maskVar);
+
 				List<VariableDefinition> localFields = new List<VariableDefinition>();
 
 				for (int i = 0; i < fields.Count; i++)
@@ -703,8 +758,15 @@ namespace Hertzole.ALE.CodeGen
 				if (fields.Count == 1)
 				{
 					il.Append(FormatterHelper.GetReadValue(fields[0].FieldTypeComponentAware, getResolver));
-					Instruction readEnd = il.EmitStloc(localFields[0]);
-					readFinishes.Add(readEnd);
+					il.EmitStloc(localFields[0]);
+					
+					// dirtyMask |= Wrapper.DirtyMask.Value;
+					il.EmitLdloc(maskVar);
+					il.EmitInt(1 << 0);
+					il.Emit(OpCodes.Conv_I8);
+					il.Emit(OpCodes.Or);
+					Instruction finish = il.EmitStloc(maskVar);
+					readFinishes.Add(finish);
 				}
 				else
 				{
@@ -719,7 +781,15 @@ namespace Hertzole.ALE.CodeGen
 						}
 
 						il.Append(FormatterHelper.GetReadValue(fields[i].FieldTypeComponentAware, getResolver));
-						Instruction finish = il.EmitStloc(localFields[i]);
+						il.EmitStloc(localFields[i]);
+						
+						// dirtyMask |= Wrapper.DirtyMask.Value;
+						il.EmitLdloc(maskVar);
+						il.EmitInt(1 << i);
+						il.Emit(OpCodes.Conv_I8);
+						il.Emit(OpCodes.Or);
+						Instruction finish = il.EmitStloc(maskVar);
+						
 						readFinishes.Add(finish);
 					}
 				}
@@ -757,6 +827,7 @@ namespace Hertzole.ALE.CodeGen
 				il.EmitInt(1);
 				il.Emit(OpCodes.Sub);
 				il.Emit(OpCodes.Call, Module.GetMethod(typeof(MessagePackReader), "set_Depth", typeof(int)));
+				il.EmitLdloc(maskVar);
 				for (int i = 0; i < fields.Count; i++)
 				{
 					il.EmitLdloc(localFields[i]);
@@ -766,6 +837,7 @@ namespace Hertzole.ALE.CodeGen
 
 				il.Emit(OpCodes.Ret);
 
+				m.SetVariableName(maskVar, "dirtyMask");
 				m.SetVariableName(lengthVar, "length");
 				m.SetVariableName(loopIndex, "i");
 				m.SetVariableName(idVar, "id");
@@ -1374,6 +1446,9 @@ namespace Hertzole.ALE.CodeGen
 			il.Emit(OpCodes.Ldstr, $"{Type.FullName} Getting wrapper...");
 			il.Emit(OpCodes.Call, Module.GetMethod(typeof(LevelEditorLogger), "Log", typeof(object)));
 #endif
+			
+			il.EmitLong(~(-1L << fields.Count));
+			il.Emit(OpCodes.Conv_I8);
 
 			for (int i = 0; i < fields.Count; i++)
 			{
@@ -1433,8 +1508,24 @@ namespace Hertzole.ALE.CodeGen
 			il.Emit(OpCodes.Unbox_Any, wrapper);
 			il.EmitStloc(wrapperVar);
 
+			Instruction previous = null;
+
 			for (int i = 0; i < fields.Count; i++)
 			{
+				Instruction start = il.EmitLdloc(wrapperVar);
+				il.Emit(OpCodes.Ldfld, dirtyMaskField);
+				il.EmitLong(1L << i);
+				il.Emit(OpCodes.Conv_I8);
+				Instruction and = Instruction.Create(OpCodes.And);
+				il.Append(and);
+				if (previous != null)
+				{
+					il.InsertAfter(previous, Instruction.Create(OpCodes.Brfalse, start));
+				}
+
+				previous = and;
+				
+				// field = wrapper.field.Item2;
 				FieldReference item2 = Module.ImportReference(typeof(ValueTuple<,>).GetField("Item2"));
 				item2.DeclaringType = Module.ImportReference(typeof(ValueTuple<,>)).MakeGenericInstanceType(Module.GetTypeReference<int>(), fields[i].FieldTypeComponentAware);
 
@@ -1521,6 +1612,11 @@ namespace Hertzole.ALE.CodeGen
 			Instruction ret = Instruction.Create(OpCodes.Ret);
 			il.Append(ret);
 			il.InsertAfter(il.Body.Instructions[1], Instruction.Create(OpCodes.Brfalse, ret));
+
+			if (previous != null)
+			{
+				il.InsertAfter(previous, Instruction.Create(OpCodes.Brfalse, ret));
+			}
 
 			m.Body.Optimize();
 		}

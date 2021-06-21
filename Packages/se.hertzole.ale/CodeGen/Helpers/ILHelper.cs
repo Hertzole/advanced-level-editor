@@ -173,6 +173,18 @@ namespace Hertzole.ALE.CodeGen.Helpers
 				return Int((int) value);
 			}
 		}
+		
+		public static Instruction Long(long value)
+		{
+			if (value > int.MaxValue)
+			{
+				return Instruction.Create(OpCodes.Ldc_I8, value);
+			}
+			else
+			{
+				return Int((int) value);
+			}
+		}
 
 		public static Instruction Bool(bool value)
 		{

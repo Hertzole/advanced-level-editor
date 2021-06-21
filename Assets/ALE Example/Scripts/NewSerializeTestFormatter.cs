@@ -27,6 +27,7 @@ namespace Hertzole.ALE.Generated
             options.Security.DepthStep(ref reader);
 
             int length = reader.ReadArrayHeader();
+            TypesTest.Wrapper.DirtyMask mask = TypesTest.Wrapper.DirtyMask.None;
             string testString = null;
             int testInt = 0;
             Vector3 testVector3 = new Vector3();
@@ -39,18 +40,22 @@ namespace Hertzole.ALE.Generated
                     if (id == 220)
                     {
                         testString = reader.ReadString();
+                        mask |= TypesTest.Wrapper.DirtyMask.A1;
                     }
                     else if (id == 1)
                     {
                         testInt = reader.ReadInt32();
+                        mask |= TypesTest.Wrapper.DirtyMask.A2;
                     }
                     else if (id == 2)
                     {
                         testVector3 = options.Resolver.GetFormatter<Vector3>().Deserialize(ref reader, options);
+                        mask |= TypesTest.Wrapper.DirtyMask.A3;
                     }
                     else if (id == 100)
                     {
                         reference = options.Resolver.GetFormatter<ComponentDataWrapper>().Deserialize(ref reader, options);
+                        mask |= TypesTest.Wrapper.DirtyMask.A4;
                     }
                     else
                     {
@@ -60,7 +65,7 @@ namespace Hertzole.ALE.Generated
             }
             
             reader.Depth--;
-            return new NewSerializeTestScript.WrapperTemplate(testString, testInt, testVector3, reference, new ComponentDataWrapper(), new ComponentDataWrapper());
+            return new NewSerializeTestScript.WrapperTemplate(mask, testString, testInt, testVector3, reference, new ComponentDataWrapper(), new ComponentDataWrapper());
         }
     }
 }

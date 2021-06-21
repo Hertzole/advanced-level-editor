@@ -55,7 +55,7 @@ public class NewSerializeTestScript : MonoBehaviour
         public ValueTuple<int, ComponentDataWrapper> transforms;
         public ValueTuple<int, ComponentDataWrapper> transformList;
 
-        public WrapperTemplate(string testString, int testInt, Vector3 testVector3, ComponentDataWrapper reference, ComponentDataWrapper transforms, ComponentDataWrapper transformList)
+        public WrapperTemplate(TypesTest.Wrapper.DirtyMask dirtymask, string testString, int testInt, Vector3 testVector3, ComponentDataWrapper reference, ComponentDataWrapper transforms, ComponentDataWrapper transformList)
         {
             this.testString = (220, testString);
             this.testInt = (1, testInt);
@@ -146,7 +146,7 @@ public class NewSerializeTestScript : MonoBehaviour
 
     IExposedWrapper IExposedToLevelEditor.GetWrapper()
     {
-        return new WrapperTemplate(testString, testInt, testVector3, new ComponentDataWrapper(reference), new ComponentDataWrapper(transforms), new ComponentDataWrapper(transformList));
+        return new WrapperTemplate(TypesTest.Wrapper.DirtyMask.A1, testString, testInt, testVector3, new ComponentDataWrapper(reference), new ComponentDataWrapper(transforms), new ComponentDataWrapper(transformList));
     }
 
     void IExposedToLevelEditor.ApplyWrapper(IExposedWrapper wrapper)

@@ -134,6 +134,8 @@ MonoBehaviour:
   structTest:
     str: 
     vec: {x: 0, y: 0, z: 0}
+    intValue: 0
+    veryLongNameThatIsLong: 0
   secondVector3: {x: 0, y: 0}
   secondVector4: {x: 0, y: 0}
   secondVector5: {x: 0, y: 0}
@@ -143,3 +145,9 @@ MonoBehaviour:
     vec: {x: 0, y: 0, z: 0}
   enumTest: 66
   gameObjectField: {fileID: 0}
+  badStruct:
+    intValue: 0
+    byteValue: 0
+  filler1: New filler 1
+  filler2: New filler 2
+  filler3: New filler 3

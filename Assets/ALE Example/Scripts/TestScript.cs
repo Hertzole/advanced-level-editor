@@ -300,6 +300,15 @@ public class TestScript : MonoBehaviour, ILevelEditorGizmos
     [SerializeField] 
     [ExposeToLevelEditor(30)]
     private MyBadderStruct badStruct = default;
+    [SerializeField] 
+    [ExposeToLevelEditor(40)]
+    private string filler1 = "New value";
+    [SerializeField] 
+    [ExposeToLevelEditor(41)]
+    private string filler2 = "Even newer";
+    [SerializeField] 
+    [ExposeToLevelEditor(42)]
+    private string filler3 = "Also very new";
 
     private int[] ints = null;
     private Color32[] colors = null;
