@@ -90,6 +90,20 @@ namespace Hertzole.ALE.CodeGen
 			il.Append(result);
 			return result;
 		}
+		
+		public static Instruction EmitULong(this ILProcessor il, ulong value)
+		{
+			Instruction result = ILHelper.ULong(value);
+			il.Append(result);
+			return result;
+		}
+		
+		public static Instruction EmitLong(this ILProcessor il, long value)
+		{
+			Instruction result = ILHelper.Long(value);
+			il.Append(result);
+			return result;
+		}
 
 		public static void EmitDefaultValue(this ILProcessor il, TypeReference type)
 		{
