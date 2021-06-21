@@ -1,18 +1,34 @@
 ﻿using System;
 using UnityEngine;
+#if ALE_LOCALIZATION
+using UnityEngine.Localization;
+#endif
 
 namespace Hertzole.ALE
 {
-    public interface ILevelEditorInspector
-    {
-        void Initialize(ILevelEditorUI ui);
+#if ALE_LOCALIZATION
+	[Serializable]
+	public struct LocalizedInspectorField
+	{
+		public string key;
+		public LocalizedString value;
+	}
+#endif
 
-        void BindObject(ILevelEditorObject target);
+	public interface ILevelEditorInspector
+	{
+		void Initialize(ILevelEditorUI ui);
 
-        LevelEditorInspectorField GetField(Type fieldType, Transform parent);
+		void BindObject(ILevelEditorObject target);
 
-        void PoolField(LevelEditorInspectorField field);
+		LevelEditorInspectorField GetField(Type fieldType, Transform parent);
 
-        bool HasField(Type type);
-    }
+		void PoolField(LevelEditorInspectorField field);
+
+		bool HasField(Type type);
+
+#if ALE_LOCALIZATION
+		LocalizedString GetLocalizedInspectorField(string key);
+#endif
+	}
 }

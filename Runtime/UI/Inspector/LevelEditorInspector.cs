@@ -13,6 +13,9 @@ using System.Collections.ObjectModel;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
+#if ALE_LOCALIZATION
+using UnityEngine.Localization;
+#endif
 
 namespace Hertzole.ALE
 {
@@ -75,6 +78,12 @@ namespace Hertzole.ALE
         [Header("Settings")]
         [SerializeField]
         private bool includeTransform = true;
+        
+#if ALE_LOCALIZATION
+        [Header("Localization")]
+        [SerializeField] 
+        private LocalizedInspectorField[] localizedInspectorFields = default;
+#endif
 
         private ILevelEditorObject boundItem;
         private ILevelEditorUI ui;
@@ -304,6 +313,13 @@ namespace Hertzole.ALE
 
                 for (int i = 0; i < fieldPrefabs.Length; i++)
                 {
+#if !ALE_STRIP_SAFETY || UNITY_EDITOR
+                    if (fieldPrefabs[i] == null)
+                    {
+                        throw new UnassignedReferenceException($"Field {i} has not been assigned on the level editor inspector.");
+                    }
+#endif
+                    
                     if (fieldPrefabs[i].SupportsTypeDirect(type))
                     {
                         foundIndex = i;
@@ -332,6 +348,22 @@ namespace Hertzole.ALE
 
             return false;
         }
+
+#if ALE_LOCALIZATION
+        public virtual LocalizedString GetLocalizedInspectorField(string key)
+        {
+            for (int i = 0; i < localizedInspectorFields.Length; i++)
+            {
+                if (localizedInspectorFields[i].key == key)
+                {
+                    return localizedInspectorFields[i].value;
+                }
+            }
+
+            Debug.LogWarning($"No localized string for {key}");
+            return null;
+        }
+#endif
     }
 }
 #endif
