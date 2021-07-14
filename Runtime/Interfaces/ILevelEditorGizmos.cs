@@ -2,6 +2,6 @@
 {
     public interface ILevelEditorGizmos
     {
-        void DrawLevelEditorGizmos();
+        void DrawLevelEditorGizmos(ILevelEditorGizmosDrawer drawer);
     }
 }

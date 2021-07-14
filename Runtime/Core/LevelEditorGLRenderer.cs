@@ -15,7 +15,7 @@ namespace Hertzole.ALE
     [AddComponentMenu("ALE/GL Renderer", 2)]
 #endif
     [DefaultExecutionOrder(-10000)]
-    public class LevelEditorGLRenderer : MonoBehaviour, ILevelEditorGL
+    public class LevelEditorGLRenderer : MonoBehaviour
     {
         [SerializeField]
         private Shader lineShader = null;
@@ -26,8 +26,10 @@ namespace Hertzole.ALE
         private Camera cam = null;
 #endif
 
-        private List<ILevelEditorGizmos> renderObjects = new List<ILevelEditorGizmos>();
-        private List<ILevelEditorSelectedGizmos> selectedRenderObjects = new List<ILevelEditorSelectedGizmos>();
+        protected ILevelEditorGizmosDrawer drawer;
+        
+        protected readonly List<ILevelEditorGizmos> renderObjects = new List<ILevelEditorGizmos>(32);
+        protected readonly List<ILevelEditorSelectedGizmos> selectedRenderObjects = new List<ILevelEditorSelectedGizmos>(32);
 
         private static LevelEditorGLRenderer instance;
 
@@ -47,11 +49,13 @@ namespace Hertzole.ALE
             {
                 instance = this;
 
-                if (!LevelEditorGizmos.IsInitialized)
-                {
-                    LevelEditorGizmos.Initialize(this);
-                }
+                drawer = SetupDrawer();
             }
+        }
+
+        protected virtual ILevelEditorGizmosDrawer SetupDrawer()
+        {
+            return new LevelEditorGLDrawer(lineShader);
         }
 
         private void OnEnable()
@@ -111,15 +115,15 @@ namespace Hertzole.ALE
             Draw(cam);
         }
 #else
-        private void OnEndCameraRendering(ScriptableRenderContext context, Camera camera)
+        private void OnEndCameraRendering(ScriptableRenderContext context, Camera renderCamera)
         {
-            Draw(camera);
+            Draw(renderCamera);
         }
 #endif
 
-        private void Draw(Camera camera)
+        protected virtual void Draw(Camera renderCamera)
         {
-            if (renderObjects == null || renderObjects.Count == 0)
+            if (renderObjects == null || drawer == null)
             {
                 return;
             }
@@ -127,16 +131,16 @@ namespace Hertzole.ALE
             GL.PushMatrix();
             try
             {
-                GL.LoadProjectionMatrix(GL.GetGPUProjectionMatrix(camera.projectionMatrix, false));
+                GL.LoadProjectionMatrix(GL.GetGPUProjectionMatrix(renderCamera.projectionMatrix, false));
 
                 for (int i = 0; i < renderObjects.Count; i++)
                 {
-                    renderObjects[i].DrawLevelEditorGizmos();
+                    renderObjects[i].DrawLevelEditorGizmos(drawer);
                 }
 
                 for (int i = 0; i < selectedRenderObjects.Count; i++)
                 {
-                    selectedRenderObjects[i].DrawLevelEditorGizmosSelected();
+                    selectedRenderObjects[i].DrawLevelEditorGizmosSelected(drawer);
                 }
             }
             finally
@@ -168,11 +172,6 @@ namespace Hertzole.ALE
             if (lineShader == null)
             {
                 lineShader = Shader.Find("Hertzole/ALE/Unlit Line");
-            }
-
-            if (Application.isPlaying && LevelEditorGizmos.IsInitialized)
-            {
-                LevelEditorGizmos.Rebuild(this);
             }
         }
 #endif
