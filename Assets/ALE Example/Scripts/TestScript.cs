@@ -69,7 +69,7 @@ public struct MyGooderStruct : IEquatable<MyGooderStruct>
     }
 }
 
-public class TestScript : MonoBehaviour, ILevelEditorGizmos
+public class TestScript : MonoBehaviour, ILevelEditorGizmos, ILevelEditorSelectedGizmos
 {
 	public struct WrapperTemplate : IExposedWrapper
 	{
@@ -313,16 +313,22 @@ public class TestScript : MonoBehaviour, ILevelEditorGizmos
     private int[] ints = null;
     private Color32[] colors = null;
     
-    public void DrawLevelEditorGizmos()
+    // Always drawing
+    public void DrawLevelEditorGizmos(ILevelEditorGizmosDrawer drawer)
     {
-        LevelEditorGizmos.DrawWireCube(transform.position, Vector3.one, transform.rotation, Color.green);
+        drawer.DrawWireCube(transform.position, Vector3.one, transform.rotation, Color.green);
     
-        LevelEditorGizmos.DrawSquare(transform.position + transform.forward * 2, Vector2.one, transform.rotation, Color.blue);
+        drawer.DrawSquare(transform.position + transform.forward * 2, Vector2.one, transform.rotation, Color.blue);
     
         if (otherObject != null)
         {
-            LevelEditorGizmos.DrawLine(transform.position, otherObject.position, Color.red);
+            drawer.DrawLine(transform.position, otherObject.position, Color.red);
         }
+
+        // Start, end, color
+        drawer.DrawLine(Vector3.zero, Vector3.one, Color.red);
+        // Center, size, rotation, color
+        drawer.DrawWireCube(Vector3.zero, Vector3.one, new Vector3(0, 45, 0), Color.magenta);
     }
     //
     // private void Template(int id, object value)
@@ -357,4 +363,9 @@ public class TestScript : MonoBehaviour, ILevelEditorGizmos
 
 #pragma warning restore CS0414
 #pragma warning restore CS0067
+	public void DrawLevelEditorGizmosSelected(ILevelEditorGizmosDrawer drawer)
+	{
+		// Center, size, rotation, color
+		drawer.DrawSquare(Vector3.zero, new Vector2(1, 1), Quaternion.identity, Color.blue);
+	}
 }

@@ -113,8 +113,28 @@ public string MyProperty { get; set; }
 ```
 **NOTICE! The IDs need to be unique and they are used for saving levels and fetching values! You should not change these after creating your exposed field!**
 
-#### Write custom writers and readers for serialization
-TODO
+#### Draw level editor gizmos
+You can draw gizmos at runtime in the level editor very easily using interfaces.
+```cs
+public class MyScript : MonoBehaviour, ILevelEditorGizmos, ILevelEditorSelectedGizmos
+{
+	// Always drawing
+    public void DrawLevelEditorGizmos(ILevelEditorGizmosDrawer drawer)
+    {
+        // Start, end, color
+        drawer.DrawLine(Vector3.zero, Vector3.one, Color.red);
+        // Center, size, rotation, color
+        drawer.DrawWireCube(Vector3.zero, Vector3.one, new Vector3(0, 45, 0), Color.magenta);
+    }
+	
+	// Only drawing when selected
+	public void DrawLevelEditorGizmosSelected(ILevelEditorGizmosDrawer drawer)
+	{
+		// Center, size, rotation, color
+		drawer.DrawSquare(Vector3.zero, new Vector2(1, 1), Quaternion.identity, Color.blue);
+	}
+}
+```
 
 ## 📃 License
 ALE itself is licensed under MIT. However, it contains some code that is under Unity's own license. As long as you use ALE within Unity, you're good to go.
@@ -127,5 +147,6 @@ Unity Technologies/ProBuilder team - [GILES](https://github.com/Unity-Technologi
 [Mirage team](https://github.com/MirageNet) - Lots of weaving code from [Mirage](https://github.com/MirageNet/Mirage)  
 [paulpach](https://github.com/paulpach) - Helped me with weaver related questions  
 [Yoshifumi Kawai](https://github.com/neuecc) - [MessagePack for C#](https://github.com/neuecc/MessagePack-CSharp) for serialization  
+[HiddenMonk](https://github.com/HiddenMonk) - [Unity3DRuntimeTransformGizmo](https://github.com/HiddenMonk/Unity3DRuntimeTransformGizmo) for runtime handles
 
 ❤ Developed with love and support from [Aurora Punks](https://www.aurorapunks.com/) ❤

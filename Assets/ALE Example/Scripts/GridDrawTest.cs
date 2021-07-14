@@ -13,8 +13,8 @@ public class GridDrawTest : MonoBehaviour, ILevelEditorGizmos
     [ExposeToLevelEditor(2)]
     private Color gridColor = Color.white;
 
-    public void DrawLevelEditorGizmos()
+    public void DrawLevelEditorGizmos(ILevelEditorGizmosDrawer drawer)
     {
-        LevelEditorGizmos.Draw2DGrid(transform.position, size, spacing, transform.rotation, gridColor);
+        drawer.Draw2DGrid(transform.position, size, spacing, transform.rotation, gridColor);
     }
 }
