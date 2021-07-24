@@ -1891,6 +1891,7 @@ MonoBehaviour:
   - {fileID: 832480442964059171, guid: c98dc8d643433824ba8c49912df4e4b9, type: 3}
   - {fileID: 9039197262415645972, guid: 41e023088ee7eba47b728cf200306946, type: 3}
   includeTransform: 1
+  localizedInspectorFields: []
 --- !u!1 &1049410937
 GameObject:
   m_ObjectHideFlags: 0

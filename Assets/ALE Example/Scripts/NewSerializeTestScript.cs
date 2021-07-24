@@ -47,7 +47,7 @@ public class NewSerializeTestScript : MonoBehaviour
         {
             return !left.Equals(right);
         }
-
+        
         public ValueTuple<int, string> testString;
         public ValueTuple<int, int> testInt;
         public ValueTuple<int, Vector3> testVector3;
@@ -149,7 +149,7 @@ public class NewSerializeTestScript : MonoBehaviour
         return new WrapperTemplate(TypesTest.Wrapper.DirtyMask.A1, testString, testInt, testVector3, new ComponentDataWrapper(reference), new ComponentDataWrapper(transforms), new ComponentDataWrapper(transformList));
     }
 
-    void IExposedToLevelEditor.ApplyWrapper(IExposedWrapper wrapper)
+    void IExposedToLevelEditor.ApplyWrapper(IExposedWrapper wrapper, bool ignoreDirtyMask = false)
     {
         if (wrapper is WrapperTemplate w)
         {

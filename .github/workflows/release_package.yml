@@ -1,11 +1,11 @@
-name: Package
+name: Release package
 on:
   release:
     types:
     - published
 jobs:
-  release:
-    name: Checkout
+  package:
+    name: Deploy package
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v2

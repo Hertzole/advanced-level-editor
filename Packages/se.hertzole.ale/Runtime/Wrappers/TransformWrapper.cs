@@ -122,7 +122,7 @@ namespace Hertzole.ALE
             return new Wrapper(Target.position, Target.eulerAngles, Target.localScale, new ComponentDataWrapper(Target.parent));
         }
 
-        public override void ApplyWrapper(IExposedWrapper wrapper)
+        public override void ApplyWrapper(IExposedWrapper wrapper, bool ignoreDirtyMask = false)
         {
             if (wrapper is Wrapper w)
             {
@@ -132,6 +132,7 @@ namespace Hertzole.ALE
             }
         }
 
+        //TODO: Implement DirtyMask.
         public readonly struct Wrapper : IExposedWrapper, IEquatable<Wrapper>
         {
             public readonly Vector3 position;

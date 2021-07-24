@@ -457,19 +457,27 @@ public class TypesTest : MonoBehaviour
 			Dic, EnumTest);
 	}
 
-	public void ApplyWrapperTemplate(IExposedWrapper exposedWrapper)
+	public void ApplyWrapperTemplate(IExposedWrapper exposedWrapper, bool ignoreDirtyMask = false)
 	{
 		if (exposedWrapper is Wrapper wrapper)
 		{
-			if ((wrapper.mask & Wrapper.DirtyMask.A1) != 0)
+			if (ignoreDirtyMask || (wrapper.mask & Wrapper.DirtyMask.A1) != 0)
 			{
+				LevelEditorLogger.Log($"Apply value on stringTest: {wrapper.stringTest.Item2}");
 				stringTest = wrapper.stringTest.Item2;
 			}
 
 			// if (wrapper.mask.HasFlag(Wrapper.DirtyMask.A2))
-			if((wrapper.mask & Wrapper.DirtyMask.A2) != 0)
+			if(ignoreDirtyMask || (wrapper.mask & Wrapper.DirtyMask.A2) != 0)
 			{
+				LevelEditorLogger.Log($"Apply value on intTest: {wrapper.intTest.Item2}");
 				intTest = wrapper.intTest.Item2;
+			}
+
+			if (ignoreDirtyMask || (wrapper.mask & Wrapper.DirtyMask.A6) != 0)
+			{
+				LevelEditorLogger.Log($"Apply value on referenceTest: {wrapper.referenceTest.Item2}");
+				
 			}
 		}
 	}

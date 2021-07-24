@@ -14,7 +14,7 @@ namespace Hertzole.ALE
     {
         [SerializeField] 
         private bool poolObjects = true;
-        [SerializeField]
+        [SerializeField, RequireType(typeof(ILevelEditorResources))]
         private ScriptableObject resources = null;
         [SerializeField, RequireType(typeof(ILevelEditorUndo))]
         private GameObject undo = null;
@@ -32,6 +32,20 @@ namespace Hertzole.ALE
         private Dictionary<uint, ILevelEditorObject> objectsWithId = new Dictionary<uint, ILevelEditorObject>();
 
         public bool PoolObjects { get { return poolObjects; } set { poolObjects = value; } }
+
+        public ILevelEditorUndo Undo
+        {
+            get
+            {
+                if (undoComp == null && undo != null)
+                {
+                    undoComp = undo.GetComponent<ILevelEditorUndo>();
+                }
+
+                return undoComp;
+            } 
+            set { undoComp = value; }
+        }
         
         public ScriptableObject ResourcesObject
         {
@@ -52,11 +66,7 @@ namespace Hertzole.ALE
 
         public ILevelEditorResources Resources
         {
-            get
-            {
-                if (realResources == null) { realResources = resources as ILevelEditorResources; }
-                return realResources;
-            }
+            get { return realResources ??= resources as ILevelEditorResources; }
             set { realResources = value; }
         }
 
@@ -67,26 +77,10 @@ namespace Hertzole.ALE
         public event EventHandler<LevelEditorObjectEvent> OnCreatedObjectFromSaveData;
         public event EventHandler<LevelEditorObjectEvent> OnDeletedObject;
 
-        private void Awake()
-        {
-            if (undo != null)
-            {
-                undoComp = undo.GetComponent<ILevelEditorUndo>();
-            }
-        }
-
-#if !ALE_STRIP_SAFETY || UNITY_EDITOR
-        private void Start()
-        {
-            if (realResources == null && !resources.ExistsAndImplements<ILevelEditorResources>(nameof(resources), this))
-            {
-                return;
-            }
-        }
-#endif
-
         public ILevelEditorObject CreateObject(ILevelEditorResource resource, Vector3 position, Quaternion rotation, Transform parent, uint instanceID, bool registerUndo = true)
         {
+            LevelEditorLogger.Log($"Create object | Resource: {resource} | Position: {position} | Rotation: {rotation} | Parent: {parent} | Instance ID: {instanceID} | Register undo: {registerUndo}");
+            
             if (resource.Asset is GameObject go)
             {
                 if (objectsWithId.ContainsKey(instanceID))
@@ -151,7 +145,7 @@ namespace Hertzole.ALE
 
                 OnCreatedObject?.Invoke(this, new LevelEditorObjectEvent(obj));
 
-                if (registerUndo && undoComp != null)
+                if (registerUndo && Undo != null)
                 {
                     undoComp.AddAction(new CreateObjectUndoAction(resource, position, rotation, parent, instanceID, obj), false);
                 }
@@ -259,6 +253,12 @@ namespace Hertzole.ALE
                 target.Children.Clear();
             }
 
+            //TODO: Apply undo.
+            if (registerUndo && Undo != null)
+            {
+                undoComp.AddAction(new DeleteObjectUndoAction(target), false);
+            }
+            
             if (poolObjects)
             {
                 target.MyGameObject.SetActive(false);
@@ -267,8 +267,6 @@ namespace Hertzole.ALE
             {
                 Destroy(target.MyGameObject);
             }
-
-            //TODO: Apply undo.
 
             OnDeletedObject?.Invoke(this, new LevelEditorObjectEvent(target));
         }
@@ -308,25 +306,5 @@ namespace Hertzole.ALE
         {
             return instanceID + 1;
         }
-
-#if UNITY_EDITOR
-        private void OnValidate()
-        {
-            GetStandardComponents();
-        }
-
-        private void Reset()
-        {
-            GetStandardComponents();
-        }
-
-        private void GetStandardComponents()
-        {
-            if (!resources.ExistsAndImplements<ILevelEditorResources>(nameof(resources), this, false))
-            {
-                resources = null;
-            }
-        }
-#endif
     }
 }

@@ -31,13 +31,34 @@ namespace Hertzole.ALE
         private ILevelEditorInput inputComp;
 
         private List<IUndoAction> actionHistory = new List<IUndoAction>();
+        
+        public bool HandleUndoRedoInput { get { return handleUndoRedoInput; } set { handleUndoRedoInput = value; } }
 
-        public ILevelEditorObjectManager ObjectManager { get { return objectManagerComp; } }
-
-        private void Awake()
+        public ILevelEditorObjectManager ObjectManager
         {
-            objectManagerComp = objectManager.NeedComponent<ILevelEditorObjectManager>();
-            inputComp = input.NeedComponent<ILevelEditorInput>();
+            get
+            {
+                if (objectManagerComp == null && objectManager != null)
+                {
+                    objectManagerComp = objectManager.GetComponent<ILevelEditorObjectManager>();
+                }
+
+                return objectManagerComp;
+            }
+            set { objectManagerComp = value; }
+        }
+        public ILevelEditorInput Input 
+        {
+            get
+            {
+                if (inputComp == null && input != null)
+                {
+                    inputComp = input.GetComponent<ILevelEditorInput>();
+                }
+
+                return inputComp;
+            }
+            set { inputComp = value; } 
         }
 
         private void Update()
@@ -50,14 +71,14 @@ namespace Hertzole.ALE
 
         protected virtual void HandleInput()
         {
-            if (inputComp.GetButton(modifierAction))
+            if (Input.GetButton(modifierAction))
             {
-                if (inputComp.GetButtonDown(undoAction))
+                if (Input.GetButtonDown(undoAction))
                 {
                     Undo();
                 }
 
-                if (inputComp.GetButtonDown(redoAction))
+                if (Input.GetButtonDown(redoAction))
                 {
                     Redo();
                 }
@@ -66,6 +87,8 @@ namespace Hertzole.ALE
 
         public void AddAction(IUndoAction action, bool execute)
         {
+            LevelEditorLogger.Log($"Add undo action | Action: {action} | Execute: {execute}");
+            
             // Remove the actions above if we cut into the history.
             while (actionHistory.Count > counter)
             {
@@ -89,12 +112,15 @@ namespace Hertzole.ALE
                 counter++;
             }
         }
-
+        
         public void Undo()
         {
+            LevelEditorLogger.Log($"Undo | Counter: {counter}");
+            
             if (counter > 0)
             {
                 counter--;
+                LevelEditorLogger.Log($"Undo {actionHistory[counter]}");
                 actionHistory[counter].Undo(this);
             }
         }

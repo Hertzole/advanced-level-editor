@@ -121,7 +121,7 @@ namespace Hertzole.ALE
             return new Wrapper(Target.mass, Target.drag, Target.angularDrag, Target.useGravity, Target.isKinematic);
         }
 
-        public override void ApplyWrapper(IExposedWrapper wrapper)
+        public override void ApplyWrapper(IExposedWrapper wrapper, bool ignoreDirtyMask = false)
         {
             if (wrapper is Wrapper w)
             {
@@ -145,6 +145,7 @@ namespace Hertzole.ALE
             Target.isKinematic = true;
         }
 
+        //TODO: Implement DirtyMask.
         public readonly struct Wrapper : IExposedWrapper, IEquatable<Wrapper>
         {
             public readonly float mass;

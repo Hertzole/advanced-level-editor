@@ -1493,10 +1493,15 @@ namespace Hertzole.ALE.CodeGen
 				Module.GetTypeReference(typeof(void)));
 
 			Type.Methods.Add(m);
-			m.Overrides.Add(Module.GetMethod<IExposedToLevelEditor>("ApplyWrapper", typeof(IExposedWrapper)));
+			m.Overrides.Add(Module.GetMethod<IExposedToLevelEditor>("ApplyWrapper", typeof(IExposedWrapper), typeof(bool)));
 			ParameterDefinition wrapperPar = m.AddParameter<IExposedWrapper>("wrapper");
+			ParameterDefinition ignoreDirtyMaskPar = m.AddParameter<bool>("ignoreDirtyMask");
 			VariableDefinition wrapperVar = m.AddLocalVariable(wrapper);
 
+			ignoreDirtyMaskPar.IsOptional = true;
+			ignoreDirtyMaskPar.HasDefault = true;
+			ignoreDirtyMaskPar.Constant = false;
+			
 			ILProcessor il = m.Body.GetILProcessor();
 
 			m.Body.InitLocals = true;
@@ -1512,7 +1517,9 @@ namespace Hertzole.ALE.CodeGen
 
 			for (int i = 0; i < fields.Count; i++)
 			{
-				Instruction start = il.EmitLdloc(wrapperVar);
+				Instruction start = il.EmitLdarg(ignoreDirtyMaskPar);
+
+				il.EmitLdloc(wrapperVar);
 				il.Emit(OpCodes.Ldfld, dirtyMaskField);
 				il.EmitLong(1L << i);
 				il.Emit(OpCodes.Conv_I8);
@@ -1531,7 +1538,37 @@ namespace Hertzole.ALE.CodeGen
 
 				bool setField = true;
 				
+#if ALE_DEBUG
+				Instruction setFieldStart;
+				if (fields[i].FieldType.Is<string>())
+				{
+					setFieldStart = Instruction.Create(OpCodes.Ldstr, "Apply value on stringTest: ");
+					il.Append(setFieldStart);
+					il.EmitLdloc(wrapperVar);
+					FieldReference valueField = wrapper.GetField(fields[i].Name);
+					il.Emit(OpCodes.Ldfld, valueField);
+					il.Emit(OpCodes.Ldfld, item2);
+					il.Emit(OpCodes.Call, Module.GetMethod<string>("Concat", typeof(string), typeof(string)));
+				}
+				else
+				{
+					setFieldStart = Instruction.Create(OpCodes.Ldstr, $"Apply value on {fields[i].Name}: {{0}}");
+					il.Append(setFieldStart);
+					il.EmitLdloc(wrapperVar);
+					il.Emit(OpCodes.Ldfld, wrapper.GetField(fields[i].Name));
+					il.Emit(OpCodes.Ldfld, item2);
+					il.Emit(OpCodes.Box, fields[i].IsComponent ? Module.GetTypeReference<ComponentDataWrapper>() : fields[i].FieldType);
+					il.Emit(OpCodes.Call, Module.GetMethod<string>("Format", typeof(string), typeof(object)));
+				}
+				
+				il.Emit(OpCodes.Call, Module.GetMethod(typeof(LevelEditorLogger), "Log", typeof(object)));
 				il.EmitLdarg();
+#else
+				Instruction setFieldStart = il.EmitLdarg();
+#endif
+				
+				il.InsertAfter(start, Instruction.Create(OpCodes.Brtrue, setFieldStart));
+
 				if (fields[i].IsComponent)
 				{
 					if (fields[i].IsCollection)
