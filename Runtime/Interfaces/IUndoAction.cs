@@ -5,7 +5,5 @@
         void Undo(ILevelEditorUndo undo);
 
         void Execute(ILevelEditorUndo undo);
-
-        void DisposeAction(ILevelEditorUndo undo);
     }
 }

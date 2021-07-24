@@ -18,10 +18,20 @@ namespace Hertzole.ALE
         {
             return x.CreateObject(x.GetResource(id), registerUndo);
         }
+        
+        public static ILevelEditorObject CreateObject(this ILevelEditorObjectManager x, string id, uint instanceId, bool registerUndo = true)
+        {
+            return x.CreateObject(x.GetResource(id), instanceId, registerUndo);
+        }
 
         public static ILevelEditorObject CreateObject(this ILevelEditorObjectManager x, ILevelEditorResource resource, bool registerUndo = true)
         {
             return x.CreateObject(resource, Vector3.zero, Quaternion.identity, null, x.GetNextInstanceID(), registerUndo);
+        }
+
+        public static ILevelEditorObject CreateObject(this ILevelEditorObjectManager x, ILevelEditorResource resource, uint instanceId, bool registerUndo = true)
+        {
+            return x.CreateObject(resource, Vector3.zero, Quaternion.identity, null, instanceId, registerUndo);
         }
 
         public static ILevelEditorObject CreateObject(this ILevelEditorObjectManager x, ILevelEditorResource resource, Vector3 position, bool registerUndo = true)

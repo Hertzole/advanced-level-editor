@@ -4,11 +4,11 @@ namespace Hertzole.ALE
 {
     public class CreateObjectUndoAction : IUndoAction
     {
-        private ILevelEditorResource resource;
-        private Vector3 position;
-        private Quaternion rotation;
-        private Transform parent;
-        private uint instanceID;
+        private readonly ILevelEditorResource resource;
+        private readonly Vector3 position;
+        private readonly Quaternion rotation;
+        private readonly Transform parent;
+        private readonly uint instanceID;
 
         private ILevelEditorObject obj;
 
@@ -29,12 +29,7 @@ namespace Hertzole.ALE
 
         public void Undo(ILevelEditorUndo undo)
         {
-            undo.ObjectManager.DeleteObject(obj);
-        }
-
-        public void DisposeAction(ILevelEditorUndo undo)
-        {
-            //TOOD: Finally delete object.
+            undo.ObjectManager.DeleteObject(obj, false);
         }
 
         public override string ToString()

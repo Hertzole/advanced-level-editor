@@ -228,14 +228,6 @@ namespace Hertzole.ALE
         public void OnPooled()
         {
             LevelEditorWorld.RemoveObject(this);
-            
-            if (originalValues != null)
-            {
-                for (int i = 0; i < originalValues.Length; i++)
-                {
-                    exposedComponents[i].ApplyWrapper(originalValues[i]);
-                }
-            }
 
             for (int i = 0; i < poolables.Length; i++)
             {
@@ -247,6 +239,14 @@ namespace Hertzole.ALE
         {
             LevelEditorWorld.AddObject(this);
 
+            if (originalValues != null)
+            {
+                for (int i = 0; i < originalValues.Length; i++)
+                {
+                    exposedComponents[i].ApplyWrapper(originalValues[i]);
+                }
+            }
+            
             for (int i = 0; i < poolables.Length; i++)
             {
                 poolables[i].OnLevelEditorUnpooled();

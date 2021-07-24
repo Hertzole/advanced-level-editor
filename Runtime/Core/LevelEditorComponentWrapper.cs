@@ -53,7 +53,7 @@ namespace Hertzole.ALE
         public abstract object GetValue(int id);
         public abstract void SetValue(int id, object value, bool notify);
         public abstract IExposedWrapper GetWrapper();
-        public abstract void ApplyWrapper(IExposedWrapper wrapper);
+        public abstract void ApplyWrapper(IExposedWrapper wrapper, bool ignoreDirtyMask = false);
 
         protected void InvokeOnValueChanged(int id, object value)
         {

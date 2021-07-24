@@ -336,7 +336,10 @@ namespace Hertzole.ALE
 
         protected virtual void UpdateModalBackground()
         {
-            modalsBackground.IfExists(x => x.SetActive(saveModal.activeSelf || loadModal.activeSelf || notificationModal.activeSelf));
+            if (modalsBackground != null)
+            {
+                modalsBackground.SetActive(saveModal.activeSelf || loadModal.activeSelf || notificationModal.activeSelf);
+            }
         }
 
         public virtual void ToggleInspectorPanel(bool toggle)

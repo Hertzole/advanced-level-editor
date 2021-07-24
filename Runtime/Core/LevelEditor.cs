@@ -136,34 +136,7 @@ namespace Hertzole.ALE
 
         private void Update()
         {
-            //if (Keyboard.current != null && editorModes != null && editorModes.Length > 0)
-            //{
-            //    if (Keyboard.current.digit1Key.wasPressedThisFrame)
-            //    {
-            //        if (editorModes.Length > 0)
-            //        {
-            //            SetMode(0);
-            //        }
-            //    }
-
-            //    if (Keyboard.current.digit2Key.wasPressedThisFrame)
-            //    {
-            //        if (editorModes.Length > 1)
-            //        {
-            //            SetMode(1);
-            //        }
-            //    }
-
-            //    if (Keyboard.current.digit3Key.wasPressedThisFrame)
-            //    {
-            //        if (editorModes.Length > 2)
-            //        {
-            //            SetMode(2);
-            //        }
-            //    }
-            //}
-
-            if (selectedMode >= 0 && playModeComp.IfElse((x) => !x.IsPlaying, () => true))
+            if (selectedMode >= 0 && editorModes.Length > 0 && (playModeComp != null && playModeComp.IsPlaying || playModeComp == null))
             {
                 editorModes[selectedMode].OnModeUpdate();
             }

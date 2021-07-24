@@ -22,6 +22,6 @@ namespace Hertzole.ALE
 
         IExposedWrapper GetWrapper();
 
-        void ApplyWrapper(IExposedWrapper wrapper);
+        void ApplyWrapper(IExposedWrapper wrapper, bool ignoreDirtyMask = false);
     }
 }

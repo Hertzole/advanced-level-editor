@@ -25,8 +25,6 @@
             exposed.SetValue(propertyId, previousValue, true);
         }
 
-        public void DisposeAction(ILevelEditorUndo undo) { }
-
         public override string ToString()
         {
             return $"SetValueUndoAction ({exposed}, {propertyId}, {previousValue}, {newValue})";
