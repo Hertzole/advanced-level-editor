@@ -98,6 +98,8 @@ namespace Hertzole.ALE
 
         private enum NumberType : ushort { Sbyte, Byte, Short, UShort, Int, UInt, Long, ULong, Float, Double, Decimal }
 
+        private bool editing;
+        
         private NumberType currentType;
 
         public SByteEvent OnSByteValueChanged { get { return onSByteValueChanged; } }
@@ -124,6 +126,14 @@ namespace Hertzole.ALE
         public DoubleEvent OnDoubleEndEdit { get { return onDoubleEndEdit; } }
         public DecimalEvent OnDecimalEndEdit { get { return onDecimalEndEdit; } }
 
+        private const int CHARACTER_LIMIT_BYTE = 3;
+        private const int CHARACTER_LIMIT_SHORT = 5;
+        private const int CHARACTER_LIMIT_INT = 10;
+        private const int CHARACTER_LIMIT_LONG = 18;
+        private const int CHARACTER_LIMIT_FLOAT = 8;
+        private const int CHARACTER_LIMIT_DOUBLE = 18;
+        private const int CHARACTER_LIMIT_DECIMAL = 29;
+
         protected override void OnAwake()
         {
             this.LogIfStripped();
@@ -148,6 +158,8 @@ namespace Hertzole.ALE
 
         protected override void OnBound(ExposedProperty property, IExposedToLevelEditor exposed)
         {
+            editing = false;
+            
             if (property.Type == typeof(sbyte))
             {
                 currentType = NumberType.Sbyte;
@@ -197,44 +209,34 @@ namespace Hertzole.ALE
             {
                 case NumberType.Sbyte:
                     textField.contentType = TMP_InputField.ContentType.IntegerNumber;
-                    textField.characterLimit = 4;
                     break;
                 case NumberType.Byte:
                     textField.contentType = TMP_InputField.ContentType.IntegerNumber;
-                    textField.characterLimit = 3;
                     break;
                 case NumberType.Short:
                     textField.contentType = TMP_InputField.ContentType.IntegerNumber;
-                    textField.characterLimit = 6;
                     break;
                 case NumberType.UShort:
                     textField.contentType = TMP_InputField.ContentType.IntegerNumber;
-                    textField.characterLimit = 5;
                     break;
                 case NumberType.Int:
                     textField.contentType = TMP_InputField.ContentType.IntegerNumber;
-                    textField.characterLimit = 11;
                     break;
                 case NumberType.UInt:
                     textField.contentType = TMP_InputField.ContentType.IntegerNumber;
-                    textField.characterLimit = 10;
                     break;
                 case NumberType.Long:
                 case NumberType.ULong:
                     textField.contentType = TMP_InputField.ContentType.IntegerNumber;
-                    textField.characterLimit = 20;
                     break;
                 case NumberType.Float:
                     textField.contentType = TMP_InputField.ContentType.DecimalNumber;
-                    textField.characterLimit = 8;
                     break;
                 case NumberType.Double:
                     textField.contentType = TMP_InputField.ContentType.DecimalNumber;
-                    textField.characterLimit = 18;
                     break;
                 case NumberType.Decimal:
                     textField.contentType = TMP_InputField.ContentType.DecimalNumber;
-                    textField.characterLimit = 29;
                     break;
             }
 
@@ -244,56 +246,88 @@ namespace Hertzole.ALE
             }
         }
 
-        private void OnValueChanged(string stringValue, bool modifyField)
+        private void OnValueChanged(string stringValue, bool endEdit)
         {
+            editing = !endEdit;
+
             switch (currentType)
             {
                 case NumberType.Sbyte:
-                    ParseValue<sbyte>(stringValue, sbyte.MinValue, sbyte.MaxValue, modifyField);
+                    ParseValue<sbyte, long>(stringValue, sbyte.MinValue, sbyte.MaxValue, CHARACTER_LIMIT_BYTE, endEdit, LongParse);
                     break;
                 case NumberType.Byte:
-                    ParseValue<byte>(stringValue, byte.MinValue, byte.MaxValue, modifyField);
+                    ParseValue<byte, ulong>(stringValue, byte.MinValue, byte.MaxValue, CHARACTER_LIMIT_BYTE, endEdit, ULongParse);
                     break;
                 case NumberType.Short:
-                    ParseValue<short>(stringValue, short.MinValue, short.MaxValue, modifyField);
+                    ParseValue<short, long>(stringValue, short.MinValue, short.MaxValue, CHARACTER_LIMIT_SHORT, endEdit, LongParse);
                     break;
                 case NumberType.UShort:
-                    ParseValue<ushort>(stringValue, ushort.MinValue, ushort.MaxValue, modifyField);
+                    ParseValue<ushort, ulong>(stringValue, ushort.MinValue, ushort.MaxValue, CHARACTER_LIMIT_SHORT, endEdit, ULongParse);
                     break;
                 case NumberType.Int:
-                    ParseValue<int>(stringValue, int.MinValue, int.MaxValue, modifyField);
+                    ParseValue<int, long>(stringValue, int.MinValue, int.MaxValue, CHARACTER_LIMIT_INT, endEdit, LongParse);
                     break;
                 case NumberType.UInt:
-                    ParseValue<uint>(stringValue, uint.MinValue, uint.MaxValue, modifyField);
+                    ParseValue<uint, ulong>(stringValue, uint.MinValue, uint.MaxValue, CHARACTER_LIMIT_INT, endEdit, ULongParse);
                     break;
                 case NumberType.Long:
-                    ParseValue<long>(stringValue, long.MinValue, long.MaxValue, modifyField);
+                    ParseValue<long, long>(stringValue, long.MinValue, long.MaxValue, CHARACTER_LIMIT_LONG, endEdit, LongParse);
                     break;
                 case NumberType.ULong:
-                    ParseValue<ulong>(stringValue, ulong.MinValue, ulong.MaxValue, modifyField);
+                    ParseValue<ulong, ulong>(stringValue, ulong.MinValue, ulong.MaxValue, CHARACTER_LIMIT_LONG, endEdit, ULongParse);
                     break;
                 case NumberType.Float:
-                    ParseValue<float>(stringValue, float.MinValue, float.MaxValue, modifyField);
+                    ParseValue<float, float>(stringValue, float.MinValue, float.MaxValue, CHARACTER_LIMIT_FLOAT, endEdit, x =>
+                    {
+                        bool canParse = float.TryParse(x, out float result);
+                        return (canParse, result);
+                    });
                     break;
                 case NumberType.Double:
-                    ParseValue<double>(stringValue, double.MinValue, double.MaxValue, modifyField);
+                    ParseValue<double, double>(stringValue, double.MinValue, double.MaxValue, CHARACTER_LIMIT_DOUBLE, endEdit, x =>
+                    {
+                        bool canParse = double.TryParse(x, out double result);
+                        return (canParse, result);
+                    });
                     break;
                 case NumberType.Decimal:
-                    ParseValue<decimal>(stringValue, decimal.MinValue, decimal.MaxValue, modifyField);
+                    ParseValue<decimal, decimal>(stringValue, decimal.MinValue, decimal.MaxValue, CHARACTER_LIMIT_DECIMAL, endEdit, x =>
+                    {
+                        bool canParse = decimal.TryParse(x, out decimal result);
+                        return (canParse, result);
+                    });
                     break;
                 default:
                     SetPropertyValue(0, true);
                     break;
             }
+
+            static (bool, long) LongParse(string x)
+            {
+                bool canParse = long.TryParse(x, out long result);
+                return (canParse, result);
+            }
+
+            static (bool, ulong) ULongParse(string x)
+            {
+                bool canParse = ulong.TryParse(x, out ulong result);
+                return (canParse, result);
+            }
         }
 
-        private void ParseValue<T>(string value, long min, long max, bool modifyField = false) where T : IConvertible
+        private void ParseValue<TValue, TConverter>(string value, TConverter min, TConverter max, int maxCharacters, bool endEdit, Func<string, ValueTuple<bool, TConverter>> parse) 
+            where TValue : IConvertible, IComparable<TValue> where TConverter : IConvertible, IComparable<TConverter>
         {
+            // If the value starts with - add one extra to the max characters to fit that in.
+            textField.characterLimit = !string.IsNullOrWhiteSpace(value) && value.StartsWith("-") ? maxCharacters + 1 : maxCharacters;
+            
+            TValue convertedValue;
+            
             if (string.IsNullOrWhiteSpace(value))
             {
-                T convertedValue = (T)Convert.ChangeType(0, typeof(T));
-                SetPropertyValue(convertedValue, modifyField);
-                if (modifyField)
+                convertedValue = (TValue)Convert.ChangeType(0, typeof(TValue));
+                SetPropertyValue(convertedValue, endEdit);
+                if (endEdit)
                 {
                     textField.SetTextWithoutNotify("0");
                     InvokeEndEdit(convertedValue);
@@ -306,29 +340,29 @@ namespace Hertzole.ALE
                 return;
             }
 
-            if (long.TryParse(value, out long result))
+            (bool canParse, TConverter result) = parse.Invoke(value);
+            LevelEditorLogger.Log($"Can Parse: {canParse} | Result: {result} | Min: {min} | Max: {max} | Compare min: {result.CompareTo(min)} | Compare max: {result.CompareTo(max)}");
+            if (canParse)
             {
-                if (result < min)
+                // Make sure the result is within the ranges.
+                if (result.CompareTo(min) < 0)
                 {
                     result = min;
-                    if (modifyField)
-                    {
-                        textField.SetTextWithoutNotify(result.ToString());
-                    }
                 }
-                else if (result > max)
+                else if (result.CompareTo(max) > 0)
                 {
                     result = max;
-                    if (modifyField)
-                    {
-                        textField.SetTextWithoutNotify(result.ToString());
-                    }
                 }
 
-                T convertedValue = (T)Convert.ChangeType(result, typeof(T));
-                SetPropertyValue(convertedValue, modifyField);
-                if (modifyField)
+                // Convert the value to what we want and set the property value.
+                convertedValue = (TValue) Convert.ChangeType(result, typeof(TValue));
+                SetPropertyValue(convertedValue, endEdit);
+
+                // If the user is leaving the text field, it's safe to update the text field to the actual result.
+                // Otherwise we just leave it be and invoke the value changed event.
+                if (endEdit)
                 {
+                    textField.SetTextWithoutNotify(result.ToString());
                     InvokeEndEdit(convertedValue);
                 }
                 else
@@ -336,179 +370,12 @@ namespace Hertzole.ALE
                     InvokeValueChanged(convertedValue);
                 }
             }
-            else
+            else if (endEdit)
             {
-                SetPropertyValue(0, modifyField);
-                InvokeValueChanged(0);
-            }
-        }
-
-        private void ParseValue<T>(string value, ulong min, ulong max, bool modifyField) where T : IConvertible
-        {
-            if (string.IsNullOrWhiteSpace(value))
-            {
-                T convertedValue = (T)Convert.ChangeType(0, typeof(T));
-                SetPropertyValue(convertedValue, modifyField);
-                if (modifyField)
-                {
-                    textField.SetTextWithoutNotify("0");
-                    InvokeEndEdit(convertedValue);
-                }
-                else
-                {
-                    InvokeValueChanged(convertedValue);
-                }
-
-                return;
-            }
-
-            if (ulong.TryParse(value, out ulong result))
-            {
-                if (result < min)
-                {
-                    result = min;
-                    if (modifyField)
-                    {
-                        textField.SetTextWithoutNotify(result.ToString());
-                    }
-                }
-                else if (result > max)
-                {
-                    result = max;
-                    if (modifyField)
-                    {
-                        textField.SetTextWithoutNotify(result.ToString());
-                    }
-                }
-
-                T convertedValue = (T)Convert.ChangeType(result, typeof(T));
-                SetPropertyValue(convertedValue, modifyField);
-                if (modifyField)
-                {
-                    InvokeEndEdit(convertedValue);
-                }
-                else
-                {
-                    InvokeValueChanged(convertedValue);
-                }
-            }
-            else
-            {
-                SetPropertyValue(0, modifyField);
-                InvokeValueChanged(0);
-            }
-        }
-
-        private void ParseValue<T>(string value, double min, double max, bool modifyField) where T : IConvertible
-        {
-            if (string.IsNullOrWhiteSpace(value))
-            {
-                T convertedValue = (T)Convert.ChangeType(0, typeof(T));
-                SetPropertyValue(convertedValue, modifyField);
-                if (modifyField)
-                {
-                    textField.SetTextWithoutNotify("0");
-                    InvokeEndEdit(convertedValue);
-                }
-                else
-                {
-                    InvokeValueChanged(convertedValue);
-                }
-
-                return;
-            }
-
-            if (double.TryParse(value, out double result))
-            {
-                if (result < min)
-                {
-                    result = min;
-                    if (modifyField)
-                    {
-                        textField.SetTextWithoutNotify(result.ToString());
-                    }
-                }
-                else if (result > max)
-                {
-                    result = max;
-                    if (modifyField)
-                    {
-                        textField.SetTextWithoutNotify(result.ToString());
-                    }
-                }
-
-                T convertedValue = (T)Convert.ChangeType(result, typeof(T));
-                SetPropertyValue(convertedValue, modifyField);
-                if (modifyField)
-                {
-                    InvokeEndEdit(convertedValue);
-                }
-                else
-                {
-                    InvokeValueChanged(convertedValue);
-                }
-            }
-            else
-            {
-                SetPropertyValue(0, modifyField);
-                InvokeValueChanged(0);
-            }
-        }
-
-        private void ParseValue<T>(string value, decimal min, decimal max, bool modifyField) where T : IConvertible
-        {
-            if (string.IsNullOrWhiteSpace(value))
-            {
-                T convertedValue = (T)Convert.ChangeType(0, typeof(T));
-                SetPropertyValue(convertedValue, modifyField);
-                if (modifyField)
-                {
-                    textField.SetTextWithoutNotify("0");
-                    InvokeEndEdit(convertedValue);
-                }
-                else
-                {
-                    InvokeValueChanged(convertedValue);
-                }
-
-                return;
-            }
-
-            if (decimal.TryParse(value, out decimal result))
-            {
-                if (result < min)
-                {
-                    result = min;
-                    if (modifyField)
-                    {
-                        textField.SetTextWithoutNotify(result.ToString());
-                    }
-                }
-                else if (result > max)
-                {
-                    result = max;
-                    if (modifyField)
-                    {
-                        textField.SetTextWithoutNotify(result.ToString());
-                    }
-                }
-
-                T convertedValue = (T)Convert.ChangeType(result, typeof(T));
-
-                SetPropertyValue(convertedValue, modifyField);
-                if (modifyField)
-                {
-                    InvokeEndEdit(convertedValue);
-                }
-                else
-                {
-                    InvokeValueChanged(convertedValue);
-                }
-            }
-            else
-            {
-                SetPropertyValue(0, modifyField);
-                InvokeValueChanged(0);
+                convertedValue = (TValue) Convert.ChangeType(0, typeof(TValue));
+                textField.SetTextWithoutNotify(convertedValue.ToString());
+                SetPropertyValue(convertedValue, true);
+                InvokeEndEdit(convertedValue);
             }
         }
 
@@ -598,6 +465,12 @@ namespace Hertzole.ALE
 
         protected override void SetFieldValue(object value)
         {
+            // If the field is currently being edited, we don't want to update it.
+            if (editing)
+            {
+                return;
+            }
+            
             textField.SetTextWithoutNotify(value.ToString());
         }
     }
