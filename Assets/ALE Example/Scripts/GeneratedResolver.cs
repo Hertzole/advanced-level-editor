@@ -195,7 +195,7 @@ namespace Hertzole.ALE.Generated
 			// Token: 0x06000120 RID: 288 RVA: 0x0000A7C4 File Offset: 0x000089C4
 			static FormatterCache()
 			{
-				Debug.Log($"FormatterCache :: {typeof(T)}");
+				
 				object obj = GetFormatterHelper.GetFormatter(typeof(T));
 				if (obj != null)
 				{

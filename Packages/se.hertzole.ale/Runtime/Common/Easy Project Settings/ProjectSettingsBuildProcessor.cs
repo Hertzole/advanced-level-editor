@@ -6,6 +6,7 @@ using UnityEditor;
 using UnityEditor.Build;
 using UnityEditor.Build.Reporting;
 using UnityEngine;
+using Object = UnityEngine.Object;
 
 namespace Hertzole.ALE
 {
@@ -31,27 +32,37 @@ namespace Hertzole.ALE
             createdResources = false;
             createdPackageFolder = false;
 
-            for (int i = 0; i < objects.Count; i++)
+            bool[] createdAssets = new bool[objects.Count];
+
+            while (!AreAllTrue(createdAssets))
             {
-                if (File.Exists($"{ProjectSettingsConsts.ROOT_FOLDER}/{names[i]}.asset"))
+                for (int i = 0; i < objects.Count; i++)
                 {
-                    ScriptableObject setting = objects[i];
-
-                    if (!Directory.Exists($"{Application.dataPath}/Resources"))
+                    if (File.Exists($"{ProjectSettingsConsts.ROOT_FOLDER}/{names[i]}.asset"))
                     {
-                        createdResources = true;
-                        Directory.CreateDirectory($"{Application.dataPath}/Resources");
-                    }
+                        ScriptableObject setting = objects[i];
 
-                    if (!Directory.Exists($"{Application.dataPath}/Resources/{ProjectSettingsConsts.PACKAGE_NAME}"))
-                    {
-                        createdPackageFolder = true;
-                        Directory.CreateDirectory($"{Application.dataPath}/Resources/{ProjectSettingsConsts.PACKAGE_NAME}");
-                    }
+                        if (!Directory.Exists($"{Application.dataPath}/Resources"))
+                        {
+                            createdResources = true;
+                            Directory.CreateDirectory($"{Application.dataPath}/Resources");
+                        }
 
-                    setting.hideFlags = HideFlags.None;
-                    AssetDatabase.CreateAsset(setting, $"Assets/Resources/{ProjectSettingsConsts.PACKAGE_NAME}/{names[i]}.asset");
-                    AssetDatabase.Refresh(ImportAssetOptions.ForceUpdate);
+                        if (!Directory.Exists($"{Application.dataPath}/Resources/{ProjectSettingsConsts.PACKAGE_NAME}"))
+                        {
+                            createdPackageFolder = true;
+                            Directory.CreateDirectory($"{Application.dataPath}/Resources/{ProjectSettingsConsts.PACKAGE_NAME}");
+                        }
+
+                        string assetPath = $"Assets/Resources/{ProjectSettingsConsts.PACKAGE_NAME}/{names[i]}.asset";
+                        
+                        setting.hideFlags = HideFlags.None;
+                        AssetDatabase.CreateAsset(setting, assetPath);
+                        AssetDatabase.Refresh(ImportAssetOptions.ForceUpdate);
+
+                        Object newAsset = AssetDatabase.LoadAssetAtPath(assetPath, setting.GetType());
+                        createdAssets[i] = newAsset != null;
+                    }
                 }
             }
         }
@@ -61,45 +72,91 @@ namespace Hertzole.ALE
             string resourcesPath = $"{Application.dataPath}/Resources";
             string packagePath = $"{resourcesPath}/{ProjectSettingsConsts.PACKAGE_NAME}";
 
-            if (createdResources && createdPackageFolder && Directory.Exists(packagePath))
+            bool cleanedUp = false;
+            while (!cleanedUp)
             {
-                Directory.Delete(resourcesPath, true);
-                if (File.Exists($"{resourcesPath}.meta"))
+                if (createdResources && createdPackageFolder && Directory.Exists(packagePath))
                 {
-                    File.Delete($"{resourcesPath}.meta");
-                }
-            }
-
-            if (!createdResources && createdPackageFolder)
-            {
-                Directory.Delete(packagePath, true);
-                if (File.Exists($"{packagePath}.meta"))
-                {
-                    File.Delete($"{packagePath}.meta");
-                }
-            }
-
-            if (!createdResources && !createdPackageFolder)
-            {
-                for (int i = 0; i < names.Count; i++)
-                {
-                    string path = $"{packagePath}/{names[i]}.asset";
-                    if (File.Exists(path))
+                    Directory.Delete(resourcesPath, true);
+                    if (File.Exists($"{resourcesPath}.meta"))
                     {
-                        File.Delete(path);
-                        string meta = $"{packagePath}/{names[i]}.asset.meta";
-                        if (File.Exists(meta))
+                        File.Delete($"{resourcesPath}.meta");
+                    }
+                }
+
+                if (!createdResources && createdPackageFolder)
+                {
+                    Directory.Delete(packagePath, true);
+                    if (File.Exists($"{packagePath}.meta"))
+                    {
+                        File.Delete($"{packagePath}.meta");
+                    }
+                }
+
+                if (!createdResources && !createdPackageFolder)
+                {
+                    for (int i = 0; i < names.Count; i++)
+                    {
+                        string path = $"{packagePath}/{names[i]}.asset";
+                        if (File.Exists(path))
                         {
-                            File.Delete(meta);
+                            File.Delete(path);
+                            string meta = $"{packagePath}/{names[i]}.asset.meta";
+                            if (File.Exists(meta))
+                            {
+                                File.Delete(meta);
+                            }
                         }
+                    }
+                }
+
+                AssetDatabase.Refresh(ImportAssetOptions.ForceUpdate);
+
+                if (createdResources && createdPackageFolder)
+                {
+                    cleanedUp = !AssetDatabase.IsValidFolder("Assets/Resources/");
+                }
+                else if (!createdResources && createdPackageFolder)
+                {
+                    cleanedUp = !AssetDatabase.IsValidFolder($"Assets/Resources/{ProjectSettingsConsts.PACKAGE_NAME}/");
+                }
+                else if (!createdResources && !createdPackageFolder)
+                {
+                    bool cleanedAll = true;
+                    
+                    for (int i = 0; i < names.Count; i++)
+                    {
+                        string path = $"Assets/Resources/{ProjectSettingsConsts.PACKAGE_NAME}/{names[i]}.asset";
+                        Object obj = AssetDatabase.LoadAssetAtPath(path, typeof(ScriptableObject));
+                        if (obj != null)
+                        {
+                            cleanedAll = false;
+                            break;
+                        }
+                    }
+
+                    if (cleanedAll)
+                    {
+                        cleanedUp = true;
                     }
                 }
             }
 
-            AssetDatabase.Refresh(ImportAssetOptions.ForceUpdate);
-
             objects = null;
             names = null;
+        }
+        
+        private static bool AreAllTrue(IReadOnlyList<bool> bools)
+        {
+            for (int i = 0; i < bools.Count; i++)
+            {
+                if (!bools[i])
+                {
+                    return false;
+                }
+            }
+
+            return true;
         }
     }
 }
