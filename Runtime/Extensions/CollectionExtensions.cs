@@ -2,6 +2,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using UnityEditor;
 using UnityEngine;
 
 namespace Hertzole.ALE
@@ -34,6 +35,27 @@ namespace Hertzole.ALE
         public static string ToDebugString<T>(this ReadOnlySpan<T> span)
         {
             return $"[{span.Length}] {{{string.Join(", ", span.ToArray())}}}";
+        }
+
+        public static T[] ToArrayFast<T>(this IReadOnlyList<T> collection)
+        {
+            if (collection == null)
+            {
+                return null;
+            }
+
+            if (collection.Count == 0)
+            {
+                return Array.Empty<T>();
+            }
+            
+            T[] array = new T[collection.Count];
+            for (int i = 0; i < collection.Count; i++)
+            {
+                array[i] = collection[i];
+            }
+
+            return array;
         }
 
         public static bool DictionaryEquals(this IDictionary a, IDictionary b)

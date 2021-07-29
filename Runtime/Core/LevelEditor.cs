@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using UnityEngine;
 
 namespace Hertzole.ALE
@@ -57,6 +58,8 @@ namespace Hertzole.ALE
         public ILevelEditorSelection Selection { get { return selectionComp; } set { selectionComp = value; } }
         public ILevelEditorUndo Undo { get { return undoComp; } set { undoComp = value; } }
 
+        public IReadOnlyList<ILevelEditorMode> EditorModes { get { return editorModes; } set { editorModes = value.ToArrayFast(); } }
+        
         public bool IsDirty { get { return isDirty; } }
 
         private void Awake()
@@ -136,31 +139,46 @@ namespace Hertzole.ALE
 
         private void Update()
         {
-            if (selectedMode >= 0 && editorModes.Length > 0 && (playModeComp != null && playModeComp.IsPlaying || playModeComp == null))
+            if (selectedMode >= 0 && editorModes.Length > 0 && (playModeComp != null && !playModeComp.IsPlaying || playModeComp == null))
             {
                 editorModes[selectedMode].OnModeUpdate();
             }
         }
 
-        public void SetMode(int newMode, bool returnOnOutOfRange = true)
+        public void SetMode(int newMode, bool wrapAroundOutOfRange = false)
         {
+#if !ALE_STRIP_SAFETY
+            if (editorModes.Length == 0)
+            {
+                throw new MissingReferenceException($"There are no editor modes attached on {gameObject.name}.");
+            }
+#endif
+            
             if (newMode < 0)
             {
-                if (returnOnOutOfRange)
+                if (wrapAroundOutOfRange)
                 {
-                    return;
+                    newMode = editorModes.Length - 1;
                 }
-
-                newMode = 0;
+#if !ALE_STRIP_SAFETY
+                else
+                {
+                    throw new ArgumentOutOfRangeException(nameof(newMode), $"{nameof(newMode)} must be between 0 and {editorModes.Length - 1}.");
+                }
+#endif
             }
             else if (newMode >= editorModes.Length)
             {
-                if (returnOnOutOfRange)
+                if (wrapAroundOutOfRange)
                 {
-                    return;
+                    newMode = 0;
                 }
-
-                newMode = editorModes.Length - 1;
+#if !ALE_STRIP_SAFETY
+                else
+                {
+                    throw new ArgumentOutOfRangeException(nameof(newMode), $"{nameof(newMode)} must be between 0 and {editorModes.Length - 1}.");
+                }
+#endif
             }
 
             if (selectedMode == newMode)
@@ -187,8 +205,32 @@ namespace Hertzole.ALE
                     return;
                 }
             }
-
+            
+#if !ALE_STRIP_SAFETY
             throw new ArgumentException($"There's no editor mode on {gameObject.name} with the type {typeof(T)}.");
+#endif
+        }
+
+        public T GetMode<T>() where T : ILevelEditorMode
+        {
+            if (editorModes == null || editorModes.Length == 0)
+            {
+                return default;
+            }
+
+            for (int i = 0; i < editorModes.Length; i++)
+            {
+                if (editorModes[i] is T mode)
+                {
+                    return mode;
+                }
+            }
+            
+#if !ALE_STRIP_SAFETY
+            throw new ArgumentException($"There's no editor mode on {gameObject.name} with the type {typeof(T)}.");
+#else
+            return default;
+#endif
         }
 
         public bool TryGetEditorMode<T>(out T mode) where T : ILevelEditorMode
