@@ -27,13 +27,13 @@ namespace Hertzole.ALE
         [Space]
 
         [SerializeField]
-        protected GameObject playerPrefab = null;
+        protected GameObject[] playerPrefabs = null;
         [SerializeField]
         protected string spawnpointTag = "Respawn";
 
         protected bool isPlaying;
 
-        protected GameObject activePlayer;
+        protected GameObject[] activePlayerObjects;
         protected GameObject[] spawnpointObjects;
 
         protected List<ILevelEditorObject> allObjects;
@@ -55,6 +55,8 @@ namespace Hertzole.ALE
                 LevelEditor = levelEditor.GetComponent<ILevelEditor>();
             }
             Input = input.GetComponent<ILevelEditorInput>();
+
+            activePlayerObjects = new GameObject[playerPrefabs.Length];
         }
 
         private void OnEnable()
@@ -119,7 +121,7 @@ namespace Hertzole.ALE
 
         public virtual void StartPlayMode(ILevelEditor levelEditor)
         {
-            SpawnPlayer();
+            SpawnPlayModeObjects();
             StartPlayModeObjects();
             ToggleEditorCamera(false);
 
@@ -127,8 +129,13 @@ namespace Hertzole.ALE
             OnStartPlayMode?.Invoke();
         }
 
-        protected virtual void SpawnPlayer()
+        protected virtual void SpawnPlayModeObjects()
         {
+            if (playerPrefabs.Length != activePlayerObjects.Length)
+            {
+                activePlayerObjects = new GameObject[playerPrefabs.Length];
+            }
+            
             Vector3 spawnPos = Vector3.zero;
             Quaternion spawnRot = Quaternion.identity;
             spawnpointObjects = GameObject.FindGameObjectsWithTag(spawnpointTag);
@@ -149,9 +156,9 @@ namespace Hertzole.ALE
                 }
             }
 
-            if (playerPrefab != null)
+            for (int i = 0; i < playerPrefabs.Length; i++)
             {
-                activePlayer = Instantiate(playerPrefab, spawnPos, spawnRot);
+                activePlayerObjects[i] = Instantiate(playerPrefabs[i], spawnPos, spawnRot);
             }
         }
 
@@ -179,9 +186,12 @@ namespace Hertzole.ALE
 
         protected virtual void DestroyPlayer()
         {
-            if (activePlayer != null)
+            for (int i = 0; i < activePlayerObjects.Length; i++)
             {
-                Destroy(activePlayer.gameObject);
+                if (activePlayerObjects[i] != null)
+                {
+                    Destroy(activePlayerObjects[i]);
+                }
             }
 
             if (spawnpointObjects != null && spawnpointObjects.Length > 0)
