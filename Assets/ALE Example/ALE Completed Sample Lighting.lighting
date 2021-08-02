@@ -6,7 +6,7 @@ LightingSettings:
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_Name: ALE Coimpleted Sample Lighting
+  m_Name: ALE Completed Sample Lighting
   serializedVersion: 3
   m_GIWorkflowMode: 0
   m_EnableBakedLightmaps: 1
