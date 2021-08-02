@@ -1,5 +1,4 @@
 ﻿#if UNITY_EDITOR
-using System.Collections.Generic;
 using System.IO;
 #endif
 using UnityEngine;
@@ -8,41 +7,23 @@ namespace Hertzole.ALE
 {
     public class RuntimeProjectSettings<T> : ScriptableObject where T : ScriptableObject
     {
-#if UNITY_EDITOR
-        static RuntimeProjectSettings()
-        {
-            ProjectSettingsBuildProcessor.OnBuild += OnProjectSettingsBuild;
-        }
-
-        private static void OnProjectSettingsBuild(List<ScriptableObject> list, List<string> names)
-        {
-            T tempInstance = CreateInstance<T>();
-            if (tempInstance is RuntimeProjectSettings<T> settings)
-            {
-                list.Add(Get());
-                names.Add(settings.SettingName);
-            }
-        }
-#endif
-
         private static T settingsInstance;
 
-        public string SettingsPath
+#if UNITY_EDITOR
+        private string SettingsPath
         {
             get
             {
-#if UNITY_EDITOR
                 return $"{ProjectSettingsConsts.ROOT_FOLDER}/{SettingName}.asset";
-#else
-                return $"{ProjectSettingsConsts.PACKAGE_NAME}/{SettingName}";
-#endif
             }
         }
+#endif
 
         public virtual string SettingName { get { return typeof(T).FullName; } }
 
         public static T Get()
         {
+#if UNITY_EDITOR
             if (settingsInstance != null)
             {
                 return settingsInstance;
@@ -51,7 +32,6 @@ namespace Hertzole.ALE
             T tempInstance = CreateInstance<T>();
             if (tempInstance is RuntimeProjectSettings<T> settings)
             {
-#if UNITY_EDITOR
                 string path = settings.SettingsPath;
 
                 if (!File.Exists(path))
@@ -66,17 +46,21 @@ namespace Hertzole.ALE
 
                 settingsInstance.hideFlags = HideFlags.HideAndDontSave;
                 return settingsInstance;
+            }
+
+            Debug.LogError($"{typeof(T)} does not inherit from RuntimeProjectSettings!");
+            return null;
 #else
-                settingsInstance = Resources.Load<T>(settings.SettingsPath);
-                return settingsInstance;
+            return settingsInstance;
 #endif
-            }
-            else
-            {
-                Debug.LogError($"{typeof(T)} does not inherit from RuntimeProjectSettings!");
-                return null;
-            }
         }
+
+#if !UNITY_EDITOR
+        private void OnEnable()
+        {
+            settingsInstance = this as T;
+        }
+#endif
 
 #if UNITY_EDITOR
         public void EditorSave()
