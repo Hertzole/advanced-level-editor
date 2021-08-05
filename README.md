@@ -1,10 +1,9 @@
 # Advanced Level Editor (ALE)
 
-![tests](https://github.com/Hertzole/advanced-level-editor/actions/workflows/tests.yml/badge.svg) 
-![build](https://github.com/Hertzole/advanced-level-editor/actions/workflows/tests.yml/build.svg) 
-![dev package](https://github.com/Hertzole/advanced-level-editor/actions/workflows/tests.yml/dev_package.svg) 
-![release package](https://github.com/Hertzole/advanced-level-editor/actions/workflows/tests.yml/release_package.svg) 
-
+![tests](https://github.com/Hertzole/advanced-level-editor/actions/workflows/test.yml/badge.svg) 
+![build](https://github.com/Hertzole/advanced-level-editor/actions/workflows/build.yml/badge.svg) 
+![dev package](https://github.com/Hertzole/advanced-level-editor/actions/workflows/dev_package.yml/badge.svg) 
+![release package](https://github.com/Hertzole/advanced-level-editor/actions/workflows/release_package.yml/badge.svg) 
 
 ⚠ **ALE IS IN VERY EARLY DEVELOPMENT! ANYTHING CAN CHANGE SUDDENLY! USE AT YOUR OWN RISK** ⚠
 
