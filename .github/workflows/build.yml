@@ -23,9 +23,9 @@ jobs:
         key: Library-Linux-IL2CPP
         restore-keys: |
           Library-Linux-IL2CPP
-      - uses: game-ci/unity-builder@v2
-        env:
-          UNITY_LICENSE: ${{ secrets.UNITY_LICENSE }}
-        with:
-          customImage: 'unityci/editor:ubuntu-2020.3.10f1-linux-il2cpp-0.15.0'
-          targetPlatform: StandaloneLinux64
+    - uses: game-ci/unity-builder@v2
+      env:
+        UNITY_LICENSE: ${{ secrets.UNITY_LICENSE }}
+      with:
+        customImage: 'unityci/editor:ubuntu-2020.3.10f1-linux-il2cpp-0.15.0'
+        targetPlatform: StandaloneLinux64
