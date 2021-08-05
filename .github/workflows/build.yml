@@ -1,0 +1,31 @@
+name: Build
+
+on:
+  workflow_run:
+    workflows: ["Tests"]
+    types:
+      - completed
+
+jobs:
+  build:
+    name: Build Linux IL2CPP
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+    steps:
+    - uses: actions/checkout@v2
+      with:
+        fetch-depth: 0
+        lfs: true
+    - uses: actions/cache@v2
+        with:
+          path: Library
+          key: Library-Linux-IL2CPP
+          restore-keys: |
+            Library-Linux-IL2CPP
+      - uses: game-ci/unity-builder@v2
+        env:
+          UNITY_LICENSE: ${{ secrets.UNITY_LICENSE }}
+        with:
+          customImage: 'unityci/editor:ubuntu-2020.3.10f1-linux-il2cpp-0.15.0'
+          targetPlatform: StandaloneLinux64

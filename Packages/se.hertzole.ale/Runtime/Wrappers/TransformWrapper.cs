@@ -1,5 +1,5 @@
 ﻿using System;
-using System.Collections.ObjectModel;
+using System.Collections.Generic;
 using UnityEngine;
 
 namespace Hertzole.ALE
@@ -18,6 +18,11 @@ namespace Hertzole.ALE
             }
         }
 
+        private int editingId;
+
+        private object beginEditValue;
+        private object lastEditValue;
+
         public override int Order { get { return -100000; } }
         public override bool HasVisibleFields { get { return true; } }
 
@@ -26,15 +31,15 @@ namespace Hertzole.ALE
         private const string SCALE = "scale";
         private const string PARENT = "parent";
 
-        private ReadOnlyCollection<ExposedProperty> cachedProperties = new ReadOnlyCollection<ExposedProperty>(new ExposedProperty[]
+        private readonly ExposedField[] cachedProperties = new ExposedField[]
         {
             new ExposedProperty(0, typeof(Vector3), POSITION, null, true),
             new ExposedProperty(1, typeof(Vector3), ROTATION, null, true),
             new ExposedProperty(2, typeof(Vector3), SCALE, null, true),
             new ExposedProperty(3, typeof(Transform), PARENT, null, false)
-        });
+        };
 
-        public override ReadOnlyCollection<ExposedProperty> GetProperties()
+        public override IReadOnlyList<ExposedField> GetProperties()
         {
             return cachedProperties;
         }
@@ -56,17 +61,40 @@ namespace Hertzole.ALE
             }
         }
 
-        public override void SetValue(int id, object value, bool notify)
+        public override void BeginEdit(int id)
+        {
+            editingId = id;
+            switch (id)
+            {
+                case 0:
+                    beginEditValue = transform.position;
+                    break;
+                case 1:
+                    beginEditValue = transform.eulerAngles;
+                    break;
+                case 2:
+                    beginEditValue = transform.localScale;
+                    break;
+                case 3:
+                    beginEditValue = new ComponentDataWrapper(transform.parent);
+                    break;
+                default:
+                    throw new InvalidExposedPropertyException(id);
+            }
+        }
+
+        public override void ModifyValue(object value, bool notify)
         {
             bool changed = false;
-
-            switch (id)
+            
+             switch (editingId)
             {
                 case 0:
                     if (transform.position != (Vector3) value)
                     {
                         transform.position = (Vector3) value;
                         changed = true;
+                        lastEditValue = transform.position;
                     }
 
                     break;
@@ -75,6 +103,7 @@ namespace Hertzole.ALE
                     {
                         transform.eulerAngles = (Vector3) value;
                         changed = true;
+                        lastEditValue = transform.eulerAngles;
                     }
 
                     break;
@@ -83,6 +112,7 @@ namespace Hertzole.ALE
                     {
                         transform.localScale = (Vector3) value;
                         changed = true;
+                        lastEditValue = transform.localScale;
                     }
 
                     break;
@@ -94,12 +124,25 @@ namespace Hertzole.ALE
                     
                     break;
                 default:
-                    throw new ArgumentException($"No exposed property with the ID '{id}'.");
+                    throw new InvalidExposedPropertyException(editingId);
             }
 
             if (notify && changed)
             {
-                InvokeOnValueChanged(id, value);
+                InvokeOnValueChanged(editingId, value);
+            }
+        }
+
+        public override void EndEdit(bool notify, ILevelEditorUndo undo)
+        {
+            if (notify)
+            {
+                InvokeOnValueChanged(editingId, lastEditValue);
+            }
+
+            if (undo != null)
+            {
+                undo.AddAction(new SetValueUndoAction(this, editingId, beginEditValue, lastEditValue));
             }
         }
 
@@ -115,6 +158,8 @@ namespace Hertzole.ALE
             {
                 Target.SetParent(null);
             }
+
+            lastEditValue = new ComponentDataWrapper(transform.parent);
         }
 
         public override IExposedWrapper GetWrapper()

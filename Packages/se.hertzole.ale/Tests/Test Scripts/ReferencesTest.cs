@@ -26,7 +26,7 @@ namespace Hertzole.ALE.Tests.TestScripts
 		[ExposeToLevelEditor(1)]
 		public List<Transform> Value { get; set; } = new List<Transform>();
 	}
-	
+
 	public class GameObjectReferenceScript : MonoBehaviour
 	{
 		[ExposeToLevelEditor(0)]

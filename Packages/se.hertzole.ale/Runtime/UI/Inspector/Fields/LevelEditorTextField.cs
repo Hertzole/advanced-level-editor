@@ -70,10 +70,11 @@ namespace Hertzole.ALE
 
                 char charValue = char.Parse(value);
 
-                SetPropertyValue(charValue, endEdit);
+                ModifyPropertyValue(charValue, true);
                 if (endEdit)
                 {
                     onCharEndEdit.Invoke(charValue);
+                    EndEdit();
                 }
                 else
                 {
@@ -82,10 +83,11 @@ namespace Hertzole.ALE
             }
             else
             {
-                SetPropertyValue(value, endEdit);
+                ModifyPropertyValue(value, true);
                 if (endEdit)
                 {
                     onStringEndEdit.Invoke(value);
+                    EndEdit();
                 }
                 else
                 {
@@ -99,7 +101,7 @@ namespace Hertzole.ALE
             return !isArray && (type == typeof(string) || type == typeof(char));
         }
 
-        protected override void OnBound(ExposedProperty property, IExposedToLevelEditor exposed)
+        protected override void OnBound(ExposedField property, IExposedToLevelEditor exposed)
         {
             isChar = property.Type == typeof(char);
 

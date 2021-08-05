@@ -14,7 +14,7 @@ namespace Hertzole.ALE
         public ILevelEditorInspector Inspector;
 #endif
 
-        private ReadOnlyCollection<ExposedProperty> exposedProperties;
+        private IReadOnlyList<ExposedField> exposedProperties;
         private RectTransform content;
 
         protected Component TargetComponent { get; private set; }
@@ -53,7 +53,7 @@ namespace Hertzole.ALE
             return false;
         }
 
-        protected ExposedProperty GetProperty(string name)
+        protected ExposedField GetProperty(string name)
         {
             for (int i = 0; i < exposedProperties.Count; i++)
             {
@@ -66,7 +66,7 @@ namespace Hertzole.ALE
             throw new ArgumentException($"There's no property with the name '{name}'.", nameof(name));
         }
 
-        protected ExposedProperty GetProperty(int id)
+        protected ExposedField GetProperty(int id)
         {
             for (int i = 0; i < exposedProperties.Count; i++)
             {
@@ -79,7 +79,7 @@ namespace Hertzole.ALE
             throw new ArgumentException($"There's no property with the ID '{id}'.", nameof(id));
         }
 
-        protected bool TryGetField<T>(ExposedProperty property, out LevelEditorInspectorField field)
+        protected bool TryGetField<T>(ExposedField property, out LevelEditorInspectorField field)
         {
             if (Inspector.HasField(typeof(T)))
             {

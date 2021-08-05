@@ -42,6 +42,18 @@ namespace Hertzole.ALE.CodeGen
 			}
 		}
 
+		public static void InsertAt(this ILProcessor il, int index, Instruction instruction)
+		{
+			Instruction target = il.Body.Instructions[index];
+			il.InsertBefore(target, instruction);
+		}
+
+		public static void InsertAt(this ILProcessor il, int index, IEnumerable<Instruction> instruction)
+		{
+			Instruction target = il.Body.Instructions[index];
+			il.InsertBefore(target, instruction);
+		}
+
 		public static void Append(this ILProcessor il, IEnumerable<Instruction> instructions)
 		{
 			foreach (Instruction i in instructions)
@@ -153,6 +165,16 @@ namespace Hertzole.ALE.CodeGen
 
 			il.InsertAfter(il.Body.Instructions[startIndex], Instruction.Create(OpCodes.Switch, switchTargets));
 			il.InsertAfter(il.Body.Instructions[startIndex + 1], Instruction.Create(OpCodes.Br, il.Body.Instructions[defaultIndex]));
+		}
+
+		public static void EmitIfElse<T>(this ILProcessor il, IReadOnlyList<T> items, Action<T, int, Instruction, List<Instruction>> ifCheck, Action<T, int, Instruction, List<Instruction>> body, Action<List<Instruction>> endElse)
+		{
+			il.Append(ILHelper.IfElse(items, ifCheck, body, endElse));
+		}
+
+		public static void EmitIfElse(this ILProcessor il, Action<Instruction, List<Instruction>> ifCheck, Action<Instruction, List<Instruction>> body, Action<List<Instruction>> endElse)
+		{
+			il.Append(ILHelper.IfElse(ifCheck, body, endElse));
 		}
 	}
 }

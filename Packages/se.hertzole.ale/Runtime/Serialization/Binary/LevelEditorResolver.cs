@@ -85,7 +85,7 @@ namespace Hertzole.ALE
                 }
             }
 
-            throw new NotImplementedException($"Found no wrapper formatter for type {type}.");
+            throw new FormatterNotRegisteredException($"Found no wrapper formatter for type {type}.");
         }
         
         public bool SerializeDynamic(Type type, ref MessagePackWriter writer, object value, MessagePackSerializerOptions options)
@@ -98,7 +98,7 @@ namespace Hertzole.ALE
                 }
             }
 
-            throw new NotImplementedException($"Found no formatter for type {type}.");
+            throw new FormatterNotRegisteredException($"Found no formatter for type {type}.");
         }
 
         public bool DeserializeDynamic(Type type, ref MessagePackReader reader, out object value, MessagePackSerializerOptions options)
@@ -111,7 +111,7 @@ namespace Hertzole.ALE
                 }
             }
 
-            throw new NotImplementedException($"Found no formatter for type {type}.");
+            throw new FormatterNotRegisteredException($"Found no formatter for type {type}.");
         }
 
         private static class FormatterCache<T>

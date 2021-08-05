@@ -1,5 +1,6 @@
 ﻿using UnityEngine;
 using Conditional = System.Diagnostics.ConditionalAttribute;
+// ReSharper disable Unity.PerformanceCriticalCodeInvocation
 
 namespace Hertzole.ALE
 {

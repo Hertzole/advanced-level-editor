@@ -22,6 +22,7 @@ using TypeAttributes = Mono.Cecil.TypeAttributes;
 
 namespace Hertzole.ALE.CodeGen
 {
+	[System.Obsolete]
 	public class ExposedClassProcessor : BaseProcessor
 	{
 		private const string NO_EXPOSED_FIELDS = "There's no exposed property with the ID '{0}'.";
@@ -1065,10 +1066,11 @@ namespace Hertzole.ALE.CodeGen
 				MethodAttributes.Private | MethodAttributes.Final | MethodAttributes.HideBySig | MethodAttributes.NewSlot | MethodAttributes.Virtual,
 				Module.ImportReference(typeof(void)));
 
-			method.AddParameter<int>(Module, "id");
-			method.AddParameter<object>(Module, "value");
-			method.AddParameter<bool>(Module, "notify");
-			method.Overrides.Add(Module.GetMethod<IExposedToLevelEditor>("SetValue", typeof(int), typeof(object), typeof(bool)));
+			ParameterDefinition id = method.AddParameter<int>(Module, "id");
+			ParameterDefinition value = method.AddParameter<object>(Module, "value");
+			ParameterDefinition notify = method.AddParameter<bool>(Module, "notify");
+			ParameterDefinition undo = method.AddParameter<ILevelEditorUndo>(Module, "undo");
+			method.Overrides.Add(Module.GetMethod<IExposedToLevelEditor>("SetValue", typeof(int), typeof(object), typeof(bool), typeof(ILevelEditorUndo)));
 
 			Type.Methods.Add(method);
 
@@ -1286,6 +1288,21 @@ namespace Hertzole.ALE.CodeGen
 				i.Add(Instruction.Create(OpCodes.Call, Module.GetMethod(typeof(LevelEditorLogger), "Log", typeof(object))));
 #endif
 
+				// Type oldValue = this.value;
+				var oldValue = method.AddLocalVariable(Module, field.FieldTypeComponentAware);
+				i.Add(Instruction.Create(OpCodes.Ldarg_0));
+				if (field.IsProperty)
+				{
+					i.Add(Instruction.Create(OpCodes.Call, field.property.GetMethod));
+				}
+				else
+				{
+					i.Add(Instruction.Create(OpCodes.Ldfld, field.field));
+				}
+
+				i.Add(ILHelper.Stloc(oldValue));
+				
+				// this.value = value;
 				i.Add(Instruction.Create(OpCodes.Ldarg_0));
 				i.Add(ILHelper.Ldloc(local));
 				if (field.IsProperty)
@@ -1297,8 +1314,28 @@ namespace Hertzole.ALE.CodeGen
 					i.Add(Instruction.Create(OpCodes.Stfld, field.field));
 				}
 
+				// changed = true;
 				i.Add(Instruction.Create(OpCodes.Ldc_I4_1));
 				i.Add(Instruction.Create(OpCodes.Stloc_0));
+				
+				// if (undo != null)
+				i.Add(ILHelper.Ldarg(il, undo));
+				i.Add(Instruction.Create(OpCodes.Brfalse, last));
+				
+				// undo.AddAction(new SetValueUndoAction(this, id, oldValue, value);
+				i.Add(ILHelper.Ldarg(il, undo));
+				i.Add(Instruction.Create(OpCodes.Ldarg_0));
+				i.Add(ILHelper.Int(field.id));
+				i.Add(ILHelper.Ldloc(oldValue));
+				if (field.IsValueType)
+				{
+					i.Add(Instruction.Create(OpCodes.Box, field.FieldTypeComponentAware));
+				}
+
+				i.Add(Instruction.Create(OpCodes.Ldarg_2));
+				i.Add(Instruction.Create(OpCodes.Newobj, Module.GetConstructor<SetValueUndoAction>(typeof(IExposedToLevelEditor), typeof(int), typeof(object), typeof(object))));
+				i.Add(Instruction.Create(OpCodes.Callvirt, Module.GetMethod<ILevelEditorUndo>("AddAction", typeof(IUndoAction))));
+				
 				i.Add(Instruction.Create(OpCodes.Br, last));
 
 				return i.ToArray();

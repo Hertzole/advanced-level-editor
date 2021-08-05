@@ -1,4 +1,7 @@
-﻿using Mono.Cecil;
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using Mono.Cecil;
 using Mono.Cecil.Cil;
 
 namespace Hertzole.ALE.CodeGen.Helpers
@@ -189,6 +192,97 @@ namespace Hertzole.ALE.CodeGen.Helpers
 		public static Instruction Bool(bool value)
 		{
 			return Instruction.Create(value ? OpCodes.Ldc_I4_1 : OpCodes.Ldc_I4_0);
+		}
+
+		public static IEnumerable<Instruction> IfElse<T>(IReadOnlyList<T> items, Action<T, int, Instruction, List<Instruction>> ifCheck, Action<T, int, Instruction, List<Instruction>> body, Action<List<Instruction>> endElse)
+		{
+			// How it works:
+			// 1. Create the end.
+			// 2. Create all the bodies.
+			// 3. Go backwards through all the if checks and give them the next target.
+			//	  Since it starts at the end, it targets that first and then creates them
+			//    in the reverse order, supplying new targets as they are created.
+			// 4. Appends all the body instructions.
+			// 5. Appends the end instructions.
+			// 6. Appends all the if check instructions before each body block.
+
+			Instruction[] targets = new Instruction[items.Count];
+			
+			Dictionary<int, List<Instruction>> bodyFills = new Dictionary<int, List<Instruction>>();
+			
+			List<Instruction> endFill = new List<Instruction>();
+			
+			endElse.Invoke(endFill);
+			targets[0] = endFill[0];
+			
+			for (int i = 0; i < items.Count; i++)
+			{
+				bodyFills.Add(i, new List<Instruction>());
+				body.Invoke(items[i], i, targets[0], bodyFills[i]);
+			}
+
+			Dictionary<int, List<Instruction>> checkFills = new Dictionary<int, List<Instruction>>();
+
+			// Create all the if checks in reverse order.
+			for (int i = items.Count - 1; i >= 0; i--)
+			{
+				checkFills.Add(i, new List<Instruction>());
+				ifCheck.Invoke(items[i], i, targets[i == items.Count - 1 ? 0 : i + 1], checkFills[i]);
+				if (i > 0)
+				{
+					targets[i] = checkFills[i][0];
+				}
+			}
+
+			List<Instruction> total = new List<Instruction>();
+
+			// Append the body instructions.
+			foreach (List<Instruction> fill in bodyFills.Values)
+			{
+				total.AddRange(fill);
+			}
+
+			// Append the end instructions.
+			total.AddRange(endFill);
+
+			// Append all if checks before each body block.
+			int index = 0;
+			foreach (List<Instruction> fill in bodyFills.Values)
+			{
+				total.InsertRange(total.IndexOf(fill[0]), checkFills[index]);
+				
+				index++;
+			}
+
+			return total.ToArray();
+		}
+
+		public static IEnumerable<Instruction> IfElse(Action<Instruction, List<Instruction>> ifCheck, Action<Instruction, List<Instruction>> body, Action<List<Instruction>> endElse)
+		{
+			List<Instruction> endFill = new List<Instruction>();
+			
+			endElse.Invoke(endFill);
+			Instruction target = endFill[0];
+			
+			List<Instruction> bodyFill = new List<Instruction>();
+			body.Invoke(target, bodyFill);
+
+			List<Instruction> checkFill = new List<Instruction>();
+
+			ifCheck.Invoke(target, checkFill);
+
+			List<Instruction> total = new List<Instruction>();
+			
+			// Append the body instructions.
+			total.AddRange(bodyFill);
+
+			// Append the end instructions.
+			total.AddRange(endFill);
+
+			// Insert the if check before the body.
+			total.InsertRange(total.IndexOf(bodyFill[0]), checkFill);
+
+			return total.ToArray();
 		}
 	}
 }

@@ -2,10 +2,10 @@
 {
     public class SetValueUndoAction : IUndoAction
     {
-        public IExposedToLevelEditor exposed;
-        public int propertyId;
-        public object previousValue;
-        public object newValue;
+        private readonly IExposedToLevelEditor exposed;
+        private readonly int propertyId;
+        private readonly object previousValue;
+        private readonly object newValue;
 
         public SetValueUndoAction(IExposedToLevelEditor exposed, int propertyId, object previousValue, object newValue)
         {
@@ -15,7 +15,7 @@
             this.newValue = newValue;
         }
 
-        public void Execute(ILevelEditorUndo undo)
+        public void Redo(ILevelEditorUndo undo)
         {
             exposed.SetValue(propertyId, newValue, true);
         }

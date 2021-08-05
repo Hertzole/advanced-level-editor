@@ -1,5 +1,5 @@
 ﻿using System;
-using System.Collections.ObjectModel;
+using System.Collections.Generic;
 
 namespace Hertzole.ALE
 {
@@ -12,13 +12,18 @@ namespace Hertzole.ALE
 
         int Order { get; }
 
+        event Action<int, object> OnValueChanging;
         event Action<int, object> OnValueChanged;
 
-        ReadOnlyCollection<ExposedProperty> GetProperties();
+        IReadOnlyList<ExposedField> GetProperties();
 
         object GetValue(int id);
 
-        void SetValue(int id, object value, bool notify);
+        void BeginEdit(int id);
+
+        void ModifyValue(object value, bool notify);
+
+        void EndEdit(bool notify, ILevelEditorUndo undo);
 
         IExposedWrapper GetWrapper();
 

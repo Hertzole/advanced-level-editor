@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using UnityEngine;
 
@@ -22,6 +23,11 @@ namespace Hertzole.ALE
         private bool useGravity;
         private bool isKinematic;
 
+        private int editingId;
+
+        private object beginEditValue;
+        private object lastEditValue;
+        
         private void Awake()
         {
             useGravity = Target.useGravity;
@@ -31,16 +37,16 @@ namespace Hertzole.ALE
             Target.isKinematic = true;
         }
 
-        private ReadOnlyCollection<ExposedProperty> cachedProperties = new ReadOnlyCollection<ExposedProperty>(new ExposedProperty[]
+        private readonly ExposedField[] cachedProperties = new ExposedField[]
         {
             new ExposedProperty(0, typeof(float), "mass", null, true),
             new ExposedProperty(1, typeof(float), "drag", null, true),
             new ExposedProperty(2, typeof(float), "angularDrag", null, true),
             new ExposedProperty(3, typeof(bool), "useGravity", null, true),
             new ExposedProperty(4, typeof(bool), "isKinematic", null, true)
-        });
+        };
 
-        public override ReadOnlyCollection<ExposedProperty> GetProperties()
+        public override IReadOnlyList<ExposedField> GetProperties()
         {
             return cachedProperties;
         }
@@ -64,31 +70,59 @@ namespace Hertzole.ALE
             }
         }
 
-        public override void SetValue(int id, object value, bool notify)
+        public override void BeginEdit(int id)
         {
-            bool changed = false;
-
+            editingId = id; 
             switch (id)
             {
                 case 0:
-                    if ((float)value != Target.mass)
+                    beginEditValue = Target.mass;
+                    break;
+                case 1:
+                    beginEditValue = Target.drag;
+                    break;
+                case 2:
+                    beginEditValue = Target.angularDrag;
+                    break;
+                case 3:
+                    beginEditValue = useGravity;
+                    break;
+                case 4:
+                    beginEditValue = isKinematic;
+                    break;
+                default:
+                    throw new InvalidExposedPropertyException(id);
+            }
+        }
+
+        public override void ModifyValue(object value, bool notify)
+        {
+            bool changed = false;
+            
+            switch (editingId)
+            {
+                 case 0:
+                    if (Mathf.Abs((float)value - Target.mass) > 0.0001f)
                     {
                         Target.mass = (float)value;
                         changed = true;
+                        lastEditValue = Target.mass;
                     }
                     break;
                 case 1:
-                    if ((float)value != Target.drag)
+                    if (Mathf.Abs((float)value - Target.drag) > 0.0001f)
                     {
                         Target.drag = (float)value;
                         changed = true;
+                        lastEditValue = Target.drag;
                     }
                     break;
                 case 2:
-                    if ((float)value != Target.angularDrag)
+                    if (Mathf.Abs((float)value - Target.angularDrag) > 0.0001f)
                     {
                         Target.angularDrag = (float)value;
                         changed = true;
+                        lastEditValue = Target.angularDrag;
                     }
                     break;
                 case 3:
@@ -96,6 +130,7 @@ namespace Hertzole.ALE
                     {
                         useGravity = (bool)value;
                         changed = true;
+                        lastEditValue = useGravity;
                     }
                     break;
                 case 4:
@@ -103,16 +138,29 @@ namespace Hertzole.ALE
                     {
                         isKinematic = (bool)value;
                         changed = true;
+                        lastEditValue = isKinematic;
                     }
                     break;
                 default:
-                    Debug.LogWarning($"There's no exposed fields with the ID {id}.");
-                    break;
+                    throw new InvalidExposedPropertyException(editingId);
             }
 
             if (notify && changed)
             {
-                InvokeOnValueChanged(id, value);
+                InvokeOnValueChanging(editingId, value);
+            }
+        }
+
+        public override void EndEdit(bool notify, ILevelEditorUndo undo)
+        {
+            if (notify)
+            {
+                InvokeOnValueChanged(editingId, lastEditValue);
+            }
+
+            if (undo != null)
+            {
+                undo.AddAction(new SetValueUndoAction(this, editingId, beginEditValue, lastEditValue));
             }
         }
 

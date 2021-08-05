@@ -16,13 +16,35 @@ namespace Hertzole.ALE
 			this.objects = objects;
 		}
 
-		public ComponentDataWrapper(Component component) : this(new Component[] { component }) { }
+		public ComponentDataWrapper(Component component)
+		{
+			if (component == null)
+			{
+				objects = Array.Empty<uint>();
+			}
+			else
+			{
+				objects = new uint[1];
+				
+				if (component.TryGetComponent(out ILevelEditorObject obj))
+				{
+					objects[0] = obj.InstanceID;
+				}
+				else
+				{
+#if DEBUG
+					Debug.LogWarning($"{component} doesn't have a ILevelEditorObject component attached when adding it to a collection.");
+#endif
+					objects[0] = 0;
+				}
+			}
+		}
 
 		public ComponentDataWrapper(IReadOnlyList<Component> component)
 		{
-			if (component == null || component.Count == 0)
+			if (component == null || component.Count == 0 || (component.Count == 1 && component[0] == null))
 			{
-				objects = new uint[0];
+				objects = Array.Empty<uint>();
 			}
 			else
 			{
@@ -48,13 +70,35 @@ namespace Hertzole.ALE
 			}
 		}
 
-		public ComponentDataWrapper(GameObject go) : this(new GameObject[] { go }) { }
+		public ComponentDataWrapper(GameObject go)
+		{
+			if (go == null)
+			{
+				objects = Array.Empty<uint>();
+			}
+			else
+			{
+				objects = new uint[1];
+				
+				if (go.TryGetComponent(out ILevelEditorObject obj))
+				{
+					objects[0] = obj.InstanceID;
+				}
+				else
+				{
+#if DEBUG
+					Debug.LogWarning($"{go} doesn't have a ILevelEditorObject component attached when adding it to a collection.");
+#endif
+					objects[0] = 0;
+				}
+			}
+		}
 
 		public ComponentDataWrapper(IReadOnlyList<GameObject> go)
 		{
-			if (go == null || go.Count == 0)
+			if (go == null || go.Count == 0 || (go.Count == 0 && go[0] == null))
 			{
-				objects = new uint[0];
+				objects = Array.Empty<uint>();
 			}
 			else
 			{
@@ -141,6 +185,11 @@ namespace Hertzole.ALE
 			}
 
 			return LevelEditorWorld.TryGetObject(objects[0], out value);
+		}
+
+		public bool IsNull()
+		{
+			return objects == null || objects.Length == 0;
 		}
 
 		public bool Equals(Component component)

@@ -5,180 +5,210 @@ using UnityEngine;
 using UnityEngine.Assertions;
 using UnityEngine.TestTools;
 
+// Used to disable cast warnings because IExposedToLevelEditor is never explicitly set but is set
+// when the code has been weaved.
+// ReSharper disable SuspiciousTypeConversion.Global
+
 namespace Hertzole.ALE.Tests
 {
-    public class UndoTests : LevelEditorTest
-    {
-        private LevelEditorUndo undo;
-        
-        protected override void OnSceneSetup(List<GameObject> objects)
-        {
-            undo = levelEditor.gameObject.AddComponent<LevelEditorUndo>();
-            undo.HandleUndoRedoInput = false;
-            undo.ObjectManager = objectManager;
-            levelEditor.Undo = undo;
-            objectManager.Undo = undo;
-        }
+	public class UndoTests : LevelEditorTest
+	{
+		private LevelEditorUndo undo;
 
-        [UnityTest]
-        public IEnumerator RemovedObjectKeepsPropertiesPooled()
-        {
-            objectManager.PoolObjects = true;
-            yield return RemovedObjectsKeepsProperties();
-        }
+		protected override void OnSceneSetup(List<GameObject> objects)
+		{
+			undo = levelEditor.gameObject.AddComponent<LevelEditorUndo>();
+			undo.HandleUndoRedoInput = false;
+			undo.ObjectManager = objectManager;
+			levelEditor.Undo = undo;
+			objectManager.Undo = undo;
+		}
 
-        [UnityTest]
-        public IEnumerator RemovedObjectKeepsPropertiesNotPooled()
-        {
-            objectManager.PoolObjects = false;
-            yield return RemovedObjectsKeepsProperties();
-        }
+		[UnityTest]
+		public IEnumerator RemovedObjectKeepsPropertiesPooled()
+		{
+			objectManager.PoolObjects = true;
+			yield return RemovedObjectsKeepsProperties();
+		}
 
-        private IEnumerator RemovedObjectsKeepsProperties()
-        {
-            ByteTest4 byteTest = cube.AddComponent<ByteTest4>();
-            byteTest.value1 = 69;
-            byteTest.value2 = 42;
+		[UnityTest]
+		public IEnumerator RemovedObjectKeepsPropertiesNotPooled()
+		{
+			objectManager.PoolObjects = false;
+			yield return RemovedObjectsKeepsProperties();
+		}
 
-            ILevelEditorObject newCube = objectManager.CreateObject("cube");
-            yield return WaitFrames(1);
+		private IEnumerator RemovedObjectsKeepsProperties()
+		{
+			ByteTest4 byteTest = cube.AddComponent<ByteTest4>();
+			byteTest.value1 = 69;
+			byteTest.value2 = 42;
 
-            Assert.AreEqual<byte>(69, byteTest.value1);
-            Assert.AreEqual<byte>(42, byteTest.value2);
-            
-            uint newCubeInstanceId = newCube.InstanceID;
-            
-            byteTest = newCube.MyGameObject.GetComponent<ByteTest4>();
-            byteTest.value1 = 6;
-            byteTest.value2 = 9;
+			ILevelEditorObject newCube = objectManager.CreateObject("cube");
+			yield return WaitFrames(1);
 
-            yield return WaitFrames(1);
+			Assert.AreEqual<byte>(69, byteTest.value1);
+			Assert.AreEqual<byte>(42, byteTest.value2);
 
-            Assert.AreEqual<byte>(6, byteTest.value1);
-            Assert.AreEqual<byte>(9, byteTest.value2);
+			uint newCubeInstanceId = newCube.InstanceID;
 
-            objectManager.DeleteObject(newCube, true);
+			byteTest = newCube.MyGameObject.GetComponent<ByteTest4>();
+			byteTest.value1 = 6;
+			byteTest.value2 = 9;
 
-            yield return WaitFrames(1);
+			yield return WaitFrames(1);
 
-            // Make sure the object doesn't exist.
-            Assert.IsFalse(LevelEditorWorld.TryGetObject(newCubeInstanceId, out _));
+			Assert.AreEqual<byte>(6, byteTest.value1);
+			Assert.AreEqual<byte>(9, byteTest.value2);
 
-            newCube = objectManager.CreateObject("cube");
+			objectManager.DeleteObject(newCube);
 
-            yield return WaitFrames(1);
+			yield return WaitFrames(1);
 
-            uint previousInstanceId = newCubeInstanceId;
-            
-            newCubeInstanceId = newCube.InstanceID;
-            byteTest = newCube.MyGameObject.GetComponent<ByteTest4>();
-            Assert.AreEqual<byte>(69, byteTest.value1);
-            Assert.AreEqual<byte>(42, byteTest.value2);
+			// Make sure the object doesn't exist.
+			Assert.IsFalse(LevelEditorWorld.TryGetObject(newCubeInstanceId, out _));
 
-            yield return WaitFrames(1);
-            
-            // Undo create object.
-            undo.Undo();
-           
-            yield return WaitFrames(1);
-            
-            // Make sure the object doesn't exist.
-            Assert.IsFalse(LevelEditorWorld.TryGetObject(newCubeInstanceId, out _));
-            
-            // Undo delete object.
-            undo.Undo();
+			newCube = objectManager.CreateObject("cube");
 
-            yield return WaitFrames(1);
-            
-            // Make sure the object exists.
-            Assert.IsTrue(LevelEditorWorld.TryGetObject(previousInstanceId, out newCube));
-            byteTest = newCube.MyGameObject.GetComponent<ByteTest4>();
-            Assert.AreEqual<byte>(6, byteTest.value1);
-            Assert.AreEqual<byte>(9, byteTest.value2);
-        }
+			yield return WaitFrames(1);
 
-        [UnityTest]
-        public IEnumerator UndoRedoCreateObjectPooled()
-        {
-            objectManager.PoolObjects = true;
-            yield return UndoRedoCreateObject();
-        }
-        
-        [UnityTest]
-        public IEnumerator UndoRedoCreateObjectNotPooled()
-        {
-            objectManager.PoolObjects = false;
-            yield return UndoRedoCreateObject();
-        }
+			uint previousInstanceId = newCubeInstanceId;
 
-        private IEnumerator UndoRedoCreateObject()
-        {
-            ILevelEditorObject newCube = objectManager.CreateObject("cube", true);
-            uint instanceId = newCube.InstanceID;
-            
-            yield return WaitFrames(1);
-            
-            // Make sure the object exists.
-            Assert.IsTrue(LevelEditorWorld.TryGetObject(instanceId, out _));
-            
-            undo.Undo();
+			newCubeInstanceId = newCube.InstanceID;
+			byteTest = newCube.MyGameObject.GetComponent<ByteTest4>();
+			Assert.AreEqual<byte>(69, byteTest.value1);
+			Assert.AreEqual<byte>(42, byteTest.value2);
 
-            yield return WaitFrames(1);
+			yield return WaitFrames(1);
 
-            // Make sure the object doesn't exist.
-            Assert.IsFalse(LevelEditorWorld.TryGetObject(instanceId, out _));
-            
-            undo.Redo();
+			// Undo create object.
+			undo.Undo();
 
-            yield return WaitFrames(1);
+			yield return WaitFrames(1);
 
-            // Make sure the object exists.
-            Assert.IsTrue(LevelEditorWorld.TryGetObject(instanceId, out _));
-        }
+			// Make sure the object doesn't exist.
+			Assert.IsFalse(LevelEditorWorld.TryGetObject(newCubeInstanceId, out _));
 
-        [UnityTest]
-        public IEnumerator UndoRedoDeleteObjectPooled()
-        {
-            objectManager.PoolObjects = true;
-            yield return UndoRedoDeleteObject();
-        }
-        
-        [UnityTest]
-        public IEnumerator UndoRedoDeleteObjectNotPooled()
-        {
-            objectManager.PoolObjects = false;
-            yield return UndoRedoCreateObject();
-        }
+			// Undo delete object.
+			undo.Undo();
 
-        private IEnumerator UndoRedoDeleteObject()
-        {
-            ILevelEditorObject newCube = objectManager.CreateObject("cube", true);
-            uint instanceId = newCube.InstanceID;
-            
-            yield return WaitFrames(1);
-            
-            // Make sure the object exists.
-            Assert.IsTrue(LevelEditorWorld.TryGetObject(instanceId, out _));
-            objectManager.DeleteObject(newCube, true);
+			yield return WaitFrames(1);
 
-            yield return WaitFrames(1);
+			// Make sure the object exists.
+			Assert.IsTrue(LevelEditorWorld.TryGetObject(previousInstanceId, out newCube));
+			byteTest = newCube.MyGameObject.GetComponent<ByteTest4>();
+			Assert.AreEqual<byte>(6, byteTest.value1);
+			Assert.AreEqual<byte>(9, byteTest.value2);
+		}
 
-            // Make sure the object doesn't exist.
-            Assert.IsFalse(LevelEditorWorld.TryGetObject(instanceId, out _));
-            
-            undo.Undo();
+		[UnityTest]
+		public IEnumerator UndoRedoCreateObjectPooled()
+		{
+			objectManager.PoolObjects = true;
+			yield return UndoRedoCreateObject();
+		}
 
-            yield return WaitFrames(1);
+		[UnityTest]
+		public IEnumerator UndoRedoCreateObjectNotPooled()
+		{
+			objectManager.PoolObjects = false;
+			yield return UndoRedoCreateObject();
+		}
 
-            // Make sure the object exists.
-            Assert.IsTrue(LevelEditorWorld.TryGetObject(instanceId, out _));
-            
-            undo.Redo();
+		private IEnumerator UndoRedoCreateObject()
+		{
+			ILevelEditorObject newCube = objectManager.CreateObject("cube");
+			uint instanceId = newCube.InstanceID;
 
-            yield return WaitFrames(1);
+			yield return WaitFrames(1);
 
-            // Make sure the object doesn't exist.
-            Assert.IsFalse(LevelEditorWorld.TryGetObject(instanceId, out _));
-        }
-    }
+			// Make sure the object exists.
+			Assert.IsTrue(LevelEditorWorld.TryGetObject(instanceId, out _));
+
+			undo.Undo();
+
+			yield return WaitFrames(1);
+
+			// Make sure the object doesn't exist.
+			Assert.IsFalse(LevelEditorWorld.TryGetObject(instanceId, out _));
+
+			undo.Redo();
+
+			yield return WaitFrames(1);
+
+			// Make sure the object exists.
+			Assert.IsTrue(LevelEditorWorld.TryGetObject(instanceId, out _));
+		}
+
+		[UnityTest]
+		public IEnumerator UndoRedoDeleteObjectPooled()
+		{
+			objectManager.PoolObjects = true;
+			yield return UndoRedoDeleteObject();
+		}
+
+		[UnityTest]
+		public IEnumerator UndoRedoDeleteObjectNotPooled()
+		{
+			objectManager.PoolObjects = false;
+			yield return UndoRedoCreateObject();
+		}
+
+		private IEnumerator UndoRedoDeleteObject()
+		{
+			ILevelEditorObject newCube = objectManager.CreateObject("cube");
+			uint instanceId = newCube.InstanceID;
+
+			yield return WaitFrames(1);
+
+			// Make sure the object exists.
+			Assert.IsTrue(LevelEditorWorld.TryGetObject(instanceId, out _));
+			objectManager.DeleteObject(newCube);
+
+			yield return WaitFrames(1);
+
+			// Make sure the object doesn't exist.
+			Assert.IsFalse(LevelEditorWorld.TryGetObject(instanceId, out _));
+
+			undo.Undo();
+
+			yield return WaitFrames(1);
+
+			// Make sure the object exists.
+			Assert.IsTrue(LevelEditorWorld.TryGetObject(instanceId, out _));
+
+			undo.Redo();
+
+			yield return WaitFrames(1);
+
+			// Make sure the object doesn't exist.
+			Assert.IsFalse(LevelEditorWorld.TryGetObject(instanceId, out _));
+		}
+
+		[UnityTest]
+		public IEnumerator SetSimpleValueUndo()
+		{
+			cube.AddComponent<ByteTest1>();
+
+			ILevelEditorObject newCube = objectManager.CreateObject("cube");
+			uint instanceId = newCube.InstanceID;
+
+			yield return WaitFrames(1);
+
+			IExposedToLevelEditor exposedScript = newCube.MyGameObject.GetComponent<ByteTest1>() as IExposedToLevelEditor;
+			Assert.IsNotNull(exposedScript);
+
+			exposedScript.SetValue(0, byte.MaxValue, true, undo);
+
+			Assert.AreEqual<byte>(byte.MaxValue, (byte) exposedScript.GetValue(0));
+
+			// Undo set value.
+			undo.Undo();
+
+			yield return WaitFrames(1);
+
+			Assert.IsTrue(LevelEditorWorld.TryGetObject(instanceId, out _), "Object does not exist.");
+			Assert.AreEqual<byte>(0, (byte) exposedScript.GetValue(0));
+		}
+	}
 }

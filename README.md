@@ -1,5 +1,11 @@
 # Advanced Level Editor (ALE)
 
+![tests](https://github.com/Hertzole/advanced-level-editor/actions/workflows/tests.yml/badge.svg) 
+![build](https://github.com/Hertzole/advanced-level-editor/actions/workflows/tests.yml/build.svg) 
+![dev package](https://github.com/Hertzole/advanced-level-editor/actions/workflows/tests.yml/dev_package.svg) 
+![release package](https://github.com/Hertzole/advanced-level-editor/actions/workflows/tests.yml/release_package.svg) 
+
+
 ⚠ **ALE IS IN VERY EARLY DEVELOPMENT! ANYTHING CAN CHANGE SUDDENLY! USE AT YOUR OWN RISK** ⚠
 
 ![Built level editor](https://i.imgur.com/Q8Wgo8n.png)

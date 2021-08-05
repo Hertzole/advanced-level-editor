@@ -1,38 +1,14 @@
-name: Test and deploy dev package
-on:
-  push:
-    branch:
-    - master
+name: Dev Package
 
-env:
-  UNITY_LICENSE: ${{ secrets.UNITY_LICENSE }}
+on:
+  workflow_run:
+    workflows: ["Tests"]
+    types:
+      - completed
 
 jobs:
-  tests:
-    name: Run Unity tests
-    runs-on: ubuntu-latest
-    steps:
-    # Checkout
-    - name: Checkout repository
-      uses: actions/checkout@v2
-      with:
-        lfs: true
-
-    # Cache
-    - uses: actions/cache@v1.1.0
-      with:
-        path: Library
-        key: Tests-Library
-        restore-keys: |
-          Tests-Library
-    
-    - name: Run tests
-      uses: webbertakken/unity-test-runner@v2
-      with:
-        testMode: playmode
   package:
     name: Deploy package
-    needs: tests
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v2
@@ -56,4 +32,3 @@ jobs:
         git push -f -u origin dev-package
       env:
         PKG_ROOT: "Packages/se.hertzole.ale"
-        

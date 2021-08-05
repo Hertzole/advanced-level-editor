@@ -32,11 +32,6 @@ namespace Hertzole.ALE
             });
         }
 
-        protected override void BeginEdit()
-        {
-            BeginEditValue = color;
-        }
-
         private void OnColorChanged(Color color)
         {
             if (this.color != color)
@@ -49,7 +44,7 @@ namespace Hertzole.ALE
                     alphaSlider.value = color.a;
                 }
 
-                SetPropertyValue(color);
+                ModifyPropertyValue(color, true);
                 onValueChanged.Invoke(color);
             }
         }
@@ -61,12 +56,14 @@ namespace Hertzole.ALE
 
             if (is32)
             {
-                SetPropertyValue((Color32)color, true);
+                ModifyPropertyValue((Color32) color, true);
             }
             else
             {
-                SetPropertyValue(color, true);
+                ModifyPropertyValue(color, true);
             }
+            
+            EndEdit();
         }
 
         public override bool SupportsType(Type type, bool isArray)

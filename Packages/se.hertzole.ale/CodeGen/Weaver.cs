@@ -12,7 +12,7 @@ namespace Hertzole.ALE.CodeGen
 
         private readonly BaseProcessor[] processors = new BaseProcessor[]
         {
-            new ExposedClassProcessor()
+            new ExposedPropertyProcessor()
         };
 
         public Weaver(List<DiagnosticMessage> diagnostics)

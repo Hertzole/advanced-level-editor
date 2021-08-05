@@ -47,14 +47,24 @@ namespace Hertzole.ALE
         public virtual Type ComponentType { get { return null; } }
         public abstract bool HasVisibleFields { get; }
 
+        public event Action<int, object> OnValueChanging;
         public event Action<int, object> OnValueChanged;
 
-        public abstract ReadOnlyCollection<ExposedProperty> GetProperties();
+        public abstract IReadOnlyList<ExposedField> GetProperties();
         public abstract object GetValue(int id);
-        public abstract void SetValue(int id, object value, bool notify);
+
+        public abstract void BeginEdit(int id);
+        public abstract void ModifyValue(object value, bool notify);
+        public abstract void EndEdit(bool notify, ILevelEditorUndo undo);
+
         public abstract IExposedWrapper GetWrapper();
         public abstract void ApplyWrapper(IExposedWrapper wrapper, bool ignoreDirtyMask = false);
 
+        protected void InvokeOnValueChanging(int id, object value)
+        {
+            OnValueChanging?.Invoke(id, value);
+        }
+        
         protected void InvokeOnValueChanged(int id, object value)
         {
             OnValueChanged?.Invoke(id, value);
