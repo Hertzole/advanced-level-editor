@@ -1,4 +1,5 @@
 ﻿using System.Collections;
+using UnityEngine;
 
 namespace Hertzole.ALE
 {
@@ -44,6 +45,25 @@ namespace Hertzole.ALE
 
             returnValue = default;
             return true;
+        }
+        
+        public static void SetValue(this IExposedToLevelEditor exposed, int id, object value, bool notify, ILevelEditorUndo undo)
+        {
+            exposed.BeginEdit(id);
+            exposed.ModifyValue(value, notify);
+            exposed.EndEdit(notify, undo);
+        }
+        
+        /// <summary>
+        /// Sets a value WITHOUT registering undo.
+        /// </summary>
+        /// <param name="exposed"></param>
+        /// <param name="id"></param>
+        /// <param name="value"></param>
+        /// <param name="notify"></param>
+        public static void SetValue(this IExposedToLevelEditor exposed, int id, object value, bool notify)
+        {
+            exposed.SetValue(id, value, notify, null);
         }
     }
 }

@@ -40,10 +40,16 @@ namespace Hertzole.ALE.CodeGen
 
         public static MethodReference GetMethod(this ModuleDefinition module, Type type, string methodName, params Type[] parameters)
         {
-            return module.ImportReference(type.GetMethod(methodName, parameters));
+            MethodInfo method = type.GetMethod(methodName, parameters);
+            if (method == null)
+            {
+                throw new ArgumentException($"There's no method called {methodName} in {type}.");
+            }
+            
+            return module.ImportReference(method);
         }
 
-        public static MethodReference GetGenericMethod(this ModuleDefinition module, Type type, string methodName, Type[] parameters, TypeReference[] genericParameters)
+        public static MethodReference GetGenericMethod(this ModuleDefinition module, Type type, string methodName, Type[] parameters, params TypeReference[] genericParameters)
         {
             MethodInfo[] methods = type.GetMethods();
             MethodInfo resultMethod = null;
@@ -61,7 +67,28 @@ namespace Hertzole.ALE.CodeGen
                 throw new ArgumentException($"There's no method called {methodName} in {type.FullName}.", nameof(methodName));
             }
 
-            return module.ImportReference(resultMethod).MakeGenericMethod(genericParameters);
+            return module.ImportReference(module.ImportReference(resultMethod).MakeGenericMethod(genericParameters));
+        }
+
+        public static MethodReference GetGenericMethod(this ModuleDefinition module, Type type, string methodName, params TypeReference[] genericParameters)
+        {
+            MethodInfo[] methods = type.GetMethods();
+            MethodInfo resultMethod = null;
+            for (int i = 0; i < methods.Length; i++)
+            {
+                if (methods[i].Name == methodName && methods[i].IsGenericMethod)
+                {
+                    resultMethod = methods[i];
+                    break;
+                }
+            }
+
+            if (resultMethod == null)
+            {
+                throw new ArgumentException($"There's no method called {methodName} in {type.FullName}.", nameof(methodName));
+            }
+
+            return module.ImportReference(module.ImportReference(resultMethod).MakeGenericMethod(genericParameters));
         }
 
         public static MethodReference GetConstructor<T>(this ModuleDefinition module, params Type[] parameters)

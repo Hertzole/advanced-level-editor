@@ -193,7 +193,7 @@ namespace Hertzole.ALE
                     }
                     else
                     {
-                        ReadOnlyCollection<ExposedProperty> properties = components[i].GetProperties();
+                        IReadOnlyList<ExposedField> properties = components[i].GetProperties();
                         for (int j = 0; j < properties.Count; j++)
                         {
                             if (!properties[j].IsVisible)
@@ -293,6 +293,8 @@ namespace Hertzole.ALE
 
         public void PoolField(LevelEditorInspectorField field)
         {
+            field.Unbind();
+            
             pooledFields[field.Index].Push(field);
             activeFields.Remove(field);
 

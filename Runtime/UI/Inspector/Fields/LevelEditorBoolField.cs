@@ -37,12 +37,13 @@ namespace Hertzole.ALE
             toggle.onValueChanged.AddListener(x =>
             {
                 BeginEdit();
-                SetPropertyValue(x, true);
+                ModifyPropertyValue(x, true);
+                EndEdit();
                 onValueChanged.Invoke(x);
             });
         }
 
-        public override void SetFieldValue(bool value)
+        protected override void SetFieldValue(bool value)
         {
             toggle.SetIsOnWithoutNotify(value);
         }

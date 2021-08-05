@@ -85,9 +85,9 @@ namespace Hertzole.ALE
             }
         }
 
-        public void AddAction(IUndoAction action, bool execute)
+        public void AddAction(IUndoAction action)
         {
-            LevelEditorLogger.Log($"Add undo action | Action: {action} | Execute: {execute}");
+            LevelEditorLogger.Log($"Add undo action | Action: {action}");
             
             // Remove the actions above if we cut into the history.
             while (actionHistory.Count > counter)
@@ -97,30 +97,26 @@ namespace Hertzole.ALE
 
             actionHistory.Add(action);
             counter++;
-
-            if (execute)
-            {
-                action.Execute(this);
-            }
         }
 
         public void Redo()
         {
             if (counter < actionHistory.Count)
             {
-                actionHistory[counter].Execute(this);
+                actionHistory[counter].Redo(this);
                 counter++;
             }
         }
         
         public void Undo()
         {
-            LevelEditorLogger.Log($"Undo | Counter: {counter}");
+            LevelEditorLogger.Log("Undo");
             
             if (counter > 0)
             {
+                LevelEditorLogger.Log($"Undo {actionHistory[counter - 1]}");
+                
                 counter--;
-                LevelEditorLogger.Log($"Undo {actionHistory[counter]}");
                 actionHistory[counter].Undo(this);
             }
         }

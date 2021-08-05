@@ -156,7 +156,7 @@ namespace Hertzole.ALE
                    type == typeof(float) || type == typeof(double) || type == typeof(decimal);
         }
 
-        protected override void OnBound(ExposedProperty property, IExposedToLevelEditor exposed)
+        protected override void OnBound(ExposedField property, IExposedToLevelEditor exposed)
         {
             editing = false;
             
@@ -298,7 +298,7 @@ namespace Hertzole.ALE
                     });
                     break;
                 default:
-                    SetPropertyValue(0, true);
+                    ModifyPropertyValue(0, true);
                     break;
             }
 
@@ -326,11 +326,12 @@ namespace Hertzole.ALE
             if (string.IsNullOrWhiteSpace(value))
             {
                 convertedValue = (TValue)Convert.ChangeType(0, typeof(TValue));
-                SetPropertyValue(convertedValue, endEdit);
+                ModifyPropertyValue(0, true);
                 if (endEdit)
                 {
                     textField.SetTextWithoutNotify("0");
                     InvokeEndEdit(convertedValue);
+                    EndEdit();
                 }
                 else
                 {
@@ -356,7 +357,7 @@ namespace Hertzole.ALE
 
                 // Convert the value to what we want and set the property value.
                 convertedValue = (TValue) Convert.ChangeType(result, typeof(TValue));
-                SetPropertyValue(convertedValue, endEdit);
+                ModifyPropertyValue(convertedValue, true);
 
                 // If the user is leaving the text field, it's safe to update the text field to the actual result.
                 // Otherwise we just leave it be and invoke the value changed event.
@@ -364,6 +365,7 @@ namespace Hertzole.ALE
                 {
                     textField.SetTextWithoutNotify(result.ToString());
                     InvokeEndEdit(convertedValue);
+                    EndEdit();
                 }
                 else
                 {
@@ -374,8 +376,9 @@ namespace Hertzole.ALE
             {
                 convertedValue = (TValue) Convert.ChangeType(0, typeof(TValue));
                 textField.SetTextWithoutNotify(convertedValue.ToString());
-                SetPropertyValue(convertedValue, true);
+                ModifyPropertyValue(convertedValue, true);
                 InvokeEndEdit(convertedValue);
+                EndEdit();
             }
         }
 

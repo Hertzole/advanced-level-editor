@@ -1,14 +1,22 @@
-﻿namespace Hertzole.ALE
+﻿using System;
+
+namespace Hertzole.ALE
 {
     public class ExposedField
     {
-        public string Name { get; private set; }
-        public bool IsVisible { get; private set; }
+        public string Name { get; }
+        public int ID { get; }
+        public bool IsVisible { get; }
+        public Type Type { get; }
+        public string CustomName { get; }
 
-        public ExposedField(string name, bool isVisible)
+        public ExposedField(int id, Type type, string name, string customName, bool isVisible)
         {
             Name = name;
+            ID = id;
             IsVisible = isVisible;
+            Type = type;
+            CustomName = customName;
         }
     }
 }

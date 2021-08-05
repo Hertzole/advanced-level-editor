@@ -22,7 +22,7 @@ namespace Hertzole.ALE
             dropdown.onValueChanged.AddListener(OnDropdownChanged);
         }
 
-        protected override void OnBound(ExposedProperty property, IExposedToLevelEditor exposed)
+        protected override void OnBound(ExposedField property, IExposedToLevelEditor exposed)
         {
             enumNames.Clear();
             enumValues.Clear();
@@ -60,7 +60,8 @@ namespace Hertzole.ALE
         private void OnDropdownChanged(int newIndex)
         {
             BeginEdit();
-            SetPropertyValue(enumValues[newIndex], true);
+            ModifyPropertyValue(enumValues[newIndex], true);
+            EndEdit();
             onValueChanged.Invoke(newIndex);
         }
     }

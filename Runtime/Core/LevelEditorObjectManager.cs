@@ -9,7 +9,6 @@ namespace Hertzole.ALE
     [DisallowMultipleComponent]
     [AddComponentMenu("ALE/Object Manager", 2)]
 #endif
-    //TODO: Make pooling toggleable.
     public class LevelEditorObjectManager : MonoBehaviour, ILevelEditorObjectManager
     {
         [SerializeField] 
@@ -147,7 +146,7 @@ namespace Hertzole.ALE
 
                 if (registerUndo && Undo != null)
                 {
-                    undoComp.AddAction(new CreateObjectUndoAction(resource, position, rotation, parent, instanceID, obj), false);
+                    undoComp.AddAction(new CreateObjectUndoAction(resource, position, rotation, parent, instanceID, obj));
                 }
 
                 return obj;
@@ -253,10 +252,9 @@ namespace Hertzole.ALE
                 target.Children.Clear();
             }
 
-            //TODO: Apply undo.
             if (registerUndo && Undo != null)
             {
-                undoComp.AddAction(new DeleteObjectUndoAction(target), false);
+                undoComp.AddAction(new DeleteObjectUndoAction(target));
             }
             
             if (poolObjects)

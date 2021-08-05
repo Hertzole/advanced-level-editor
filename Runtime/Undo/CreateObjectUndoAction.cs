@@ -22,7 +22,7 @@ namespace Hertzole.ALE
             this.obj = obj;
         }
 
-        public void Execute(ILevelEditorUndo undo)
+        public void Redo(ILevelEditorUndo undo)
         {
             obj = undo.ObjectManager.CreateObject(resource, position, rotation, parent, instanceID, false);
         }

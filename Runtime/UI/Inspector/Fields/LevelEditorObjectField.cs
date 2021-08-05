@@ -61,7 +61,7 @@ namespace Hertzole.ALE
             
             if (obj == null)
             {
-                SetPropertyValue(new ComponentDataWrapper(0));
+                ModifyPropertyValue(new ComponentDataWrapper(0), true);
                 onValueChanged.Invoke(null);
             }
             else
@@ -70,28 +70,29 @@ namespace Hertzole.ALE
                 {
                     if (BoundProperty.Type == typeof(GameObject))
                     {
-                        SetPropertyValue(new ComponentDataWrapper(levelObject.MyGameObject));
+                        ModifyPropertyValue(new ComponentDataWrapper(levelObject.MyGameObject), true);
                         onValueChanged.Invoke(levelObject.MyGameObject);
                     }
                     else
                     {
                         Component value = levelObject.MyGameObject.GetComponent(BoundProperty.Type);
-                        SetPropertyValue(new ComponentDataWrapper(value));
+                        ModifyPropertyValue(new ComponentDataWrapper(value), true);
                         onValueChanged.Invoke(value);
                     }
                 }
                 else if(obj is GameObject go)
                 {
-                    SetPropertyValue(new ComponentDataWrapper(go));
+                    ModifyPropertyValue(new ComponentDataWrapper(go), true);
                     onValueChanged.Invoke(obj);
                 }
                 else
                 {
-                    SetPropertyValue(new ComponentDataWrapper((Component)obj));
+                    ModifyPropertyValue(new ComponentDataWrapper((Component)obj), true);
                     onValueChanged.Invoke(obj);
                 }
             }
 
+            EndEdit();
             UpdateLabel(obj);
         }
 

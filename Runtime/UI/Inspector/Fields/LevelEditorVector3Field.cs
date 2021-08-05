@@ -104,7 +104,7 @@ namespace Hertzole.ALE
             return !isArray && (type == typeof(Vector3) || type == typeof(Vector3Int));
         }
 
-        protected override void OnBound(ExposedProperty property, IExposedToLevelEditor exposed)
+        protected override void OnBound(ExposedField property, IExposedToLevelEditor exposed)
         {
             if (property.Type == typeof(Vector2))
             {
@@ -193,16 +193,17 @@ namespace Hertzole.ALE
                 switch (type)
                 {
                     case VectorTypes.Vector2Int:
-                        SetPropertyValue(new Vector2Int(value.x, value.y), endEdit);
+                        ModifyPropertyValue(new Vector2Int(value.x, value.y), true);
                         break;
                     default:
-                        SetPropertyValue(value, endEdit);
+                        ModifyPropertyValue(value, true);
                         break;
                 }
 
                 if (endEdit)
                 {
                     onIntEndEdit.Invoke(value);
+                    EndEdit();
                 }
                 else
                 {
@@ -230,19 +231,20 @@ namespace Hertzole.ALE
                 switch (type)
                 {
                     case VectorTypes.Vector2:
-                        SetPropertyValue(new Vector2(value.x, value.y), endEdit);
+                        ModifyPropertyValue(new Vector2(value.x, value.y), true);
                         break;
                     case VectorTypes.Vector4:
-                        SetPropertyValue(new Vector4(value.x, value.y, value.z, 0), endEdit);
+                        ModifyPropertyValue(new Vector4(value.x, value.y, value.z, 0), true);
                         break;
                     default:
-                        SetPropertyValue(value, endEdit);
+                        ModifyPropertyValue(value, true);
                         break;
                 }
 
                 if (endEdit)
                 {
                     onValueEndEdit.Invoke(value);
+                    EndEdit();
                 }
                 else
                 {

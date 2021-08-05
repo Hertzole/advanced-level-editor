@@ -181,7 +181,8 @@ namespace Hertzole.ALE.CodeGen.Helpers
 					isAdvanced = false;
 					lengthLast = null;
 					checkLast = null;
-					return Array.Empty<Instruction>();
+					// return Array.Empty<Instruction>();
+					throw new NotImplementedException("No support for singles yet");
 				case 2:
 				case 3:
 				case 4:

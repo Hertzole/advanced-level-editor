@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using Hertzole.ALE.CodeGen.Data;
 using Hertzole.ALE.CodeGen.Helpers;
 using MessagePack;
 using MessagePack.Formatters;
@@ -243,7 +244,7 @@ namespace Hertzole.ALE.CodeGen
 				ParameterDefinition readerPara = m.AddParameter(module.ImportReference(typeof(MessagePackReader).MakeByRefType()), "reader");
 				ParameterDefinition optionsPara = m.AddParameter<MessagePackSerializerOptions>("options");
 
-				ILProcessor il = m.Body.GetILProcessor();
+				ILProcessor il = m.BeginEdit();
 
 				m.Body.InitLocals = true;
 
@@ -251,7 +252,7 @@ namespace Hertzole.ALE.CodeGen
 				VariableDefinition length = m.AddLocalVariable<int>();
 				VariableDefinition iVar = m.AddLocalVariable<int>();
 
-				il.Emit(OpCodes.Ldarg_1);
+				il.EmitLdarg(readerPara);
 				Instruction readNil = Instruction.Create(OpCodes.Call, module.GetMethod(typeof(MessagePackReader), "TryReadNil"));
 				il.Append(readNil);
 
@@ -384,95 +385,374 @@ namespace Hertzole.ALE.CodeGen
 					previous.Add(lengthLast);
 					previous.Add(checkLast);
 
+ #if ALE_DEBUG
+ 					il.Emit(OpCodes.Ldstr, $"Reading value {fields[i].Item1.Name}");
+ 					il.Emit(OpCodes.Call, module.GetMethod(typeof(LevelEditorLogger), "Log", typeof(object)));
+ #endif
+
+ 					Instruction[] readMethod = FormatterHelper.GetReadValue(fields[i].Item1.FieldType, resolverVariable: resolverVar);
+ 					il.Append(readMethod);
+ 					Instruction finish = il.EmitStloc(localFields[i]);
+ 					ifBreaks.Add(finish);				}
+
+ #if ALE_DEBUG
+ 				Instruction skipStart = Instruction.Create(OpCodes.Ldstr, "Skipping :: Span length: {0} Key: {1}");
+ 				il.Append(skipStart);
+ 				il.EmitLdloc(stringKey, true);
+ 				il.Emit(OpCodes.Call, module.GetMethod(typeof(ReadOnlySpan<byte>), "get_Length"));
+ 				il.Emit(OpCodes.Box, module.GetTypeReference<int>());
+ 				il.EmitLdloc(key);
+ 				il.Emit(OpCodes.Box, module.GetTypeReference<ulong>());
+ 				il.Emit(OpCodes.Call, module.GetMethod<string>("Format", typeof(string), typeof(object), typeof(object)));
+ 				il.Emit(OpCodes.Call, module.GetMethod(typeof(LevelEditorLogger), "Log", typeof(object)));
+ 				il.EmitLdarg(readerPara);
+ #else
+ 				Instruction skipStart = il.EmitLdarg(readerPara);
+ #endif
+ 				il.Emit(OpCodes.Call, module.GetMethod(typeof(MessagePackReader), "Skip"));
+ 				if (previous.Count == 2)
+ 				{
+ 					il.InsertAfter(previous[0], Instruction.Create(OpCodes.Bne_Un, skipStart)); // Length check
+ 					il.InsertAfter(previous[1], Instruction.Create(wasAdvanced ? OpCodes.Brfalse : OpCodes.Bne_Un, skipStart)); // Key check
+ 				}
+ 				else
+ 				{
+ 					throw new NotSupportedException($"Unknown amount of previous when going to skip. ({previous.Count})");
+ 				}
+
+ 				Instruction loopEnd = il.EmitLdloc(iVar);
+ 				il.EmitInt(1);
+ 				il.Emit(OpCodes.Add);
+ 				il.EmitStloc(iVar);
+
+ 				Instruction loopFinish = il.EmitLdloc(iVar);
+ 				il.EmitLdloc(length);
+ 				il.Emit(OpCodes.Blt, loopStart);
+
+ 				il.InsertAfter(beforeLoop, Instruction.Create(OpCodes.Br, loopFinish));
+ 				for (int i = 0; i < ifBreaks.Count; i++)
+ 				{
+ 					il.InsertAfter(ifBreaks[i], Instruction.Create(OpCodes.Br, loopEnd));
+ 				}
+
+ 				VariableDefinition result = m.AddLocalVariable(type);
+ 				VariableDefinition depth = m.AddLocalVariable<int>();
+
+ 				il.EmitLdloc(result, true);
+ 				il.Emit(OpCodes.Initobj, type);
+ 				il.EmitLdloc(result, true);
+ 				for (int i = 0; i < fields.Count; i++)
+ 				{
+ 					il.EmitLdloc(localFields[i]);
+ 					il.Emit(OpCodes.Stfld, fields[i].Item1);
+ 					il.EmitLdloc(result, i < fields.Count - 1);
+ 				}
+
+ 				il.EmitLdarg(readerPara);
+ 				il.Emit(OpCodes.Dup);
+ 				il.Emit(OpCodes.Call, module.GetMethod(typeof(MessagePackReader), "get_Depth"));
+ 				il.EmitStloc(depth);
+ 				il.EmitLdloc(depth);
+ 				il.EmitInt(1);
+ 				il.Emit(OpCodes.Sub);
+ 				il.Emit(OpCodes.Call, module.GetMethod(typeof(MessagePackReader), "set_Depth"));
+
+ 				il.Emit(OpCodes.Ret);
+
+ 				m.SetVariableName(resolverVar, "resolver");
+ 				m.SetVariableName(length, "length");
+ 				m.SetVariableName(iVar, "i");
+ 				m.SetVariableName(stringKey, "stringKey");
+ 				m.SetVariableName(key, "key");
+ 				m.SetVariableName(result, "result");
+ 				m.SetVariableName(depth, "depth");
+
+ 				for (int i = 0; i < localFields.Count; i++)
+ 				{
+ 					m.SetVariableName(localFields[i], $"__{fields[i].Item1.Name}__");
+ 				}
+                
+				m.EndEdit();
+			}
+		}
+
+		public void CreateExposedFormatter(TypeDefinition baseType, IReadOnlyList<IExposedProperty> properties, WrapperData wrapperData)
+		{
+			string name = $"{baseType.Namespace.Replace('.', '_')}_{baseType.Name}_Formatter";
+			if (name.StartsWith("_"))
+			{
+				name = name.Substring(1);
+			}
+
+			TypeDefinition formatter = new TypeDefinition("Hertzole.ALE.Generated.Formatters", name,
+				TypeAttributes.Public | TypeAttributes.AnsiClass | TypeAttributes.BeforeFieldInit, baseType.Module.GetTypeReference<object>());
+
+			formatter.Interfaces.Add(new InterfaceImplementation(baseType.Module.GetTypeReference(typeof(IMessagePackFormatter<>)).MakeGenericInstanceType(wrapperData.wrapper)));
+			formatter.Interfaces.Add(new InterfaceImplementation(baseType.Module.GetTypeReference(typeof(IMessagePackFormatter))));
+
+			baseType.Module.Types.Add(formatter);
+
+			MethodDefinition ctor = new MethodDefinition(".ctor", MethodAttributes.Public | MethodAttributes.HideBySig |
+			                                                      MethodAttributes.SpecialName | MethodAttributes.RTSpecialName,
+				baseType.Module.GetTypeReference(typeof(void)));
+
+			ILProcessor ctorIl = ctor.Body.GetILProcessor();
+			ctorIl.Emit(OpCodes.Ldarg_0);
+			ctorIl.Emit(OpCodes.Call, baseType.Module.GetConstructor<object>());
+			ctorIl.Emit(OpCodes.Ret);
+
+			formatter.Methods.Add(ctor);
+
+			CreateSerializeMethod();
+			CreateDeserializeMethod();
+
+			void CreateSerializeMethod()
+			{
+				var m = formatter.AddMethod("Serialize",
+					MethodAttributes.Public | MethodAttributes.Final | MethodAttributes.HideBySig | MethodAttributes.NewSlot | MethodAttributes.Virtual);
+
+				ParameterDefinition writer = m.AddParameter(baseType.Module.GetTypeReference(typeof(MessagePackWriter).MakeByRefType()), "writer");
+				ParameterDefinition value = m.AddParameter(wrapperData.wrapper, "value");
+				ParameterDefinition options = m.AddParameter(baseType.Module.GetTypeReference<MessagePackSerializerOptions>(), "options");
+
+				ILProcessor il = m.BeginEdit();
+
+				m.Body.InitLocals = true;
+
 #if ALE_DEBUG
-					il.Emit(OpCodes.Ldstr, $"Reading value {fields[i].Item1.Name}");
-					il.Emit(OpCodes.Call, module.GetMethod(typeof(LevelEditorLogger), "Log", typeof(object)));
+				il.Emit(OpCodes.Ldstr, $"Serializing component {baseType.FullName}");
+				il.Emit(OpCodes.Call, baseType.Module.GetMethod(typeof(LevelEditorLogger), "Log", typeof(object)));
 #endif
 
-					Instruction[] readMethod = FormatterHelper.GetReadValue(fields[i].Item1.FieldType, resolverVariable: resolverVar);
-					il.Append(readMethod);
-					Instruction finish = il.EmitStloc(localFields[i]);
-					ifBreaks.Add(finish);
+				il.EmitLdarg(writer);
+				il.Emit(OpCodes.Ldc_I4, properties.Count * 2);
+				il.Emit(OpCodes.Call, baseType.Module.GetMethod(typeof(MessagePackWriter), "WriteArrayHeader", typeof(int)));
+
+				MethodReference getResolver = baseType.Module.GetMethod<MessagePackSerializerOptions>("get_Resolver");
+
+				for (int i = 0; i < properties.Count; i++)
+				{
+					il.EmitLdarg(writer);
+					il.EmitLdarg(value);
+					il.Emit(OpCodes.Ldfld, wrapperData.wrapper.GetField(properties[i].Name));
+					FieldReference item1 = baseType.Module.ImportReference(typeof(ValueTuple<,>).GetField("Item1"));
+					item1.DeclaringType = baseType.Module.ImportReference(typeof(ValueTuple<,>)).MakeGenericInstanceType(baseType.Module.GetTypeReference<int>(), properties[i].FieldTypeComponentAware);
+					il.Emit(OpCodes.Ldfld, baseType.Module.ImportReference(item1));
+					il.Emit(OpCodes.Call, baseType.Module.GetMethod(typeof(MessagePackWriter), "WriteInt32", typeof(int)));
+					
+#if ALE_DEBUG
+					// LevelEditorLogger.Log
+					il.Emit(OpCodes.Ldstr, "Writing value | ID: {0} | Value: {1}");
+					il.EmitLdarg(value);
+					il.Emit(OpCodes.Ldfld, wrapperData.wrapper.GetField(properties[i].Name));
+					il.Emit(OpCodes.Ldfld, item1);
+					il.Emit(OpCodes.Box, baseType.Module.GetTypeReference<int>());
+					il.EmitLdarg(value);
+					FieldReference item2 = baseType.Module.ImportReference(typeof(ValueTuple<,>).GetField("Item2"));
+					item2.DeclaringType = baseType.Module.ImportReference(typeof(ValueTuple<,>)).MakeGenericInstanceType(baseType.Module.GetTypeReference<int>(), properties[i].FieldTypeComponentAware);
+					il.Emit(OpCodes.Ldfld, wrapperData.wrapper.GetField(properties[i].Name));
+					il.Emit(OpCodes.Ldfld, item2);
+					if (properties[i].FieldTypeComponentAware.IsValueType)
+					{
+						il.Emit(OpCodes.Box, properties[i].FieldTypeComponentAware);
+					}
+					il.Emit(OpCodes.Call, baseType.Module.GetMethod<string>("Format", typeof(string), typeof(object), typeof(object)));
+					il.Emit(OpCodes.Call, baseType.Module.GetMethod(typeof(LevelEditorLogger), "Log", typeof(object)));
+#endif
+					
+					il.Append(FormatterHelper.GetWriteValue(properties[i].FieldTypeComponentAware, wrapperData.wrapper.GetField(properties[i].Name), false, getResolver, true));
 				}
 
 #if ALE_DEBUG
-				Instruction skipStart = Instruction.Create(OpCodes.Ldstr, "Skipping :: Span length: {0} Key: {1}");
-				il.Append(skipStart);
-				il.EmitLdloc(stringKey, true);
-				il.Emit(OpCodes.Call, module.GetMethod(typeof(ReadOnlySpan<byte>), "get_Length"));
-				il.Emit(OpCodes.Box, module.GetTypeReference<int>());
-				il.EmitLdloc(key);
-				il.Emit(OpCodes.Box, module.GetTypeReference<ulong>());
-				il.Emit(OpCodes.Call, module.GetMethod<string>("Format", typeof(string), typeof(object), typeof(object)));
-				il.Emit(OpCodes.Call, module.GetMethod(typeof(LevelEditorLogger), "Log", typeof(object)));
-				il.EmitLdarg(readerPara);
-#else
-				Instruction skipStart = il.EmitLdarg(readerPara);
+				il.Emit(OpCodes.Ldstr, $"Finished serializing component {baseType.FullName}");
+				il.Emit(OpCodes.Call, baseType.Module.GetMethod(typeof(LevelEditorLogger), "Log", typeof(object)));
 #endif
-				il.Emit(OpCodes.Call, module.GetMethod(typeof(MessagePackReader), "Skip"));
-				if (previous.Count == 2)
-				{
-					il.InsertAfter(previous[0], Instruction.Create(OpCodes.Bne_Un, skipStart)); // Length check
-					il.InsertAfter(previous[1], Instruction.Create(wasAdvanced ? OpCodes.Brfalse : OpCodes.Bne_Un, skipStart)); // Key check
-				}
-				else
-				{
-					throw new NotSupportedException($"Unknown amount of previous when going to skip. ({previous.Count})");
-				}
-
-				Instruction loopEnd = il.EmitLdloc(iVar);
-				il.EmitInt(1);
-				il.Emit(OpCodes.Add);
-				il.EmitStloc(iVar);
-
-				Instruction loopFinish = il.EmitLdloc(iVar);
-				il.EmitLdloc(length);
-				il.Emit(OpCodes.Blt, loopStart);
-
-				il.InsertAfter(beforeLoop, Instruction.Create(OpCodes.Br, loopFinish));
-				for (int i = 0; i < ifBreaks.Count; i++)
-				{
-					il.InsertAfter(ifBreaks[i], Instruction.Create(OpCodes.Br, loopEnd));
-				}
-
-				VariableDefinition result = m.AddLocalVariable(type);
-				VariableDefinition depth = m.AddLocalVariable<int>();
-
-				il.EmitLdloc(result, true);
-				il.Emit(OpCodes.Initobj, type);
-				il.EmitLdloc(result, true);
-				for (int i = 0; i < fields.Count; i++)
-				{
-					il.EmitLdloc(localFields[i]);
-					il.Emit(OpCodes.Stfld, fields[i].Item1);
-					il.EmitLdloc(result, i < fields.Count - 1);
-				}
-
-				il.EmitLdarg(readerPara);
-				il.Emit(OpCodes.Dup);
-				il.Emit(OpCodes.Call, module.GetMethod(typeof(MessagePackReader), "get_Depth"));
-				il.EmitStloc(depth);
-				il.EmitLdloc(depth);
-				il.EmitInt(1);
-				il.Emit(OpCodes.Sub);
-				il.Emit(OpCodes.Call, module.GetMethod(typeof(MessagePackReader), "set_Depth"));
 
 				il.Emit(OpCodes.Ret);
 
-				m.SetVariableName(resolverVar, "resolver");
-				m.SetVariableName(length, "length");
-				m.SetVariableName(iVar, "i");
-				m.SetVariableName(stringKey, "stringKey");
-				m.SetVariableName(key, "key");
-				m.SetVariableName(result, "result");
-				m.SetVariableName(depth, "depth");
+				resolver.AddWrapperFormatter(formatter, wrapperData.wrapper, baseType);
 
-				for (int i = 0; i < localFields.Count; i++)
+				m.EndEdit();
+			}
+
+			void CreateDeserializeMethod()
+			{
+				var m = formatter.AddMethod("Deserialize",
+					MethodAttributes.Public | MethodAttributes.Final | MethodAttributes.HideBySig | MethodAttributes.NewSlot | MethodAttributes.Virtual,
+					wrapperData.wrapper);
+
+				ParameterDefinition reader = m.AddParameter(baseType.Module.GetTypeReference(typeof(MessagePackReader).MakeByRefType()), "reader");
+				m.AddParameter(baseType.Module.GetTypeReference<MessagePackSerializerOptions>(), "options");
+
+				MethodReference getResolver = baseType.Module.GetMethod<MessagePackSerializerOptions>("get_Resolver");
+
+
+				ILProcessor il = m.BeginEdit();
+				Instruction dummy = Instruction.Create(OpCodes.Ret);
+			
+				VariableDefinition lengthVar = m.AddLocalVariable<int>("length");
+
+				m.Body.InitLocals = true;
+
+				il.Emit(OpCodes.Ldarg_2);
+				il.Emit(OpCodes.Callvirt, baseType.Module.GetMethod<MessagePackSerializerOptions>("get_Security"));
+				il.Emit(OpCodes.Ldarg_1);
+				il.Emit(OpCodes.Callvirt, baseType.Module.GetMethod<MessagePackSecurity>("DepthStep", typeof(MessagePackReader).MakeByRefType()));
+				il.Emit(OpCodes.Ldarg_1);
+				il.Emit(OpCodes.Call, baseType.Module.GetMethod(typeof(MessagePackReader), "ReadArrayHeader"));
+				il.EmitStloc(lengthVar);
+
+				VariableDefinition maskVar = m.AddLocalVariable(wrapperData.dirtyMaskType, "dirtyMask");
+				il.EmitInt(0);
+				il.Emit(OpCodes.Conv_I8);
+				il.EmitStloc(maskVar);
+
+				List<VariableDefinition> localFields = new List<VariableDefinition>();
+
+				for (int i = 0; i < properties.Count; i++)
 				{
-					m.SetVariableName(localFields[i], $"__{fields[i].Item1.Name}__");
+					VariableDefinition v = m.AddLocalVariable(properties[i].FieldTypeComponentAware, properties[i].Name);
+					localFields.Add(v);
+
+					if (properties[i].IsValueType && !properties[i].IsPrimitive && !properties[i].IsEnum)
+					{
+						il.EmitLdloc(v, true);
+					}
+
+					il.EmitDefaultValue(properties[i].FieldTypeComponentAware);
+
+					if (!properties[i].IsValueType || properties[i].IsPrimitive || properties[i].IsEnum)
+					{
+						il.EmitStloc(v);
+					}
 				}
 
-				m.Body.Optimize();
+				VariableDefinition loopIndex = m.AddLocalVariable<int>("loopIndex");
+				VariableDefinition idVar = m.AddLocalVariable<int>("id");
+
+				il.EmitInt(0);
+				Instruction beforeLoop = il.EmitStloc(loopIndex);
+
+				List<Instruction> readFinishes = new List<Instruction>();
+
+				Instruction loopStart = il.EmitLdloc(loopIndex);
+				il.EmitInt(2);
+				Instruction remainder = Instruction.Create(OpCodes.Rem);
+				il.Append(remainder);
+
+				Instruction previous;
+				Instruction[] idRead = FormatterHelper.GetReadValue(idVar.VariableType, getResolver);
+
+				il.Append(idRead);
+
+				if (properties.Count > 1)
+				{
+					il.EmitStloc(idVar);
+					if (properties[0].Id == 0)
+					{
+						previous = il.EmitLdloc(idVar);
+					}
+					else
+					{
+						il.EmitLdloc(idVar);
+						previous = il.EmitInt(properties[0].Id);
+					}
+				}
+				else
+				{
+					if (properties[0].Id == 0)
+					{
+						previous = idRead[idRead.Length - 1];
+					}
+					else
+					{
+						previous = il.EmitInt(properties[0].Id);
+					}
+				}
+
+				if (properties.Count == 1)
+				{
+					il.Append(FormatterHelper.GetReadValue(properties[0].FieldTypeComponentAware, getResolver));
+					il.EmitStloc(localFields[0]);
+					
+					// dirtyMask |= Wrapper.DirtyMask.Value;
+					il.EmitLdloc(maskVar);
+					il.EmitInt(1 << 0);
+					il.Emit(OpCodes.Conv_I8);
+					il.Emit(OpCodes.Or);
+					Instruction finish = il.EmitStloc(maskVar);
+					readFinishes.Add(finish);
+				}
+				else
+				{
+					for (int i = 0; i < properties.Count; i++)
+					{
+						if (i != 0)
+						{
+							Instruction ifStart = il.EmitLdloc(idVar);
+							il.InsertAfter(previous, Instruction.Create(properties[i - 1].Id == 0 ? OpCodes.Brtrue : OpCodes.Bne_Un, ifStart));
+
+							previous = properties[i].Id != 0 ? il.EmitInt(properties[i].Id) : ifStart;
+						}
+
+						il.Append(FormatterHelper.GetReadValue(properties[i].FieldTypeComponentAware, getResolver));
+						il.EmitStloc(localFields[i]);
+						
+						// dirtyMask |= Wrapper.DirtyMask.Value;
+						il.EmitLdloc(maskVar);
+						il.EmitInt(1 << i);
+						il.Emit(OpCodes.Conv_I8);
+						il.Emit(OpCodes.Or);
+						Instruction finish = il.EmitStloc(maskVar);
+						
+						readFinishes.Add(finish);
+					}
+				}
+
+				Instruction skipStart = il.EmitLdarg(reader);
+				il.Emit(OpCodes.Call, baseType.Module.GetMethod(typeof(MessagePackReader), "Skip"));
+
+				// Insert jump to skip on last if check.
+				il.InsertAfter(previous, Instruction.Create(properties[properties.Count - 1].Id == 0 ? OpCodes.Brtrue : OpCodes.Bne_Un, skipStart));
+
+				Instruction loopFinish = il.EmitLdloc(loopIndex);
+				il.EmitInt(1);
+				il.Emit(OpCodes.Add);
+				il.EmitStloc(loopIndex);
+
+				Instruction loopEnd = il.EmitLdloc(loopIndex);
+				il.EmitLdloc(lengthVar);
+				il.Emit(OpCodes.Blt, loopStart);
+
+				il.InsertAfter(beforeLoop, Instruction.Create(OpCodes.Br, loopEnd));
+				il.InsertAfter(remainder, Instruction.Create(OpCodes.Brtrue, loopFinish));
+
+				for (int i = 0; i < readFinishes.Count; i++)
+				{
+					il.InsertAfter(readFinishes[i], Instruction.Create(OpCodes.Br, loopFinish));
+				}
+
+				VariableDefinition depthVar = m.AddLocalVariable<int>("depth");
+
+				il.Emit(OpCodes.Ldarg_1);
+				il.Emit(OpCodes.Dup);
+				il.Emit(OpCodes.Call, baseType.Module.GetMethod(typeof(MessagePackReader), "get_Depth"));
+				il.EmitStloc(depthVar);
+				il.EmitLdloc(depthVar);
+				il.EmitInt(1);
+				il.Emit(OpCodes.Sub);
+				il.Emit(OpCodes.Call, baseType.Module.GetMethod(typeof(MessagePackReader), "set_Depth", typeof(int)));
+				il.EmitLdloc(maskVar);
+				for (int i = 0; i < properties.Count; i++)
+				{
+					il.EmitLdloc(localFields[i]);
+				}
+
+				il.Emit(OpCodes.Newobj, wrapperData.wrapperConstructor);
+
+				il.Emit(OpCodes.Ret);
+
+				m.EndEdit();
 			}
 		}
 	}

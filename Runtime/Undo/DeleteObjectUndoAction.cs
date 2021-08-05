@@ -31,12 +31,11 @@ namespace Hertzole.ALE
 			
 			for (int i = 0; i < exposed.Length; i++)
 			{
-				Debug.Log($"Apply wrapper for {exposed[i]} {savedValues[i]}");
 				exposed[i].ApplyWrapper(savedValues[i], true);
 			}
 		}
 
-		public void Execute(ILevelEditorUndo undo)
+		public void Redo(ILevelEditorUndo undo)
 		{
 			if(LevelEditorWorld.TryGetObject(targetInstanceId, out var target))
 			{

@@ -30,8 +30,8 @@ namespace Hertzole.ALE
 
         private int depth = 0;
 
-        private ExposedProperty property;
-        private IExposedToLevelEditor exposed;
+        private ExposedField boundProperty;
+        private IExposedToLevelEditor boundComponent;
         
 #if ALE_LOCALIZATION
         private LocalizeStringEvent localStringComp;
@@ -54,17 +54,14 @@ namespace Hertzole.ALE
 
         public string Label { get { return label.text; } set { label.text = value; } }
 
-        public ExposedProperty BoundProperty { get { return property; } }
-        public IExposedToLevelEditor BoundComponent { get { return exposed; } }
+        public ExposedField BoundProperty { get { return boundProperty; } }
+        public IExposedToLevelEditor BoundComponent { get { return boundComponent; } }
 
         public ILevelEditorUI UI { get; set; }
 
-        public object BeginEditValue { get; set; }
-
         public object RawValue
         {
-            get { return exposed.GetValue(property.ID); }
-            set { exposed.SetValue(property.ID, value, true); }
+            get { return boundComponent.GetValue(boundProperty.ID); }
         }
 
         private void Awake()
@@ -82,12 +79,12 @@ namespace Hertzole.ALE
 
         protected virtual void OnAwake() { }
 
-        public void Bind(ExposedProperty property, IExposedToLevelEditor exposed)
+        public void Bind(ExposedField property, IExposedToLevelEditor exposed)
         {
             exposed.OnValueChanged += OnExposedValueChanged;
 
-            this.property = property;
-            this.exposed = exposed;
+            boundProperty = property;
+            boundComponent = exposed;
             
 #if ALE_LOCALIZATION
             if (!string.IsNullOrWhiteSpace(property.CustomName) && localStringComp != null)
@@ -109,11 +106,11 @@ namespace Hertzole.ALE
             SetFieldValue(exposed.GetValue(property.ID));
         }
 
-        protected virtual void OnBound(ExposedProperty property, IExposedToLevelEditor exposed) { }
+        protected virtual void OnBound(ExposedField property, IExposedToLevelEditor exposed) { }
 
         public void Unbind()
         {
-            exposed.OnValueChanged -= OnExposedValueChanged;
+            boundComponent.OnValueChanged -= OnExposedValueChanged;
 
             OnUnbound();
         }
@@ -122,7 +119,7 @@ namespace Hertzole.ALE
 
         private void OnExposedValueChanged(int id, object value)
         {
-            if (id == property.ID)
+            if (id == boundProperty.ID)
             {
                 SetFieldValue(value);
             }
@@ -146,19 +143,19 @@ namespace Hertzole.ALE
 
         protected virtual void SetFieldValue(object value) { }
 
-        protected void SetPropertyValue(object value, bool undo = false)
+        protected void BeginEdit()
         {
-            if (undo && UI.LevelEditor.Undo != null)
-            {
-                UI.LevelEditor.Undo.AddAction(new SetValueUndoAction(exposed, property.ID, BeginEditValue, value), false);
-            }
-
-            exposed.SetValue(property.ID, value, true);
+            boundComponent.BeginEdit(boundProperty.ID);
         }
 
-        protected virtual void BeginEdit()
+        protected void ModifyPropertyValue(object value, bool notify)
         {
-            BeginEditValue = RawValue;
+            boundComponent.ModifyValue(value, notify);
+        }
+
+        protected void EndEdit(bool notify = true, bool undo = true)
+        {
+            boundComponent.EndEdit(notify, undo ? UI.LevelEditor.Undo : null);
         }
 
 #if UNITY_EDITOR
@@ -199,7 +196,7 @@ namespace Hertzole.ALE
 #endif
     public abstract class LevelEditorInspectorField<T> : LevelEditorInspectorField
     {
-        public T Value { get { return (T)RawValue; } set { RawValue = value; } }
+        public T Value { get { return (T)RawValue; } }
 
         public override bool SupportsType(Type type, bool isArray)
         {
@@ -227,11 +224,11 @@ namespace Hertzole.ALE
             SetFieldValue((T)value);
         }
 
-        public abstract void SetFieldValue(T value);
+        protected abstract void SetFieldValue(T value);
 
-        protected void SetPropertyValue(T value, bool undo = false)
+        protected void ModifyPropertyValue(T value, bool notify)
         {
-            SetPropertyValue((object)value, undo);
+            ModifyPropertyValue((object) value, notify);
         }
     }
 }
