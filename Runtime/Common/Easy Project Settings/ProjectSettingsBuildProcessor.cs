@@ -15,20 +15,19 @@ namespace Hertzole.ALE
 		int IOrderedCallback.callbackOrder { get { return -10000; } }
 
 		private readonly List<ScriptableObject> objects = new List<ScriptableObject>();
-		private readonly List<Object> originalPreloadedAssets = new List<Object>();
+		private readonly List<Object> preloadedAssets = new List<Object>();
 		private readonly List<string> names = new List<string>();
 
 		void IPreprocessBuildWithReport.OnPreprocessBuild(BuildReport report)
 		{
 			objects.Clear();
 			names.Clear();
-			originalPreloadedAssets.Clear();
+			preloadedAssets.Clear();
 
 			objects.Add(ALESettings.Get());
 			names.Add(ALESettings.Get().SettingName);
 
-			originalPreloadedAssets.AddRange(PlayerSettings.GetPreloadedAssets());
-			List<Object> preloadedAssets = new List<Object>(originalPreloadedAssets);
+			preloadedAssets.AddRange(PlayerSettings.GetPreloadedAssets());
 
 			for (int i = 0; i < objects.Count; i++)
 			{
@@ -53,15 +52,27 @@ namespace Hertzole.ALE
 
 		void IPostprocessBuildWithReport.OnPostprocessBuild(BuildReport report)
 		{
-			for (int i = 0; i < objects.Count; i++)
+			AssetDatabase.Refresh(ImportAssetOptions.ForceUpdate);
+			
+			preloadedAssets.Clear();
+			preloadedAssets.AddRange(PlayerSettings.GetPreloadedAssets());
+
+			for (int i = preloadedAssets.Count - 1; i >= 0; i--)
 			{
-				string assetPath = $"Assets/{ProjectSettingsConsts.PACKAGE_NAME}_{names[i]}.asset";
-				AssetDatabase.DeleteAsset(assetPath);
-				AssetDatabase.Refresh(ImportAssetOptions.ForceUpdate);
+				for (int j = 0; j < objects.Count; j++)
+				{
+					if (preloadedAssets[i] == objects[j])
+					{
+						preloadedAssets.RemoveAt(i);
+						string path = AssetDatabase.GetAssetPath(objects[j]);
+						objects.RemoveAt(j);
+						AssetDatabase.DeleteAsset(path);
+					}
+				}
 			}
 
 			// Must delay the call for it to work.
-			EditorApplication.delayCall += () => { PlayerSettings.SetPreloadedAssets(originalPreloadedAssets.ToArray()); };
+			EditorApplication.delayCall += () => { PlayerSettings.SetPreloadedAssets(preloadedAssets.ToArray()); AssetDatabase.SaveAssets(); };
 
 			objects.Clear();
 			names.Clear();
