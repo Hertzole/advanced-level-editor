@@ -1,5 +1,4 @@
-﻿using System;
-using Mono.Cecil;
+﻿using Mono.Cecil;
 using Mono.Cecil.Cil;
 
 namespace Hertzole.ALE.CodeGen
@@ -12,6 +11,8 @@ namespace Hertzole.ALE.CodeGen
         public RegisterTypeProcessor TypeRegister { get; set; }
         public ResolverProcessor Resolver { get; set; }
         public FormatterProcessor Formatters { get; set; }
+        
+        public bool IsBuildingPlayer { get; set; }
 
         public abstract bool IsValidClass(TypeDefinition type);
 

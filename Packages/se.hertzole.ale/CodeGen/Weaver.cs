@@ -35,12 +35,22 @@ namespace Hertzole.ALE.CodeGen
             diagnostics.AddError(sequencePoint, message);
         }
 
-        public void ProcessAssembly(ModuleDefinition module)
+        public void ProcessAssembly(ModuleDefinition module, string[] defines)
         {
             RegisterTypeProcessor typeRegister = new RegisterTypeProcessor(module);
             ResolverProcessor resolver = new ResolverProcessor(module);
             FormatterProcessor formatter = new FormatterProcessor(this, module, resolver);
             CustomDataProcessor customData = new CustomDataProcessor(this, module, typeRegister, resolver, formatter);
+
+            bool isBuildingPlayer = true;
+            for (int i = 0; i < defines.Length; i++)
+            {
+                if (defines[i] == "UNITY_EDITOR")
+                {
+                    isBuildingPlayer = false;
+                    break;
+                }
+            }
 
             for (int i = 0; i < processors.Length; i++)
             {
@@ -49,6 +59,7 @@ namespace Hertzole.ALE.CodeGen
                 processors[i].TypeRegister = typeRegister;
                 processors[i].Resolver = resolver;
                 processors[i].Formatters = formatter;
+                processors[i].IsBuildingPlayer = isBuildingPlayer;
             }
 
             IEnumerable<TypeDefinition> types = module.GetTypes();
@@ -76,7 +87,7 @@ namespace Hertzole.ALE.CodeGen
             customData.EndEditing();
             typeRegister.EndEditing();
             formatter.EndEditing(); // Important to be before resolver!
-            resolver.EndEditing();
+            resolver.EndEditing(isBuildingPlayer);
         }
     }
 }
