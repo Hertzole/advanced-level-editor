@@ -15,10 +15,8 @@ namespace Hertzole.ALE
 	}
 #endif
 
-	public interface ILevelEditorInspector
+	public interface ILevelEditorInspector : ILevelEditorPanel
 	{
-		void Initialize(ILevelEditorUI ui);
-
 		void BindObject(ILevelEditorObject target);
 
 		LevelEditorInspectorField GetField(Type fieldType, Transform parent);

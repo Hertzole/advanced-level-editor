@@ -1,35 +1,26 @@
-﻿using System;
-
-namespace Hertzole.ALE
+﻿namespace Hertzole.ALE
 {
-    public interface ILevelEditorUI
-    {
-        ILevelEditor LevelEditor { get; }
-        ILevelEditorSaveModal SaveModal { get; }
-        ILevelEditorLoadModal LoadModal { get; }
-        ILevelEditorInspector InspectorPanel { get; }
-        ILevelEditorResourceView ResourcePanel { get; }
-        ILevelEditorHierarchy HierarchyPanel { get; }
+	public interface ILevelEditorUI : ILevelEditorPlayModeObject
+	{
+		ILevelEditor LevelEditor { get; }
+		
+		ILevelEditorInspector InspectorPanel { get; }
+		ILevelEditorResourceView ResourcePanel { get; }
+		ILevelEditorHierarchy HierarchyPanel { get; }
+		
+		ILevelEditorSaveModal SaveModal { get; }
+		ILevelEditorLoadModal LoadModal { get; }
+		ILevelEditorMessageModal MessageModal { get; }
 
-        ILevelEditorColorPickerWindow ColorPickerWindow { get; }
-        ILevelEditorObjectPickerWindow ObjectPickerWindow { get; }
+		ILevelEditorColorPickerWindow ColorPickerWindow { get; }
+		ILevelEditorObjectPickerWindow ObjectPickerWindow { get; }
 
-        void Initialize(ILevelEditor levelEditor);
+		void ToggleInspectorPanel(bool toggle, bool instant);
+		void ToggleResourcePanel(bool toggle, bool instant);
+		void ToggleHierarchyPanel(bool toggle, bool instant);
 
-        void ToggleSaveModal(bool toggle);
-
-        void ToggleLoadModal(bool toggle);
-
-        void ToggleResourcePanel(bool toggle);
-
-        void ToggleInspectorPanel(bool toggle);
-
-        void ShowNotification(string title, string text, string yesButton, string noButton, Action onClickYes, Action onClickNo);
-
-        void CloseNotification();
-
-        void OnPlayModeStart();
-
-        void OnPlayModeStop();
-    }
+		void ToggleSaveModal(bool toggle, bool instant);
+		void ToggleLoadModal(bool toggle, bool instant);
+		void ToggleMessageModal(bool toggle, bool instant);
+	}
 }

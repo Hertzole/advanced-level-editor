@@ -5,47 +5,114 @@ using UnityEngine.UI;
 
 namespace Hertzole.ALE
 {
-    public class LevelEditorSaveModal : MonoBehaviour, ILevelEditorSaveModal
-    {
-        [SerializeField]
-        private TMP_InputField nameField = null;
-        [SerializeField]
-        private Button saveButton = null;
-        [SerializeField]
-        private Button closeButton = null;
-        
-        [Space]
-        
-        [SerializeField] 
-        private bool applyLevelNameOnLoad = true;
+	public class LevelEditorSaveModal : MonoBehaviour, ILevelEditorSaveModal
+	{
+		[SerializeField]
+		private TMP_InputField nameField;
+		[SerializeField]
+		private Button saveButton;
+		[SerializeField]
+		private Button cancelButton;
+		[SerializeField]
+		private Button closeButton;
 
-        public bool ApplyLevelNameOnLoad { get { return applyLevelNameOnLoad; } }
-        public string LevelName { get { return nameField.text; } set { nameField.text = value; } }
+		[Space]
+		[SerializeField]
+		private bool applyLevelNameOnLoad = true;
+		[SerializeField]
+		private bool closeOnSave = true;
+		[SerializeField]
+		private bool askBeforeOverride = true;
 
-        public event Action<string> OnClickSave;
-        public event Action OnClickClose;
+		[Space]
+		[SerializeField]
+		[RequireType(typeof(ILevelEditorSaveManager))]
+		private GameObject saveManager;
 
-        GameObject ILevelEditorSaveModal.MyGameObject { get { return gameObject; } }
+		public ILevelEditorSaveManager SaveManager { get; set; }
 
-        public void Initialize()
-        {
-            nameField.onValueChanged.AddListener(x => ValidateSaveButton());
-            saveButton.onClick.AddListener(() =>
-            {
-                OnClickSave?.Invoke(nameField.text);
-                Close();
-            });
-            closeButton.onClick.AddListener(Close);
-        }
+		public bool ApplyLevelNameOnLoad { get { return applyLevelNameOnLoad; } set { applyLevelNameOnLoad = value; } }
 
-        private void ValidateSaveButton()
-        {
-            saveButton.interactable = !string.IsNullOrWhiteSpace(nameField.text);
-        }
+		public string LevelName { get { return nameField.text; } set { nameField.text = value; } }
 
-        public void Close()
-        {
-            OnClickClose?.Invoke();
-        }
-    }
+		GameObject ILevelEditorModal.MyGameObject { get { return gameObject; } }
+
+		public event Action<string> OnSave;
+		public event Action OnClose;
+
+		private void Awake()
+		{
+			if (nameField != null)
+			{
+				nameField.onValueChanged.AddListener(x => ValidateSaveButton());
+			}
+
+			if (saveManager != null)
+			{
+				SaveManager = saveManager.NeedComponent<ILevelEditorSaveManager>();
+				SaveManager.OnLevelLoaded += OnLevelLoaded;
+			}
+
+			if (saveButton != null)
+			{
+				saveButton.onClick.AddListener(() =>
+				{
+					if (SaveManager != null)
+					{
+						SaveManager.SaveLevel(nameField.text);
+					}
+
+					OnSave?.Invoke(nameField.text);
+					if (closeOnSave)
+					{
+						Close();
+					}
+
+					//TODO: Ask before override.
+					LevelEditorLogger.LogTodo("Ask before override");
+				});
+			}
+
+			if (cancelButton != null)
+			{
+				cancelButton.onClick.AddListener(Close);
+			}
+
+			if (closeButton != null)
+			{
+				closeButton.onClick.AddListener(Close);
+			}
+			
+			ValidateSaveButton();
+		}
+
+		private void OnDestroy()
+		{
+			if (SaveManager != null)
+			{
+				SaveManager.OnLevelLoaded -= OnLevelLoaded;
+			}
+		}
+
+		private void OnLevelLoaded(object sender, LevelEventArgs e)
+		{
+			if (applyLevelNameOnLoad)
+			{
+				nameField.SetTextWithoutNotify(e.Data.name);
+			}
+		}
+
+		private void ValidateSaveButton()
+		{
+			if (saveButton != null)
+			{
+				saveButton.interactable = !string.IsNullOrWhiteSpace(nameField.text);
+			}
+		}
+
+		public void Close()
+		{
+			OnClose?.Invoke();
+		}
+	}
 }

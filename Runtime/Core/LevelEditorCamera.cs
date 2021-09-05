@@ -174,7 +174,7 @@ namespace Hertzole.ALE
                 {
                     previousMousePosition = realInput.MousePosition;
                 }
-
+            
                 return;
             }
 

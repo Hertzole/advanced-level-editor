@@ -10,6 +10,9 @@ namespace Hertzole.ALE
     {
         [SerializeField, RequireType(typeof(ILevelEditorResourceView))]
         private GameObject resourcePanel = null;
+        
+        [SerializeField] 
+        private ManipulationHandle handle = default;
 
         private ILevelEditorResourceView realResourcePanel;
 
@@ -34,6 +37,7 @@ namespace Hertzole.ALE
             {
                 ILevelEditorObject obj = ObjectManager.CreateObject(e.Resource);
                 Selection.Selection = obj;
+                // handle.AddTarget(obj.MyGameObject.transform);
             }
 
         }

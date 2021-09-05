@@ -497,6 +497,8 @@ namespace Hertzole.ALE
             dummyPanel = PanelUtils.Internal.CreatePanel(null, this, panelPrefab);
             dummyPanel.gameObject.name = "DummyPanel";
             dummyPanel.CanvasGroup.alpha = 0f;
+            dummyPanel.CanvasGroup.interactable = false;
+            dummyPanel.CanvasGroup.blocksRaycasts = false;
             dummyPanel.Internal.SetDummy(minimumFreeSpace);
 
             RootPanelGroup = new PanelGroup(this, PanelDirection.Right);

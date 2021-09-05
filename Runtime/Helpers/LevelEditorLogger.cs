@@ -24,6 +24,11 @@ namespace Hertzole.ALE
             Debug.LogError($"[ALE] {message}");
         }
 
+        [Conditional("ALE_DEBUG")]
+        public static void LogTodo(object message)
+        {
+            Debug.Log($"<color=green><i>TODO: {message}</i></color>");
+        }
 
         /// <summary>
         /// Only logs messages if DEBUG script define is present. Usually only in development builds and Unity editor.

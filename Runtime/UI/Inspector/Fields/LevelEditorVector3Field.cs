@@ -8,6 +8,7 @@
 
 #if !STRIP
 using System;
+using System.Globalization;
 using TMPro;
 using UnityEngine;
 using UnityEngine.Events;
@@ -160,9 +161,9 @@ namespace Hertzole.ALE
                         v = (Vector3)value;
                         break;
                 }
-                xField.SetTextWithoutNotify(v.x.ToString());
-                yField.SetTextWithoutNotify(v.y.ToString());
-                zField.SetTextWithoutNotify(v.z.ToString());
+                xField.SetTextWithoutNotify(v.x.ToString(CultureInfo.InvariantCulture));
+                yField.SetTextWithoutNotify(v.y.ToString(CultureInfo.InvariantCulture));
+                zField.SetTextWithoutNotify(v.z.ToString(CultureInfo.InvariantCulture));
             }
         }
 
