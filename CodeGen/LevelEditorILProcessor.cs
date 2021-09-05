@@ -1,10 +1,12 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using Mono.Cecil;
 using Mono.Cecil.Cil;
 using Unity.CompilationPipeline.Common.Diagnostics;
 using Unity.CompilationPipeline.Common.ILPostProcessing;
+using UnityEditor;
 
 namespace Hertzole.ALE.CodeGen
 {
@@ -34,10 +36,7 @@ namespace Hertzole.ALE.CodeGen
 
 			diagnostics.Clear();
 
-			if (weaver == null)
-			{
-				weaver = new Weaver(diagnostics);
-			}
+			weaver ??= new Weaver(diagnostics);
 
 			AssemblyDefinition assemblyDefinition = AssemblyDefinitionFor(compiledAssembly);
 			if (assemblyDefinition == null)
@@ -49,7 +48,7 @@ namespace Hertzole.ALE.CodeGen
 			ModuleDefinition mainModule = assemblyDefinition.MainModule;
 			if (mainModule != null)
 			{
-				weaver.ProcessAssembly(mainModule);
+				weaver.ProcessAssembly(mainModule, compiledAssembly.Defines);
 			}
 			else
 			{

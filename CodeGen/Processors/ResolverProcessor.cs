@@ -6,12 +6,15 @@ using MessagePack.Formatters;
 using Mono.Cecil;
 using Mono.Cecil.Cil;
 using Mono.Cecil.Rocks;
+using UnityEditor;
 using UnityEngine;
 
 namespace Hertzole.ALE.CodeGen
 {
 	public class ResolverProcessor
 	{
+		private bool isBuildingPlayer;
+		
 		private readonly List<(TypeReference, TypeReference)> allFormatters = new List<(TypeReference, TypeReference)>();
 		private readonly List<TypeReference> customDataTypes = new List<TypeReference>();
 		private readonly List<TypeDefinition> enums = new List<TypeDefinition>();
@@ -56,8 +59,10 @@ namespace Hertzole.ALE.CodeGen
 			enums.Add(type);
 		}
 
-		public void EndEditing()
+		public void EndEditing(bool isBuilding)
 		{
+			this.isBuildingPlayer = isBuilding;
+			
 			for (int i = 0; i < wrapperFormatters.Count; i++)
 			{
 				allFormatters.Add((wrapperFormatters[i].Item1, wrapperFormatters[i].Item2));
@@ -135,8 +140,17 @@ namespace Hertzole.ALE.CodeGen
 			MethodDefinition m = new MethodDefinition("RegisterResolver", MethodAttributes.Private | MethodAttributes.HideBySig | MethodAttributes.Static,
 				module.GetTypeReference(typeof(void)));
 
-			CustomAttribute a = new CustomAttribute(module.GetConstructor<RuntimeInitializeOnLoadMethodAttribute>(typeof(RuntimeInitializeLoadType)));
-			a.ConstructorArguments.Add(new CustomAttributeArgument(module.GetTypeReference<RuntimeInitializeLoadType>(), RuntimeInitializeLoadType.BeforeSceneLoad));
+			CustomAttribute a;
+
+			if (isBuildingPlayer)
+			{
+				a = new CustomAttribute(module.GetConstructor<RuntimeInitializeOnLoadMethodAttribute>(typeof(RuntimeInitializeLoadType)));
+				a.ConstructorArguments.Add(new CustomAttributeArgument(module.GetTypeReference<RuntimeInitializeLoadType>(), RuntimeInitializeLoadType.BeforeSceneLoad));
+			}
+			else
+			{
+				a = new CustomAttribute(module.GetConstructor<InitializeOnLoadMethodAttribute>());
+			}
 			m.CustomAttributes.Add(a);
 
 			MethodReference cctor = resolver.GetMethod(".cctor");
