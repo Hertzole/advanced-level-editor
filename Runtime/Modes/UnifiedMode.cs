@@ -11,8 +11,8 @@ namespace Hertzole.ALE
         [SerializeField, RequireType(typeof(ILevelEditorResourceView))]
         private GameObject resourcePanel = null;
         
-        [SerializeField] 
-        private ManipulationHandle handle = default;
+        // [SerializeField] 
+        // private ManipulationHandle handle = default;
 
         private ILevelEditorResourceView realResourcePanel;
 
