@@ -3,230 +3,273 @@ using UnityEngine;
 
 namespace Hertzole.ALE
 {
-    public class LevelEditorHierarchy : MonoBehaviour, ILevelEditorHierarchy
-    {
-        [SerializeField]
-        private HierarchyTree treeControl = null;
+	public class LevelEditorHierarchy : MonoBehaviour, ILevelEditorHierarchy
+	{
+		[SerializeField]
+		[RequireType(typeof(ILevelEditor))]
+		private GameObject levelEditor;
 
-        private bool selectedThroughUI = false;
-        private bool selectedThroughObjectManager = false;
-        private bool loadingLevel = false;
+		[Space]
+		[SerializeField]
+		private HierarchyTree treeControl;
+		private bool loadingLevel;
+		private bool selectedThroughObjectManager;
 
-        private ILevelEditor levelEditor;
+		private bool selectedThroughUI;
 
-        public HierarchyTree TreeControl { get { return treeControl; } set { treeControl = value; } }
+		protected ILevelEditor realLevelEditor;
 
-        private void Awake()
-        {
-            treeControl.Initialize(
-            (go) =>
-            {
-                return (go == null || go.Parent == null) ? null : go.Parent;
-            },
-            (go) =>
-            {
-                List<ILevelEditorObject> result = new List<ILevelEditorObject>();
+		public HierarchyTree TreeControl { get { return treeControl; } set { treeControl = value; } }
 
-                if (go.HasChildren())
-                {
-                    for (int i = 0; i < go.Children.Count; i++)
-                    {
-                        result.Add(go.Children[i]);
-                    }
-                }
+		public ILevelEditor LevelEditor
+		{
+			get { return realLevelEditor; }
+			set
+			{
+				if (realLevelEditor != value)
+				{
+					SetLevelEditor(value);
+				}
+			}
+		}
 
-                return result;
-            });
+		GameObject ILevelEditorPanel.MyGameObject { get { return gameObject; } }
 
-            treeControl.OnBindItem += OnBindItem;
-            treeControl.OnReparent += OnReparentItem;
-            treeControl.OnItemExpandingCollapsing += OnItemExpanding;
-            treeControl.OnSelectionChanged += OnTreeSelectionChanged;
-        }
+		private void Awake()
+		{
+			treeControl.Initialize(
+				go => { return go == null || go.Parent == null ? null : go.Parent; },
+				go =>
+				{
+					List<ILevelEditorObject> result = new List<ILevelEditorObject>();
 
-        public void Initialize(ILevelEditor levelEditor)
-        {
-            this.levelEditor = levelEditor;
-            levelEditor.SaveManager.OnLevelLoading += OnLevelLoading;
-            levelEditor.SaveManager.OnLevelLoaded += OnLevelLoaded;
-            levelEditor.ObjectManager.OnCreatedObject += OnObjectManagerCreatedObject;
-            levelEditor.ObjectManager.OnDeletedObject += OnObjectManagerDeleteObject;
-            levelEditor.Selection.OnSelectionChanged += OnSelectionChanged;
+					if (go.HasChildren())
+					{
+						for (int i = 0; i < go.Children.Count; i++)
+						{
+							result.Add(go.Children[i]);
+						}
+					}
 
-            treeControl.SetItems(levelEditor.ObjectManager.GetAllObjects());
-        }
+					return result;
+				});
 
-        private void OnLevelLoading(object sender, LevelSavingLoadingArgs e)
-        {
-            loadingLevel = true;
-        }
+			treeControl.OnBindItem += OnBindItem;
+			treeControl.OnReparent += OnReparentItem;
+			treeControl.OnItemExpandingCollapsing += OnItemExpanding;
+			treeControl.OnSelectionChanged += OnTreeSelectionChanged;
 
-        private void OnLevelLoaded(object sender, LevelEventArgs e)
-        {
-            treeControl.ClearItems();
+			if (levelEditor != null)
+			{
+				SetLevelEditor(levelEditor.NeedComponent<ILevelEditor>());
+			}
+		}
 
-            loadingLevel = false;
-            List<ILevelEditorObject> allObjects = levelEditor.ObjectManager.GetAllObjects();
-            for (int i = 0; i < allObjects.Count; i++)
-            {
-                if (allObjects[i].MyGameObject.transform.parent == null)
-                {
-                    treeControl.AddItem(allObjects[i], false);
-                }
-            }
+		protected virtual void SetLevelEditor(ILevelEditor l)
+		{
+			if (realLevelEditor != null)
+			{
+				realLevelEditor.SaveManager.OnLevelLoading -= OnLevelLoading;
+				realLevelEditor.SaveManager.OnLevelLoaded -= OnLevelLoaded;
+				realLevelEditor.ObjectManager.OnCreatedObject -= OnObjectManagerCreatedObject;
+				realLevelEditor.ObjectManager.OnDeletedObject -= OnObjectManagerDeleteObject;
+				realLevelEditor.Selection.OnSelectionChanged -= OnSelectionChanged;
 
-            treeControl.UpdateList();
-        }
+				realLevelEditor = null;
+			}
 
-        private void OnObjectManagerCreatedObject(object sender, LevelEditorObjectEvent args)
-        {
-            args.Object.OnStateChanged += OnObjectStateChanged;
-            if (!loadingLevel)
-            {
-                treeControl.AddItem(args.Object);
-            }
-        }
+			if (l != null)
+			{
+				realLevelEditor = l;
+				l.SaveManager.OnLevelLoading += OnLevelLoading;
+				l.SaveManager.OnLevelLoaded += OnLevelLoaded;
+				l.ObjectManager.OnCreatedObject += OnObjectManagerCreatedObject;
+				l.ObjectManager.OnDeletedObject += OnObjectManagerDeleteObject;
+				l.Selection.OnSelectionChanged += OnSelectionChanged;
+				treeControl.SetItems(l.ObjectManager.GetAllObjects());
+			}
+		}
 
-        private void OnObjectManagerDeleteObject(object sender, LevelEditorObjectEvent args)
-        {
-            args.Object.OnStateChanged -= OnObjectStateChanged;
-            if (!loadingLevel)
-            {
-                treeControl.RemoveItem(args.Object);
-            }
-        }
+		private void OnLevelLoading(object sender, LevelSavingLoadingArgs e)
+		{
+			loadingLevel = true;
+		}
 
-        private void OnObjectStateChanged(object sender, LevelEditorObjectStateArgs e)
-        {
-            treeControl.RebindItem(sender);
-        }
+		private void OnLevelLoaded(object sender, LevelEventArgs e)
+		{
+			treeControl.ClearItems();
 
-        private void OnSelectionChanged(object sender, SelectionEvent e)
-        {
-            if (selectedThroughUI)
-            {
-                selectedThroughUI = false;
-                return;
-            }
+			if (realLevelEditor == null)
+			{
+				return;
+			}
 
-            selectedThroughObjectManager = true;
+			loadingLevel = false;
+			List<ILevelEditorObject> allObjects = realLevelEditor.ObjectManager.GetAllObjects();
+			for (int i = 0; i < allObjects.Count; i++)
+			{
+				if (allObjects[i].MyGameObject.transform.parent == null)
+				{
+					treeControl.AddItem(allObjects[i], false);
+				}
+			}
 
-            treeControl.SelectItem(e.NewObject);
-        }
+			treeControl.UpdateList();
+		}
 
-        private void OnBindItem(object sender, TreeBindItemEventArgs<HierarchyItem, ILevelEditorObject> e)
-        {
-            e.TreeItem.LabelText.text = e.Item.MyGameObject.name;
-            e.TreeItem.HasChildren = e.Item.HasChildren();
+		private void OnObjectManagerCreatedObject(object sender, LevelEditorObjectEvent args)
+		{
+			args.Object.OnStateChanged += OnObjectStateChanged;
+			if (!loadingLevel)
+			{
+				treeControl.AddItem(args.Object);
+			}
+		}
+
+		private void OnObjectManagerDeleteObject(object sender, LevelEditorObjectEvent args)
+		{
+			args.Object.OnStateChanged -= OnObjectStateChanged;
+			if (!loadingLevel)
+			{
+				treeControl.RemoveItem(args.Object);
+			}
+		}
+
+		private void OnObjectStateChanged(object sender, LevelEditorObjectStateArgs e)
+		{
+			treeControl.RebindItem(sender);
+		}
+
+		private void OnSelectionChanged(object sender, SelectionEvent e)
+		{
+			if (selectedThroughUI)
+			{
+				selectedThroughUI = false;
+				return;
+			}
+
+			selectedThroughObjectManager = true;
+
+			treeControl.SelectItem(e.NewObject);
+		}
+
+		private void OnBindItem(object sender, TreeBindItemEventArgs<HierarchyItem, ILevelEditorObject> e)
+		{
+			e.TreeItem.LabelText.text = e.Item.MyGameObject.name;
+			e.TreeItem.HasChildren = e.Item.HasChildren();
 
 #if UNITY_EDITOR
-            e.TreeItem.gameObject.name = $"Item - {e.Item.MyGameObject.name}";
+			e.TreeItem.gameObject.name = $"Item - {e.Item.MyGameObject.name}";
 #endif
-        }
+		}
 
-        private void OnReparentItem(object sender, TreeReparentEventArgs<ILevelEditorObject> e)
-        {
-            if (e.DraggingItem.Parent != null)
-            {
-                e.DraggingItem.Parent.RemoveChild(e.DraggingItem);
-            }
+		private void OnReparentItem(object sender, TreeReparentEventArgs<ILevelEditorObject> e)
+		{
+			if (e.DraggingItem.Parent != null)
+			{
+				e.DraggingItem.Parent.RemoveChild(e.DraggingItem);
+			}
 
-            switch (e.Action)
-            {
-                case ItemDropAction.SetLastChild:
-                    if (e.Target != null)
-                    {
-                        e.DraggingItem.MyGameObject.transform.SetParent(e.Target.MyGameObject.transform, true);
-                        e.DraggingItem.MyGameObject.transform.SetAsLastSibling();
-                        e.DraggingItem.Parent = e.Target;
-                        e.DraggingItem.Parent.AddChild(e.DraggingItem);
-                    }
-                    else
-                    {
-                        e.DraggingItem.MyGameObject.transform.SetParent(null, true);
-                        e.DraggingItem.Parent = null;
-                    }
-                    break;
-                case ItemDropAction.SetPreviousSibling:
-                    if (e.Target != null)
-                    {
-                        if (e.DraggingItem.Parent != e.Target.Parent)
-                        {
-                            e.DraggingItem.MyGameObject.transform.SetParent(e.Target.MyGameObject.transform.parent, true);
-                            e.DraggingItem.Parent = e.Target.Parent;
-                            if (e.DraggingItem.Parent != null)
-                            {
-                                e.DraggingItem.Parent.AddChild(e.DraggingItem);
-                            }
-                        }
+			switch (e.Action)
+			{
+				case ItemDropAction.SetLastChild:
+					if (e.Target != null)
+					{
+						e.DraggingItem.MyGameObject.transform.SetParent(e.Target.MyGameObject.transform, true);
+						e.DraggingItem.MyGameObject.transform.SetAsLastSibling();
+						e.DraggingItem.Parent = e.Target;
+						e.DraggingItem.Parent.AddChild(e.DraggingItem);
+					}
+					else
+					{
+						e.DraggingItem.MyGameObject.transform.SetParent(null, true);
+						e.DraggingItem.Parent = null;
+					}
 
-                        int targetIndex = e.Target.MyGameObject.transform.GetSiblingIndex();
-                        int currentIndex = e.DraggingItem.MyGameObject.transform.GetSiblingIndex();
+					break;
+				case ItemDropAction.SetPreviousSibling:
+					if (e.Target != null)
+					{
+						if (e.DraggingItem.Parent != e.Target.Parent)
+						{
+							e.DraggingItem.MyGameObject.transform.SetParent(e.Target.MyGameObject.transform.parent, true);
+							e.DraggingItem.Parent = e.Target.Parent;
+							if (e.DraggingItem.Parent != null)
+							{
+								e.DraggingItem.Parent.AddChild(e.DraggingItem);
+							}
+						}
 
-                        if (targetIndex > currentIndex)
-                        {
-                            e.DraggingItem.MyGameObject.transform.SetSiblingIndex(targetIndex - 1);
-                        }
-                        else
-                        {
-                            e.DraggingItem.MyGameObject.transform.SetSiblingIndex(targetIndex);
-                        }
-                    }
-                    break;
-                case ItemDropAction.SetNextSibling:
-                    if (e.Target != null)
-                    {
-                        int targetIndex = e.Target.MyGameObject.transform.GetSiblingIndex();
-                        int currentIndex = e.DraggingItem.MyGameObject.transform.GetSiblingIndex();
+						int targetIndex = e.Target.MyGameObject.transform.GetSiblingIndex();
+						int currentIndex = e.DraggingItem.MyGameObject.transform.GetSiblingIndex();
 
-                        if (e.DraggingItem.Parent != e.Target.Parent)
-                        {
-                            e.DraggingItem.MyGameObject.transform.SetParent(e.Target.MyGameObject.transform.parent, true);
-                            e.DraggingItem.MyGameObject.transform.SetSiblingIndex(targetIndex + 1);
-                            e.DraggingItem.Parent = e.Target.Parent;
-                            if (e.DraggingItem.Parent != null)
-                            {
-                                e.DraggingItem.Parent.AddChild(e.DraggingItem);
-                            }
-                        }
-                        else
-                        {
-                            if (targetIndex < currentIndex)
-                            {
-                                e.DraggingItem.MyGameObject.transform.SetSiblingIndex(targetIndex + 1);
-                            }
-                            else
-                            {
-                                e.DraggingItem.MyGameObject.transform.SetSiblingIndex(targetIndex);
-                            }
-                        }
-                    }
-                    break;
-                default:
-                    break;
-            }
-        }
+						if (targetIndex > currentIndex)
+						{
+							e.DraggingItem.MyGameObject.transform.SetSiblingIndex(targetIndex - 1);
+						}
+						else
+						{
+							e.DraggingItem.MyGameObject.transform.SetSiblingIndex(targetIndex);
+						}
+					}
 
-        private void OnItemExpanding(object sender, TreeExpandingEventArgs<ILevelEditorObject> e)
-        {
-            if (e.Parent.HasChildren())
-            {
-                for (int i = 0; i < e.Parent.Children.Count; i++)
-                {
-                    e.Children.Add(e.Parent.Children[i]);
-                }
-            }
-        }
+					break;
+				case ItemDropAction.SetNextSibling:
+					if (e.Target != null)
+					{
+						int targetIndex = e.Target.MyGameObject.transform.GetSiblingIndex();
+						int currentIndex = e.DraggingItem.MyGameObject.transform.GetSiblingIndex();
 
-        private void OnTreeSelectionChanged(object sender, TreeSelectionArgs<ILevelEditorObject> e)
-        {
-            if (!selectedThroughObjectManager)
-            {
-                selectedThroughUI = true;
-                selectedThroughObjectManager = false;
-            }
+						if (e.DraggingItem.Parent != e.Target.Parent)
+						{
+							e.DraggingItem.MyGameObject.transform.SetParent(e.Target.MyGameObject.transform.parent, true);
+							e.DraggingItem.MyGameObject.transform.SetSiblingIndex(targetIndex + 1);
+							e.DraggingItem.Parent = e.Target.Parent;
+							if (e.DraggingItem.Parent != null)
+							{
+								e.DraggingItem.Parent.AddChild(e.DraggingItem);
+							}
+						}
+						else
+						{
+							if (targetIndex < currentIndex)
+							{
+								e.DraggingItem.MyGameObject.transform.SetSiblingIndex(targetIndex + 1);
+							}
+							else
+							{
+								e.DraggingItem.MyGameObject.transform.SetSiblingIndex(targetIndex);
+							}
+						}
+					}
 
-            levelEditor.Selection.Selection = e.New;
-        }
-    }
+					break;
+			}
+		}
+
+		private void OnItemExpanding(object sender, TreeExpandingEventArgs<ILevelEditorObject> e)
+		{
+			if (e.Parent.HasChildren())
+			{
+				for (int i = 0; i < e.Parent.Children.Count; i++)
+				{
+					e.Children.Add(e.Parent.Children[i]);
+				}
+			}
+		}
+
+		private void OnTreeSelectionChanged(object sender, TreeSelectionArgs<ILevelEditorObject> e)
+		{
+			if (!selectedThroughObjectManager)
+			{
+				selectedThroughUI = true;
+				selectedThroughObjectManager = false;
+			}
+
+			if (realLevelEditor != null)
+			{
+				realLevelEditor.Selection.Selection = e.New;
+			}
+		}
+	}
 }

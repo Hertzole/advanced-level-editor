@@ -3,10 +3,10 @@ using UnityEngine;
 
 namespace Hertzole.ALE
 {
-    [AttributeUsage(AttributeTargets.Field, AllowMultiple = false, Inherited = false)]
+    [AttributeUsage(AttributeTargets.Field)]
     public sealed class RequireTypeAttribute : PropertyAttribute
     {
-        public Type Type { get; private set; }
+        public Type Type { get; }
 
         public RequireTypeAttribute(Type type)
         {

@@ -98,10 +98,10 @@ MonoBehaviour:
     m_SelectOnRight: {fileID: 0}
   m_Transition: 1
   m_Colors:
-    m_NormalColor: {r: 0.34117648, g: 0.34117648, b: 0.37254903, a: 1}
-    m_HighlightedColor: {r: 0.44077632, g: 0.44077632, b: 0.482, a: 1}
-    m_PressedColor: {r: 0.25642106, g: 0.25642106, b: 0.28, a: 1}
-    m_SelectedColor: {r: 0.25490198, g: 0.25490198, b: 0.2784314, a: 1}
+    m_NormalColor: {r: 0.25, g: 0.25, b: 0.25, a: 1}
+    m_HighlightedColor: {r: 0.312, g: 0.312, b: 0.312, a: 1}
+    m_PressedColor: {r: 0.15, g: 0.15, b: 0.15, a: 1}
+    m_SelectedColor: {r: 0.3137255, g: 0.3137255, b: 0.3137255, a: 1}
     m_DisabledColor: {r: 1, g: 0, b: 0, a: 0.23921569}
     m_ColorMultiplier: 1
     m_FadeDuration: 0
@@ -219,6 +219,10 @@ PrefabInstance:
     - target: {fileID: 1147172621863324011, guid: cf14e781ebd55504c8cb778574ab831a, type: 3}
       propertyPath: m_text
       value: Button
+      objectReference: {fileID: 0}
+    - target: {fileID: 1147172621863324011, guid: cf14e781ebd55504c8cb778574ab831a, type: 3}
+      propertyPath: m_fontStyle
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 1147172621863324011, guid: cf14e781ebd55504c8cb778574ab831a, type: 3}
       propertyPath: m_fontColor32.rgba

@@ -1,19 +1,11 @@
 ﻿using System;
-using UnityEngine;
 
 namespace Hertzole.ALE
 {
-    public interface ILevelEditorLoadModal
+    public interface ILevelEditorLoadModal : ILevelEditorModal
     {
-        event Action<string> OnClickLoadLevel;
-        event Action OnClickClose;
-
-        GameObject MyGameObject { get; }
-
-        void Initialize();
+        event Action<string> OnLoadLevel;
 
         void PopulateLevels(string[] paths);
-
-        void Close();
     }
 }

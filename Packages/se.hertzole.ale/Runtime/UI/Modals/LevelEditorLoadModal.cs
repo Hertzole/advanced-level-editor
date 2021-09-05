@@ -5,98 +5,123 @@ using UnityEngine.UI;
 
 namespace Hertzole.ALE
 {
-    public class LevelEditorLoadModal : MonoBehaviour, ILevelEditorLoadModal
-    {
-        [SerializeField]
-        private Button closeButton = null;
-        [SerializeField]
-        private ListToggle levelToggle = null;
-        [SerializeField]
-        private RecycledListView listView = null;
-        [SerializeField]
-        private Button loadButton = null;
+	public class LevelEditorLoadModal : MonoBehaviour, ILevelEditorLoadModal
+	{
+		[SerializeField]
+		private Button closeButton;
+		[SerializeField]
+		private ListToggle levelToggle;
+		[SerializeField]
+		private RecycledListView listView;
+		[SerializeField]
+		private Button loadButton;
 
-        private int selectedLevel = -1;
+		[Space]
+		[SerializeField]
+		[RequireType(typeof(ILevelEditorSaveManager))]
+		private GameObject saveManager;
 
-        private string[] levels;
+		private int selectedLevel = -1;
 
-        public event Action<string> OnClickLoadLevel;
-        public event Action OnClickClose;
+		private string[] levels;
 
-        GameObject ILevelEditorLoadModal.MyGameObject { get { return gameObject; } }
+		public ILevelEditorSaveManager SaveManager { get; set; }
 
-        public void Initialize()
-        {
-            listView.OnCreateItem = OnCreateListItem;
-            listView.OnBindItem += OnBindListItem;
+		GameObject ILevelEditorModal.MyGameObject { get { return gameObject; } }
 
-            listView.Initialize(null, ((RectTransform)levelToggle.transform).sizeDelta.y);
+		public event Action<string> OnLoadLevel;
+		public event Action OnClose;
 
-            loadButton.onClick.AddListener(ClickLoadLevel);
-            closeButton.onClick.AddListener(Close);
+		private void Awake()
+		{
+			listView.OnCreateItem = OnCreateListItem;
+			listView.OnBindItem += OnBindListItem;
 
-            ValidateLoadButton();
-        }
+			listView.Initialize(null, ((RectTransform) levelToggle.transform).sizeDelta.y);
 
-        private RecycledListItem OnCreateListItem()
-        {
-            ListToggle toggle = Instantiate(levelToggle);
-            toggle.OnToggled += OnLevelToggled;
-            return toggle;
-        }
+			loadButton.onClick.AddListener(ClickLoadLevel);
+			closeButton.onClick.AddListener(Close);
 
-        private void OnLevelToggled(int index, bool isOn)
-        {
-            if (isOn)
-            {
-                selectedLevel = index;
-                ValidateLoadButton();
-            }
+			if (saveManager != null)
+			{
+				SaveManager = saveManager.NeedComponent<ILevelEditorSaveManager>();
+			}
 
-            listView.ForEachListItem((i, item) =>
-            {
-                if (item is ListToggle toggle)
-                {
-                    toggle.SetToggledWithoutNotify(i == index);
-                    toggle.Interactable = i != index;
-                }
-            });
-        }
+			ValidateLoadButton();
+		}
 
-        private void OnBindListItem(int index, object item, RecycledListItem listItem)
-        {
-            if (listItem is ListToggle toggle)
-            {
-                toggle.Index = index;
-                toggle.Label.text = Path.GetFileNameWithoutExtension((string)item);
-                toggle.SetToggledWithoutNotify(index == selectedLevel);
-                toggle.Interactable = index != selectedLevel;
-            }
-        }
+		private void OnEnable()
+		{
+			if (SaveManager != null)
+			{
+				PopulateLevels(SaveManager.GetLevels());
+			}
+		}
 
-        private void ClickLoadLevel()
-        {
-            OnClickLoadLevel?.Invoke(levels[selectedLevel]);
-            OnClickClose?.Invoke();
-        }
+		private RecycledListItem OnCreateListItem()
+		{
+			ListToggle toggle = Instantiate(levelToggle);
+			toggle.OnToggled += OnLevelToggled;
+			return toggle;
+		}
 
-        public void Close()
-        {
-            OnClickClose?.Invoke();
-        }
+		private void OnLevelToggled(int index, bool isOn)
+		{
+			if (isOn)
+			{
+				selectedLevel = index;
+				ValidateLoadButton();
+			}
 
-        public void PopulateLevels(string[] paths)
-        {
-            levels = paths;
-            selectedLevel = -1;
+			listView.ForEachListItem((i, item) =>
+			{
+				if (item is ListToggle toggle)
+				{
+					toggle.SetToggledWithoutNotify(i == index);
+					toggle.Interactable = i != index;
+				}
+			});
+		}
 
-            listView.SetItems(paths);
-            ValidateLoadButton();
-        }
+		private void OnBindListItem(int index, object item, RecycledListItem listItem)
+		{
+			if (listItem is ListToggle toggle)
+			{
+				toggle.Index = index;
+				toggle.Label.text = Path.GetFileNameWithoutExtension((string) item);
+				toggle.SetToggledWithoutNotify(index == selectedLevel);
+				toggle.Interactable = index != selectedLevel;
+			}
+		}
 
-        private void ValidateLoadButton()
-        {
-            loadButton.interactable = selectedLevel >= 0 && selectedLevel < levels.Length;
-        }
-    }
+		private void ClickLoadLevel()
+		{
+			if (SaveManager != null)
+			{
+				SaveManager.LoadLevel(levels[selectedLevel]);
+			}
+			
+			OnLoadLevel?.Invoke(levels[selectedLevel]);
+			OnClose?.Invoke();
+		}
+
+		private void ValidateLoadButton()
+		{
+			loadButton.interactable = selectedLevel >= 0 && selectedLevel < levels.Length;
+		}
+
+		public void Close()
+		{
+			OnClose?.Invoke();
+		}
+
+		public void PopulateLevels(string[] paths)
+		{
+			levels = paths;
+			selectedLevel = -1;
+
+			listView.SetItems(paths);
+			ValidateLoadButton();
+		}
+	}
 }

@@ -26,12 +26,10 @@ namespace Hertzole.ALE
 #if OBSOLETE
     [System.Obsolete("ILevelEditorResourceView has been stripped and will be removed on build.", true)]
 #endif
-    public interface ILevelEditorResourceView
+    public interface ILevelEditorResourceView : ILevelEditorPanel
     {
         event EventHandler<AssetClickEventArgs> OnClickAsset;
         event EventHandler<AssetClickEventArgs> OnClickFolder;
-
-        void Initialize(ILevelEditorResource[] resources);
     }
 }
 #endif

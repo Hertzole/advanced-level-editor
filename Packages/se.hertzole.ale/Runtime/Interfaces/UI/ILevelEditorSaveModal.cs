@@ -1,20 +1,12 @@
 ﻿using System;
-using UnityEngine;
 
 namespace Hertzole.ALE
 {
-    public interface ILevelEditorSaveModal
+    public interface ILevelEditorSaveModal : ILevelEditorModal
     {
         bool ApplyLevelNameOnLoad { get; }
         string LevelName { get; set; }
 
-        event Action<string> OnClickSave;
-        event Action OnClickClose;
-
-        GameObject MyGameObject { get; }
-
-        void Initialize();
-
-        void Close();
+        event Action<string> OnSave;
     }
 }

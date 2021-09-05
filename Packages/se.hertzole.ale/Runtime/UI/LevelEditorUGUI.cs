@@ -4,405 +4,314 @@ using UnityEngine;
 namespace Hertzole.ALE
 {
 #if UNITY_EDITOR
-    [DisallowMultipleComponent]
-    [AddComponentMenu("ALE/UI/uGUI/Level Editor uGUI", 0)]
+	[DisallowMultipleComponent]
+	[AddComponentMenu("ALE/UI/uGUI/Level Editor uGUI", 0)]
 #endif
-    public class LevelEditorUGUI : MonoBehaviour, ILevelEditorUI
-    {
-        [SerializeField]
-        private ScriptableObject resources = null;
-        
-        [Space]
-        
-        [SerializeField]
-        private GameObject editorRoot = null;
-        [SerializeField]
-        private GameObject playModeRoot = null;
+	public class LevelEditorUGUI : MonoBehaviour, ILevelEditorUI
+	{
+		[SerializeField]
+		private ScriptableObject resources;
+		[SerializeField]
+		[RequireType(typeof(ILevelEditor))]
+		private GameObject levelEditor;
 
-        [Header("Panels")]
-        [SerializeField, RequireType(typeof(ILevelEditorResourceView))]
-        private GameObject resourcePanel = null;
-        [SerializeField, RequireType(typeof(ILevelEditorInspector))]
-        private GameObject inspectorPanel = null;
-        [SerializeField, RequireType(typeof(ILevelEditorHierarchy))]
-        private GameObject hierarchyPanel = null;
+		[Space]
+		[SerializeField]
+		private GameObject editorRoot;
+		[SerializeField]
+		private GameObject playModeRoot;
 
-        [Header("Modals")]
-        [SerializeField]
-        private GameObject modalsBackground = null;
-        [SerializeField, RequireType(typeof(ILevelEditorSaveModal))]
-        private GameObject saveModal = null;
-        [SerializeField, RequireType(typeof(ILevelEditorLoadModal))]
-        private GameObject loadModal = null;
-        [SerializeField, RequireType(typeof(ILevelEditorNotificationModal))]
-        private GameObject notificationModal = null;
+		[Header("Panels")]
+		[SerializeField]
+		[RequireType(typeof(ILevelEditorResourceView))]
+		private GameObject resourcePanel;
+		[SerializeField]
+		[RequireType(typeof(ILevelEditorInspector))]
+		private GameObject inspectorPanel;
+		[SerializeField]
+		[RequireType(typeof(ILevelEditorHierarchy))]
+		private GameObject hierarchyPanel;
 
-        [Header("Windows")]
-        [SerializeField]
-        [RequireType(typeof(ILevelEditorColorPickerWindow))]
-        private GameObject colorPickerWindow = null;
-        [SerializeField]
-        [RequireType(typeof(ILevelEditorObjectPickerWindow))]
-        private GameObject objectPickerWindow = null;
+		[Header("Modals")]
+		[SerializeField]
+		private GameObject modalsBackground;
+		[SerializeField]
+		[RequireType(typeof(ILevelEditorSaveModal))]
+		private GameObject saveModal;
+		[SerializeField]
+		[RequireType(typeof(ILevelEditorLoadModal))]
+		private GameObject loadModal;
+		[SerializeField]
+		[RequireType(typeof(ILevelEditorMessageModal))]
+		private GameObject messageModal;
 
-        private ILevelEditorResources realResources;
-        private ILevelEditor levelEditor;
-        private ILevelEditorSaveModal realSaveModal;
-        private ILevelEditorLoadModal realLoadModal;
-        private ILevelEditorNotificationModal realNotificationModal;
-        private ILevelEditorInspector realInspectorPanel;
-        private ILevelEditorResourceView realResourcePanel;
-        private ILevelEditorHierarchy realHierarchy;
-        private ILevelEditorColorPickerWindow realColorPickerWindow;
-        private ILevelEditorObjectPickerWindow realObjectPickerWindow;
+		[Header("Windows")]
+		[SerializeField]
+		[RequireType(typeof(ILevelEditorColorPickerWindow))]
+		private GameObject colorPickerWindow;
+		[SerializeField]
+		[RequireType(typeof(ILevelEditorObjectPickerWindow))]
+		private GameObject objectPickerWindow;
 
-        public ILevelEditor LevelEditor { get { return levelEditor; } }
-        public ILevelEditorSaveModal SaveModal { get { return realSaveModal; } }
-        public ILevelEditorLoadModal LoadModal { get { return realLoadModal; } }
-        public ILevelEditorNotificationModal NotificationModal { get { return realNotificationModal; } }
-        public ILevelEditorInspector InspectorPanel { get { return realInspectorPanel; } }
-        public ILevelEditorResourceView ResourcePanel { get { return realResourcePanel; } }
-        public ILevelEditorHierarchy HierarchyPanel { get { return realHierarchy; } }
-        public ILevelEditorColorPickerWindow ColorPickerWindow { get { return realColorPickerWindow; } }
-        public ILevelEditorObjectPickerWindow ObjectPickerWindow { get { return realObjectPickerWindow; } }
+		private ILevelEditorResources realResources;
 
-        protected virtual void Awake()
-        {
-            if (saveModal != null)
-            {
-                realSaveModal = saveModal.NeedComponent<ILevelEditorSaveModal>();
-            }
+		public ILevelEditor LevelEditor { get; private set; }
 
-            if (loadModal != null)
-            {
-                realLoadModal = loadModal.NeedComponent<ILevelEditorLoadModal>();
-            }
+		public ILevelEditorInspector InspectorPanel { get; private set; }
+		public ILevelEditorResourceView ResourcePanel { get; private set; }
+		public ILevelEditorHierarchy HierarchyPanel { get; private set; }
 
-            if (notificationModal != null)
-            {
-                realNotificationModal = notificationModal.NeedComponent<ILevelEditorNotificationModal>();
-            }
+		public ILevelEditorSaveModal SaveModal { get; private set; }
+		public ILevelEditorLoadModal LoadModal { get; private set; }
+		public ILevelEditorMessageModal MessageModal { get; private set; }
 
-            if (inspectorPanel != null)
-            {
-                realInspectorPanel = inspectorPanel.NeedComponent<ILevelEditorInspector>();
-            }
+		public ILevelEditorColorPickerWindow ColorPickerWindow { get; private set; }
+		public ILevelEditorObjectPickerWindow ObjectPickerWindow { get; private set; }
 
-            if (resourcePanel != null)
-            {
-                realResourcePanel = resourcePanel.NeedComponent<ILevelEditorResourceView>();
-            }
-            if (hierarchyPanel != null)
-            {
-                realHierarchy = hierarchyPanel.NeedComponent<ILevelEditorHierarchy>();
-            }
-            if (colorPickerWindow != null)
-            {
-                realColorPickerWindow = colorPickerWindow.NeedComponent<ILevelEditorColorPickerWindow>();
-            }
-            if (objectPickerWindow != null)
-            {
-                realObjectPickerWindow = objectPickerWindow.NeedComponent<ILevelEditorObjectPickerWindow>();
-            }
+		protected virtual void Awake()
+		{
+			if (levelEditor != null)
+			{
+				LevelEditor = levelEditor.NeedComponent<ILevelEditor>();
+				if (LevelEditor != null && LevelEditor.Selection != null)
+				{
+					LevelEditor.Selection.OnSelectionChanged += OnSelectionChanged;
+				}
+			}
 
-            ToggleSaveModal(false);
-            ToggleLoadModal(false);
+			if (inspectorPanel != null)
+			{
+				InspectorPanel = inspectorPanel.NeedComponent<ILevelEditorInspector>();
+			}
 
-            if (!ReferenceEquals(notificationModal, null))
-            {
-                notificationModal.SetActive(false);
-            }
+			if (resourcePanel != null)
+			{
+				ResourcePanel = resourcePanel.NeedComponent<ILevelEditorResourceView>();
+			}
 
-            if (!ReferenceEquals(colorPickerWindow, null))
-            {
-                colorPickerWindow.SetActive(false);
-            }
+			if (hierarchyPanel != null)
+			{
+				HierarchyPanel = hierarchyPanel.NeedComponent<ILevelEditorHierarchy>();
+			}
 
-            if (!ReferenceEquals(objectPickerWindow, null))
-            {
-                objectPickerWindow.SetActive(false);
-            }
-        }
+			SaveModal = GetModal(SaveModal, saveModal, OnSaveModalClose);
+			LoadModal = GetModal(LoadModal, loadModal, OnLoadModalClose);
+			MessageModal = GetModal(MessageModal, messageModal, OnMessageModalClose);
 
-        public void Initialize(ILevelEditor levelEditor)
-        {
-            this.levelEditor = levelEditor;
-            levelEditor.SaveManager.OnLevelLoaded += OnLevelLoaded;
+			if (colorPickerWindow != null)
+			{
+				ColorPickerWindow = colorPickerWindow.NeedComponent<ILevelEditorColorPickerWindow>();
+			}
 
-            if (!ReferenceEquals(levelEditor.Selection, null))
-            {
-                levelEditor.Selection.OnSelectionChanged += OnSelectionChanged;
-            }
+			if (objectPickerWindow != null)
+			{
+				ObjectPickerWindow = objectPickerWindow.NeedComponent<ILevelEditorObjectPickerWindow>();
+			}
 
-            if (!ReferenceEquals(realInspectorPanel, null))
-            {
-                realInspectorPanel.Initialize(this);
-            }
+			ToggleSaveModal(false, true);
+			ToggleLoadModal(false, true);
+			ToggleMessageModal(false, true);
+		}
 
-            if (!ReferenceEquals(realHierarchy, null))
-            {
-                realHierarchy.Initialize(levelEditor);
-            }
+		private void OnDestroy()
+		{
+			if (LevelEditor != null && LevelEditor.Selection != null)
+			{
+				LevelEditor.Selection.OnSelectionChanged -= OnSelectionChanged;
+			}
+		}
 
-            if (!ReferenceEquals(realSaveModal, null))
-            {
-                realSaveModal.Initialize();
-            }
+		private void OnMessageModalClose()
+		{
+			ToggleMessageModal(false, false);
+		}
 
-            if (!ReferenceEquals(realLoadModal, null))
-            {
-                realLoadModal.Initialize();
-            }
+		private void OnLoadModalClose()
+		{
+			ToggleLoadModal(false, false);
+		}
 
-            if (!ReferenceEquals(realObjectPickerWindow, null))
-            {
-                realObjectPickerWindow.Initialize(levelEditor);
-            }
+		private void OnSaveModalClose()
+		{
+			ToggleSaveModal(false, false);
+		}
 
-            if (resources is ILevelEditorResources r)
-            {
-                realResources = r;
-            }
+		public virtual void ClickNewLevel()
+		{
+			if (LevelEditor.IsDirty)
+			{
+				// ShowNotification("Notice!", "All your unsaved changes will be lost.\nAre you sure you want to create a new level?", "Yes", "No", ConfirmNewLevel, CloseNotification);
+			}
+		}
 
-            if (realResourcePanel != null)
-            {
-                InitializeResources(realResources.GetResources());
-            }
+		protected virtual void ConfirmNewLevel()
+		{
+			LevelEditor.NewLevel();
+			// CloseNotification();
+		}
 
-            OnInitialize();
-        }
+		public virtual void ClickSaveLevel()
+		{
+			ToggleSaveModal(true, false);
+		}
 
-        protected virtual void OnInitialize() { }
+		public virtual void ClickLoadLevel()
+		{
+			ToggleLoadModal(true, false);
+		}
 
-        private void OnDestroy()
-        {
-            if (levelEditor != null && levelEditor.Selection != null)
-            {
-                levelEditor.Selection.OnSelectionChanged -= OnSelectionChanged;
-            }
-        }
+		public virtual void ClickPlayLevel()
+		{
+			if (!LevelEditor.StartPlayMode(out string failReason))
+			{
+				if (MessageModal != null)
+				{
+					MessageModal.ShowMessage("Play Mode Error", failReason, "Okay");
+					ToggleMessageModal(true, false);
+				}
+			}
+		}
 
-        public virtual void InitializeResources(ILevelEditorResource[] resources)
-        {
-            if (ReferenceEquals(null, realResourcePanel))
-            {
-                return;
-            }
+		protected virtual void OnSelectionChanged(object sender, SelectionEvent e)
+		{
+			if (InspectorPanel != null)
+			{
+				InspectorPanel.BindObject(e.NewObject);
+			}
+		}
 
-            realResourcePanel.Initialize(resources);
-        }
+		private static T GetModal<T>(T old, GameObject go, Action onClose) where T : ILevelEditorModal
+		{
+			if (old != null)
+			{
+				old.OnClose -= onClose;
+			}
 
-        protected virtual void OnEnable()
-        {
-#if !ALE_STRIP_SAFETY || UNITY_EDITOR
-            if (realSaveModal == null)
-            {
-                LevelEditorLogger.LogWarning("Stopped LevelEditorUGUI OnEnable because no save modal.");
-                return;
-            }
+			if (go != null && go.TryGetComponent(out T result))
+			{
+				result.OnClose += onClose;
+				return result;
+			}
 
-            if (realLoadModal == null)
-            {
-                LevelEditorLogger.LogWarning("Stopped LevelEditorUGUI OnEnable because no load modal.");
-                return;
-            }
-#endif
+			return default;
+		}
 
-            if (!ReferenceEquals(null, realSaveModal))
-            {
-                realSaveModal.OnClickSave += OnSavePanelClickSave;
-                realSaveModal.OnClickClose += OnSavePanelClickClose;
-            }
+		private void UpdateModalBackground()
+		{
+			UpdateModalBackground(IsModalActiveAndExists(SaveModal) || IsModalActiveAndExists(LoadModal) || IsModalActiveAndExists(MessageModal));
+		}
 
-            if (!ReferenceEquals(null, realLoadModal))
-            {
-                realLoadModal.OnClickLoadLevel += OnLoadPanelClickLoadLevel;
-                realLoadModal.OnClickClose += OnLoadPanelClickClose;
-            }
-        }
+		protected virtual void UpdateModalBackground(bool isShowing)
+		{
+			if (modalsBackground != null)
+			{
+				modalsBackground.gameObject.SetActive(isShowing);
+			}
+		}
 
-        protected virtual void OnDisable()
-        {
-#if !ALE_STRIP_SAFETY || UNITY_EDITOR
-            if (realSaveModal == null)
-            {
-                LevelEditorLogger.LogWarning("Stopped LevelEditorUGUI OnDisable because no save modal.");
-                return;
-            }
+		private static bool IsModalActiveAndExists(ILevelEditorModal go)
+		{
+			return go != null && go.MyGameObject.activeInHierarchy;
+		}
 
-            if (realLoadModal == null)
-            {
-                LevelEditorLogger.LogWarning("Stopped LevelEditorUGUI OnDisable because no load modal.");
-                return;
-            }
-#endif
+		public virtual void ToggleInspectorPanel(bool toggle, bool instant)
+		{
+			if (InspectorPanel == null)
+			{
+				return;
+			}
 
-            if (!ReferenceEquals(null, realSaveModal))
-            {
-                realSaveModal.OnClickSave -= OnSavePanelClickSave;
-                realSaveModal.OnClickClose -= OnSavePanelClickClose;
-            }
+			InspectorPanel.MyGameObject.SetActive(toggle);
+		}
 
-            if (!ReferenceEquals(null, realLoadModal))
-            {
-                realLoadModal.OnClickLoadLevel -= OnLoadPanelClickLoadLevel;
-                realLoadModal.OnClickClose -= OnLoadPanelClickClose;
-            }
-        }
+		public void ToggleResourcePanel(bool toggle, bool instant)
+		{
+			if (ResourcePanel == null)
+			{
+				return;
+			}
 
-        private void OnSavePanelClickSave(string levelName)
-        {
-            levelEditor.SaveManager.SaveLevel(levelName);
-        }
+			ResourcePanel.MyGameObject.SetActive(toggle);
+		}
 
-        private void OnSavePanelClickClose()
-        {
-            ToggleSaveModal(false);
-        }
+		public virtual void ToggleHierarchyPanel(bool toggle, bool instant)
+		{
+			if (HierarchyPanel == null)
+			{
+				return;
+			}
 
-        private void OnLoadPanelClickLoadLevel(string levelPath)
-        {
-            levelEditor.SaveManager.LoadLevel(levelPath);
-        }
+			HierarchyPanel.MyGameObject.SetActive(toggle);
+		}
 
-        private void OnLoadPanelClickClose()
-        {
-            ToggleLoadModal(false);
-        }
-        
-        protected virtual void OnLevelLoaded(object sender, LevelEventArgs e)
-        {
-            if (realSaveModal != null && realSaveModal.ApplyLevelNameOnLoad)
-            {
-                realSaveModal.LevelName = e.Data.name;
-            }
-        }
+		public virtual void ToggleSaveModal(bool toggle, bool instant)
+		{
+			if (SaveModal == null)
+			{
+				return;
+			}
 
-        public virtual void ClickNewLevel()
-        {
-            if (levelEditor.IsDirty)
-            {
-                ShowNotification("Notice!", "All your unsaved changes will be lost.\nAre you sure you want to create a new level?", "Yes", "No", ConfirmNewLevel, CloseNotification);
-            }
-        }
+			SaveModal.MyGameObject.SetActive(toggle);
+			UpdateModalBackground();
+		}
 
-        protected virtual void ConfirmNewLevel()
-        {
-            levelEditor.NewLevel();
-            CloseNotification();
-        }
+		public virtual void ToggleLoadModal(bool toggle, bool instant)
+		{
+			if (LoadModal == null)
+			{
+				return;
+			}
 
-        public virtual void ClickPlayLevel()
-        {
-            if (!levelEditor.StartPlayMode(out string failReason))
-            {
-                ShowNotification("Error", failReason, "OK", string.Empty, CloseNotification, null);
-            }
-        }
+			LoadModal.MyGameObject.SetActive(toggle);
+			UpdateModalBackground();
+		}
 
-        public virtual void ToggleResourcePanel(bool toggle)
-        {
-            if (resourcePanel != null)
-            {
-                resourcePanel.SetActive(toggle);
-            }
-        }
+		public virtual void ToggleMessageModal(bool toggle, bool instant)
+		{
+			if (MessageModal == null)
+			{
+				return;
+			}
 
-        public virtual void ToggleSaveModal(bool toggle)
-        {
-            if (ReferenceEquals(null, saveModal))
-            {
-                return;
-            }
+			MessageModal.MyGameObject.SetActive(toggle);
+			UpdateModalBackground();
+		}
 
-            saveModal.SetActive(toggle);
-            UpdateModalBackground();
-        }
+		public virtual void OnStartPlayMode()
+		{
+			if (editorRoot != null)
+			{
+				editorRoot.SetActive(false);
+			}
 
-        public virtual void ToggleLoadModal(bool toggle)
-        {
-            if (ReferenceEquals(null, loadModal))
-            {
-                return;
-            }
+			if (playModeRoot != null)
+			{
+				playModeRoot.SetActive(true);
+			}
+		}
 
-            if (toggle)
-            {
-                realLoadModal.PopulateLevels(levelEditor.SaveManager.GetLevels());
-            }
-            loadModal.SetActive(toggle);
-            UpdateModalBackground();
-        }
+		public virtual void OnStopPlayMode()
+		{
+			if (editorRoot != null)
+			{
+				editorRoot.SetActive(true);
+			}
 
-        protected virtual void UpdateModalBackground()
-        {
-            if (modalsBackground != null)
-            {
-                modalsBackground.SetActive(saveModal.activeSelf || loadModal.activeSelf || notificationModal.activeSelf);
-            }
-        }
+			if (playModeRoot != null)
+			{
+				playModeRoot.SetActive(false);
+			}
+		}
 
-        public virtual void ToggleInspectorPanel(bool toggle)
-        {
-            inspectorPanel.SetActive(toggle);
-        }
-
-        public virtual void ShowNotification(string title, string text, string yesButton, string noButton, Action onClickYes, Action onClickNo)
-        {
-            realNotificationModal.Show(title, text, yesButton, noButton, onClickYes, onClickNo);
-            notificationModal.gameObject.SetActive(true);
-            UpdateModalBackground();
-        }
-
-        public virtual void CloseNotification()
-        {
-            notificationModal.gameObject.SetActive(false);
-            UpdateModalBackground();
-        }
-
-        public virtual void OnPlayModeStart()
-        {
-            if (editorRoot != null)
-            {
-                editorRoot.SetActive(false);
-            }
-            
-            if (playModeRoot != null)
-            {
-                playModeRoot.SetActive(true);
-            }
-        }
-
-        public virtual void OnPlayModeStop()
-        {
-            if (editorRoot != null)
-            {
-                editorRoot.SetActive(true);
-            }
-            
-            if (playModeRoot != null)
-            {
-                playModeRoot.SetActive(false);
-            }
-        }
-
-        protected virtual void OnSelectionChanged(object sender, SelectionEvent e)
-        {
-            if (realInspectorPanel != null)
-            {
-                realInspectorPanel.BindObject(e.NewObject);
-            }
-        }
-        
 #if UNITY_EDITOR
-        private void OnValidate()
-        {
-            if (resources != null && !(resources is ILevelEditorResources))
-            {
-                Debug.LogError("Resources needs to implement ILevelEditorResources!");
-                resources = null;
-            }
-        }
+		private void OnValidate()
+		{
+			if (resources != null && !(resources is ILevelEditorResources))
+			{
+				Debug.LogError("Resources needs to implement ILevelEditorResources!");
+				resources = null;
+			}
+		}
 #endif
-    }
+	}
 }

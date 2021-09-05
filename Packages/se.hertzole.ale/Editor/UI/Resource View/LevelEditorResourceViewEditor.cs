@@ -6,6 +6,7 @@ namespace Hertzole.ALE.Editor
     [CustomEditor(typeof(LevelEditorResourceView))]
     public class LevelEditorResourceViewEditor : UnityEditor.Editor
     {
+        private SerializedProperty resources;
         private SerializedProperty folderTree;
         private SerializedProperty showRoot;
         private SerializedProperty rootName;
@@ -15,7 +16,7 @@ namespace Hertzole.ALE.Editor
         private SerializedProperty iconHandling;
         private SerializedProperty generateAsync;
         private SerializedProperty asyncWaitMethod;
-        private SerializedProperty isOrtographic;
+        private SerializedProperty isOrthographic;
         private SerializedProperty backgroundColor;
         private SerializedProperty padding;
         private SerializedProperty previewDirection;
@@ -27,6 +28,7 @@ namespace Hertzole.ALE.Editor
 
         private void OnEnable()
         {
+            resources = serializedObject.FindProperty(nameof(resources));
             folderTree = serializedObject.FindProperty(nameof(folderTree));
             showRoot = serializedObject.FindProperty(nameof(showRoot));
             rootName = serializedObject.FindProperty(nameof(rootName));
@@ -36,7 +38,7 @@ namespace Hertzole.ALE.Editor
             iconHandling = serializedObject.FindProperty(nameof(iconHandling));
             generateAsync = serializedObject.FindProperty(nameof(generateAsync));
             asyncWaitMethod = serializedObject.FindProperty(nameof(asyncWaitMethod));
-            isOrtographic = serializedObject.FindProperty(nameof(isOrtographic));
+            isOrthographic = serializedObject.FindProperty(nameof(isOrthographic));
             backgroundColor = serializedObject.FindProperty(nameof(backgroundColor));
             padding = serializedObject.FindProperty(nameof(padding));
             previewDirection = serializedObject.FindProperty(nameof(previewDirection));
@@ -47,6 +49,8 @@ namespace Hertzole.ALE.Editor
         {
             serializedObject.Update();
 
+            EditorGUILayout.PropertyField(resources);
+            
             EditorGUILayout.PropertyField(folderTree);
             EditorGUILayout.PropertyField(showRoot);
             EditorGUILayout.PropertyField(rootName);
@@ -60,7 +64,7 @@ namespace Hertzole.ALE.Editor
             EditorGUILayout.Space();
 
             EditorGUI.BeginChangeCheck();
-            EditorGUILayout.PropertyField(isOrtographic);
+            EditorGUILayout.PropertyField(isOrthographic);
             EditorGUILayout.PropertyField(backgroundColor);
             padding.floatValue = EditorGUILayout.Slider(padding.displayName, padding.floatValue, -0.25f, 0.25f);
 
@@ -72,7 +76,7 @@ namespace Hertzole.ALE.Editor
                 generatePreview = true;
             }
 
-            EditorGUIHelper.DrawFancyFoldout(isOrtographic, "Preview", false, () =>
+            EditorGUIHelper.DrawFancyFoldout(isOrthographic, "Preview", false, () =>
             {
                 if (generatePreview)
                 {
@@ -81,7 +85,7 @@ namespace Hertzole.ALE.Editor
                         DestroyImmediate(previewTexture);
                     }
 
-                    RuntimePreviewGenerator.OrthographicMode = isOrtographic.boolValue;
+                    RuntimePreviewGenerator.OrthographicMode = isOrthographic.boolValue;
                     RuntimePreviewGenerator.Padding = padding.floatValue;
                     RuntimePreviewGenerator.BackgroundColor = backgroundColor.colorValue;
                     RuntimePreviewGenerator.PreviewDirection = previewDirection.vector3Value;
