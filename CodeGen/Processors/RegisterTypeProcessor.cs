@@ -3,6 +3,7 @@ using Mono.Cecil;
 using Mono.Cecil.Cil;
 using System;
 using System.Collections.Generic;
+using UnityEditor;
 using UnityEngine;
 using UnityEngine.Scripting;
 
@@ -10,6 +11,8 @@ namespace Hertzole.ALE.CodeGen
 {
     public class RegisterTypeProcessor
     {
+        private bool isBuildingPlayer;
+        
         private readonly ModuleDefinition module;
         private readonly List<TypeReference> types;
 
@@ -67,12 +70,14 @@ namespace Hertzole.ALE.CodeGen
             return false;
         }
 
-        public void EndEditing()
+        public void EndEditing(bool isBuilding)
         {
             if (types == null || types.Count == 0)
             {
                 return;
             }
+
+            isBuildingPlayer = isBuilding;
 
             TypeDefinition generatedClass = CreateClass();
             generatedClass.Methods.Add(CreateRegisterMethod());
@@ -94,12 +99,17 @@ namespace Hertzole.ALE.CodeGen
             MethodDefinition method = new MethodDefinition("Generated__RegisterExposedTypes",
                 MethodAttributes.Private | MethodAttributes.HideBySig | MethodAttributes.Static, module.ImportReference(typeof(void)));
 
-            MethodReference initAttributeCtor = module.ImportReference(
-                typeof(RuntimeInitializeOnLoadMethodAttribute).GetConstructor(new Type[] { typeof(RuntimeInitializeLoadType) }));
-            CustomAttribute attribute = new CustomAttribute(initAttributeCtor);
-            attribute.ConstructorArguments.Add(new CustomAttributeArgument(module.ImportReference(
-                typeof(RuntimeInitializeLoadType)), RuntimeInitializeLoadType.BeforeSceneLoad));
-            method.CustomAttributes.Add(attribute);
+            CustomAttribute a;
+            if (isBuildingPlayer)
+            {
+                a = new CustomAttribute(module.GetConstructor<RuntimeInitializeOnLoadMethodAttribute>(typeof(RuntimeInitializeLoadType)));
+                a.ConstructorArguments.Add(new CustomAttributeArgument(module.GetTypeReference<RuntimeInitializeLoadType>(), RuntimeInitializeLoadType.BeforeSceneLoad));
+            }
+            else
+            {
+                a = new CustomAttribute(module.GetConstructor<InitializeOnLoadMethodAttribute>());
+            }
+            method.CustomAttributes.Add(a);
 
             MethodReference registerType = module.GetMethod(typeof(LevelEditorSerializer), "RegisterType", typeof(int));
             
@@ -110,6 +120,15 @@ namespace Hertzole.ALE.CodeGen
                 m.GenericArguments.Add(types[i]);
                 il.EmitInt(types[i].FullName.GetStableHashCode());
                 il.Emit(OpCodes.Call, m);
+                
+                if (types[i].TryResolve(out TypeDefinition type) && type.TryGetAttributes<FormerlyHashedAsAttribute>(out CustomAttribute[] formerHashedAttributes))
+                {
+                    for (int j = 0; j < formerHashedAttributes.Length; j++)
+                    {
+                        il.EmitInt(formerHashedAttributes[j].GetConstructorArgument(0, string.Empty).GetStableHashCode());
+                        il.Emit(OpCodes.Call, module.GetMethod(typeof(LevelEditorSerializer), "RegisterType", typeof(int)).MakeGenericMethod(type));
+                    }
+                }
             }
 
             il.Emit(OpCodes.Ret);

@@ -85,7 +85,7 @@ namespace Hertzole.ALE.CodeGen
             }
 
             customData.EndEditing();
-            typeRegister.EndEditing();
+            typeRegister.EndEditing(isBuildingPlayer);
             formatter.EndEditing(); // Important to be before resolver!
             resolver.EndEditing(isBuildingPlayer);
         }

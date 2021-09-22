@@ -28,6 +28,15 @@ namespace Hertzole.ALE
 #endif
 		private static void RegisterResolvers()
 		{
+			#if UNITY_EDITOR
+			EditorApplication.delayCall += RegisterResolversInternal;
+#else
+			RegisterResolversInternal();
+#endif
+		}
+
+		private static void RegisterResolversInternal()
+		{
 			if (serializerRegistered)
 			{
 				return;
@@ -139,28 +148,23 @@ namespace Hertzole.ALE
 
 		private static class LevelEditorResolverGetFormatterHelper
 		{
-			private static readonly Dictionary<Type, int> lookup;
-
-			static LevelEditorResolverGetFormatterHelper()
+			private static readonly Dictionary<Type, int> lookup = new Dictionary<Type, int>(8)
 			{
-				lookup = new Dictionary<Type, int>(8)
-				{
-					{ typeof(LevelEditorSaveData), 0 },
-					{ typeof(LevelEditorObjectData), 1 },
-					{ typeof(LevelEditorComponentData), 2 },
-					{ typeof(LevelEditorCustomData), 3 },
-					{ typeof(List<LevelEditorObjectData>), 4 },
-					{ typeof(LevelEditorComponentData[]), 5 },
-					{ typeof(LevelEditorPropertyData[]), 6 },
-					{ typeof(Dictionary<string, LevelEditorCustomData>), 7 },
-					{ typeof(ComponentDataWrapper), 8 },
-					{ typeof(ComponentDataWrapper[]), 9 },
-					{ typeof(List<ComponentDataWrapper>), 10 },
-					{ typeof(TransformWrapper.Wrapper), 11 },
-					{ typeof(RigidbodyWrapper.Wrapper), 12 }
-				};
-			}
-
+				{ typeof(LevelEditorSaveData), 0 },
+				{ typeof(LevelEditorObjectData), 1 },
+				{ typeof(LevelEditorComponentData), 2 },
+				{ typeof(LevelEditorCustomData), 3 },
+				{ typeof(List<LevelEditorObjectData>), 4 },
+				{ typeof(LevelEditorComponentData[]), 5 },
+				{ typeof(LevelEditorPropertyData[]), 6 },
+				{ typeof(Dictionary<string, LevelEditorCustomData>), 7 },
+				{ typeof(ComponentDataWrapper), 8 },
+				{ typeof(ComponentDataWrapper[]), 9 },
+				{ typeof(List<ComponentDataWrapper>), 10 },
+				{ typeof(TransformWrapper.Wrapper), 11 },
+				{ typeof(RigidbodyWrapper.Wrapper), 12 }
+			};
+			
 			internal static IMessagePackFormatter GetFormatter(Type t)
 			{
 				if (!lookup.TryGetValue(t, out int key))

@@ -61,7 +61,7 @@ namespace Hertzole.ALE.CodeGen
 
 		public void EndEditing(bool isBuilding)
 		{
-			this.isBuildingPlayer = isBuilding;
+			isBuildingPlayer = isBuilding;
 			
 			for (int i = 0; i < wrapperFormatters.Count; i++)
 			{
@@ -190,6 +190,15 @@ namespace Hertzole.ALE.CodeGen
 			{
 				il.EmitInt(wrapperFormatters[i].Item3.FullName.GetStableHashCode());
 				il.Emit(OpCodes.Call, module.GetMethod(typeof(LevelEditorSerializer), "RegisterType", typeof(int)).MakeGenericMethod(wrapperFormatters[i].Item3));
+
+				if (wrapperFormatters[i].Item3.TryGetAttributes<FormerlyHashedAsAttribute>(out CustomAttribute[] formerHashedAttributes))
+				{
+					for (int j = 0; j < formerHashedAttributes.Length; j++)
+					{
+						il.EmitInt(formerHashedAttributes[j].GetConstructorArgument(0, string.Empty).GetStableHashCode());
+						il.Emit(OpCodes.Call, module.GetMethod(typeof(LevelEditorSerializer), "RegisterType", typeof(int)).MakeGenericMethod(wrapperFormatters[i].Item3));
+					}
+				}
 			}
 
 			il.Emit(OpCodes.Ret);
