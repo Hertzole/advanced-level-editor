@@ -92,6 +92,18 @@ namespace Hertzole.ALE.CodeGen
 			return true;
 		}
 
+		public static bool TryResolve(this TypeReference td, out TypeDefinition type)
+		{
+			if (td.CanBeResolved())
+			{
+				type = td.Resolve();
+				return true;
+			}
+
+			type = null;
+			return false;
+		}
+
 		public static TypeReference GetCollectionType(this TypeReference type)
 		{
 			if (!type.IsCollection())
