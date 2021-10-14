@@ -50,7 +50,8 @@ namespace Hertzole.ALE
 			customResolvers.Add(StandardResolver.Instance);
 
 			StaticCompositeResolver.Instance.Register(customResolvers.ToArray());
-			MessagePackSerializer.DefaultOptions = MessagePackSerializerOptions.Standard.WithResolver(StaticCompositeResolver.Instance).WithCompression(MessagePackCompression.Lz4Block);
+			Debug.Log(customResolvers.ToDebugString());
+			LevelEditorSerializer.Options = (LevelEditorSerializerOptions) LevelEditorSerializer.Options.WithResolver(StaticCompositeResolver.Instance);
 
 			serializerRegistered = true;
 		}

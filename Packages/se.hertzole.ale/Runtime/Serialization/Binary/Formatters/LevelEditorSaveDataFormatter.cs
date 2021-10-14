@@ -8,8 +8,9 @@ namespace Hertzole.ALE
     {
         public void Serialize(ref MessagePackWriter writer, LevelEditorSaveData value, MessagePackSerializerOptions options)
         {
-            writer.WriteArrayHeader(3);
-            options.Resolver.GetFormatterWithVerify<string>().Serialize(ref writer, value.name, options);
+            writer.WriteArrayHeader(4);
+            writer.WriteUInt16(LevelEditorSaveData.SAVE_VERSION);
+            writer.Write(value.name);
             options.Resolver.GetFormatterWithVerify<List<LevelEditorObjectData>>().Serialize(ref writer, value.objects, options);
             options.Resolver.GetFormatterWithVerify<Dictionary<string, LevelEditorCustomData>>().Serialize(ref writer, value.customData, options);
         }
@@ -22,18 +23,27 @@ namespace Hertzole.ALE
             List<LevelEditorObjectData> objects = null;
             Dictionary<string, LevelEditorCustomData> customData = null;
 
+            LevelEditorSerializerOptions levelEditorOptions = options as LevelEditorSerializerOptions;
+
             int count = reader.ReadArrayHeader();
             for (int i = 0; i < count; i++)
             {
                 switch (i)
                 {
                     case 0:
-                        name = options.Resolver.GetFormatterWithVerify<string>().Deserialize(ref reader, options);
+                        ushort saveVersion = reader.ReadUInt16();
+                        if (levelEditorOptions != null)
+                        {
+                            levelEditorOptions.SaveVersion = saveVersion;
+                        }
                         break;
                     case 1:
-                        objects = options.Resolver.GetFormatterWithVerify<List<LevelEditorObjectData>>().Deserialize(ref reader, options);
+                        name = reader.ReadString();
                         break;
                     case 2:
+                        objects = options.Resolver.GetFormatterWithVerify<List<LevelEditorObjectData>>().Deserialize(ref reader, options);
+                        break;
+                    case 3:
                         customData = options.Resolver.GetFormatterWithVerify<Dictionary<string, LevelEditorCustomData>>().Deserialize(ref reader, options);
                         break;
                     default:

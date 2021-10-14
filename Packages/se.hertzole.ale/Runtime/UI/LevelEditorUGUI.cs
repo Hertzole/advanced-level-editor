@@ -261,7 +261,7 @@ namespace Hertzole.ALE
 			{
 				return;
 			}
-
+			
 			LoadModal.MyGameObject.SetActive(toggle);
 			UpdateModalBackground();
 		}
