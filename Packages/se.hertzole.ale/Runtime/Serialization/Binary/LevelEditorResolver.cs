@@ -6,7 +6,6 @@ using MessagePack.Formatters;
 using MessagePack.Resolvers;
 using MessagePack.Unity;
 using MessagePack.Unity.Extension;
-using UnityEngine;
 #if UNITY_EDITOR
 using UnityEditor;
 #endif
@@ -21,6 +20,10 @@ namespace Hertzole.ALE
 		private static readonly List<IWrapperSerializer> wrapperSerializers = new List<IWrapperSerializer>();
 		private static readonly List<IDynamicResolver> dynamicResolvers = new List<IDynamicResolver>();
 
+		public static readonly IFormatterResolver instance = new LevelEditorResolver();
+
+		private LevelEditorResolver() { }
+
 #if UNITY_EDITOR
 		[InitializeOnLoadMethod]
 #else
@@ -28,7 +31,7 @@ namespace Hertzole.ALE
 #endif
 		private static void RegisterResolvers()
 		{
-			#if UNITY_EDITOR
+#if UNITY_EDITOR
 			EditorApplication.delayCall += RegisterResolversInternal;
 #else
 			RegisterResolversInternal();
@@ -44,7 +47,7 @@ namespace Hertzole.ALE
 
 			LevelEditorLogger.Log("Registering LevelEditorResolver.");
 
-			customResolvers.Add(Instance);
+			customResolvers.Add(instance);
 			customResolvers.Add(UnityResolver.Instance);
 			customResolvers.Add(UnityBlitResolver.Instance);
 			customResolvers.Add(StandardResolver.Instance);
@@ -55,13 +58,9 @@ namespace Hertzole.ALE
 			serializerRegistered = true;
 		}
 
-		public static readonly IFormatterResolver Instance = new LevelEditorResolver();
-
-		private LevelEditorResolver() { }
-
 		public IMessagePackFormatter<T> GetFormatter<T>()
 		{
-			return FormatterCache<T>.Formatter;
+			return FormatterCache<T>.formatter;
 		}
 
 		public static void RegisterResolver(IFormatterResolver resolver)
@@ -134,78 +133,72 @@ namespace Hertzole.ALE
 
 		private static class FormatterCache<T>
 		{
-			internal static readonly IMessagePackFormatter<T> Formatter;
+			internal static readonly IMessagePackFormatter<T> formatter = GetFormatter();
 
-			static FormatterCache()
+			private static IMessagePackFormatter<T> GetFormatter()
 			{
 				IMessagePackFormatter f = LevelEditorResolverGetFormatterHelper.GetFormatter(typeof(T));
-				if (f != null)
-				{
-					Formatter = (IMessagePackFormatter<T>) f;
-				}
+				return (IMessagePackFormatter<T>) f;
 			}
 		}
 
 		private static class LevelEditorResolverGetFormatterHelper
 		{
-			private static readonly Dictionary<Type, int> lookup = new Dictionary<Type, int>(8)
+			private static readonly Dictionary<Type, IMessagePackFormatter> lookup = new Dictionary<Type, IMessagePackFormatter>
 			{
-				{ typeof(LevelEditorSaveData), 0 },
-				{ typeof(LevelEditorObjectData), 1 },
-				{ typeof(LevelEditorComponentData), 2 },
-				{ typeof(LevelEditorCustomData), 3 },
-				{ typeof(List<LevelEditorObjectData>), 4 },
-				{ typeof(LevelEditorComponentData[]), 5 },
-				{ typeof(LevelEditorPropertyData[]), 6 },
-				{ typeof(Dictionary<string, LevelEditorCustomData>), 7 },
-				{ typeof(ComponentDataWrapper), 8 },
-				{ typeof(ComponentDataWrapper[]), 9 },
-				{ typeof(List<ComponentDataWrapper>), 10 },
-				{ typeof(TransformWrapper.Wrapper), 11 },
-				{ typeof(RigidbodyWrapper.Wrapper), 12 },
-				{ typeof(LevelEditorIdentifier), 13 }
+				// Standard
+				{ typeof(LevelEditorSaveData), new LevelEditorSaveDataFormatter() },
+				{ typeof(LevelEditorObjectData), new LevelEditorObjectDataFormatter() },
+				{ typeof(LevelEditorComponentData), new LevelEditorComponentDataFormatter() },
+				{ typeof(LevelEditorCustomData), new LevelEditorCustomDataFormatter() },
+				{ typeof(ComponentDataWrapper), new ComponentDataWrapperFormatter() },
+				{ typeof(LevelEditorIdentifier), new LevelEditorIdentifierFormatter() },
+				{ typeof(LevelEditorSaveData?), new StaticNullableFormatter<LevelEditorSaveData>(new LevelEditorSaveDataFormatter()) },
+				{ typeof(LevelEditorObjectData?), new StaticNullableFormatter<LevelEditorObjectData>(new LevelEditorObjectDataFormatter()) },
+				{ typeof(LevelEditorComponentData?), new StaticNullableFormatter<LevelEditorComponentData>(new LevelEditorComponentDataFormatter()) },
+				{ typeof(LevelEditorCustomData?), new StaticNullableFormatter<LevelEditorCustomData>(new LevelEditorCustomDataFormatter()) },
+				{ typeof(ComponentDataWrapper?), new StaticNullableFormatter<ComponentDataWrapper>(new ComponentDataWrapperFormatter()) },
+				{ typeof(LevelEditorIdentifier?), new StaticNullableFormatter<LevelEditorIdentifier>(new LevelEditorIdentifierFormatter()) },
+
+				// Standard array
+				{ typeof(LevelEditorSaveData[]), new ArrayFormatter<LevelEditorSaveData>() },
+				{ typeof(LevelEditorObjectData[]), new ArrayFormatter<LevelEditorObjectData>() },
+				{ typeof(LevelEditorComponentData[]), new ArrayFormatter<LevelEditorComponentData>() },
+				{ typeof(LevelEditorCustomData[]), new ArrayFormatter<LevelEditorCustomData>() },
+				{ typeof(ComponentDataWrapper[]), new ArrayFormatter<ComponentDataWrapper>() },
+				{ typeof(LevelEditorIdentifier[]), new ArrayFormatter<LevelEditorIdentifier>() },
+				{ typeof(LevelEditorSaveData?[]), new ArrayFormatter<LevelEditorSaveData?>() },
+				{ typeof(LevelEditorObjectData?[]), new ArrayFormatter<LevelEditorObjectData?>() },
+				{ typeof(LevelEditorComponentData?[]), new ArrayFormatter<LevelEditorComponentData?>() },
+				{ typeof(LevelEditorCustomData?[]), new ArrayFormatter<LevelEditorCustomData?>() },
+				{ typeof(ComponentDataWrapper?[]), new ArrayFormatter<ComponentDataWrapper?>() },
+				{ typeof(LevelEditorIdentifier?[]), new ArrayFormatter<LevelEditorIdentifier?>() },
+
+				// Standard list
+				{ typeof(List<LevelEditorSaveData>), new ListFormatter<LevelEditorSaveData>() },
+				{ typeof(List<LevelEditorObjectData>), new ListFormatter<LevelEditorObjectData>() },
+				{ typeof(List<LevelEditorComponentData>), new ListFormatter<LevelEditorComponentData>() },
+				{ typeof(List<LevelEditorCustomData>), new ListFormatter<LevelEditorCustomData>() },
+				{ typeof(List<ComponentDataWrapper>), new ListFormatter<ComponentDataWrapper>() },
+				{ typeof(List<LevelEditorIdentifier>), new ListFormatter<LevelEditorIdentifier>() },
+				{ typeof(List<LevelEditorSaveData?>), new ListFormatter<LevelEditorSaveData?>() },
+				{ typeof(List<LevelEditorObjectData?>), new ListFormatter<LevelEditorObjectData?>() },
+				{ typeof(List<LevelEditorComponentData?>), new ListFormatter<LevelEditorComponentData?>() },
+				{ typeof(List<LevelEditorCustomData?>), new ListFormatter<LevelEditorCustomData?>() },
+				{ typeof(List<ComponentDataWrapper?>), new ListFormatter<ComponentDataWrapper?>() },
+				{ typeof(List<LevelEditorIdentifier?>), new ListFormatter<LevelEditorIdentifier?>() },
+
+				// Wrappers
+				{ typeof(TransformWrapper.Wrapper), new TransformWrapperFormatter() },
+				{ typeof(RigidbodyWrapper.Wrapper), new RigidbodyWrapperFormatter() },
+
+				// Specials
+				{ typeof(Dictionary<string, LevelEditorCustomData>), new DictionaryFormatter<string, LevelEditorCustomData>() }
 			};
-			
+
 			internal static IMessagePackFormatter GetFormatter(Type t)
 			{
-				if (!lookup.TryGetValue(t, out int key))
-				{
-					return null;
-				}
-
-				switch (key)
-				{
-					case 0:
-						return new LevelEditorSaveDataFormatter();
-					case 1:
-						return new LevelEditorObjectDataFormatter();
-					case 2:
-						return new LevelEditorComponentDataFormatter();
-					case 3:
-						return new LevelEditorCustomDataFormatter();
-					case 4:
-						return new ListFormatter<LevelEditorObjectData>();
-					case 5:
-						return new ArrayFormatter<LevelEditorComponentData>();
-					case 6:
-						return new ArrayFormatter<LevelEditorPropertyData>();
-					case 7:
-						return new DictionaryFormatter<string, LevelEditorCustomData>();
-					case 8:
-						return new ComponentDataWrapperFormatter();
-					case 9:
-						return new ArrayFormatter<ComponentDataWrapper>();
-					case 10:
-						return new ListFormatter<ComponentDataWrapper>();
-					case 11:
-						return new TransformWrapperFormatter();
-					case 12:
-						return new RigidbodyWrapperFormatter();
-					case 13:
-						return new LevelEditorIdentifierFormatter();
-					default:
-						return null;
-				}
+				return lookup.TryGetValue(t, out IMessagePackFormatter formatter) ? formatter : null;
 			}
 		}
 	}
