@@ -21,7 +21,7 @@ namespace Hertzole.ALE
         string Name { get; set; }
         bool IsActive { get; set; }
 
-        string ID { get; set; }
+        LevelEditorIdentifier ID { get; set; }
         uint InstanceID { get; set; }
 
         GameObject MyGameObject { get; }

@@ -5,7 +5,7 @@ namespace Hertzole.ALE
     public interface ILevelEditorResource
     {
         string Name { get; }
-        string ID { get; }
+        LevelEditorIdentifier ID { get; }
         int Limit { get; }
         bool Hidden { get; }
         bool CustomIcon { get; }

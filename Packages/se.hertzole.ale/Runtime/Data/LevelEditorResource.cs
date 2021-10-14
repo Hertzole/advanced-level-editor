@@ -10,7 +10,7 @@ namespace Hertzole.ALE
         [SerializeField]
         private string name = "New Resource";
         [SerializeField]
-        private string id = "new_resource";
+        private LevelEditorIdentifier id = "new_resource";
         [SerializeField]
         private bool customIcon = false;
         [SerializeField]
@@ -32,7 +32,7 @@ namespace Hertzole.ALE
         private List<LevelEditorResource> children;
 
         public string Name { get { return name; } set { name = value; } }
-        public string ID { get { return id; } set { id = value; } }
+        public LevelEditorIdentifier ID { get { return id; } set { id = value; } }
         public int Limit { get { return limit; } set { limit = value; } }
         public bool Hidden { get { return hidden; } set { hidden = value; } }
         public bool CustomIcon { get { return customIcon; } set { customIcon = value; } }
@@ -80,7 +80,7 @@ namespace Hertzole.ALE
             hashCode = hashCode * -1521134295 + limit.GetHashCode();
             hashCode = hashCode * -1521134295 + treeID.GetHashCode();
             hashCode = hashCode * -1521134295 + treeDepth.GetHashCode();
-            hashCode = hashCode * -1521134295 + EqualityComparer<string>.Default.GetHashCode(id);
+            hashCode = hashCode * -1521134295 + id.GetHashCode();
             return hashCode;
         }
 

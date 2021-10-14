@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using MessagePack;
+using UnityEditor;
 using UnityEngine;
 
 namespace Hertzole.ALE
@@ -30,19 +31,17 @@ namespace Hertzole.ALE
 			typeMap[hash] = typeof(T);
 		}
 
-		public static byte[] SerializeBinary<T>(T data, bool compress = false)
+		public static byte[] SerializeBinary<T>(T data, bool compress = true)
 		{
-			if (compress != previousCompress)
-			{
-				previousCompress = compress;
-				Options = (LevelEditorSerializerOptions) Options.WithCompression(compress ? MessagePackCompression.Lz4Block : MessagePackCompression.None);
-			}
+			SetCompression(compress);
 
 			return MessagePackSerializer.Serialize(data, Options);
 		}
 
-		public static T DeserializeBinary<T>(byte[] bytes)
+		public static T DeserializeBinary<T>(byte[] bytes, bool compressed = true)
 		{
+			SetCompression(compressed);
+			
 			return MessagePackSerializer.Deserialize<T>(bytes, Options);
 		}
 
@@ -56,6 +55,15 @@ namespace Hertzole.ALE
 			byte[] bytes = MessagePackSerializer.ConvertFromJson(json, Options);
 
 			return MessagePackSerializer.Deserialize<T>(bytes, Options);
+		}
+
+		private static void SetCompression(bool compress)
+		{
+			if (compress != previousCompress)
+			{
+				previousCompress = compress;
+				Options = (LevelEditorSerializerOptions) Options.WithCompression(compress ? MessagePackCompression.Lz4Block : MessagePackCompression.None);
+			}
 		}
 
 		public static Type GetType(string typeName)

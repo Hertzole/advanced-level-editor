@@ -14,7 +14,9 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   resources:
   - name: Root
-    id: ale_tree_view_root
+    id:
+      stringValue: ale_tree_view_root
+      value: -108415644
     customIcon: 0
     icon: {fileID: 0}
     limit: 0
@@ -23,7 +25,9 @@ MonoBehaviour:
     treeID: 0
     treeDepth: -1
   - name: Primitives
-    id: 
+    id:
+      stringValue: 
+      value: 23
     customIcon: 0
     icon: {fileID: 0}
     limit: 0
@@ -32,7 +36,9 @@ MonoBehaviour:
     treeID: 17
     treeDepth: 0
   - name: Physics
-    id: 
+    id:
+      stringValue: 
+      value: 23
     customIcon: 0
     icon: {fileID: 0}
     limit: 0
@@ -41,7 +47,9 @@ MonoBehaviour:
     treeID: 21
     treeDepth: 1
   - name: Physics Sphere
-    id: sphere_physics
+    id:
+      stringValue: sphere_physics
+      value: 1919247276
     customIcon: 0
     icon: {fileID: 0}
     limit: 0
@@ -50,7 +58,9 @@ MonoBehaviour:
     treeID: 23
     treeDepth: 2
   - name: Physics Cube
-    id: cube_physics
+    id:
+      stringValue: cube_physics
+      value: -524557868
     customIcon: 0
     icon: {fileID: 0}
     limit: 0
@@ -59,7 +69,9 @@ MonoBehaviour:
     treeID: 22
     treeDepth: 2
   - name: Sphere
-    id: sphere
+    id:
+      stringValue: sphere
+      value: -1958233436
     customIcon: 0
     icon: {fileID: 0}
     limit: 0
@@ -68,7 +80,9 @@ MonoBehaviour:
     treeID: 20
     treeDepth: 1
   - name: Plane
-    id: plane
+    id:
+      stringValue: plane
+      value: 765218981
     customIcon: 0
     icon: {fileID: 0}
     limit: 0
@@ -77,7 +91,9 @@ MonoBehaviour:
     treeID: 19
     treeDepth: 1
   - name: Cube
-    id: cube
+    id:
+      stringValue: cube
+      value: 24305868
     customIcon: 0
     icon: {fileID: 0}
     limit: 0
@@ -86,7 +102,9 @@ MonoBehaviour:
     treeID: 18
     treeDepth: 1
   - name: Game
-    id: 
+    id:
+      stringValue: 
+      value: 23
     customIcon: 0
     icon: {fileID: 0}
     limit: 0
@@ -95,7 +113,9 @@ MonoBehaviour:
     treeID: 15
     treeDepth: 0
   - name: Spawnpoint
-    id: spawnpoint
+    id:
+      stringValue: spawnpoint
+      value: -1327143348
     customIcon: 0
     icon: {fileID: 0}
     limit: 0

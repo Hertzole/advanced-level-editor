@@ -600,7 +600,7 @@ PlayerSettings:
   webGLThreadsSupport: 0
   webGLDecompressionFallback: 0
   scriptingDefineSymbols:
-    1: ALE_COMPATIBILITY_0
+    1: 
   additionalCompilerArguments: {}
   platformArchitecture: {}
   scriptingBackend:

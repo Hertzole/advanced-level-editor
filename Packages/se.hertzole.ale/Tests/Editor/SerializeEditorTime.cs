@@ -62,7 +62,7 @@ namespace Hertzole.ALE.Tests.Editor
 					new LevelEditorObjectData
 					{
 						active = true,
-						id = "delete_me",
+						id = new LevelEditorIdentifier("delete_me"),
 						instanceId = 0,
 						name = "Haha"
 					}

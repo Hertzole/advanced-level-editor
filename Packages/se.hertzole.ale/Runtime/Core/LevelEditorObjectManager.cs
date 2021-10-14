@@ -25,9 +25,9 @@ namespace Hertzole.ALE
 
         private List<ILevelEditorObject> allObjects = new List<ILevelEditorObject>();
 
-        private Dictionary<string, Stack<ILevelEditorObject>> pooledObjects = new Dictionary<string, Stack<ILevelEditorObject>>();
-        private Dictionary<string, List<ILevelEditorObject>> activeObjects = new Dictionary<string, List<ILevelEditorObject>>();
-        private Dictionary<string, int> objectCount = new Dictionary<string, int>();
+        private Dictionary<LevelEditorIdentifier, Stack<ILevelEditorObject>> pooledObjects = new Dictionary<LevelEditorIdentifier, Stack<ILevelEditorObject>>();
+        private Dictionary<LevelEditorIdentifier, List<ILevelEditorObject>> activeObjects = new Dictionary<LevelEditorIdentifier, List<ILevelEditorObject>>();
+        private Dictionary<LevelEditorIdentifier, int> objectCount = new Dictionary<LevelEditorIdentifier, int>();
         private Dictionary<uint, ILevelEditorObject> objectsWithId = new Dictionary<uint, ILevelEditorObject>();
 
         public bool PoolObjects { get { return poolObjects; } set { poolObjects = value; } }
@@ -284,7 +284,7 @@ namespace Hertzole.ALE
             return objectsWithId.TryGetValue(instanceID, out ILevelEditorObject obj) ? obj : null;
         }
 
-        public int GetObjectCount(string id)
+        public int GetObjectCount(LevelEditorIdentifier id)
         {
             if (objectCount.TryGetValue(id, out int count))
             {

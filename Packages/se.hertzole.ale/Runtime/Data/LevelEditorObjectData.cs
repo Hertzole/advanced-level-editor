@@ -7,7 +7,7 @@ namespace Hertzole.ALE
     {
         public string name;
         public bool active;
-        public string id;
+        public LevelEditorIdentifier id;
         public uint instanceId;
         public LevelEditorComponentData[] components;
 
