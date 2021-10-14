@@ -50,7 +50,6 @@ namespace Hertzole.ALE
 			customResolvers.Add(StandardResolver.Instance);
 
 			StaticCompositeResolver.Instance.Register(customResolvers.ToArray());
-			Debug.Log(customResolvers.ToDebugString());
 			LevelEditorSerializer.Options = (LevelEditorSerializerOptions) LevelEditorSerializer.Options.WithResolver(StaticCompositeResolver.Instance);
 
 			serializerRegistered = true;
@@ -163,7 +162,8 @@ namespace Hertzole.ALE
 				{ typeof(ComponentDataWrapper[]), 9 },
 				{ typeof(List<ComponentDataWrapper>), 10 },
 				{ typeof(TransformWrapper.Wrapper), 11 },
-				{ typeof(RigidbodyWrapper.Wrapper), 12 }
+				{ typeof(RigidbodyWrapper.Wrapper), 12 },
+				{ typeof(LevelEditorIdentifier), 13 }
 			};
 			
 			internal static IMessagePackFormatter GetFormatter(Type t)
@@ -201,6 +201,8 @@ namespace Hertzole.ALE
 						return new TransformWrapperFormatter();
 					case 12:
 						return new RigidbodyWrapperFormatter();
+					case 13:
+						return new LevelEditorIdentifierFormatter();
 					default:
 						return null;
 				}

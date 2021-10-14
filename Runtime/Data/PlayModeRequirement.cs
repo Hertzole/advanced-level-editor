@@ -6,7 +6,7 @@ namespace Hertzole.ALE
     [Serializable]
     public struct PlayModeRequirement : IEquatable<PlayModeRequirement>
     {
-        public string objectID;
+        public LevelEditorIdentifier objectID;
         public int minAmount;
         public bool mustBeActive;
 
@@ -23,7 +23,7 @@ namespace Hertzole.ALE
         public override int GetHashCode()
         {
             int hashCode = 793019971;
-            hashCode = hashCode * -1521134295 + EqualityComparer<string>.Default.GetHashCode(objectID);
+            hashCode = hashCode * -1521134295 + objectID.GetHashCode();
             hashCode = hashCode * -1521134295 + minAmount.GetHashCode();
             hashCode = hashCode * -1521134295 + mustBeActive.GetHashCode();
             return hashCode;

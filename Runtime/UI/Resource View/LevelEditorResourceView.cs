@@ -67,7 +67,7 @@ namespace Hertzole.ALE
 		private ILevelEditorResources realResources;
 
 		private readonly Dictionary<int, LevelEditorResource> treeLookup = new Dictionary<int, LevelEditorResource>();
-		private Dictionary<string, Sprite> iconCache;
+		private Dictionary<LevelEditorIdentifier, Sprite> iconCache;
 
 		protected LevelEditorResource treeRoot;
 		protected LevelEditorResource[] allAssets;
@@ -103,7 +103,7 @@ namespace Hertzole.ALE
 
 			if (iconHandling == IconHandling.SaveInMemory)
 			{
-				iconCache = new Dictionary<string, Sprite>();
+				iconCache = new Dictionary<LevelEditorIdentifier, Sprite>();
 			}
 
 			switch (asyncWaitMethod)

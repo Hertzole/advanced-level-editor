@@ -6,7 +6,7 @@ namespace Hertzole.ALE
 	public class DeleteObjectUndoAction : IUndoAction
 	{
 		private readonly uint targetInstanceId;
-		private readonly string targetId;
+		private readonly LevelEditorIdentifier targetId;
 		private readonly IExposedWrapper[] savedValues;
 
 		public DeleteObjectUndoAction(ILevelEditorObject obj)

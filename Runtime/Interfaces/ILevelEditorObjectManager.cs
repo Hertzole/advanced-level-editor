@@ -63,7 +63,7 @@ namespace Hertzole.ALE
 
         ILevelEditorObject GetObject(uint instanceID);
 
-        int GetObjectCount(string id);
+        int GetObjectCount(LevelEditorIdentifier id);
 
         int GetTotalObjectCount();
 

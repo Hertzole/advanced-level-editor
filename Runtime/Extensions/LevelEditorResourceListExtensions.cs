@@ -10,7 +10,7 @@ namespace Hertzole.ALE
         /// <returns>The ID of the resource at the given index.</returns>
         /// <exception cref="IndexOutOfRangeException">Thrown if your index is outside the bounds of the resources arrray.</exception>
         /// <exception cref="EmptyArrayException">Thrown if there are no resources.</exception>
-        public static string GetItemID(this ILevelEditorResources x, int index)
+        public static LevelEditorIdentifier GetItemID(this ILevelEditorResources x, int index)
         {
             ILevelEditorResource[] resources = x.GetResources();
             if (resources != null && resources.Length > 0)
@@ -36,18 +36,23 @@ namespace Hertzole.ALE
         /// <exception cref="EmptyArrayException">Thrown if there are no resources.</exception>
         public static int GetItemIndex(this ILevelEditorResources x, string id)
         {
+            return GetItemIndex(x, new LevelEditorIdentifier(id));
+        }
+
+        public static int GetItemIndex(this ILevelEditorResources x, LevelEditorIdentifier identifier)
+        {
             ILevelEditorResource[] resources = x.GetResources();
             if (resources != null && resources.Length > 0)
             {
                 for (int i = 0; i < resources.Length; i++)
                 {
-                    if (resources[i].ID == id)
+                    if (resources[i].ID == identifier)
                     {
                         return i;
                     }
                 }
 
-                throw new ArgumentException($"There's no resource with the ID {id}.");
+                throw new ArgumentException($"There's no resource with the ID {identifier}.");
             }
 
             throw new EmptyArrayException("There are no resources to get.");
@@ -85,18 +90,23 @@ namespace Hertzole.ALE
         /// <exception cref="EmptyArrayException">Thrown if there are no resources.</exception>
         public static ILevelEditorResource GetResource(this ILevelEditorResources x, string id)
         {
+            return GetResource(x, new LevelEditorIdentifier(id));
+        }
+
+        public static ILevelEditorResource GetResource(this ILevelEditorResources x, LevelEditorIdentifier identifier)
+        {
             ILevelEditorResource[] resources = x.GetResources();
             if (resources != null && resources.Length > 0)
             {
                 for (int i = 0; i < resources.Length; i++)
                 {
-                    if (resources[i].ID == id)
+                    if (resources[i].ID == identifier)
                     {
                         return resources[i];
                     }
                 }
 
-                throw new ArgumentException($"There's no resource with the ID {id}.");
+                throw new ArgumentException($"There's no resource with the ID {identifier}.");
             }
 
             throw new EmptyArrayException("There are no resources to get.");

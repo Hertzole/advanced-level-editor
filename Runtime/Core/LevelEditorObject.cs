@@ -58,9 +58,8 @@ namespace Hertzole.ALE
             }
         }
 
-        public string ID { get; set; }
+        public LevelEditorIdentifier ID { get; set; }
         public uint InstanceID { get; set; }
-
 
         public ILevelEditorObject Parent { get; set; }
 

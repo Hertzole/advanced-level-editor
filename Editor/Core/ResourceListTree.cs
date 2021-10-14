@@ -121,16 +121,20 @@ namespace Hertzole.ALE.Editor
                 case ResourcesColumns.ID:
                     if (!isFolder)
                     {
-                        item.Data.ID = EditorGUI.TextField(cellRect, GUIContent.none, item.Data.ID);
+                        string identifier = item.Data.ID.stringValue;
+                        EditorGUI.BeginChangeCheck();
+                        identifier = EditorGUI.TextField(cellRect, GUIContent.none, identifier);
+                        if (EditorGUI.EndChangeCheck())
+                        {
+                            LevelEditorIdentifier newIdentifier = new LevelEditorIdentifier() { stringValue = identifier, value = identifier.GetStableHashCode() };
+                            item.Data.ID = newIdentifier;
+                        }
                     }
                     break;
                 case ResourcesColumns.Limit:
-                    if (!isFolder)
+                    if (!isFolder && item.Data.Asset != null && item.Data.Asset is GameObject)
                     {
-                        if (item.Data.Asset != null && item.Data.Asset.GetType() == typeof(GameObject))
-                        {
-                            item.Data.Limit = EditorGUI.IntField(cellRect, GUIContent.none, item.Data.Limit);
-                        }
+                        item.Data.Limit = EditorGUI.IntField(cellRect, GUIContent.none, item.Data.Limit);
                     }
                     break;
                 case ResourcesColumns.GameIcon:
