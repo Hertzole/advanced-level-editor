@@ -10,6 +10,8 @@ namespace Hertzole.ALE
         public List<LevelEditorObjectData> objects;
         internal Dictionary<string, LevelEditorCustomData> customData;
 
+        public const ushort SAVE_VERSION = 1;
+
         public LevelEditorSaveData(string name)
         {
             this.name = name;
