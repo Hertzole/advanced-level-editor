@@ -416,6 +416,14 @@ namespace Hertzole.ALE.CodeGen
 			m.Body.InitLocals = true;
 
 			ILProcessor il = m.Body.GetILProcessor();
+			
+			if (wrapperFormatters.Count == 0)
+			{
+				il.EmitBool(false);
+				il.Emit(OpCodes.Ret);
+				m.Body.Optimize();
+				return m;
+			}
 
 			CreateSerializeBlock(il, wrapperFormatters, (x, i) => // If check
 			{
@@ -460,6 +468,17 @@ namespace Hertzole.ALE.CodeGen
 			wrapper.IsOut = true;
 
 			ILProcessor il = m.Body.GetILProcessor();
+
+			if (wrapperFormatters.Count == 0)
+			{
+				il.EmitLdarg(wrapper);
+				il.Emit(OpCodes.Ldnull);
+				il.Emit(OpCodes.Stind_Ref);
+				il.EmitBool(false);
+				il.Emit(OpCodes.Ret);
+				m.Body.Optimize();
+				return m;
+			}
 
 			MethodReference getType = module.GetMethod<Type>("GetTypeFromHandle", typeof(RuntimeTypeHandle));
 			MethodReference equality = module.GetMethod<Type>("op_Equality", typeof(Type), typeof(Type));

@@ -4,7 +4,7 @@ namespace Hertzole.ALE
 {
 	public class LevelEditorSerializerOptions : MessagePackSerializerOptions
 	{
-		public ushort SaveVersion { get; set; } = 0;
+		public ushort SaveVersion { get; set; } = 1;
 		
 		protected internal LevelEditorSerializerOptions(IFormatterResolver resolver) : base(resolver) { }
 

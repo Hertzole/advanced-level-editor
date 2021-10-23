@@ -14,11 +14,13 @@ namespace Hertzole.ALE
 
         public event Action<UnityObject> OnObjectSelected;
 
-        protected override void OnInitialized()
+        private void Awake()
         {
             listView.Initialize(null, ((RectTransform)listItemPrefab.transform).sizeDelta.y);
             listView.OnBindItem += OnBindListItem;
             listView.OnCreateItem = OnCreateListItem;
+
+            gameObject.SetActive(false);
         }
 
         private RecycledListItem OnCreateListItem()

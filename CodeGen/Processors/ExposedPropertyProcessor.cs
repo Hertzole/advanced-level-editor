@@ -464,8 +464,6 @@ namespace Hertzole.ALE.CodeGen
 
 					if (item.IsComponent)
 					{
-						VariableDefinition varWrapper = m.AddLocalVariable<ComponentDataWrapper>(item.Name);
-
 						// ComponentDataWrapper wrapper = (ComponentDataWrapper) value;
 						fill.Add(ILHelper.Ldarg(localIl, localParaValue));
 						fill.Add(Instruction.Create(OpCodes.Isinst, Module.GetTypeReference<ComponentDataWrapper>()));
@@ -473,10 +471,10 @@ namespace Hertzole.ALE.CodeGen
 
 						fill.Add(ILHelper.Ldarg(localIl, localParaValue));
 						fill.Add(Instruction.Create(OpCodes.Unbox_Any, Module.GetTypeReference<ComponentDataWrapper>()));
-						fill.Add(ILHelper.Stloc(varWrapper));
+						fill.Add(ILHelper.Stloc(localVariables[index]));
 						
 						// if (!wrapper.Equals(value))
-						fill.Add(ILHelper.Ldloc(varWrapper, true));
+						fill.Add(ILHelper.Ldloc(localVariables[index], true));
 						fill.Add(ILHelper.Ldarg(localIl));
 						fill.Add(item.GetLoadInstruction());
 						if (item.IsCollection)
@@ -528,7 +526,7 @@ namespace Hertzole.ALE.CodeGen
 								// value.AddRange(wrapper.GetObjects<Type>());
 								fill.Add(addStart);
 								fill.Add(item.GetLoadInstruction());
-								fill.Add(ILHelper.Ldloc(varWrapper, true));
+								fill.Add(ILHelper.Ldloc(localVariables[index], true));
 								fill.Add(Instruction.Create(OpCodes.Call, Module.GetMethod<ComponentDataWrapper>("GetObjects", Array.Empty<Type>()).MakeGenericMethod(item.FieldType.GetCollectionType())));
 								fill.Add(Instruction.Create(OpCodes.Callvirt, Module.GetMethod(typeof(List<>), "AddRange").MakeHostInstanceGeneric(
 									Module.GetTypeReference(typeof(List<>)).MakeGenericInstanceType(item.FieldType.GetCollectionType()))));
@@ -536,20 +534,20 @@ namespace Hertzole.ALE.CodeGen
 							else
 							{
 								// valueArray = wrapper.GetObjects<Type>();
-								fill.Add(ILHelper.Ldloc(varWrapper, true));
+								fill.Add(ILHelper.Ldloc(localVariables[index], true));
 								fill.Add(Instruction.Create(OpCodes.Call, Module.GetMethod<ComponentDataWrapper>("GetObjects", Array.Empty<Type>()).MakeGenericMethod(item.FieldType.GetCollectionType())));
 								fill.Add(item.GetSetInstruction());
 							}
 							
 							// ALE__GENERATED__lastModifyValue = wrapper;
                             fill.Add(ILHelper.Ldarg(localIl));
-                            fill.Add(ILHelper.Ldloc(varWrapper));
+                            fill.Add(ILHelper.Ldloc(localVariables[index]));
                             fill.Add(Instruction.Create(OpCodes.Box, Module.GetTypeReference<ComponentDataWrapper>()));
                             fill.Add(Instruction.Create(OpCodes.Stfld, lastModifyValueField));
 						}
 						else
 						{
-							fill.Add(ILHelper.Ldloc(varWrapper, true));
+							fill.Add(ILHelper.Ldloc(localVariables[index], true));
 							fill.Add(Instruction.Create(OpCodes.Call, Module.GetMethod<ComponentDataWrapper>("GetObject", Array.Empty<Type>()).MakeGenericMethod(item.FieldType.GetCollectionType())));
 							fill.Add(item.GetSetInstruction());
 						}
@@ -632,13 +630,13 @@ namespace Hertzole.ALE.CodeGen
 						fill.Add(ILHelper.Ldarg(localIl));
 						fill.Add(ILHelper.Ldloc(localVariables[index]));
 						fill.Add(item.GetSetInstruction());
-
-						// ALE__GENERATED__lastModifyValue = var;
-						fill.Add(ILHelper.Ldarg(localIl));
-						fill.Add(ILHelper.Ldloc(localVariables[index]));
-						fill.Add(Instruction.Create(OpCodes.Box, item.FieldTypeComponentAware));
-						fill.Add(Instruction.Create(OpCodes.Stfld, lastModifyValueField));
 					}
+					
+					// ALE__GENERATED__lastModifyValue = var;
+                    fill.Add(ILHelper.Ldarg(localIl));
+                    fill.Add(ILHelper.Ldloc(localVariables[index]));
+                    fill.Add(Instruction.Create(OpCodes.Box, item.FieldTypeComponentAware));
+                    fill.Add(Instruction.Create(OpCodes.Stfld, lastModifyValueField));
 					
 					// changed = true;
 					fill.Add(ILHelper.Ldarg(localIl, localParaChanged));

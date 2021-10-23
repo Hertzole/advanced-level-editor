@@ -21,6 +21,8 @@ namespace Hertzole.ALE
         private string fileExtension = ".json";
         [SerializeField]
         private FormatType levelFormat = FormatType.JSON;
+        [SerializeField] 
+        private bool compress = true;
 
         private string loadLocation;
 
@@ -86,7 +88,7 @@ namespace Hertzole.ALE
                     data = LevelEditorSerializer.DeserializeJson<LevelEditorSaveData>(File.ReadAllText(path));
                     break;
                 case FormatType.Binary:
-                    data = LevelEditorSerializer.DeserializeBinary<LevelEditorSaveData>(File.ReadAllBytes(path));
+                    data = LevelEditorSerializer.DeserializeBinary<LevelEditorSaveData>(File.ReadAllBytes(path), compress);
                     break;
                 default:
                     data = new LevelEditorSaveData();
@@ -158,7 +160,7 @@ namespace Hertzole.ALE
                     File.WriteAllText(path, json);
                     break;
                 case FormatType.Binary:
-                    byte[] bytes = LevelEditorSerializer.SerializeBinary(saveData);
+                    byte[] bytes = LevelEditorSerializer.SerializeBinary(saveData, compress);
                     File.WriteAllBytes(path, bytes);
                     break;
             }

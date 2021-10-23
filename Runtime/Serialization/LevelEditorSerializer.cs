@@ -80,7 +80,7 @@ namespace Hertzole.ALE
 
 		public static Type GetType(int hash)
 		{
-			return typeMap[hash];
+			return typeMap.TryGetValue(hash, out Type type) ? type : null;
 		}
 	}
 }
