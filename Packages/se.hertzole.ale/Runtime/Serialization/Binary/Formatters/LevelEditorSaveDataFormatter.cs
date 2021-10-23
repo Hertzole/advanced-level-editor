@@ -25,6 +25,10 @@ namespace Hertzole.ALE
 			Dictionary<string, LevelEditorCustomData> customData = null;
 
 			LevelEditorSerializerOptions levelEditorOptions = options as LevelEditorSerializerOptions;
+			if (levelEditorOptions != null)
+			{
+				levelEditorOptions.SaveVersion = 0;
+			}
 			int count = reader.ReadArrayHeader();
 			for (int i = 0; i < count; i++)
 			{

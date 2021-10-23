@@ -71,6 +71,12 @@ namespace Hertzole.ALE
 							goto FAIL;
 						}
 
+						if (type == null)
+						{
+							reader.Skip();
+							continue;
+						}
+
 						((LevelEditorResolver) LevelEditorResolver.instance).DeserializeWrapper(type, ref reader, options, out wrapper);
 						continue;
 				}
@@ -89,6 +95,12 @@ namespace Hertzole.ALE
 						type = LevelEditorSerializer.GetType(reader.ReadInt32());
 						break;
 					case 1:
+						if (type == null)
+						{
+							reader.Skip();
+							continue;
+						}
+						
 						((LevelEditorResolver) LevelEditorResolver.instance).DeserializeWrapper(type, ref reader, options, out wrapper);
 						break;
 				}

@@ -223,11 +223,13 @@ namespace Hertzole.ALE.CodeGen.Helpers
 
 			Dictionary<int, List<Instruction>> checkFills = new Dictionary<int, List<Instruction>>();
 
+			int index = 0;
 			// Create all the if checks in reverse order.
 			for (int i = items.Count - 1; i >= 0; i--)
 			{
+				index = i;
 				checkFills.Add(i, new List<Instruction>());
-				ifCheck.Invoke(items[i], i, targets[i == items.Count - 1 ? 0 : i + 1], checkFills[i]);
+				ifCheck.Invoke(items[index], index, targets[i == items.Count - 1 ? 0 : i + 1], checkFills[index]);
 				if (i > 0)
 				{
 					targets[i] = checkFills[i][0];
@@ -246,7 +248,7 @@ namespace Hertzole.ALE.CodeGen.Helpers
 			total.AddRange(endFill);
 
 			// Append all if checks before each body block.
-			int index = 0;
+			index = 0;
 			foreach (List<Instruction> fill in bodyFills.Values)
 			{
 				total.InsertRange(total.IndexOf(fill[0]), checkFills[index]);

@@ -11,8 +11,6 @@ namespace Hertzole.ALE
         LevelEditorWindowEvent OnWindowClose { get; }
         LevelEditorWindowEvent OnWindowOpen { get; }
 
-        void Initialize(ILevelEditor levelEditor);
-
         void Dismiss();
 
         void Show();

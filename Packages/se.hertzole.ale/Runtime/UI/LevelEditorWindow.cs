@@ -28,19 +28,8 @@ namespace Hertzole.ALE
         public RectTransform DragArea { get { return dragArea; } set { dragArea = value; } }
         public RectTransform RectTransform { get { if (!rectTransform) { rectTransform = (RectTransform)transform; } return rectTransform; } }
 
-        protected ILevelEditor LevelEditor { get; private set; }
-
         public LevelEditorWindowEvent OnWindowOpen { get { return onWindowOpen; } set { onWindowOpen = value; } }
         public LevelEditorWindowEvent OnWindowClose { get { return onWindowClose; } set { onWindowClose = value; } }
-
-        public void Initialize(ILevelEditor levelEditor)
-        {
-            LevelEditor = levelEditor;
-
-            OnInitialized();
-        }
-
-        protected virtual void OnInitialized() { }
 
         public virtual void Show()
         {

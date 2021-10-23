@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using Hertzole.ALE.Tests.TestScripts;
 using UnityEngine;
 using UnityEngine.Assertions;
 using UnityEngine.TestTools;
@@ -179,6 +180,48 @@ namespace Hertzole.ALE.Tests
 			ComponentDataWrapper array1 = new ComponentDataWrapper(new Component[] { newSphere.MyGameObject.transform, newCapsule.MyGameObject.transform });
 			ComponentDataWrapper array2 = new ComponentDataWrapper(new Component[] { newCapsule.MyGameObject.transform, newSphere.MyGameObject.transform });
 			yield return SetValueTest<ComponentDataWrapper, TransformList>(array1, array2);
+		}
+
+		[UnityTest]
+		public IEnumerator SetValueScript()
+		{
+			sphere.AddComponent<TempTestScript>();
+			capsule.AddComponent<TempTestScript>();
+			
+			ILevelEditorObject newSphere = objectManager.CreateObject("sphere");
+			ILevelEditorObject newCapsule = objectManager.CreateObject("capsule");
+
+			ComponentDataWrapper sphereRef = new ComponentDataWrapper(newSphere.MyGameObject.GetComponent<TempTestScript>());
+			ComponentDataWrapper capsuleRef = new ComponentDataWrapper(newCapsule.MyGameObject.GetComponent<TempTestScript>());
+			yield return SetValueTest<ComponentDataWrapper, ScriptReference>(sphereRef, capsuleRef);
+		}
+
+		[UnityTest]
+		public IEnumerator SetValueScriptArray()
+		{
+			sphere.AddComponent<TempTestScript>();
+			capsule.AddComponent<TempTestScript>();
+			
+			ILevelEditorObject newSphere = objectManager.CreateObject("sphere");
+			ILevelEditorObject newCapsule = objectManager.CreateObject("capsule");
+
+			ComponentDataWrapper array1 = new ComponentDataWrapper(new TempTestScript[] { newSphere.MyGameObject.GetComponent<TempTestScript>(), newCapsule.MyGameObject.GetComponent<TempTestScript>() });
+			ComponentDataWrapper array2 = new ComponentDataWrapper(new TempTestScript[] { newCapsule.MyGameObject.GetComponent<TempTestScript>(), newSphere.MyGameObject.GetComponent<TempTestScript>() });
+			yield return SetValueTest<ComponentDataWrapper, ScriptArray>(array1, array2);
+		}
+
+		[UnityTest]
+		public IEnumerator SetValueScriptList()
+		{
+			sphere.AddComponent<TempTestScript>();
+			capsule.AddComponent<TempTestScript>();
+			
+			ILevelEditorObject newSphere = objectManager.CreateObject("sphere");
+			ILevelEditorObject newCapsule = objectManager.CreateObject("capsule");
+
+			ComponentDataWrapper array1 = new ComponentDataWrapper(new TempTestScript[] { newSphere.MyGameObject.GetComponent<TempTestScript>(), newCapsule.MyGameObject.GetComponent<TempTestScript>() });
+			ComponentDataWrapper array2 = new ComponentDataWrapper(new TempTestScript[] { newCapsule.MyGameObject.GetComponent<TempTestScript>(), newSphere.MyGameObject.GetComponent<TempTestScript>() });
+			yield return SetValueTest<ComponentDataWrapper, ScriptList>(array1, array2);
 		}
 
 		[UnityTest]
@@ -472,6 +515,9 @@ namespace Hertzole.ALE.Tests
 
 		private class GameObjectReference : MonoBehaviour
 		{
+			[ExposeToLevelEditor(-1)]
+			private bool notImportant; // Just to make sure there aren't all ComponentDataWrappers.
+			
 			[ExposeToLevelEditor(512)]
 			private GameObject value;
 
@@ -481,6 +527,9 @@ namespace Hertzole.ALE.Tests
 
 		private class GameObjectArray : MonoBehaviour
 		{
+			[ExposeToLevelEditor(-1)]
+			private bool notImportant; // Just to make sure there aren't all ComponentDataWrappers.
+			
 			[ExposeToLevelEditor(512)]
 			private GameObject[] value;
 
@@ -490,6 +539,9 @@ namespace Hertzole.ALE.Tests
 
 		private class GameObjectList : MonoBehaviour
 		{
+			[ExposeToLevelEditor(-1)]
+			private bool notImportant; // Just to make sure there aren't all ComponentDataWrappers.
+			
 			[ExposeToLevelEditor(512)]
 			private List<GameObject> value;
 
@@ -499,6 +551,9 @@ namespace Hertzole.ALE.Tests
 
 		private class TransformReference : MonoBehaviour
 		{
+			[ExposeToLevelEditor(-1)]
+			private bool notImportant; // Just to make sure there aren't all ComponentDataWrappers.
+			
 			[ExposeToLevelEditor(512)]
 			private Transform value;
 
@@ -508,6 +563,9 @@ namespace Hertzole.ALE.Tests
 
 		private class TransformArray : MonoBehaviour
 		{
+			[ExposeToLevelEditor(-1)]
+			private bool notImportant; // Just to make sure there aren't all ComponentDataWrappers.
+			
 			[ExposeToLevelEditor(512)]
 			private Transform[] value;
 
@@ -517,11 +575,50 @@ namespace Hertzole.ALE.Tests
 
 		private class TransformList : MonoBehaviour
 		{
+			[ExposeToLevelEditor(-1)]
+			private bool notImportant; // Just to make sure there aren't all ComponentDataWrappers.
+			
 			[ExposeToLevelEditor(512)]
 			private List<Transform> value;
 
 			[ExposeToLevelEditor(0)]
 			private List<Transform> Value { get; set; }
+		}
+
+		private class ScriptReference : MonoBehaviour
+		{
+			[ExposeToLevelEditor(-1)]
+			private bool notImportant; // Just to make sure there aren't all ComponentDataWrappers.
+			
+			[ExposeToLevelEditor(512)]
+			private TempTestScript value;
+
+			[ExposeToLevelEditor(0)]
+			private TempTestScript Value { get; set; }
+		}
+
+		private class ScriptArray : MonoBehaviour
+		{
+			[ExposeToLevelEditor(-1)]
+			private bool notImportant; // Just to make sure there aren't all ComponentDataWrappers.
+			
+			[ExposeToLevelEditor(512)]
+			private TempTestScript[] value;
+
+			[ExposeToLevelEditor(0)]
+			private TempTestScript[] Value { get; set; }
+		}
+
+		private class ScriptList : MonoBehaviour
+		{
+			[ExposeToLevelEditor(-1)]
+			private bool notImportant; // Just to make sure there aren't all ComponentDataWrappers.
+			
+			[ExposeToLevelEditor(512)]
+			private List<TempTestScript> value;
+
+			[ExposeToLevelEditor(0)]
+			private List<TempTestScript> Value { get; set; }
 		}
 
 		private class StructValue : MonoBehaviour

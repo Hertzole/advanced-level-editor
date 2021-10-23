@@ -104,6 +104,11 @@ namespace Hertzole.ALE
             
             for (int i = 0; i < components.Length; i++)
             {
+                if (components[i].type == null)
+                {
+                    continue;
+                }
+                
                 string compName = components[i].type.FullName;
                 
                 for (int j = 0; j < exposedComponents.Length; j++)
