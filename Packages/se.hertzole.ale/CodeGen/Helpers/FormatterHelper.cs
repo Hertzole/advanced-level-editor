@@ -512,6 +512,133 @@ namespace Hertzole.ALE.CodeGen.Helpers
 
 			return ins.ToArray();
 		}
+	
+		public static Instruction[] GetReadValue(TypeReference type, ILProcessor il, ParameterDefinition reader, ParameterDefinition options, ParameterDefinition value, VariableDefinition resolverVariable)
+		{
+			ModuleDefinition module = type.Module;
+
+			List<Instruction> ins = new List<Instruction>();
+
+			bool isStandard = IsStandardReadType(type);
+
+			ins.Add(ILHelper.Ldarg(il, value));
+
+			if (!isStandard)
+			{
+				if (resolverVariable == null)
+				{
+					throw new ArgumentNullException(nameof(resolverVariable), "If you don't provide a getResolver call, you'll need to provide a resolver variable.");
+				}
+
+				ins.Add(ILHelper.Ldloc(resolverVariable));
+				ins.Add(Instruction.Create(OpCodes.Call, module.ImportReference(typeof(FormatterResolverExtensions).GetMethod("GetFormatterWithVerify")).MakeGenericMethod(type)));
+			}
+			else
+			{
+				ins.Add(ILHelper.Ldarg(il, reader));
+			}
+
+			MethodReference readMethod;
+
+			if (type.Is<byte>())
+			{
+				readMethod = module.GetMethod(typeof(MessagePackReader), nameof(MessagePackReader.ReadByte));
+			}
+			else if (type.Is<sbyte>())
+			{
+				readMethod = module.GetMethod(typeof(MessagePackReader), nameof(MessagePackReader.ReadSByte));
+			}
+			else if (type.Is<short>())
+			{
+				readMethod = module.GetMethod(typeof(MessagePackReader), nameof(MessagePackReader.ReadInt16));
+			}
+			else if (type.Is<ushort>())
+			{
+				readMethod = module.GetMethod(typeof(MessagePackReader), nameof(MessagePackReader.ReadUInt16));
+			}
+			else if (type.Is<int>())
+			{
+				readMethod = module.GetMethod(typeof(MessagePackReader), nameof(MessagePackReader.ReadInt32));
+			}
+			else if (type.Is<uint>())
+			{
+				readMethod = module.GetMethod(typeof(MessagePackReader), nameof(MessagePackReader.ReadUInt32));
+			}
+			else if (type.Is<long>())
+			{
+				readMethod = module.GetMethod(typeof(MessagePackReader), nameof(MessagePackReader.ReadInt64));
+			}
+			else if (type.Is<ulong>())
+			{
+				readMethod = module.GetMethod(typeof(MessagePackReader), nameof(MessagePackReader.ReadUInt64));
+			}
+			else if (type.Is<string>())
+			{
+				readMethod = module.GetMethod(typeof(MessagePackReader), nameof(MessagePackReader.ReadString));
+			}
+			else if (type.Is<char>())
+			{
+				readMethod = module.GetMethod(typeof(MessagePackReader), nameof(MessagePackReader.ReadChar));
+			}
+			else if (type.Is<bool>())
+			{
+				readMethod = module.GetMethod(typeof(MessagePackReader), nameof(MessagePackReader.ReadBoolean));
+			}
+			else if (type.Is<float>())
+			{
+				readMethod = module.GetMethod(typeof(MessagePackReader), nameof(MessagePackReader.ReadSingle));
+			}
+			else if (type.Is<double>())
+			{
+				readMethod = module.GetMethod(typeof(MessagePackReader), nameof(MessagePackReader.ReadDouble));
+			}
+			else
+			{
+				ins.Add(ILHelper.Ldarg(il, reader));
+				ins.Add(ILHelper.Ldarg(il, options));
+				readMethod = module.ImportReference(typeof(IMessagePackFormatter<>).GetMethod("Deserialize")).MakeHostInstanceGeneric(module.ImportReference(typeof(IMessagePackFormatter<>)).MakeGenericInstanceType(type));
+			}
+
+			ins.Add(Instruction.Create(isStandard ? OpCodes.Call : OpCodes.Callvirt, readMethod));
+			
+			Instruction finish;
+			if (type.Is<sbyte>() || type.Is<byte>())
+			{
+				finish = Instruction.Create(OpCodes.Stind_I1);
+			}
+			else if (type.Is<short>() || type.Is<ushort>())
+			{
+				finish = Instruction.Create(OpCodes.Stind_I2);
+			}
+			else if (type.Is<int>() || type.Is<uint>())
+			{
+				finish = Instruction.Create(OpCodes.Stind_I4);
+			}
+			else if (type.Is<long>() || type.Is<ulong>())
+			{
+				finish = Instruction.Create(OpCodes.Stind_I8);
+			}
+			else if (type.Is<float>())
+			{
+				finish = Instruction.Create(OpCodes.Stind_R4);
+			}
+			else if (type.Is<double>())
+			{
+				finish = Instruction.Create(OpCodes.Stind_R8);
+			}
+			else if (type.IsValueType)
+			{	                
+				finish = Instruction.Create(OpCodes.Stobj, type);
+			}
+			else
+			{
+				finish = Instruction.Create(OpCodes.Stind_Ref);
+			}
+
+			ins.Add(finish);
+
+			return ins.ToArray();
+		}
 
 		public static Instruction GetReadStandardValue(TypeReference type, ModuleDefinition module)
 		{
