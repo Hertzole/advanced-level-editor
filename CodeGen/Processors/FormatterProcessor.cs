@@ -4,11 +4,9 @@ using Hertzole.ALE.CodeGen.Data;
 using Hertzole.ALE.CodeGen.Helpers;
 using MessagePack;
 using MessagePack.Formatters;
-using MessagePack.Internal;
 using Mono.Cecil;
 using Mono.Cecil.Cil;
 using Mono.Cecil.Rocks;
-using Mono.Collections.Generic;
 using UnityEngine;
 
 namespace Hertzole.ALE.CodeGen
@@ -123,8 +121,12 @@ namespace Hertzole.ALE.CodeGen
 						continue;
 					}
 				
+#if ALE_COMPATIBILITY_0
 					MethodDefinition nameSpan = FormatterHelper.CreateSpanMethod(module, type.Fields[i].Name, formatter);
 					fields.Add((type.Fields[i], nameSpan));
+#else
+					fields.Add((type.Fields[i], null));
+#endif
 					if (type.Fields[i].FieldType.IsArray())
 					{
 						resolver.AddTypeFormatter(module.GetTypeReference(typeof(ArrayFormatter<>)).MakeGenericInstanceType(type.Fields[i].FieldType.GetCollectionType()), type.Fields[i].FieldType);
@@ -148,11 +150,11 @@ namespace Hertzole.ALE.CodeGen
 
 				formatter.Methods.Add(m);
 
-				m.AddParameter(module.GetTypeReference(typeof(MessagePackWriter).MakeByRefType()), "writer");
-				m.AddParameter(module.ImportReference(type), "value");
-				m.AddParameter(module.GetTypeReference<MessagePackSerializerOptions>(), "options");
+				ParameterDefinition writer = m.AddParameter(module.GetTypeReference(typeof(MessagePackWriter).MakeByRefType()), "writer");
+				ParameterDefinition value = m.AddParameter(module.ImportReference(type), "value");
+				ParameterDefinition options = m.AddParameter(module.GetTypeReference<MessagePackSerializerOptions>(), "options");
 
-				ILProcessor il = m.Body.GetILProcessor();
+				ILProcessor il = m.BeginEdit();
 
 				m.Body.InitLocals = true;
 
@@ -172,47 +174,21 @@ namespace Hertzole.ALE.CodeGen
 					il.Emit(OpCodes.Callvirt, module.GetMethod<MessagePackSerializerOptions>("get_Resolver"));
 				}
 
-				il.Emit(OpCodes.Ldarg_1);
-				il.Emit(OpCodes.Ldc_I4, fields.Count);
-				il.Emit(OpCodes.Call, module.GetMethod(typeof(MessagePackWriter), "WriteMapHeader", typeof(int)));
+				il.EmitLdarg(writer);
+				il.EmitInt(fields.Count);
+				il.Emit(OpCodes.Call, module.GetMethod(typeof(MessagePackWriter), "WriteArrayHeader", typeof(int)));
 
 				for (int i = 0; i < fields.Count; i++)
 				{
-#if ALE_DEBUG
-					VariableDefinition spanV = m.AddLocalVariable(module.GetTypeReference(typeof(ReadOnlySpan<byte>)));
-					il.Emit(OpCodes.Call, fields[i].Item2);
-					il.EmitStloc(spanV);
-					il.Emit(OpCodes.Ldstr, $"{formatter.Name} writing {fields[i].Item1.Name} | Key: {{0}} | Bytes: {{1}}");
-					il.EmitLdloc(spanV, true);
-					il.Emit(OpCodes.Call, module.GetMethod(typeof(AutomataKeyGen), "GetKey", typeof(ReadOnlySpan<byte>).MakeByRefType()));
-					il.Emit(OpCodes.Box, module.GetTypeReference<ulong>());
-					il.EmitLdloc(spanV);
-
-					MethodReference debugString = null;
-					Collection<MethodDefinition> methods = module.GetTypeReference(typeof(LevelEditorExtensions)).Resolve().Methods;
-					for (int j = 0; j < methods.Count; j++)
-					{
-						if (methods[j].Name == "ToDebugString" && methods[j].Parameters[0].ParameterType.Resolve().Is(typeof(ReadOnlySpan<>)))
-						{
-							debugString = module.ImportReference(methods[j].MakeGenericMethod(module.GetTypeReference<byte>()));
-							break;
-						}
-					}
-
-					il.Emit(OpCodes.Call, debugString);
-					il.Emit(OpCodes.Call, module.GetMethod<string>("Format", typeof(string), typeof(object), typeof(object)));
-					il.Emit(OpCodes.Call, module.GetMethod(typeof(LevelEditorLogger), "Log", typeof(object)));
-#endif
-
-					il.Emit(OpCodes.Ldarg_1);
-					il.Emit(OpCodes.Call, fields[i].Item2);
-					il.Emit(OpCodes.Call, module.GetMethod(typeof(MessagePackWriter), "WriteRaw", typeof(ReadOnlySpan<byte>)));
+					il.EmitLdarg(writer);
+					il.EmitInt(fields[i].Item1.Name.GetStableHashCode());
+					il.Emit(OpCodes.Call, module.GetMethod(typeof(MessagePackWriter), "WriteInt32", typeof(int)));
 					il.Append(FormatterHelper.GetWriteValue(fields[i].Item1.FieldType, fields[i].Item1, IsLastField(i)));
 				}
 
 				il.Emit(OpCodes.Ret);
 
-				m.Body.Optimize();
+				m.EndEdit();
 
 				bool IsLastField(int index)
 				{
@@ -248,10 +224,6 @@ namespace Hertzole.ALE.CodeGen
 
 				m.Body.InitLocals = true;
 
-				VariableDefinition resolverVar = m.AddLocalVariable<IFormatterResolver>();
-				VariableDefinition length = m.AddLocalVariable<int>();
-				VariableDefinition iVar = m.AddLocalVariable<int>();
-
 				il.EmitLdarg(readerPara);
 				Instruction readNil = Instruction.Create(OpCodes.Call, module.GetMethod(typeof(MessagePackReader), "TryReadNil"));
 				il.Append(readNil);
@@ -260,17 +232,12 @@ namespace Hertzole.ALE.CodeGen
 				il.Emit(OpCodes.Newobj, module.GetConstructor<InvalidOperationException>(typeof(string)));
 				il.Emit(OpCodes.Throw);
 
+				// options.Security.DepthStep(ref reader)
 				Instruction start = il.EmitLdarg(optionsPara);
 				il.InsertAfter(readNil, Instruction.Create(OpCodes.Brfalse, start));
 				il.Emit(OpCodes.Callvirt, module.GetMethod<MessagePackSerializerOptions>("get_Security"));
 				il.EmitLdarg(readerPara);
 				il.Emit(OpCodes.Callvirt, module.GetMethod<MessagePackSecurity>("DepthStep"));
-				il.EmitLdarg(optionsPara);
-				il.Emit(OpCodes.Callvirt, module.GetMethod<MessagePackSerializerOptions>("get_Resolver"));
-				il.EmitStloc(resolverVar);
-				il.EmitLdarg(readerPara);
-				il.Emit(OpCodes.Call, module.GetMethod(typeof(MessagePackReader), "ReadMapHeader"));
-				il.EmitStloc(length);
 
 				List<VariableDefinition> localFields = new List<VariableDefinition>();
 
@@ -294,160 +261,65 @@ namespace Hertzole.ALE.CodeGen
 					}
 				}
 
-				il.EmitInt(0);
-				Instruction beforeLoop = il.EmitStloc(iVar);
+				Instruction deserializeFormat1 = Instruction.Create(OpCodes.Ldarg_1);
+				VariableDefinition result = m.AddLocalVariable(type);
+				Instruction createResult = ILHelper.Ldloc(result, true);
+				
+#if ALE_COMPATIBILITY_0
+				VariableDefinition levelEditorOptions = m.AddLocalVariable<LevelEditorSerializerOptions>();
+				
+				// LevelEditorSerializerOptions levelEditorSerializerOptions = options as LevelEditorSerializerOptions
+				il.EmitLdarg(optionsPara);
+				il.Emit(OpCodes.Isinst, module.GetTypeReference<LevelEditorSerializerOptions>());
+				il.EmitStloc(levelEditorOptions);
 
-				VariableDefinition stringKey = m.AddLocalVariable(module.GetTypeReference(typeof(ReadOnlySpan<byte>)));
-				VariableDefinition key = m.AddLocalVariable<ulong>();
-				VariableDefinition keyLength = m.AddLocalVariable<int>();
+				
+				// if (levelEditorSerializerOptions != null && levelEditorSerializerOptions.SaveVersion == 0)
+				il.EmitLdloc(levelEditorOptions);
+				il.Emit(OpCodes.Brfalse, deserializeFormat1);
 
-				// ReadOnlySpan<byte> stringKey = CodeGenHelpers.ReadStringSpan(ref reader);
-				Instruction loopStart = il.EmitLdarg(readerPara);
-				il.Emit(OpCodes.Call, module.GetMethod(typeof(CodeGenHelpers), "ReadStringSpan", typeof(MessagePackReader).MakeByRefType()));
-				il.EmitStloc(stringKey);
+				il.EmitLdloc(levelEditorOptions);
+				il.Emit(OpCodes.Callvirt, module.GetMethod<LevelEditorSerializerOptions>("get_SaveVersion"));
+				il.Emit(OpCodes.Brtrue, deserializeFormat1);
 
-#if ALE_DEBUG
-				// LevelEditorLogger.Log($"Reading loop {i} {stringKey.Slice(1).ToDebugString()}");
-				il.Emit(OpCodes.Ldstr, "Reading loop {0} | String key: {1}");
-				il.EmitLdloc(iVar);
-				il.Emit(OpCodes.Box, module.ImportReference(iVar.VariableType));
-				il.EmitLdloc(stringKey);
-
-				MethodReference debugString = null;
-				Collection<MethodDefinition> methods = module.GetTypeReference(typeof(LevelEditorExtensions)).Resolve().Methods;
-				for (int j = 0; j < methods.Count; j++)
+				// Create the compatibility method for format 0.
+				MethodDefinition deserializeMethod0 = CreateDeserializeMethod0(formatter, fields);
+				
+				// DeserializeFormat0(ref reader, options, <other parameters>)
+				il.EmitLdarg(readerPara);
+				il.EmitLdarg(optionsPara);
+				for (int i = 0; i < localFields.Count; i++)
 				{
-					if (methods[j].Name == "ToDebugString" && methods[j].Parameters[0].ParameterType.Resolve().Is(typeof(ReadOnlySpan<>)))
-					{
-						debugString = module.ImportReference(methods[j].MakeGenericMethod(module.GetTypeReference<byte>()));
-						break;
-					}
+					il.EmitLdloc(localFields[i], true);
 				}
-
-				il.Emit(OpCodes.Call, debugString);
-				il.Emit(OpCodes.Call, module.GetMethod<string>("Format", typeof(string), typeof(object), typeof(object)));
-				il.Emit(OpCodes.Call, module.GetMethod(typeof(LevelEditorLogger), "Log", typeof(object)));
+				
+				il.Emit(OpCodes.Call, deserializeMethod0);
+				il.Emit(OpCodes.Br, createResult);
 #endif
 
-				// int keyLength = stringKey.Length;
-				il.EmitLdloc(stringKey, true);
-				il.Emit(OpCodes.Call, module.GetMethod(typeof(ReadOnlySpan<byte>), "get_Length"));
-				il.EmitStloc(keyLength);
-
-				// ulong key = 0uL;
-				il.EmitInt(0);
-				il.Emit(OpCodes.Conv_I8);
-				il.EmitStloc(key);
-
-				// if (keyLength <= 8)
-				il.EmitLdloc(keyLength);
-				Instruction lengthCheck = il.EmitInt(8); // 8 because if names are longer than 8, it will use the SequenceEquals.
-
-				// ulong key = AutomataKeyGen.GetKey(ref stringKey);
-				il.EmitLdloc(stringKey, true);
-				il.Emit(OpCodes.Call, module.GetMethod(typeof(AutomataKeyGen), "GetKey", typeof(ReadOnlySpan<byte>).MakeByRefType()));
-				il.EmitStloc(key);
-
-				List<Instruction> previous = new List<Instruction>();
-				List<Instruction> ifBreaks = new List<Instruction>();
-
-				bool wasAdvanced = false;
-
-				for (int i = 0; i < fields.Count; i++)
+				MethodDefinition deserializeMethod1 = CreateDeserializeMethod1(formatter, fields);
+				
+				// DeserializeFormat1(ref reader, options, <other parameters>)
+				il.Append(deserializeFormat1);
+				il.EmitLdarg(optionsPara);
+				for (int i = 0; i < localFields.Count; i++)
 				{
-					Instruction[] keyCheck = FormatterHelper.GetKeyCheck(m, key, stringKey, keyLength, fields[i].Item1,
-						fields[i].Item2, out Instruction lengthLast, out Instruction checkLast, out bool isAdvanced);
+					il.EmitLdloc(localFields[i], true);
+				}
 
-					if (previous.Count > 0)
-					{
-						if (previous.Count == 2)
-						{
-							il.InsertAfter(previous[0], Instruction.Create(OpCodes.Bne_Un, keyCheck[0])); // Length check
-							il.InsertAfter(previous[1], Instruction.Create(wasAdvanced ? OpCodes.Brfalse : OpCodes.Bne_Un, keyCheck[0])); // Key check
-						}
-						else
-						{
-							throw new NotSupportedException($"Unknown amount of previous ({previous.Count})");
-						}
-					}
+				il.Emit(OpCodes.Call, deserializeMethod1);
 
-					wasAdvanced = isAdvanced;
-
-					il.Append(keyCheck);
-
-					if (i == 0)
-					{
-						il.InsertAfter(lengthCheck, Instruction.Create(OpCodes.Bgt, keyCheck[0]));
-					}
-
-					previous.Clear();
-
-					previous.Add(lengthLast);
-					previous.Add(checkLast);
-
- #if ALE_DEBUG
- 					il.Emit(OpCodes.Ldstr, $"Reading value {fields[i].Item1.Name}");
- 					il.Emit(OpCodes.Call, module.GetMethod(typeof(LevelEditorLogger), "Log", typeof(object)));
- #endif
-
- 					Instruction[] readMethod = FormatterHelper.GetReadValue(fields[i].Item1.FieldType, resolverVariable: resolverVar);
- 					il.Append(readMethod);
- 					Instruction finish = il.EmitStloc(localFields[i]);
- 					ifBreaks.Add(finish);				}
-
- #if ALE_DEBUG
- 				Instruction skipStart = Instruction.Create(OpCodes.Ldstr, "Skipping :: Span length: {0} Key: {1}");
- 				il.Append(skipStart);
- 				il.EmitLdloc(stringKey, true);
- 				il.Emit(OpCodes.Call, module.GetMethod(typeof(ReadOnlySpan<byte>), "get_Length"));
- 				il.Emit(OpCodes.Box, module.GetTypeReference<int>());
- 				il.EmitLdloc(key);
- 				il.Emit(OpCodes.Box, module.GetTypeReference<ulong>());
- 				il.Emit(OpCodes.Call, module.GetMethod<string>("Format", typeof(string), typeof(object), typeof(object)));
- 				il.Emit(OpCodes.Call, module.GetMethod(typeof(LevelEditorLogger), "Log", typeof(object)));
- 				il.EmitLdarg(readerPara);
- #else
- 				Instruction skipStart = il.EmitLdarg(readerPara);
- #endif
- 				il.Emit(OpCodes.Call, module.GetMethod(typeof(MessagePackReader), "Skip"));
- 				if (previous.Count == 2)
- 				{
- 					il.InsertAfter(previous[0], Instruction.Create(OpCodes.Bne_Un, skipStart)); // Length check
- 					il.InsertAfter(previous[1], Instruction.Create(wasAdvanced ? OpCodes.Brfalse : OpCodes.Bne_Un, skipStart)); // Key check
- 				}
- 				else
- 				{
- 					throw new NotSupportedException($"Unknown amount of previous when going to skip. ({previous.Count})");
- 				}
-
- 				Instruction loopEnd = il.EmitLdloc(iVar);
- 				il.EmitInt(1);
- 				il.Emit(OpCodes.Add);
- 				il.EmitStloc(iVar);
-
- 				Instruction loopFinish = il.EmitLdloc(iVar);
- 				il.EmitLdloc(length);
- 				il.Emit(OpCodes.Blt, loopStart);
-
- 				il.InsertAfter(beforeLoop, Instruction.Create(OpCodes.Br, loopFinish));
- 				for (int i = 0; i < ifBreaks.Count; i++)
- 				{
- 					il.InsertAfter(ifBreaks[i], Instruction.Create(OpCodes.Br, loopEnd));
- 				}
-
- 				VariableDefinition result = m.AddLocalVariable(type);
- 				VariableDefinition depth = m.AddLocalVariable<int>();
-
- 				il.EmitLdloc(result, true);
+				VariableDefinition depth = m.AddLocalVariable<int>();
+     
+                il.Append(createResult);
  				il.Emit(OpCodes.Initobj, type);
- 				il.EmitLdloc(result, true);
  				for (int i = 0; i < fields.Count; i++)
  				{
- 					il.EmitLdloc(localFields[i]);
+	                il.EmitLdloc(result, true);
+	                il.EmitLdloc(localFields[i]);
  					il.Emit(OpCodes.Stfld, fields[i].Item1);
- 					il.EmitLdloc(result, i < fields.Count - 1);
- 				}
-
+                }
+     
  				il.EmitLdarg(readerPara);
  				il.Emit(OpCodes.Dup);
  				il.Emit(OpCodes.Call, module.GetMethod(typeof(MessagePackReader), "get_Depth"));
@@ -457,23 +329,227 @@ namespace Hertzole.ALE.CodeGen
  				il.Emit(OpCodes.Sub);
  				il.Emit(OpCodes.Call, module.GetMethod(typeof(MessagePackReader), "set_Depth"));
 
+                il.EmitLdloc(result);
  				il.Emit(OpCodes.Ret);
 
- 				m.SetVariableName(resolverVar, "resolver");
- 				m.SetVariableName(length, "length");
- 				m.SetVariableName(iVar, "i");
- 				m.SetVariableName(stringKey, "stringKey");
- 				m.SetVariableName(key, "key");
- 				m.SetVariableName(result, "result");
- 				m.SetVariableName(depth, "depth");
-
- 				for (int i = 0; i < localFields.Count; i++)
- 				{
- 					m.SetVariableName(localFields[i], $"__{fields[i].Item1.Name}__");
- 				}
-                
-				m.EndEdit();
+                m.EndEdit();
 			}
+		}
+
+		#if ALE_COMPATIBILITY_0
+		private MethodDefinition CreateDeserializeMethod0(TypeDefinition baseType, IReadOnlyList<(FieldDefinition, MethodDefinition)> fields)
+		{
+			MethodDefinition m = new MethodDefinition("DeserializeFormat0", MethodAttributes.Private | MethodAttributes.HideBySig | MethodAttributes.Static, module.Void());
+			baseType.Methods.Add(m);
+			
+			var reader = m.AddParameter(module.GetTypeReference(typeof(MessagePackReader).MakeByRefType()));
+			var options = m.AddParameter<MessagePackSerializerOptions>();
+			
+			List<ParameterDefinition> parameters = new List<ParameterDefinition>(fields.Count);
+			
+			for (int i = 0; i < fields.Count; i++)
+			{
+				parameters.Add(m.AddParameter(fields[i].Item1.FieldType.MakeByReferenceType(), fields[i].Item1.Name));
+			}
+
+			VariableDefinition lengthVar = m.AddLocalVariable<int>("length");
+			VariableDefinition indexVar = m.AddLocalVariable<int>("i");
+			VariableDefinition resolverVar = m.AddLocalVariable<IFormatterResolver>("resolver");
+			
+			VariableDefinition stringKey = m.AddLocalVariable(module.GetTypeReference(typeof(ReadOnlySpan<byte>)));
+			VariableDefinition key = m.AddLocalVariable<ulong>();
+			VariableDefinition keyLength = m.AddLocalVariable<int>();
+
+			ILProcessor il = m.BeginEdit();
+
+			// int length = reader.ReadMapHeader()
+			il.EmitLdarg(reader);
+			il.Emit(OpCodes.Call, module.GetMethod(typeof(MessagePackReader), "ReadMapHeader"));
+			il.EmitStloc(lengthVar);
+			
+			// int i = 0
+			il.EmitInt(0);
+			il.EmitStloc(indexVar);
+			
+			// IFormatterResolver resolver = options.Resolver
+			il.EmitLdarg(options);
+			il.Emit(OpCodes.Callvirt, module.GetMethod<MessagePackSerializerOptions>("get_Resolver"));
+			il.Emit(OpCodes.Pop);
+
+			// Loop start
+			Instruction whileStart = ILHelper.Ldloc(indexVar);
+			il.Emit(OpCodes.Br, whileStart);
+			
+			// ReadOnlySpan<byte> stringKey = CodeGenHelpers.ReadStringSpan(ref reader)
+			Instruction loopStart = il.EmitLdarg(reader);
+			il.Emit(OpCodes.Call, module.GetMethod(typeof(CodeGenHelpers), "ReadStringSpan", typeof(MessagePackReader).MakeByRefType()));
+			il.EmitStloc(stringKey);
+			
+			// int keyLength = stringKey.Length;
+			il.EmitLdloc(stringKey, true);
+			il.Emit(OpCodes.Call, module.GetMethod(typeof(ReadOnlySpan<byte>), "get_Length"));
+			il.EmitStloc(keyLength);
+
+			// ulong key = 0uL;
+			il.EmitInt(0);
+			il.Emit(OpCodes.Conv_I8);
+			il.EmitStloc(key);
+
+			// if (keyLength <= 8)
+			il.EmitLdloc(keyLength);
+			Instruction lengthCheck = il.EmitInt(8); // 8 because if names are longer than 8, it will use the SequenceEquals.
+			
+			// ulong key = AutomataKeyGen.GetKey(ref stringKey);
+			il.EmitLdloc(stringKey, true);
+			il.Emit(OpCodes.Call, module.GetMethod(typeof(AutomataKeyGen), "GetKey", typeof(ReadOnlySpan<byte>).MakeByRefType()));
+			il.EmitStloc(key);
+
+			Instruction loopEnd = ILHelper.Ldloc(indexVar);
+
+			il.EmitIfElse(fields, (field, index, last, fill) => // If check
+			{
+				Instruction[] keyCheck = FormatterHelper.GetKeyCheck(m, key, stringKey, keyLength, field.Item1,
+					field.Item2, out Instruction lengthLast, out Instruction checkLast, out bool isAdvanced);
+
+				fill.AddRange(keyCheck);
+				fill.Insert(fill.IndexOf(lengthLast) + 1, Instruction.Create(OpCodes.Bne_Un, last));
+				fill.Insert(fill.IndexOf(checkLast) + 1, Instruction.Create(OpCodes.Bne_Un, last));
+				
+				if (index == 0)
+				{
+					il.InsertAfter(lengthCheck, Instruction.Create(OpCodes.Bgt, keyCheck[0]));
+				}
+			}, (field, index, last, fill) => // Body
+			{
+				fill.AddRange(FormatterHelper.GetReadValue(field.Item1.FieldType, il, reader, options, parameters[index], resolverVar));
+				fill.Add(Instruction.Create(OpCodes.Br, loopEnd));
+			}, fill => // Last
+			{
+				fill.Add(ILHelper.Ldarg(il, reader));
+				fill.Add(Instruction.Create(OpCodes.Call, module.GetMethod(typeof(MessagePackReader), "Skip")));
+			});
+
+			il.Append(loopEnd);
+ 			il.EmitInt(1);
+ 			il.Emit(OpCodes.Add);
+ 			il.EmitStloc(indexVar);
+
+ 			il.Append(whileStart);
+ 			il.EmitLdloc(lengthVar);
+ 			il.Emit(OpCodes.Blt, loopStart);
+
+            il.Emit(OpCodes.Ret);
+			
+			m.EndEdit();
+
+			return m;
+		}
+		#endif
+
+		private MethodDefinition CreateDeserializeMethod1(TypeDefinition baseType, IReadOnlyList<(FieldDefinition, MethodDefinition)> fields)
+		{
+			MethodDefinition m = new MethodDefinition("DeserializeFormat1", MethodAttributes.Private | MethodAttributes.HideBySig | MethodAttributes.Static, module.Void());
+			baseType.Methods.Add(m);
+			
+			ParameterDefinition reader = m.AddParameter(module.GetTypeReference(typeof(MessagePackReader).MakeByRefType()));
+			ParameterDefinition options = m.AddParameter<MessagePackSerializerOptions>();
+			
+			List<ParameterDefinition> parameters = new List<ParameterDefinition>(fields.Count);
+			
+			for (int i = 0; i < fields.Count; i++)
+			{
+				parameters.Add(m.AddParameter(fields[i].Item1.FieldType.MakeByReferenceType(), fields[i].Item1.Name));
+			}
+
+			VariableDefinition resolverVar = m.AddLocalVariable<IFormatterResolver>("resolver");
+			VariableDefinition lengthVar = m.AddLocalVariable<int>("length");
+			VariableDefinition indexVar = m.AddLocalVariable<int>("i");
+			VariableDefinition hashVar = m.AddLocalVariable<int>("hash");
+
+			ILProcessor il = m.BeginEdit();
+
+			// IFormatterResolver resolver = options.Resolver
+			il.EmitLdarg(options);
+			il.Emit(OpCodes.Callvirt, module.GetMethod<MessagePackSerializerOptions>("get_Resolver"));
+			il.Emit(OpCodes.Pop);
+			
+			// int length = reader.ReadArrayHeader()
+			il.EmitLdarg(reader);
+			il.Emit(OpCodes.Call, module.GetMethod(typeof(MessagePackReader), "ReadArrayHeader"));
+			il.EmitStloc(lengthVar);
+			
+			// int i = 0
+			il.EmitInt(0);
+			il.EmitStloc(indexVar);
+
+			Instruction whileStart = ILHelper.Ldloc(indexVar);
+			il.Emit(OpCodes.Br, whileStart);
+			
+			// int hash = reader.ReadInt32()
+			Instruction loopStart = il.EmitLdarg(reader);
+			il.Emit(OpCodes.Call, module.GetMethod(typeof(MessagePackReader), "ReadInt32"));
+			il.EmitStloc(hashVar);
+			
+			Instruction loopEnd = ILHelper.Ldloc(indexVar);
+
+			Instruction[] bodyStarts = new Instruction[fields.Count];
+
+			il.EmitIfElse(fields, (field, i, last, fill) => // If check
+			{
+				fill.Add(ILHelper.Ldloc(hashVar));
+				fill.Add(ILHelper.Int(field.Item1.Name.GetStableHashCode()));
+				
+				if (field.Item1.TryGetAttributes<FormerlyHashedAsAttribute>(out CustomAttribute[] hashedAttributes))
+				{
+					fill.Add(Instruction.Create(OpCodes.Beq, bodyStarts[i]));
+					
+					for (int j = 0; j < hashedAttributes.Length; j++)
+					{
+						fill.Add(ILHelper.Ldloc(hashVar));
+						fill.Add(ILHelper.Int(hashedAttributes[j].GetConstructorArgument(0, string.Empty).GetStableHashCode()));
+
+						if (j == hashedAttributes.Length - 1)
+						{
+							fill.Add(Instruction.Create(OpCodes.Bne_Un, last));
+						}
+						else
+						{
+							fill.Add(Instruction.Create(OpCodes.Beq, bodyStarts[i]));
+						}
+					}
+				}
+				else
+				{
+					fill.Add(Instruction.Create(OpCodes.Bne_Un, last));
+				}
+			}, (field, i, last, fill) => // Body
+			{
+				Instruction[] read = FormatterHelper.GetReadValue(field.Item1.FieldType, il, reader, options, parameters[i], resolverVar);
+				fill.AddRange(read);
+				fill.Add(Instruction.Create(OpCodes.Br, loopEnd));
+
+				bodyStarts[i] = read[0];
+
+			}, fill => // Last
+			{
+				fill.Add(ILHelper.Ldarg(il, reader));
+				fill.Add(Instruction.Create(OpCodes.Call, module.GetMethod(typeof(MessagePackReader), "Skip")));
+			});
+			
+			il.Append(loopEnd);
+			il.EmitInt(1);
+			il.Emit(OpCodes.Add);
+			il.EmitStloc(indexVar);
+
+			il.Append(whileStart);
+			il.EmitLdloc(lengthVar);
+			il.Emit(OpCodes.Blt, loopStart);
+
+			il.Emit(OpCodes.Ret);
+			
+			m.EndEdit();
+			
+			return m;
 		}
 
 		public void CreateExposedFormatter(TypeDefinition baseType, IReadOnlyList<IExposedProperty> properties, WrapperData wrapperData)
