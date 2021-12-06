@@ -2,6 +2,7 @@
 using MessagePack;
 using MessagePack.Formatters;
 using MessagePack.Internal;
+using UnityEngine;
 
 namespace Hertzole.ALE
 {
@@ -13,6 +14,12 @@ namespace Hertzole.ALE
 
 		public void Serialize(ref MessagePackWriter writer, LevelEditorComponentData value, MessagePackSerializerOptions options)
 		{
+			if (value.type == null)
+			{
+				writer.WriteNil();
+				return;
+			}
+			
 			writer.WriteArrayHeader(2);
 
 			writer.WriteInt32(value.type.FullName.GetStableHashCode());
@@ -21,6 +28,11 @@ namespace Hertzole.ALE
 
 		public LevelEditorComponentData Deserialize(ref MessagePackReader reader, MessagePackSerializerOptions options)
 		{
+			if (reader.TryReadNil())
+			{
+				return new LevelEditorComponentData();
+			}
+			
 			options.Security.DepthStep(ref reader);
 
 			Type type = null;
@@ -47,6 +59,7 @@ namespace Hertzole.ALE
 		private static void DeserializeFormat0(ref MessagePackReader reader, MessagePackSerializerOptions options, ref Type type, ref IExposedWrapper wrapper)
 		{
 			int count = reader.ReadMapHeader();
+			int typeHash = 0;
 			for (int i = 0; i < count; i++)
 			{
 				ReadOnlySpan<byte> stringKey = CodeGenHelpers.ReadStringSpan(ref reader);
@@ -63,7 +76,8 @@ namespace Hertzole.ALE
 							goto FAIL;
 						}
 
-						type = LevelEditorSerializer.GetType(reader.ReadInt32());
+						typeHash = reader.ReadInt32();
+						type = LevelEditorSerializer.GetType(typeHash);
 						continue;
 					case 10:
 						if (!stringKey.SequenceEqual(SpanProperties.Slice(1)))
@@ -73,6 +87,7 @@ namespace Hertzole.ALE
 
 						if (type == null)
 						{
+							Debug.LogWarning($"Couldn't find a wrapper for type hash {typeHash}.");
 							reader.Skip();
 							continue;
 						}

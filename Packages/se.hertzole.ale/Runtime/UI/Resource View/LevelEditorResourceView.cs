@@ -130,20 +130,20 @@ namespace Hertzole.ALE
 			InitializeResources(realResources.GetResources());
 		}
 
-		protected virtual void InitializeResources(ILevelEditorResource[] resources)
+		protected virtual void InitializeResources(IReadOnlyList<ILevelEditorResource> resourcesList)
 		{
 #if !ALE_STRIP_SAFETY || UNITY_EDITOR
-			if (!(resources is LevelEditorResource[]))
+			if (!(resourcesList is LevelEditorResource[]))
 			{
 				throw new NotSupportedException("LevelEditorResourceView only works with LevelEditorResource classes.");
 			}
 #endif
 
 #if UNITY_EDITOR // This needs to be done to avoid a problem with opening up the resources object in the editor.
-			LevelEditorResource[] newResources = new LevelEditorResource[resources.Length];
+			LevelEditorResource[] newResources = new LevelEditorResource[resourcesList.Count];
 			for (int i = 0; i < newResources.Length; i++)
 			{
-				newResources[i] = new LevelEditorResource(resources[i] as LevelEditorResource);
+				newResources[i] = new LevelEditorResource(resourcesList[i] as LevelEditorResource);
 			}
 #else
             LevelEditorResource[] newResources = resources as LevelEditorResource[];
@@ -151,7 +151,7 @@ namespace Hertzole.ALE
 
 			// Need to create a copy here or else the children will not work in the asset view.
 			LevelEditorResource[] resourcesCopy = new LevelEditorResource[newResources.Length];
-			for (int i = 0; i < resources.Length; i++)
+			for (int i = 0; i < resourcesList.Count; i++)
 			{
 				resourcesCopy[i] = new LevelEditorResource(newResources[i]);
 			}
@@ -160,7 +160,7 @@ namespace Hertzole.ALE
 			treeRoot = TreeUtility.ListToTree(resourcesCopy, true);
 			treeRoot.Name = rootName;
 
-			folderTree.Initialize(child => { return ((LevelEditorResource) child).Parent; }, parent =>
+			folderTree.Initialize(child => ((LevelEditorResource) child).Parent, parent =>
 			{
 				List<object> children = new List<object>();
 				children.AddRange(((LevelEditorResource) parent).Children);

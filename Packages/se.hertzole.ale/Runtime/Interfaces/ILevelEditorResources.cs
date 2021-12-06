@@ -1,7 +1,9 @@
-﻿namespace Hertzole.ALE
+﻿using System.Collections.Generic;
+
+namespace Hertzole.ALE
 {
     public interface ILevelEditorResources
     {
-        ILevelEditorResource[] GetResources();
+        IReadOnlyList<ILevelEditorResource> GetResources();
     }
 }

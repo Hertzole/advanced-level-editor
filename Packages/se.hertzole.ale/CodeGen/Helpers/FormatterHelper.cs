@@ -8,7 +8,6 @@ using MessagePack.Internal;
 using Mono.Cecil;
 using Mono.Cecil.Cil;
 using Mono.Cecil.Rocks;
-using Mono.Collections.Generic;
 using FieldAttributes = Mono.Cecil.FieldAttributes;
 using MethodAttributes = Mono.Cecil.MethodAttributes;
 using TypeAttributes = Mono.Cecil.TypeAttributes;
@@ -177,12 +176,6 @@ namespace Hertzole.ALE.CodeGen.Helpers
 			switch (binary.Length)
 			{
 				case 1:
-					//TODO: Handle single
-					isAdvanced = false;
-					lengthLast = null;
-					checkLast = null;
-					// return Array.Empty<Instruction>();
-					throw new NotImplementedException("No support for singles yet");
 				case 2:
 				case 3:
 				case 4:
@@ -235,7 +228,6 @@ namespace Hertzole.ALE.CodeGen.Helpers
 						ParameterInfo[] para = methods[j].GetParameters();
 						if (para.Length == 2 && IsSameType(para[0].ParameterType, typeof(ReadOnlySpan<>)) && IsSameType(para[1].ParameterType, typeof(ReadOnlySpan<>)))
 						{
-							Console.WriteLine($"FOUND RIGHT METHOD {methods[j]} {para[0].ParameterType.Namespace}.{para[0].ParameterType.Name} == {typeof(Span<>).FullName} = {para[0].ParameterType.FullName == typeof(Span<>).FullName}!");
 							seqEqual = method.Module.ImportReference(methods[j]).MakeGenericMethod(method.Module.GetTypeReference<byte>());
 							break;
 						}
@@ -274,11 +266,11 @@ namespace Hertzole.ALE.CodeGen.Helpers
 			}
 		}
 
-		public static Instruction[] GetWriteValue(TypeReference type, FieldDefinition field, bool isLastField, MethodReference getResolver = null, bool isComponentFormatter = false)
+		public static Instruction[] GetWriteValue(ModuleDefinition module, TypeReference type, FieldDefinition field, bool isLastField, MethodReference getResolver = null, bool isComponentFormatter = false)
 		{
-			ModuleDefinition module = type.Module;
-
 			List<Instruction> ins = new List<Instruction>();
+
+			type = module.ImportReference(type);
 
 			bool isStandard = IsStandardWriteType(type);
 
@@ -287,8 +279,8 @@ namespace Hertzole.ALE.CodeGen.Helpers
 				if (getResolver != null)
 				{
 					ins.Add(Instruction.Create(OpCodes.Ldarg_3));
-					ins.Add(Instruction.Create(OpCodes.Callvirt, getResolver));
-					ins.Add(Instruction.Create(OpCodes.Call, module.ImportReference(typeof(FormatterResolverExtensions).GetMethod("GetFormatterWithVerify")).MakeGenericMethod(type)));
+					ins.Add(Instruction.Create(OpCodes.Callvirt, module.ImportReference(getResolver)));
+					ins.Add(Instruction.Create(OpCodes.Call, module.ImportReference(module.ImportReference(typeof(FormatterResolverExtensions).GetMethod("GetFormatterWithVerify")).MakeGenericMethod(type))));
 				}
 				else
 				{
@@ -297,13 +289,13 @@ namespace Hertzole.ALE.CodeGen.Helpers
 						ins.Add(Instruction.Create(OpCodes.Dup));
 					}
 
-					ins.Add(Instruction.Create(OpCodes.Call, module.ImportReference(typeof(FormatterResolverExtensions).GetMethod("GetFormatterWithVerify")).MakeGenericMethod(type)));
+					ins.Add(Instruction.Create(OpCodes.Call, module.ImportReference(module.ImportReference(typeof(FormatterResolverExtensions).GetMethod("GetFormatterWithVerify")).MakeGenericMethod(type))));
 				}
 			}
 
 			ins.Add(Instruction.Create(OpCodes.Ldarg_1));
 			ins.Add(Instruction.Create(OpCodes.Ldarg_2));
-			ins.Add(Instruction.Create(OpCodes.Ldfld, field));
+			ins.Add(Instruction.Create(OpCodes.Ldfld, module.ImportReference(field)));
 			if (isComponentFormatter)
 			{
 				FieldReference item2 = module.ImportReference(typeof(ValueTuple<,>).GetField("Item2"));
@@ -312,7 +304,7 @@ namespace Hertzole.ALE.CodeGen.Helpers
 			}
 
 			MethodReference writeMethod;
-
+			
 			if (type.Is<byte>())
 			{
 				writeMethod = module.GetMethod(typeof(MessagePackWriter), "WriteUInt8", typeof(byte));
@@ -355,11 +347,11 @@ namespace Hertzole.ALE.CodeGen.Helpers
 				{
 					ins.Add(Instruction.Create(OpCodes.Conv_R8));
 				}
-
+			
 				ins.Add(Instruction.Create(OpCodes.Ldarg_3));
-				writeMethod = module.ImportReference(typeof(IMessagePackFormatter<>).GetMethod("Serialize")).MakeHostInstanceGeneric(module.ImportReference(typeof(IMessagePackFormatter<>)).MakeGenericInstanceType(type));
+				writeMethod = module.GetMethod(typeof(IMessagePackFormatter<>), "Serialize").MakeHostInstanceGeneric(module.GetTypeReference(typeof(IMessagePackFormatter<>)).MakeGenericInstanceType(type));
 			}
-
+			
 			ins.Add(Instruction.Create(isStandard ? OpCodes.Call : OpCodes.Callvirt, writeMethod));
 
 			return ins.ToArray();
@@ -415,10 +407,10 @@ namespace Hertzole.ALE.CodeGen.Helpers
 			       type.Is<string>() | type.Is<char>() | type.Is<bool>() | type.Is<float>() | type.Is<double>();
 		}
 
-		public static Instruction[] GetReadValue(TypeReference type, MethodReference getResolver = null, VariableDefinition resolverVariable = null)
+		public static Instruction[] GetReadValue(ModuleDefinition module, TypeReference type, MethodReference getResolver = null, VariableDefinition resolverVariable = null)
 		{
-			ModuleDefinition module = type.Module;
-
+			type = module.ImportReference(type);
+			
 			List<Instruction> ins = new List<Instruction>();
 
 			bool isStandard = IsStandardReadType(type);
@@ -429,7 +421,7 @@ namespace Hertzole.ALE.CodeGen.Helpers
 				{
 					ins.Add(Instruction.Create(OpCodes.Ldarg_2));
 					ins.Add(Instruction.Create(OpCodes.Callvirt, getResolver));
-					ins.Add(Instruction.Create(OpCodes.Call, module.ImportReference(typeof(FormatterResolverExtensions).GetMethod("GetFormatterWithVerify")).MakeGenericMethod(type)));
+					ins.Add(Instruction.Create(OpCodes.Call, module.ImportReference(module.ImportReference(typeof(FormatterResolverExtensions).GetMethod("GetFormatterWithVerify")).MakeGenericMethod(type))));
 				}
 				else
 				{
@@ -439,7 +431,7 @@ namespace Hertzole.ALE.CodeGen.Helpers
 					}
 
 					ins.Add(ILHelper.Ldloc(resolverVariable));
-					ins.Add(Instruction.Create(OpCodes.Call, module.ImportReference(typeof(FormatterResolverExtensions).GetMethod("GetFormatterWithVerify")).MakeGenericMethod(type)));
+					ins.Add(Instruction.Create(OpCodes.Call, module.ImportReference(module.ImportReference(typeof(FormatterResolverExtensions).GetMethod("GetFormatterWithVerify")).MakeGenericMethod(type))));
 				}
 			}
 			else
@@ -513,10 +505,10 @@ namespace Hertzole.ALE.CodeGen.Helpers
 			return ins.ToArray();
 		}
 	
-		public static Instruction[] GetReadValue(TypeReference type, ILProcessor il, ParameterDefinition reader, ParameterDefinition options, ParameterDefinition value, VariableDefinition resolverVariable)
+		public static Instruction[] GetReadValue(ModuleDefinition module, TypeReference type, ILProcessor il, ParameterDefinition reader, ParameterDefinition options, ParameterDefinition value, VariableDefinition resolverVariable)
 		{
-			ModuleDefinition module = type.Module;
-
+			type = module.ImportReference(type);
+			
 			List<Instruction> ins = new List<Instruction>();
 
 			bool isStandard = IsStandardReadType(type);
@@ -531,7 +523,7 @@ namespace Hertzole.ALE.CodeGen.Helpers
 				}
 
 				ins.Add(ILHelper.Ldloc(resolverVariable));
-				ins.Add(Instruction.Create(OpCodes.Call, module.ImportReference(typeof(FormatterResolverExtensions).GetMethod("GetFormatterWithVerify")).MakeGenericMethod(type)));
+				ins.Add(Instruction.Create(OpCodes.Call, module.ImportReference(module.ImportReference(typeof(FormatterResolverExtensions).GetMethod("GetFormatterWithVerify")).MakeGenericMethod(type))));
 			}
 			else
 			{

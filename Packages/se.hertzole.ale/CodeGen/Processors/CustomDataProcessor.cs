@@ -80,9 +80,11 @@ namespace Hertzole.ALE.CodeGen
 						return instruction;
 					}
 
+					dataType = module.ImportReference(dataType);
+
 					resolverProcessor.AddCustomDataType(dataType);
 					registerTypeProcessor.AddType(dataType);
-					formatterProcessor.AddTypeToGenerate(dataType.Resolve());
+					formatterProcessor.AddTypeToGenerate(dataType);
 					resolverProcessor.AddTypeFormatter(
 						module.GetTypeReference(typeof(DictionaryFormatter<,>)).MakeGenericInstanceType(module.GetTypeReference<string>(), dataType),
 						module.GetTypeReference(typeof(Dictionary<,>)).MakeGenericInstanceType(module.GetTypeReference<string>(), dataType));

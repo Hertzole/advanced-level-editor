@@ -23,7 +23,7 @@ namespace Hertzole.ALE
         private ILevelEditorResources realResources;
         private ILevelEditorUndo undoComp;
 
-        private List<ILevelEditorObject> allObjects = new List<ILevelEditorObject>();
+        private readonly List<ILevelEditorObject> allObjects = new List<ILevelEditorObject>();
 
         private Dictionary<LevelEditorIdentifier, Stack<ILevelEditorObject>> pooledObjects = new Dictionary<LevelEditorIdentifier, Stack<ILevelEditorObject>>();
         private Dictionary<LevelEditorIdentifier, List<ILevelEditorObject>> activeObjects = new Dictionary<LevelEditorIdentifier, List<ILevelEditorObject>>();
@@ -42,23 +42,13 @@ namespace Hertzole.ALE
                 }
 
                 return undoComp;
-            } 
-            set { undoComp = value; }
-        }
-        
-        public ScriptableObject ResourcesObject
-        {
-            get { return resources; }
+            }
             set
             {
-                if (value is ILevelEditorResources resources)
+                undoComp = value;
+                if (value is Component comp)
                 {
-                    this.resources = value;
-                    realResources = resources;
-                }
-                else
-                {
-                    Debug.LogError($"{value} does not implement ILevelEditorResources interface.");
+                    undo = comp.gameObject;
                 }
             }
         }
@@ -66,7 +56,14 @@ namespace Hertzole.ALE
         public ILevelEditorResources Resources
         {
             get { return realResources ??= resources as ILevelEditorResources; }
-            set { realResources = value; }
+            set
+            {
+                realResources = value;
+                if (value is ScriptableObject so)
+                {
+                    resources = so;
+                }
+            }
         }
 
         public event EventHandler<LevelEditorObjectEventSpawningEvent> OnCreatingObject;
@@ -153,7 +150,7 @@ namespace Hertzole.ALE
             }
             else
             {
-                Debug.LogError($"Tried to create {resource.ID} but the asset is not a prefab.");
+                Debug.LogError($"Tried to create {resource.Name} ({resource.ID}) but the asset is not a prefab.");
                 return null;
             }
         }
@@ -162,22 +159,27 @@ namespace Hertzole.ALE
         {
             if (data.objects != null && data.objects.Count > 0)
             {
-                ILevelEditorObject[] allObjects = new ILevelEditorObject[data.objects.Count];
+                ILevelEditorObject[] savedObjects = new ILevelEditorObject[data.objects.Count];
 
                 for (int i = 0; i < data.objects.Count; i++)
                 {
                     ILevelEditorObject obj = this.CreateObject(data.objects[i]);
-                    allObjects[i] = obj;
+                    savedObjects[i] = obj;
                 }
 
-                Assert.AreEqual(data.objects.Count, allObjects.Length);
+                Assert.AreEqual(data.objects.Count, savedObjects.Length);
 
-                for (int i = 0; i < allObjects.Length; i++)
+                for (int i = 0; i < savedObjects.Length; i++)
                 {
                     LevelEditorComponentData[] components = data.objects[i].components;
 
-                    allObjects[i].ApplyExposedData(components);
-                    OnCreatedObjectFromSaveData?.Invoke(this, new LevelEditorObjectEvent(allObjects[i]));
+                    if (savedObjects[i] == null)
+                    {
+                        continue;
+                    }
+                    
+                    savedObjects[i].ApplyExposedData(components);
+                    OnCreatedObjectFromSaveData?.Invoke(this, new LevelEditorObjectEvent(savedObjects[i]));
                 }
             }
         }
