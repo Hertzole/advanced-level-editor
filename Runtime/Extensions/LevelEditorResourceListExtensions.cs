@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Collections.Generic;
+using UnityEngine;
 
 namespace Hertzole.ALE
 {
@@ -12,13 +14,13 @@ namespace Hertzole.ALE
         /// <exception cref="EmptyArrayException">Thrown if there are no resources.</exception>
         public static LevelEditorIdentifier GetItemID(this ILevelEditorResources x, int index)
         {
-            ILevelEditorResource[] resources = x.GetResources();
-            if (resources != null && resources.Length > 0)
+            IReadOnlyList<ILevelEditorResource> resources = x.GetResources();
+            if (resources != null && resources.Count > 0)
             {
 #if !ALE_STRIP_SAFETY || UNITY_EDITOR
-                if (index < 0 || index >= resources.Length)
+                if (index < 0 || index >= resources.Count)
                 {
-                    throw new IndexOutOfRangeException($"Your index is out of range. You tried to get a resource at index {index} but there are only {resources.Length} resources.");
+                    throw new IndexOutOfRangeException($"Your index is out of range. You tried to get a resource at index {index} but there are only {resources.Count} resources.");
                 }
 #endif
 
@@ -41,10 +43,10 @@ namespace Hertzole.ALE
 
         public static int GetItemIndex(this ILevelEditorResources x, LevelEditorIdentifier identifier)
         {
-            ILevelEditorResource[] resources = x.GetResources();
-            if (resources != null && resources.Length > 0)
+            IReadOnlyList<ILevelEditorResource> resources = x.GetResources();
+            if (resources != null && resources.Count > 0)
             {
-                for (int i = 0; i < resources.Length; i++)
+                for (int i = 0; i < resources.Count; i++)
                 {
                     if (resources[i].ID == identifier)
                     {
@@ -66,13 +68,13 @@ namespace Hertzole.ALE
         /// <exception cref="EmptyArrayException">Thrown if there are no resources.</exception>
         public static ILevelEditorResource GetResource(this ILevelEditorResources x, int index)
         {
-            ILevelEditorResource[] resources = x.GetResources();
-            if (resources != null && resources.Length > 0)
+            IReadOnlyList<ILevelEditorResource> resources = x.GetResources();
+            if (resources != null && resources.Count > 0)
             {
 #if !ALE_STRIP_SAFETY || UNITY_EDITOR
-                if (index < 0 || index >= resources.Length)
+                if (index < 0 || index >= resources.Count)
                 {
-                    throw new IndexOutOfRangeException($"Your index is out of range. You tried to get a resource at index {index} but there are only {resources.Length} resources.");
+                    throw new IndexOutOfRangeException($"Your index is out of range. You tried to get a resource at index {index} but there are only {resources.Count} resources.");
                 }
 #endif
 
@@ -95,10 +97,10 @@ namespace Hertzole.ALE
 
         public static ILevelEditorResource GetResource(this ILevelEditorResources x, LevelEditorIdentifier identifier)
         {
-            ILevelEditorResource[] resources = x.GetResources();
-            if (resources != null && resources.Length > 0)
+            IReadOnlyList<ILevelEditorResource> resources = x.GetResources();
+            if (resources != null && resources.Count > 0)
             {
-                for (int i = 0; i < resources.Length; i++)
+                for (int i = 0; i < resources.Count; i++)
                 {
                     if (resources[i].ID == identifier)
                     {
@@ -106,7 +108,8 @@ namespace Hertzole.ALE
                     }
                 }
 
-                throw new ArgumentException($"There's no resource with the ID {identifier}.");
+                Debug.LogError($"There's no resource with the ID {identifier}.");
+                return null;
             }
 
             throw new EmptyArrayException("There are no resources to get.");

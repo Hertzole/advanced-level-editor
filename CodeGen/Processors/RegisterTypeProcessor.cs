@@ -117,7 +117,7 @@ namespace Hertzole.ALE.CodeGen
             for (int i = 0; i < types.Count; i++)
             {
                 GenericInstanceMethod m = new GenericInstanceMethod(registerType);
-                m.GenericArguments.Add(types[i]);
+                m.GenericArguments.Add(module.ImportReference(types[i]));
                 il.EmitInt(types[i].FullName.GetStableHashCode());
                 il.Emit(OpCodes.Call, m);
                 
@@ -126,7 +126,7 @@ namespace Hertzole.ALE.CodeGen
                     for (int j = 0; j < formerHashedAttributes.Length; j++)
                     {
                         il.EmitInt(formerHashedAttributes[j].GetConstructorArgument(0, string.Empty).GetStableHashCode());
-                        il.Emit(OpCodes.Call, module.GetMethod(typeof(LevelEditorSerializer), "RegisterType", typeof(int)).MakeGenericMethod(type));
+                        il.Emit(OpCodes.Call, module.GetMethod(typeof(LevelEditorSerializer), "RegisterType", typeof(int)).MakeGenericMethod(module.ImportReference(type)));
                     }
                 }
             }

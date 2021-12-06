@@ -7,13 +7,13 @@
 #endif
 
 #if !STRIP
-#if ALE_LOCALIZATION
 using System;
 using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
-using UnityEngine.Localization;
 using UnityEngine.UI;
+#if ALE_LOCALIZATION
+using UnityEngine.Localization;
 #endif
 
 namespace Hertzole.ALE
@@ -28,7 +28,7 @@ namespace Hertzole.ALE
 #endif
 	public class LevelEditorInspector : MonoBehaviour, ILevelEditorInspector
 	{
-		private struct TypeAndArray : IEquatable<TypeAndArray>
+		private readonly struct TypeAndArray : IEquatable<TypeAndArray>
 		{
 			public readonly Type type;
 			public readonly bool isArray;
@@ -46,7 +46,7 @@ namespace Hertzole.ALE
 
 			public bool Equals(TypeAndArray other)
 			{
-				return isArray == other.isArray && type.Equals(other.type);
+				return isArray == other.isArray && type == other.type;
 			}
 
 			public override int GetHashCode()

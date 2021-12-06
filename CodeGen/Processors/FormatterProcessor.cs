@@ -8,6 +8,9 @@ using Mono.Cecil;
 using Mono.Cecil.Cil;
 using Mono.Cecil.Rocks;
 using UnityEngine;
+#if ALE_COMPATIBILITY_0
+using MessagePack.Internal;
+#endif
 
 namespace Hertzole.ALE.CodeGen
 {
@@ -52,23 +55,64 @@ namespace Hertzole.ALE.CodeGen
 				module.ImportReference(typeof(Bounds)).Resolve(),
 				module.ImportReference(typeof(Rect)).Resolve(),
 				module.ImportReference(typeof(Color)).Resolve(),
-				module.ImportReference(typeof(Color32)).Resolve()
+				module.ImportReference(typeof(Color32)).Resolve(),
+				module.ImportReference(typeof(LevelEditorIdentifier)).Resolve()
 			};
 		}
 
-		public void AddTypeToGenerate(TypeDefinition type)
+		public void AddTypeToGenerate(TypeReference type)
 		{
-			if (standardTypes.Contains(type) || typesToGenerate.Contains(type) || type.IsCollection() || type.IsComponent())
+			if (type.IsGenericInstance && type is GenericInstanceType genericInstance)
+			{
+				for (int i = 0; i < genericInstance.GenericArguments.Count; i++)
+				{
+					AddTypeToGenerate(genericInstance.GenericArguments[i].GetElementType());
+				}
+			}
+			
+			var resolved = type.Resolve();
+			if (resolved == null)
 			{
 				return;
 			}
 
-			if (type.IsClass && !type.IsValueType && !type.IsComponent())
+			AddTypeFields(resolved);
+			
+			if (standardTypes.Contains(resolved) || typesToGenerate.Contains(resolved) || resolved.IsCollection() || resolved.IsComponent())
 			{
-				weaver.Error($"{type.FullName} is a normal class and can not be serialized yet. Only structs can be automatically serialized.");
+				return;
 			}
 
-			typesToGenerate.Add(type);
+			if (resolved.IsClass && !resolved.IsValueType && !resolved.IsComponent())
+			{
+				weaver.Error($"{resolved.FullName} is a normal class and can not be serialized yet. Only structs can be automatically serialized.");
+				return;
+			}
+
+			typesToGenerate.Add(resolved);
+		}
+
+		private void AddTypeFields(TypeDefinition type)
+		{
+			if (!type.HasFields)
+			{
+				return;
+			}
+
+			for (int i = 0; i < type.Fields.Count; i++)
+			{
+				if (type.Fields[i].FieldType.IsGenericInstance && type.Fields[i].FieldType is GenericInstanceType genericInstance)
+				{
+					for (int j = 0; j < genericInstance.GenericArguments.Count; j++)
+					{
+						TypeReference genericType =genericInstance.GenericArguments[j].GetCollectionType();
+						if (genericType != null)
+						{
+							AddTypeToGenerate(genericType);
+						}
+					}
+				}
+			}
 		}
 
 		public void EndEditing()
@@ -97,7 +141,7 @@ namespace Hertzole.ALE.CodeGen
 			TypeDefinition formatter = new TypeDefinition("Hertzole.ALE.Generated.Formatters", name,
 				TypeAttributes.Public | TypeAttributes.AnsiClass | TypeAttributes.BeforeFieldInit, module.GetTypeReference<object>());
 
-			formatter.Interfaces.Add(new InterfaceImplementation(module.GetTypeReference(typeof(IMessagePackFormatter<>)).MakeGenericInstanceType(type)));
+			formatter.Interfaces.Add(new InterfaceImplementation(module.GetTypeReference(typeof(IMessagePackFormatter<>)).MakeGenericInstanceType(module.ImportReference(type))));
 			formatter.Interfaces.Add(new InterfaceImplementation(module.GetTypeReference(typeof(IMessagePackFormatter))));
 
 			module.Types.Add(formatter);
@@ -183,7 +227,7 @@ namespace Hertzole.ALE.CodeGen
 					il.EmitLdarg(writer);
 					il.EmitInt(fields[i].Item1.Name.GetStableHashCode());
 					il.Emit(OpCodes.Call, module.GetMethod(typeof(MessagePackWriter), "WriteInt32", typeof(int)));
-					il.Append(FormatterHelper.GetWriteValue(fields[i].Item1.FieldType, fields[i].Item1, IsLastField(i)));
+					il.Append(FormatterHelper.GetWriteValue(module, fields[i].Item1.FieldType, fields[i].Item1, IsLastField(i)));
 				}
 
 				il.Emit(OpCodes.Ret);
@@ -211,11 +255,9 @@ namespace Hertzole.ALE.CodeGen
 
 			void CreateDeserializeMethod()
 			{
-				MethodDefinition m = new MethodDefinition("Deserialize",
+				MethodDefinition m = formatter.AddMethod("Deserialize",
 					MethodAttributes.Public | MethodAttributes.Final | MethodAttributes.HideBySig | MethodAttributes.NewSlot | MethodAttributes.Virtual,
-					type);
-
-				formatter.Methods.Add(m);
+					module.ImportReference(type));
 
 				ParameterDefinition readerPara = m.AddParameter(module.ImportReference(typeof(MessagePackReader).MakeByRefType()), "reader");
 				ParameterDefinition optionsPara = m.AddParameter<MessagePackSerializerOptions>("options");
@@ -306,18 +348,18 @@ namespace Hertzole.ALE.CodeGen
 				{
 					il.EmitLdloc(localFields[i], true);
 				}
-
+				
 				il.Emit(OpCodes.Call, deserializeMethod1);
 
 				VariableDefinition depth = m.AddLocalVariable<int>();
      
                 il.Append(createResult);
- 				il.Emit(OpCodes.Initobj, type);
+ 				il.Emit(OpCodes.Initobj, module.ImportReference(type));
  				for (int i = 0; i < fields.Count; i++)
  				{
 	                il.EmitLdloc(result, true);
 	                il.EmitLdloc(localFields[i]);
- 					il.Emit(OpCodes.Stfld, fields[i].Item1);
+ 					il.Emit(OpCodes.Stfld, module.ImportReference(fields[i].Item1));
                 }
      
  				il.EmitLdarg(readerPara);
@@ -339,17 +381,16 @@ namespace Hertzole.ALE.CodeGen
 		#if ALE_COMPATIBILITY_0
 		private MethodDefinition CreateDeserializeMethod0(TypeDefinition baseType, IReadOnlyList<(FieldDefinition, MethodDefinition)> fields)
 		{
-			MethodDefinition m = new MethodDefinition("DeserializeFormat0", MethodAttributes.Private | MethodAttributes.HideBySig | MethodAttributes.Static, module.Void());
-			baseType.Methods.Add(m);
+			MethodDefinition m = baseType.AddMethod("DeserializeFormat0", MethodAttributes.Private | MethodAttributes.HideBySig | MethodAttributes.Static);
 			
-			var reader = m.AddParameter(module.GetTypeReference(typeof(MessagePackReader).MakeByRefType()));
-			var options = m.AddParameter<MessagePackSerializerOptions>();
+			ParameterDefinition reader = m.AddParameter(module.GetTypeReference(typeof(MessagePackReader).MakeByRefType()));
+			ParameterDefinition options = m.AddParameter<MessagePackSerializerOptions>();
 			
 			List<ParameterDefinition> parameters = new List<ParameterDefinition>(fields.Count);
 			
 			for (int i = 0; i < fields.Count; i++)
 			{
-				parameters.Add(m.AddParameter(fields[i].Item1.FieldType.MakeByReferenceType(), fields[i].Item1.Name));
+				parameters.Add(m.AddParameter(module.ImportReference(fields[i].Item1.FieldType.MakeByReferenceType()), fields[i].Item1.Name));
 			}
 
 			VariableDefinition lengthVar = m.AddLocalVariable<int>("length");
@@ -374,7 +415,8 @@ namespace Hertzole.ALE.CodeGen
 			// IFormatterResolver resolver = options.Resolver
 			il.EmitLdarg(options);
 			il.Emit(OpCodes.Callvirt, module.GetMethod<MessagePackSerializerOptions>("get_Resolver"));
-			il.Emit(OpCodes.Pop);
+			il.EmitStloc(resolverVar);
+			// il.Emit(OpCodes.Pop);
 
 			// Loop start
 			Instruction whileStart = ILHelper.Ldloc(indexVar);
@@ -385,12 +427,12 @@ namespace Hertzole.ALE.CodeGen
 			il.Emit(OpCodes.Call, module.GetMethod(typeof(CodeGenHelpers), "ReadStringSpan", typeof(MessagePackReader).MakeByRefType()));
 			il.EmitStloc(stringKey);
 			
-			// int keyLength = stringKey.Length;
+			// int keyLength = stringKey.Length
 			il.EmitLdloc(stringKey, true);
 			il.Emit(OpCodes.Call, module.GetMethod(typeof(ReadOnlySpan<byte>), "get_Length"));
 			il.EmitStloc(keyLength);
 
-			// ulong key = 0uL;
+			// ulong key = 0uL
 			il.EmitInt(0);
 			il.Emit(OpCodes.Conv_I8);
 			il.EmitStloc(key);
@@ -399,7 +441,7 @@ namespace Hertzole.ALE.CodeGen
 			il.EmitLdloc(keyLength);
 			Instruction lengthCheck = il.EmitInt(8); // 8 because if names are longer than 8, it will use the SequenceEquals.
 			
-			// ulong key = AutomataKeyGen.GetKey(ref stringKey);
+			// ulong key = AutomataKeyGen.GetKey(ref stringKey)
 			il.EmitLdloc(stringKey, true);
 			il.Emit(OpCodes.Call, module.GetMethod(typeof(AutomataKeyGen), "GetKey", typeof(ReadOnlySpan<byte>).MakeByRefType()));
 			il.EmitStloc(key);
@@ -410,7 +452,7 @@ namespace Hertzole.ALE.CodeGen
 			{
 				Instruction[] keyCheck = FormatterHelper.GetKeyCheck(m, key, stringKey, keyLength, field.Item1,
 					field.Item2, out Instruction lengthLast, out Instruction checkLast, out bool isAdvanced);
-
+			
 				fill.AddRange(keyCheck);
 				fill.Insert(fill.IndexOf(lengthLast) + 1, Instruction.Create(OpCodes.Bne_Un, last));
 				fill.Insert(fill.IndexOf(checkLast) + 1, Instruction.Create(OpCodes.Bne_Un, last));
@@ -421,7 +463,7 @@ namespace Hertzole.ALE.CodeGen
 				}
 			}, (field, index, last, fill) => // Body
 			{
-				fill.AddRange(FormatterHelper.GetReadValue(field.Item1.FieldType, il, reader, options, parameters[index], resolverVar));
+				fill.AddRange(FormatterHelper.GetReadValue(module, field.Item1.FieldType, il, reader, options, parameters[index], resolverVar));
 				fill.Add(Instruction.Create(OpCodes.Br, loopEnd));
 			}, fill => // Last
 			{
@@ -448,8 +490,7 @@ namespace Hertzole.ALE.CodeGen
 
 		private MethodDefinition CreateDeserializeMethod1(TypeDefinition baseType, IReadOnlyList<(FieldDefinition, MethodDefinition)> fields)
 		{
-			MethodDefinition m = new MethodDefinition("DeserializeFormat1", MethodAttributes.Private | MethodAttributes.HideBySig | MethodAttributes.Static, module.Void());
-			baseType.Methods.Add(m);
+			MethodDefinition m = baseType.AddMethod("DeserializeFormat1", MethodAttributes.Private | MethodAttributes.HideBySig | MethodAttributes.Static);
 			
 			ParameterDefinition reader = m.AddParameter(module.GetTypeReference(typeof(MessagePackReader).MakeByRefType()));
 			ParameterDefinition options = m.AddParameter<MessagePackSerializerOptions>();
@@ -471,7 +512,7 @@ namespace Hertzole.ALE.CodeGen
 			// IFormatterResolver resolver = options.Resolver
 			il.EmitLdarg(options);
 			il.Emit(OpCodes.Callvirt, module.GetMethod<MessagePackSerializerOptions>("get_Resolver"));
-			il.Emit(OpCodes.Pop);
+			il.EmitStloc(resolverVar);
 			
 			// int length = reader.ReadArrayHeader()
 			il.EmitLdarg(reader);
@@ -524,7 +565,7 @@ namespace Hertzole.ALE.CodeGen
 				}
 			}, (field, i, last, fill) => // Body
 			{
-				Instruction[] read = FormatterHelper.GetReadValue(field.Item1.FieldType, il, reader, options, parameters[i], resolverVar);
+				Instruction[] read = FormatterHelper.GetReadValue(module, field.Item1.FieldType, il, reader, options, parameters[i], resolverVar);
 				fill.AddRange(read);
 				fill.Add(Instruction.Create(OpCodes.Br, loopEnd));
 
@@ -636,7 +677,7 @@ namespace Hertzole.ALE.CodeGen
 					il.Emit(OpCodes.Call, baseType.Module.GetMethod(typeof(LevelEditorLogger), "Log", typeof(object)));
 #endif
 					
-					il.Append(FormatterHelper.GetWriteValue(properties[i].FieldTypeComponentAware, wrapperData.wrapper.GetField(properties[i].Name), false, getResolver, true));
+					il.Append(FormatterHelper.GetWriteValue(module, properties[i].FieldTypeComponentAware, wrapperData.wrapper.GetField(properties[i].Name), false, getResolver, true));
 				}
 
 #if ALE_DEBUG
@@ -717,7 +758,7 @@ namespace Hertzole.ALE.CodeGen
 				il.Append(remainder);
 
 				Instruction previous;
-				Instruction[] idRead = FormatterHelper.GetReadValue(idVar.VariableType, getResolver);
+				Instruction[] idRead = FormatterHelper.GetReadValue(module, idVar.VariableType, getResolver);
 
 				il.Append(idRead);
 
@@ -748,7 +789,7 @@ namespace Hertzole.ALE.CodeGen
 
 				if (properties.Count == 1)
 				{
-					il.Append(FormatterHelper.GetReadValue(properties[0].FieldTypeComponentAware, getResolver));
+					il.Append(FormatterHelper.GetReadValue(module, properties[0].FieldTypeComponentAware, getResolver));
 					il.EmitStloc(localFields[0]);
 					
 					// dirtyMask |= Wrapper.DirtyMask.Value;
@@ -771,7 +812,7 @@ namespace Hertzole.ALE.CodeGen
 							previous = properties[i].Id != 0 ? il.EmitInt(properties[i].Id) : ifStart;
 						}
 
-						il.Append(FormatterHelper.GetReadValue(properties[i].FieldTypeComponentAware, getResolver));
+						il.Append(FormatterHelper.GetReadValue(module, properties[i].FieldTypeComponentAware, getResolver));
 						il.EmitStloc(localFields[i]);
 						
 						// dirtyMask |= Wrapper.DirtyMask.Value;

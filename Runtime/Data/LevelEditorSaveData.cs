@@ -8,7 +8,7 @@ namespace Hertzole.ALE
     {
         public string name;
         public List<LevelEditorObjectData> objects;
-        internal Dictionary<string, LevelEditorCustomData> customData;
+        public Dictionary<string, LevelEditorCustomData> customData;
 
         public const ushort SAVE_VERSION = 1;
 

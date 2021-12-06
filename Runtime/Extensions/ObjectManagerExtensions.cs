@@ -221,7 +221,16 @@ namespace Hertzole.ALE
 
         public static ILevelEditorObject CreateObject(this ILevelEditorObjectManager x, LevelEditorObjectData data, bool registerUndo = false)
         {
-            ILevelEditorObject obj = x.CreateObject(x.GetResource(data.id), Vector3.zero, Quaternion.identity, null, data.instanceId, registerUndo);
+            ILevelEditorResource resource = x.GetResource(data.id);
+            if (resource == null)
+            {
+                return null;
+            }
+            ILevelEditorObject obj = x.CreateObject(resource, Vector3.zero, Quaternion.identity, null, data.instanceId, registerUndo);
+            if (obj == null)
+            {
+                return null;
+            }
             obj.MyGameObject.name = data.name;
             obj.MyGameObject.SetActive(data.active);
 

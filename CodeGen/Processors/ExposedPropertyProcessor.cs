@@ -1254,7 +1254,7 @@ namespace Hertzole.ALE.CodeGen
 
 				usedIds.Add(resultExposedProperties[i].Id);
 				// Must generate a formatter for this type.
-				Formatters.AddTypeToGenerate(resultExposedProperties[i].FieldTypeResolved);
+				Formatters.AddTypeToGenerate(resultExposedProperties[i].FieldType);
 			}
 
 			resultExposedProperties.Sort((x, y) => x.Order.CompareTo(y.Order));

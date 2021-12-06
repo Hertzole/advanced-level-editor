@@ -71,6 +71,20 @@ namespace Hertzole.ALE
             return Directory.GetFiles(location, "*" + ToFileExtension(fileExtension));
         }
 
+        public virtual LevelEditorSaveData LoadLevelFromBytes(byte[] levelBytes)
+        {
+            LevelEditorSaveData data = LevelEditorSerializer.DeserializeBinary<LevelEditorSaveData>(levelBytes, compress);
+
+            return LoadLevel(data);
+        }
+
+        public virtual LevelEditorSaveData LoadLevelFromJson(string json)
+        {
+            LevelEditorSaveData data = LevelEditorSerializer.DeserializeJson<LevelEditorSaveData>(json);
+
+            return LoadLevel(data);
+        }
+
         public virtual LevelEditorSaveData LoadLevel(string path)
         {
             loadLocation = path;
@@ -97,6 +111,8 @@ namespace Hertzole.ALE
 
             return LoadLevel(data);
         }
+        
+        
 
         public virtual LevelEditorSaveData LoadLevel(LevelEditorSaveData data)
         {

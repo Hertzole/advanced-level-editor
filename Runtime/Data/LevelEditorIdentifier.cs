@@ -16,7 +16,7 @@ namespace Hertzole.ALE
 
 		public LevelEditorIdentifier(string id)
 		{
-			stringValue = null;
+			stringValue = id;
 			value = id.GetStableHashCode();
 		}
 

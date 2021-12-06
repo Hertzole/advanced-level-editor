@@ -36,9 +36,9 @@ namespace Hertzole.ALE
             };
         }
 
-        public ILevelEditorResource[] GetResources()
+        public IReadOnlyList<ILevelEditorResource> GetResources()
         {
-            return resources.ToArray();
+            return resources;
         }
 
         public List<LevelEditorResource> GetResourcesList()

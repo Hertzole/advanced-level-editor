@@ -2,6 +2,7 @@
 using MessagePack;
 using MessagePack.Formatters;
 using MessagePack.Internal;
+using UnityEngine;
 
 namespace Hertzole.ALE
 {
@@ -9,6 +10,13 @@ namespace Hertzole.ALE
 	{
 		public void Serialize(ref MessagePackWriter writer, LevelEditorCustomData value, MessagePackSerializerOptions options)
 		{
+			if (value.type == null)
+			{
+				Debug.LogWarning($"CustomData with value {value.value} type is null, writing nil. ");
+				writer.WriteNil();
+				return;
+			}
+
 			writer.WriteArrayHeader(2);
 
 			writer.WriteInt32(value.type.FullName.GetStableHashCode());
@@ -17,6 +25,11 @@ namespace Hertzole.ALE
 
 		public LevelEditorCustomData Deserialize(ref MessagePackReader reader, MessagePackSerializerOptions options)
 		{
+			if (reader.TryReadNil())
+			{
+				return new LevelEditorCustomData();
+			}
+			
 			options.Security.DepthStep(ref reader);
 
 			object value = null;
@@ -43,6 +56,7 @@ namespace Hertzole.ALE
 		private static void DeserializeFormat0(ref MessagePackReader reader, MessagePackSerializerOptions options, ref Type type, ref object value)
 		{
 			int count = reader.ReadMapHeader();
+			int typeHash = 0;
 			for (int i = 0; i < count; i++)
 			{
 				ReadOnlySpan<byte> stringKey = CodeGenHelpers.ReadStringSpan(ref reader);
@@ -58,7 +72,8 @@ namespace Hertzole.ALE
 							goto FAIL;
 						}
 
-						type = LevelEditorSerializer.GetType(reader.ReadInt32());
+						typeHash = reader.ReadInt32();
+						type = LevelEditorSerializer.GetType(typeHash);
 						continue;
 					case 5:
 						if (AutomataKeyGen.GetKey(ref stringKey) != 435761734006UL)
@@ -66,6 +81,13 @@ namespace Hertzole.ALE
 							goto FAIL;
 						}
 
+						if (type == null)
+						{
+							Debug.LogWarning($"Can't deserialize some custom data because there's no type with hash {typeHash}.");
+							reader.Skip();
+							break;
+						}
+						
 						((LevelEditorResolver) LevelEditorResolver.instance).DeserializeDynamic(type, ref reader, out value, options);
 						continue;
 				}
@@ -84,6 +106,13 @@ namespace Hertzole.ALE
 						type = LevelEditorSerializer.GetType(reader.ReadInt32());
 						break;
 					case 1:
+						if (type == null)
+						{
+							Debug.LogWarning("Can't deserialize some custom data because no type for it was found.");
+							reader.Skip();
+							break;
+						}
+						
 						((LevelEditorResolver) LevelEditorResolver.instance).DeserializeDynamic(type, ref reader, out value, options);
 						break;
 				}

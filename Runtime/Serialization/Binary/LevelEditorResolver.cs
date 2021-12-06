@@ -8,6 +8,8 @@ using MessagePack.Unity;
 using MessagePack.Unity.Extension;
 #if UNITY_EDITOR
 using UnityEditor;
+#else
+using UnityEngine;
 #endif
 
 namespace Hertzole.ALE
