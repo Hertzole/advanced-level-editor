@@ -194,7 +194,11 @@ namespace Hertzole.ALE.CodeGen.Helpers
 			return Instruction.Create(value ? OpCodes.Ldc_I4_1 : OpCodes.Ldc_I4_0);
 		}
 
-		public static IEnumerable<Instruction> IfElse<T>(IReadOnlyList<T> items, Action<T, int, Instruction, List<Instruction>> ifCheck, Action<T, int, Instruction, List<Instruction>> body, Action<List<Instruction>> endElse)
+		public delegate void IfCheckBuilder<in T>(T item, int index, Instruction next, Instruction body, List<Instruction> fill);
+		public delegate void IfBodyBuilder<in T>(T item, int index, Instruction next, List<Instruction> fill);
+		public delegate void IfElseBuilder<in T>(List<Instruction> fill);
+
+		public static IEnumerable<Instruction> IfElse<T>(IReadOnlyList<T> items, IfCheckBuilder<T> ifCheck, IfBodyBuilder<T> body, IfElseBuilder<T> endElse)
 		{
 			// How it works:
 			// 1. Create the end.
@@ -206,34 +210,43 @@ namespace Hertzole.ALE.CodeGen.Helpers
 			// 5. Appends the end instructions.
 			// 6. Appends all the if check instructions before each body block.
 
-			Instruction[] targets = new Instruction[items.Count];
+			// Used to target the next if check.
+			Instruction[] checkTargets = new Instruction[items.Count];
 			
+			// The body fillings. The key is the item index.
 			Dictionary<int, List<Instruction>> bodyFills = new Dictionary<int, List<Instruction>>();
 			
+			// List of instructions for the end.
 			List<Instruction> endFill = new List<Instruction>();
 			
 			endElse.Invoke(endFill);
-			targets[0] = endFill[0];
+			checkTargets[0] = endFill[0];
 			
 			for (int i = 0; i < items.Count; i++)
 			{
 				bodyFills.Add(i, new List<Instruction>());
-				body.Invoke(items[i], i, targets[0], bodyFills[i]);
+				body.Invoke(items[i], i, checkTargets[0], bodyFills[i]);
 			}
 
+			// The check fillings. The key is the item index.
 			Dictionary<int, List<Instruction>> checkFills = new Dictionary<int, List<Instruction>>();
 
-			int index = 0;
+			int index;
+			int reverseI = items.Count - 1;
 			// Create all the if checks in reverse order.
 			for (int i = items.Count - 1; i >= 0; i--)
 			{
 				index = i;
 				checkFills.Add(i, new List<Instruction>());
-				ifCheck.Invoke(items[index], index, targets[i == items.Count - 1 ? 0 : i + 1], checkFills[index]);
+				Instruction nextInstruction = checkTargets[i == items.Count - 1 ? 0 : i + 1];
+				Instruction bodyInstruction = bodyFills[reverseI][0];
+				ifCheck.Invoke(items[index], index, nextInstruction, bodyInstruction, checkFills[index]);
 				if (i > 0)
 				{
-					targets[i] = checkFills[i][0];
+					checkTargets[i] = checkFills[i][0];
 				}
+
+				reverseI--;
 			}
 
 			List<Instruction> total = new List<Instruction>();

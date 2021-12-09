@@ -261,9 +261,9 @@ namespace Hertzole.ALE.CodeGen
         {
             if (!type.HasMethods)
             {
-                throw new NullReferenceException("There's no methods in " + type.FullName);
+                throw new NullReferenceException($"There's no methods in {type.FullName}");
             }
-
+            
             for (int i = 0; i < type.Methods.Count; i++)
             {
                 if (type.Methods[i].Name == method)
@@ -272,10 +272,10 @@ namespace Hertzole.ALE.CodeGen
                 }
             }
 
-            throw new ArgumentException("There's no method called " + method + " in " + type.FullName + " with those parameters.");
+            throw new ArgumentException($"There's no method called {method} in {type.FullName}.");
         }
 
-        public static MethodDefinition GetMethod(this TypeDefinition type, string method, params Type[] parameters)
+        public static MethodDefinition GetMethodWithParameters(this TypeDefinition type, string method, params Type[] parameters)
         {
             if (!type.HasMethods)
             {
@@ -306,7 +306,7 @@ namespace Hertzole.ALE.CodeGen
             throw new ArgumentException($"There's no method called {method} in {type.FullName} with those parameters.");
         }
 
-        public static MethodDefinition GetMethod(this TypeDefinition type, string method, params TypeReference[] parameters)
+        public static MethodDefinition GetMethodWithParameters(this TypeDefinition type, string method, params TypeReference[] parameters)
         {
             if (!type.HasMethods)
             {
@@ -339,12 +339,12 @@ namespace Hertzole.ALE.CodeGen
 
         public static MethodDefinition GetConstructor(this TypeDefinition type, params TypeReference[] parameters)
         {
-            return type.GetMethod(".ctor", parameters);
+            return type.GetMethodWithParameters(".ctor", parameters);
         }
 
-        public static MethodDefinition GetMethodInBaseType(this TypeDefinition type, string method)
+        public static MethodDefinition GetMethodInBaseType(this TypeDefinition type, string method, bool includeSelf = true)
         {
-            TypeDefinition typedef = type;
+            TypeDefinition typedef = includeSelf ? type : type.BaseType.Resolve();
             while (typedef != null)
             {
                 for (int i = 0; i < typedef.Methods.Count; i++)
@@ -475,6 +475,11 @@ namespace Hertzole.ALE.CodeGen
         {
             return m.AddParameter(module, module.ImportReference(typeof(T)), name);
         }
+
+        public static ParameterDefinition AddParameter(this MethodDefinition m, Type type, string name = null)
+        {
+            return AddParameter(m, m.Module.ImportReference(type), name);
+        }
         
         public static ParameterDefinition AddParameter(this MethodDefinition m, TypeReference type, string name = null)
         {
@@ -536,10 +541,24 @@ namespace Hertzole.ALE.CodeGen
 
             for (int i = 0; i < varList.Count; i++)
             {
+                Console.WriteLine($"Adding debug variable {varList[i].name} to {varList[i].variableDefinition} in type {method.Name}");
                 method.DebugInformation.Scope.Variables.Add(new VariableDebugInformation(varList[i].variableDefinition, varList[i].name));
             }
             
             method.Body.Optimize();
+        }
+
+        public static CustomAttribute AddAttribute<T>(this MethodDefinition method) where T : Attribute
+        {
+            return AddAttribute(method, method.Module.GetConstructor<T>());
+        }
+
+        public static CustomAttribute AddAttribute(this MethodDefinition method, MethodReference constructor)
+        {
+            CustomAttribute attribute = new CustomAttribute(constructor);
+            method.CustomAttributes.Add(attribute);
+
+            return attribute;
         }
     }
 }

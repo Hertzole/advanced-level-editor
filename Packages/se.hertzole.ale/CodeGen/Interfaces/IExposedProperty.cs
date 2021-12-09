@@ -31,5 +31,7 @@ namespace Hertzole.ALE.CodeGen
 		Instruction GetLoadInstruction(bool ldflda = false);
 
 		Instruction GetSetInstruction();
+
+		void MakeProtected();
 	}
 }

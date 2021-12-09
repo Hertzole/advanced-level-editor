@@ -3,15 +3,14 @@ using UnityEngine;
 
 namespace Hertzole.ALE.Editor
 {
-    //TODO: LevelEditorCameraEditor
     [CustomEditor(typeof(LevelEditorCamera))]
     public class LevelEditorCameraEditor : UnityEditor.Editor
     {
-        private GUIContent twoDModeContent = new GUIContent("2D Mode");
-        private GUIContent boundsMinContent = new GUIContent("Bounds Min");
-        private GUIContent boundsMaxContent = new GUIContent("Bounds Max");
-        private GUIContent canFlyContent = new GUIContent("Can Pan With Right Click");
-        private GUIContent canPanContent = new GUIContent("Can Pan With Middle Click");
+        private static readonly GUIContent twoDModeContent = new GUIContent("2D Mode");
+        private static readonly GUIContent boundsMinContent = new GUIContent("Bounds Min");
+        private static readonly GUIContent boundsMaxContent = new GUIContent("Bounds Max");
+        private static readonly GUIContent canFlyContent = new GUIContent("Can Pan With Right Click");
+        private static readonly GUIContent canPanContent = new GUIContent("Can Pan With Middle Click");
 
         private SerializedProperty twoDMode;
         private SerializedProperty limitBounds;

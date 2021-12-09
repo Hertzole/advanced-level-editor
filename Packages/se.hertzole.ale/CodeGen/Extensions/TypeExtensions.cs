@@ -1,4 +1,5 @@
 ﻿using System;
+using System.CodeDom;
 using System.Collections.Generic;
 using System.Reflection;
 using Mono.Cecil;
@@ -9,6 +10,7 @@ using FieldAttributes = Mono.Cecil.FieldAttributes;
 using MethodAttributes = Mono.Cecil.MethodAttributes;
 using Object = UnityEngine.Object;
 using PropertyAttributes = Mono.Cecil.PropertyAttributes;
+using TypeAttributes = Mono.Cecil.TypeAttributes;
 
 namespace Hertzole.ALE.CodeGen
 {
@@ -92,6 +94,39 @@ namespace Hertzole.ALE.CodeGen
 			return true;
 		}
 
+		public static void GetParents(this TypeDefinition type, IList<TypeDefinition> parentsList, Predicate<TypeDefinition> predicate = null)
+		{
+			parentsList.Clear();
+			
+			// Go until we hit a null base type.
+			TypeReference baseType = type.BaseType;
+			while (baseType != null)
+			{
+				// Stop if it basically doesn't exist.
+				if (!baseType.CanBeResolved())
+				{
+					break;
+				}
+
+				// Check if it's a valid type and doesn't implement IGetComponent.
+				TypeDefinition resolved = baseType.Resolve();
+				if (predicate != null)
+				{
+					if (predicate(resolved))
+					{
+						parentsList.Add(resolved);
+					}
+				}
+				else
+				{
+					parentsList.Add(resolved);
+				}
+
+				// Go to the next base type.
+				baseType = resolved.BaseType;
+			}
+		}
+
 		public static bool TryResolve(this TypeReference td, out TypeDefinition type)
 		{
 			if (td.CanBeResolved())
@@ -119,10 +154,7 @@ namespace Hertzole.ALE.CodeGen
 			if (type.IsList() && type is GenericInstanceType generic && generic.GenericArguments.Count == 1)
 			{
 				TypeDefinition resolved = generic.GenericArguments[0].GetElementType().Resolve();
-				if (resolved.Is<GameObject>() || resolved.IsSubclassOf<Component>())
-				{
-					return type.Module.ImportReference(resolved);
-				}
+				return type.Module.ImportReference(resolved);
 			}
 
 			return type;
@@ -193,7 +225,7 @@ namespace Hertzole.ALE.CodeGen
 		{
 			if (!type.HasProperties)
 			{
-				return null;
+				throw new NullReferenceException($"There are no properties in type '{type.FullName}'.");
 			}
 
 			for (int i = 0; i < type.Properties.Count; i++)
@@ -204,14 +236,14 @@ namespace Hertzole.ALE.CodeGen
 				}
 			}
 
-			return null;
+			throw new ArgumentException($"There's no property called '{property}' in type '{type.FullName}'.");
 		}
 
 		public static FieldDefinition GetField(this TypeDefinition type, string field)
 		{
 			if (!type.HasFields)
 			{
-				throw new NullReferenceException("There are no fields on " + type.FullName);
+				throw new NullReferenceException($"There are no fields in type '{type.FullName}'");
 			}
 
 			for (int i = 0; i < type.Fields.Count; i++)
@@ -222,7 +254,39 @@ namespace Hertzole.ALE.CodeGen
 				}
 			}
 
-			throw new ArgumentException("There's no field called " + field + " on " + type.FullName);
+			throw new ArgumentException($"There's no field called '{field}' in type '{type.FullName}'.");
+		}
+
+		public static FieldDefinition GetFieldInBaseType(this TypeDefinition type, string field)
+		{
+			if (type == null)
+			{
+				throw new ArgumentNullException(nameof(type));
+			}
+			
+			TypeDefinition typedef = type;
+			while (typedef != null)
+			{
+				for (int i = 0; i < typedef.Fields.Count; i++)
+				{
+					if (typedef.Fields[i].Name == field)
+					{
+						return typedef.Fields[i];
+					}
+				}
+
+				try
+				{
+					TypeReference parent = typedef.BaseType;
+					typedef = parent?.Resolve();
+				}
+				catch (AssemblyResolutionException)
+				{
+					break;
+				}
+			}
+
+			throw new ArgumentException($"There's no field called {field} in {type.FullName} or its base types.");
 		}
 
 		public static bool TryGetField(this TypeDefinition type, string fieldName, out FieldDefinition field)
@@ -394,6 +458,29 @@ namespace Hertzole.ALE.CodeGen
 			return p;
 		}
 
+		public static TypeDefinition AddNestedType(this TypeDefinition type, string name, TypeAttributes attributes)
+		{
+			TypeDefinition newType = new TypeDefinition(type.Namespace, name, attributes);
+			type.NestedTypes.Add(newType);
+
+			return newType;
+		}
+
+		public static TypeDefinition AddNestedType(this TypeDefinition type, string name, TypeAttributes attributes, TypeReference baseType)
+		{
+			TypeDefinition newType = new TypeDefinition(type.Namespace, name, attributes, baseType);
+			type.NestedTypes.Add(newType);
+
+			return newType;
+		}
+
+		public static InterfaceImplementation AddInterface<T>(this TypeDefinition type)
+		{
+			InterfaceImplementation i = new InterfaceImplementation(type.Module.ImportReference(typeof(T)));
+			type.Interfaces.Add(i);
+			return i;
+		}
+
 		public static FieldDefinition CreateLockObject(this TypeDefinition type)
 		{
 			FieldDefinition field = type.AddField<object>($"ALE__GENERATED__{type.Name}__LOCK", FieldAttributes.Private);
@@ -432,7 +519,7 @@ namespace Hertzole.ALE.CodeGen
 			{
 				fieldType = type.Module.ImportReference(typeof(Object));
 				isInequality = true;
-				return type.GetMethod("op_Inequality", fieldType, fieldType);
+				return type.GetMethodWithParameters("op_Inequality", fieldType, fieldType);
 			}
 
 			if (type.TryGetMethodInBaseTypeWithParameters("Equals", out MethodReference equalsMethod, fieldType))

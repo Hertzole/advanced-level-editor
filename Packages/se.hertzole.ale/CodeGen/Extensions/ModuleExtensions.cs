@@ -30,7 +30,13 @@ namespace Hertzole.ALE.CodeGen
 
         public static MethodReference GetMethod(this ModuleDefinition module, Type type, string methodName)
         {
-            return module.ImportReference(type.GetMethod(methodName));
+            MethodInfo method = type.GetMethod(methodName);
+            if (method == null)
+            {
+                throw new ArgumentException($"There's no method called '{methodName}' in type '{type}'");
+            }
+            
+            return module.ImportReference(method);
         }
 
         public static MethodReference GetMethod<T>(this ModuleDefinition module, string methodName, params Type[] parameters)

@@ -2,6 +2,7 @@
 using MessagePack;
 using MessagePack.Formatters;
 using MessagePack.Internal;
+using UnityEngine;
 
 namespace Hertzole.ALE
 {
@@ -10,7 +11,7 @@ namespace Hertzole.ALE
 		public void Serialize(ref MessagePackWriter writer, LevelEditorObjectData value, MessagePackSerializerOptions options)
 		{
 			writer.WriteArrayHeader(5);
-
+			
 			writer.Write(value.name);
 			writer.Write(value.active);
 			options.Resolver.GetFormatter<LevelEditorIdentifier>().Serialize(ref writer, value.id, options);

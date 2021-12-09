@@ -23,7 +23,7 @@ public class ExposedTemplate : MonoBehaviour, IExposedToLevelEditor
 	private event Action<int, object> ALE__GENERATED__OnValueChanging; 
 	private event Action<int, object> ALE__GENERATED__OnValueChanged; 
 	
-	string IExposedToLevelEditor.ComponentName { get { return "ExposedTemplate"; } }
+	string IExposedToLevelEditor.ComponentName { get { return ALE__GENERATED__GetComponentName(); } }
 	string IExposedToLevelEditor.TypeName { get { return "ExposedTemplate"; } }
 	Type IExposedToLevelEditor.ComponentType { get { return typeof(ExposedTemplate); } }
 	bool IExposedToLevelEditor.HasVisibleFields { get { return true; } }
@@ -52,6 +52,11 @@ public class ExposedTemplate : MonoBehaviour, IExposedToLevelEditor
 		ALE__GENERATED__GetProperties(ALE__GENERATED__propertiesList);
 
 		return ALE__GENERATED__propertiesList;
+	}
+
+	protected virtual string ALE__GENERATED__GetComponentName()
+	{
+		return "ExposedTemplate";
 	}
 
 	protected virtual void ALE__GENERATED__GetProperties(List<ExposedField> list)

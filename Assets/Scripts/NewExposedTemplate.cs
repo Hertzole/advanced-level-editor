@@ -1,25 +1,30 @@
 using System;
 using System.Collections.Generic;
 using Hertzole.ALE;
+using MessagePack;
 using UnityEngine;
 
 public class NewExposedTemplate : MonoBehaviour
 {
+	protected byte value3;
 	private readonly ExposedProperty[] cachedProperties =
 	{
 		new ExposedProperty(0, typeof(string), "value1", string.Empty, true),
 		new ExposedProperty(1, typeof(int), "value2", string.Empty, true),
-		new ExposedProperty(2, typeof(byte), "value3", string.Empty, true)
+		new ExposedProperty(2, typeof(byte), "value3", string.Empty, true),
+		new ExposedProperty(3, typeof(GameObject), "reference", string.Empty, true)
 	};
 
-	private readonly List<ExposedProperty> internalPropertyGatherer = new List<ExposedProperty>();
-
 	protected int editingId;
+	protected int value2;
+
+	private readonly List<ExposedProperty> internalPropertyGatherer = new List<ExposedProperty>();
 	protected object lastValue;
 	protected object startEditValue;
-	private string value1;
-	private int value2;
-	private byte value3;
+	protected string value1;
+	protected GameObject reference;
+	protected GameObject[] references;
+	protected List<GameObject> referencesList;
 
 	public event Action<int, object> OnValueChanging;
 	public event Action<int, object> OnValueChanged;
@@ -63,6 +68,12 @@ public class NewExposedTemplate : MonoBehaviour
 		if (id == 2)
 		{
 			startEditValue = value3;
+			return true;
+		}
+
+		if (id == 3)
+		{
+			startEditValue = new ComponentDataWrapper(reference);
 			return true;
 		}
 
@@ -115,6 +126,15 @@ public class NewExposedTemplate : MonoBehaviour
 				changed = true;
 			}
 		}
+		else if (editingId == 3)
+		{
+			if (value is ComponentDataWrapper wrapper && !wrapper.Equals(reference))
+			{
+				reference = wrapper.GetObject<GameObject>();
+				lastValue = wrapper;
+				changed = true;
+			}
+		}
 
 		return false;
 	}
@@ -162,6 +182,12 @@ public class NewExposedTemplate : MonoBehaviour
 			return true;
 		}
 
+		if (id == 4)
+		{
+			value = new ComponentDataWrapper(gameObject);
+			return true;
+		}
+
 		value = null;
 		return false;
 	}
@@ -171,5 +197,119 @@ public class NewExposedTemplate : MonoBehaviour
 		StartEdit(id);
 		SetEditValue(value, notify);
 		EndEdit(notify, undo);
+	}
+
+	public IExposedWrapper GetWrapper()
+	{
+		return INTERNAL__GetWrapper();
+	}
+
+	protected virtual IExposedWrapper INTERNAL__GetWrapper()
+	{
+		return new BaseWrapper
+		{
+			Values = new Dictionary<int, object>(3)
+			{
+				{ 0, value1 },
+				{ 2, value2 },
+				{ 2, value3 },
+				{ 3, new ComponentDataWrapper(reference) }
+			},
+			Dirty = new Dictionary<int, bool>(3)
+			{
+				{ 0, false },
+				{ 1, false },
+				{ 2, false }
+			}
+		};
+	}
+
+	public void ApplyWrapper(IExposedWrapper wrapper, bool ignoreDirtyCheck)
+	{
+		INTERNAL__ApplyWrapper(wrapper, ignoreDirtyCheck);
+	}
+
+	protected virtual void INTERNAL__ApplyWrapper(IExposedWrapper wrapper, bool ignoreDirtyCheck)
+	{
+		if (ignoreDirtyCheck || wrapper.IsDirty(0))
+		{
+			value1 = wrapper.GetValue<string>(0);
+		}
+
+		if (ignoreDirtyCheck || wrapper.IsDirty(1))
+		{
+			value2 = wrapper.GetValue<int>(1);
+		}
+
+		if (wrapper.IsDirty(2))
+		{
+			value3 = wrapper.GetValue<byte>(2);
+		}
+
+		if (wrapper.IsDirty(3))
+		{
+			reference = wrapper.GetValue<ComponentDataWrapper>(3).GetObject<GameObject>();
+		}
+
+		if (wrapper.IsDirty(10))
+		{
+			references = wrapper.GetValue<ComponentDataWrapper>(10).GetObjects<GameObject>();
+		}
+
+		if (wrapper.IsDirty(11))
+		{
+			if (referencesList == null)
+			{
+				referencesList = new List<GameObject>();
+			}
+			else
+			{
+				referencesList.Clear();
+			}
+			
+			referencesList.AddRange(wrapper.GetValue<ComponentDataWrapper>(11).GetObjects<GameObject>());
+		}
+	}
+
+	public struct BaseWrapper : IExposedWrapper
+	{
+		public Dictionary<int, object> Values { get; set; }
+		public Dictionary<int, bool> Dirty { get; set; }
+
+		void IExposedWrapper.Serialize(int id, ref MessagePackWriter writer, MessagePackSerializerOptions options)
+		{
+			if (id == 0)
+			{
+				writer.Write((string) Values[0]);
+			}
+			else if (id == 50)
+			{
+				writer.Write((int) Values[1]);
+			}
+			else if (id == 200)
+			{
+				writer.Write((byte) Values[2]);
+			}
+		}
+
+		object IExposedWrapper.Deserialize(int id, ref MessagePackReader reader, MessagePackSerializerOptions options)
+		{
+			if (id == 0)
+			{
+				return reader.ReadString();
+			}
+
+			if (id == 1)
+			{
+				return reader.ReadInt32();
+			}
+
+			if (id == 2)
+			{
+				return reader.ReadByte();
+			}
+
+			return null;
+		}
 	}
 }

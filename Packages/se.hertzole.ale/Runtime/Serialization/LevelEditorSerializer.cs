@@ -47,7 +47,15 @@ namespace Hertzole.ALE
 
 		public static string SerializeJson<T>(T data)
 		{
-			return MessagePackSerializer.SerializeToJson(data, Options);
+			try
+			{
+				return MessagePackSerializer.SerializeToJson(data, Options);
+			}
+			catch (Exception e)
+			{
+				Debug.LogError(e);
+				return string.Empty;
+			}
 		}
 
 		public static T DeserializeJson<T>(string json)

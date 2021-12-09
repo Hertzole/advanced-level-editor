@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using MessagePack;
 using MessagePack.Formatters;
 
@@ -8,17 +9,17 @@ namespace Hertzole.ALE.Formatters
 	{
 		public void Serialize(ref MessagePackWriter writer, RigidbodyWrapper.Wrapper value, MessagePackSerializerOptions options)
 		{
-			writer.WriteArrayHeader(10);
+			writer.WriteArrayHeader(5);
 			writer.WriteInt8(0);
-			options.Resolver.GetFormatterWithVerify<float>().Serialize(ref writer, value.mass, options);
+			value.Serialize(0, ref writer, options);
 			writer.WriteInt8(1);
-			options.Resolver.GetFormatterWithVerify<float>().Serialize(ref writer, value.drag, options);
+			value.Serialize(1, ref writer, options);
 			writer.WriteInt8(2);
-			options.Resolver.GetFormatterWithVerify<float>().Serialize(ref writer, value.angularDrag, options);
+			value.Serialize(2, ref writer, options);
 			writer.WriteInt8(3);
-			options.Resolver.GetFormatterWithVerify<bool>().Serialize(ref writer, value.useGravity, options);
+			value.Serialize(3, ref writer, options);
 			writer.WriteInt8(4);
-			options.Resolver.GetFormatterWithVerify<bool>().Serialize(ref writer, value.isKinematic, options);
+			value.Serialize(4, ref writer, options);
 		}
 
 		public RigidbodyWrapper.Wrapper Deserialize(ref MessagePackReader reader, MessagePackSerializerOptions options)
@@ -30,12 +31,13 @@ namespace Hertzole.ALE.Formatters
 
 			options.Security.DepthStep(ref reader);
 
-			int length = reader.ReadArrayHeader() / 2;
-			float mass = default;
-			float drag = default;
-			float angularDrag = default;
-			bool useGravity = default;
-			bool isKinematic = default;
+			int length = reader.ReadArrayHeader();
+
+			RigidbodyWrapper.Wrapper wrapper = new RigidbodyWrapper.Wrapper
+			{
+				Values = new Dictionary<int, object>(5),
+				Dirty = new Dictionary<int, bool>(5)
+			};
 
 			for (int i = 0; i < length; i++)
 			{
@@ -43,28 +45,33 @@ namespace Hertzole.ALE.Formatters
 				switch (id)
 				{
 					case 0:
-						mass = reader.ReadSingle();
+						wrapper.Values[0] = wrapper.Deserialize(0, ref reader, options);
+						wrapper.Dirty[0] = true;
 						break;
 					case 1:
-						drag = reader.ReadSingle();
+						wrapper.Values[1] = wrapper.Deserialize(1, ref reader, options);
+						wrapper.Dirty[1] = true;
 						break;
 					case 2:
-						angularDrag = reader.ReadSingle();
+						wrapper.Values[2] = wrapper.Deserialize(2, ref reader, options);
+						wrapper.Dirty[2] = true;
 						break;
 					case 3:
-						useGravity = reader.ReadBoolean();
+						wrapper.Values[3] = wrapper.Deserialize(3, ref reader, options);
+						wrapper.Dirty[3] = true;
 						break;
 					case 4:
-						isKinematic = reader.ReadBoolean();
+						wrapper.Values[4] = wrapper.Deserialize(4, ref reader, options);
+						wrapper.Dirty[4] = true;
 						break;
 					default:
 						reader.Skip();
 						break;
 				}
 			}
-			
+
 			reader.Depth--;
-			return new RigidbodyWrapper.Wrapper(mass, drag, angularDrag, useGravity, isKinematic);
+			return wrapper;
 		}
 	}
 }

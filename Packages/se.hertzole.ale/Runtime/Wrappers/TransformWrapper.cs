@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using MessagePack;
 using UnityEngine;
 
 namespace Hertzole.ALE
@@ -27,16 +28,20 @@ namespace Hertzole.ALE
         public override bool HasVisibleFields { get { return true; } }
 
         private const string POSITION = "position";
+        private const int POSITION_ID = 0;
         private const string ROTATION = "rotation";
+        private const int ROTATION_ID = 1;
         private const string SCALE = "scale";
+        private const int SCALE_ID = 2;
         private const string PARENT = "parent";
+        private const int PARENT_ID = 3;
 
         private readonly ExposedField[] cachedProperties = new ExposedField[]
         {
-            new ExposedProperty(0, typeof(Vector3), POSITION, null, true),
-            new ExposedProperty(1, typeof(Vector3), ROTATION, null, true),
-            new ExposedProperty(2, typeof(Vector3), SCALE, null, true),
-            new ExposedProperty(3, typeof(Transform), PARENT, null, false)
+            new ExposedProperty(POSITION_ID, typeof(Vector3), POSITION, null, true),
+            new ExposedProperty(ROTATION_ID, typeof(Vector3), ROTATION, null, true),
+            new ExposedProperty(SCALE_ID, typeof(Vector3), SCALE, null, true),
+            new ExposedProperty(PARENT_ID, typeof(Transform), PARENT, null, false)
         };
 
         public override IReadOnlyList<ExposedField> GetProperties()
@@ -48,13 +53,13 @@ namespace Hertzole.ALE
         {
             switch (id)
             {
-                case 0:
+                case POSITION_ID:
                     return transform.position;
-                case 1:
+                case ROTATION_ID:
                     return transform.eulerAngles;
-                case 2:
+                case SCALE_ID:
                     return transform.localScale;
-                case 3:
+                case PARENT_ID:
                     return new ComponentDataWrapper(transform.parent);
                 default:
                     throw new ArgumentException($"No exposed property with the ID '{id}'.");
@@ -66,16 +71,16 @@ namespace Hertzole.ALE
             editingId = id;
             switch (id)
             {
-                case 0:
+                case POSITION_ID:
                     beginEditValue = transform.position;
                     break;
-                case 1:
+                case ROTATION_ID:
                     beginEditValue = transform.eulerAngles;
                     break;
-                case 2:
+                case SCALE_ID:
                     beginEditValue = transform.localScale;
                     break;
-                case 3:
+                case PARENT_ID:
                     beginEditValue = new ComponentDataWrapper(transform.parent);
                     break;
                 default:
@@ -89,7 +94,7 @@ namespace Hertzole.ALE
             
              switch (editingId)
             {
-                case 0:
+                case POSITION_ID:
                     if (transform.position != (Vector3) value)
                     {
                         transform.position = (Vector3) value;
@@ -98,7 +103,7 @@ namespace Hertzole.ALE
                     }
 
                     break;
-                case 1:
+                case ROTATION_ID:
                     if (transform.eulerAngles != (Vector3) value)
                     {
                         transform.eulerAngles = (Vector3) value;
@@ -107,7 +112,7 @@ namespace Hertzole.ALE
                     }
 
                     break;
-                case 2:
+                case SCALE_ID:
                     if (transform.localScale != (Vector3) value)
                     {
                         transform.localScale = (Vector3) value;
@@ -116,7 +121,7 @@ namespace Hertzole.ALE
                     }
 
                     break;
-                case 3:
+                case PARENT_ID:
                     if (value is ComponentDataWrapper wrapper && !wrapper.Equals(transform.parent))
                     {
                         SetParent(wrapper);
@@ -164,38 +169,62 @@ namespace Hertzole.ALE
 
         public override IExposedWrapper GetWrapper()
         {
-            return new Wrapper(Target.position, Target.eulerAngles, Target.localScale, new ComponentDataWrapper(Target.parent));
+            return new Wrapper(Target.position, Target.eulerAngles, Target.localScale, new ComponentDataWrapper(Target.parent), false);
         }
 
         public override void ApplyWrapper(IExposedWrapper wrapper, bool ignoreDirtyMask = false)
         {
             if (wrapper is Wrapper w)
             {
-                Target.SetPositionAndRotation(w.position, Quaternion.Euler(w.rotation));
-                Target.localScale = w.scale;
-                SetParent(w.parent);
+                if (ignoreDirtyMask || wrapper.IsDirty(POSITION_ID))
+                {
+                    Target.position = w.GetValue<Vector3>(POSITION_ID);
+                }
+                
+                if (ignoreDirtyMask || wrapper.IsDirty(ROTATION_ID))
+                {
+                    Target.eulerAngles = w.GetValue<Vector3>(ROTATION_ID);
+                }
+                
+                if (ignoreDirtyMask || wrapper.IsDirty(SCALE_ID))
+                {
+                    Target.localScale = w.GetValue<Vector3>(SCALE_ID);
+                }
+                
+                if (ignoreDirtyMask || wrapper.IsDirty(PARENT_ID))
+                {
+                    SetParent(w.GetValue<ComponentDataWrapper>(PARENT_ID));
+                }
             }
         }
 
-        //TODO: Implement DirtyMask.
-        public readonly struct Wrapper : IExposedWrapper, IEquatable<Wrapper>
+        public struct Wrapper : IExposedWrapper, IEquatable<Wrapper>
         {
-            public readonly Vector3 position;
-            public readonly Vector3 rotation;
-            public readonly Vector3 scale;
-            public readonly ComponentDataWrapper parent;
+            public Dictionary<int, object> Values { get; set; }
+            public Dictionary<int, bool> Dirty { get; set; }
 
-            public Wrapper(Vector3 position, Vector3 rotation, Vector3 scale, ComponentDataWrapper parent)
+            public Wrapper(Vector3 position, Vector3 rotation, Vector3 scale, ComponentDataWrapper parent, bool isDirty)
             {
-                this.position = position;
-                this.rotation = rotation;
-                this.scale = scale;
-                this.parent = parent;
+                Values = new Dictionary<int, object>(4)
+                {
+                    { POSITION_ID, position },
+                    { ROTATION_ID, rotation },
+                    { SCALE_ID, scale },
+                    { PARENT_ID, parent },
+                };
+
+                Dirty = new Dictionary<int, bool>(4)
+                {
+                    { POSITION_ID, isDirty },
+                    { ROTATION_ID, isDirty },
+                    { SCALE_ID, isDirty },
+                    { PARENT_ID, isDirty }
+                };
             }
             
             public bool Equals(Wrapper other)
             {
-                return position.Equals(other.position) && rotation.Equals(other.rotation) && scale.Equals(other.scale) && parent.Equals(other.parent);
+                return Values.DictionaryEquals(other.Values);
             }
 
             public override bool Equals(object obj)
@@ -205,14 +234,7 @@ namespace Hertzole.ALE
 
             public override int GetHashCode()
             {
-                unchecked
-                {
-                    int hashCode = position.GetHashCode();
-                    hashCode = (hashCode * 397) ^ rotation.GetHashCode();
-                    hashCode = (hashCode * 397) ^ scale.GetHashCode();
-                    hashCode = (hashCode * 397) ^ parent.GetHashCode();
-                    return hashCode;
-                }
+                return Values.GetHashCode();
             }
 
             public static bool operator ==(Wrapper left, Wrapper right)
@@ -223,6 +245,42 @@ namespace Hertzole.ALE
             public static bool operator !=(Wrapper left, Wrapper right)
             {
                 return !left.Equals(right);
+            }
+
+            public void Serialize(int id, ref MessagePackWriter writer, MessagePackSerializerOptions options)
+            {
+                switch (id)
+                {
+                    case POSITION_ID:
+                        options.Resolver.GetFormatterWithVerify<Vector3>().Serialize(ref writer, (Vector3) Values[POSITION_ID], options);
+                        break;
+                    case ROTATION_ID:
+                        options.Resolver.GetFormatterWithVerify<Vector3>().Serialize(ref writer, (Vector3) Values[ROTATION_ID], options);
+                        break;
+                    case SCALE_ID:
+                        options.Resolver.GetFormatterWithVerify<Vector3>().Serialize(ref writer, (Vector3) Values[SCALE_ID], options);
+                        break;
+                    case PARENT_ID:
+                        options.Resolver.GetFormatterWithVerify<ComponentDataWrapper>().Serialize(ref writer, (ComponentDataWrapper) Values[PARENT_ID], options);
+                        break;
+                }
+            }
+
+            public object Deserialize(int id, ref MessagePackReader reader, MessagePackSerializerOptions options)
+            {
+                switch (id)
+                {
+                    case POSITION_ID:
+                        return options.Resolver.GetFormatterWithVerify<Vector3>().Deserialize(ref reader, options);
+                    case ROTATION_ID:
+                        return options.Resolver.GetFormatterWithVerify<Vector3>().Deserialize(ref reader, options);
+                    case SCALE_ID:
+                        return options.Resolver.GetFormatterWithVerify<Vector3>().Deserialize(ref reader, options);
+                    case PARENT_ID:
+                        return options.Resolver.GetFormatterWithVerify<ComponentDataWrapper>().Deserialize(ref reader, options);
+                }
+
+                return default;
             }
         }
     }

@@ -167,7 +167,7 @@ namespace Hertzole.ALE.CodeGen
 			il.InsertAfter(il.Body.Instructions[startIndex + 1], Instruction.Create(OpCodes.Br, il.Body.Instructions[defaultIndex]));
 		}
 
-		public static void EmitIfElse<T>(this ILProcessor il, IReadOnlyList<T> items, Action<T, int, Instruction, List<Instruction>> ifCheck, Action<T, int, Instruction, List<Instruction>> body, Action<List<Instruction>> endElse)
+		public static void EmitIfElse<T>(this ILProcessor il, IReadOnlyList<T> items, ILHelper.IfCheckBuilder<T> ifCheck, ILHelper.IfBodyBuilder<T> body, ILHelper.IfElseBuilder<T> endElse)
 		{
 			il.Append(ILHelper.IfElse(items, ifCheck, body, endElse));
 		}

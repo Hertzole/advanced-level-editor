@@ -1,120 +1,167 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
-using Hertzole.ALE.CodeGen.Data;
+using System.Runtime.CompilerServices;
+using Hertzole.ALE.CodeGen.Helpers;
+using MessagePack;
 using Mono.Cecil;
 using Mono.Cecil.Cil;
-using Mono.Cecil.Rocks;
 
 namespace Hertzole.ALE.CodeGen
 {
 	public static class WrapperProcessor
 	{
-		private const string WRAPPER_NAME = "ALE__GeneratedComponentWrapper";
-
-		public static WrapperData CreateWrapper(TypeDefinition baseType, IReadOnlyList<IExposedProperty> properties)
+		public static TypeDefinition CreateWrapper(TypeDefinition baseType, ModuleDefinition module, IReadOnlyList<IExposedProperty> properties)
 		{
-			if (baseType.HasNestedTypes)
-			{
-				for (int i = 0; i < baseType.NestedTypes.Count; i++)
-				{
-					if (baseType.NestedTypes[i].Name == WRAPPER_NAME)
-					{
-						throw new NotSupportedException($"{baseType.FullName} already has a nested class called '{WRAPPER_NAME}'.");
-					}
-				}
-			}
-
-			TypeDefinition wrapper = new TypeDefinition(baseType.Namespace, WRAPPER_NAME,
+			TypeDefinition wrapper = baseType.AddNestedType($"ALE__GENERATED__{baseType.Name}ComponentWrapper",
 				TypeAttributes.NestedPublic | TypeAttributes.SequentialLayout | TypeAttributes.AnsiClass | TypeAttributes.Sealed | TypeAttributes.BeforeFieldInit,
-				baseType.Module.GetTypeReference<ValueType>());
+				module.GetTypeReference<ValueType>());
 
-			baseType.NestedTypes.Add(wrapper);
+			wrapper.AddInterface<IExposedWrapper>();
 
-			wrapper.Interfaces.Add(new InterfaceImplementation(baseType.Module.GetTypeReference<IExposedWrapper>()));
-			TypeDefinition dirtyMaskType = CreateDirtyMask();
-			wrapper.NestedTypes.Add(dirtyMaskType);
-			FieldDefinition dirtyMaskField = new FieldDefinition("ALE__Generated__dirtyMaskField", FieldAttributes.Public, dirtyMaskType);
-			wrapper.Fields.Add(dirtyMaskField);
-
-			MethodDefinition ctor = wrapper.AddMethod(".ctor", MethodAttributes.Public | MethodAttributes.HideBySig | MethodAttributes.SpecialName | MethodAttributes.RTSpecialName);
+			PropertyDefinition valuesProperty = CreateProperty<Dictionary<int, object>>(wrapper, module, "Values");
+			CreateProperty<Dictionary<int, bool>>(wrapper, module, "Dirty");
 			
-			ILProcessor il = ctor.BeginEdit();
+			CreateSerializeMethod(wrapper, module, valuesProperty, properties);
+			CreateDeserializeMethod(wrapper, module, properties);
 
-			ParameterDefinition dirtyMaskParameter = ctor.AddParameter(dirtyMaskType);
+			return wrapper;
+		}
+
+		private static PropertyDefinition CreateProperty<T>(TypeDefinition wrapper, ModuleDefinition module, string name)
+		{
+			FieldDefinition field = wrapper.AddField<T>($"<{name}>k__BackingField", FieldAttributes.Private);
+			field.CustomAttributes.Add(new CustomAttribute(module.GetConstructor<CompilerGeneratedAttribute>()));
+
+			var get = wrapper.AddMethod<T>($"get_{name}", 
+				MethodAttributes.Public | MethodAttributes.Final | MethodAttributes.HideBySig | MethodAttributes.SpecialName | MethodAttributes.NewSlot | MethodAttributes.Virtual);
+
+			get.AddAttribute<CompilerGeneratedAttribute>();
+			get.AddAttribute<IsReadOnlyAttribute>();
+
+			ILProcessor il = get.BeginEdit();
 
 			il.EmitLdarg();
-			il.EmitLdarg(dirtyMaskParameter);
-			il.Emit(OpCodes.Stfld, dirtyMaskField);
-
-			for (int i = 0; i < properties.Count; i++)
-			{
-				FieldDefinition field = CreateField(properties[i]);
-				wrapper.Fields.Add(field);
-
-				ParameterDefinition p = ctor.AddParameter(properties[i].FieldTypeComponentAware);
-#if ALE_DEBUG
-				p.Name = properties[i].Name;
-#else
-#endif
-
-#if ALE_DEBUG
-				il.Emit(OpCodes.Ldstr, $"{baseType.FullName} wrapper setting value for field {properties[i].Id} ({properties[i].Name})");
-				il.Emit(OpCodes.Call, baseType.Module.GetMethod(typeof(LevelEditorLogger), "Log", typeof(object)));
-#endif
-
-				il.EmitLdarg();
-				il.EmitInt(properties[i].Id);
-				il.EmitLdarg(p);
-
-				MethodReference fieldCtor = baseType.Module.ImportReference(typeof(ValueTuple<,>)
-				                                                            .GetConstructors()
-				                                                            .Single(c => c.GetParameters().Length == 2))
-				                                    .MakeHostInstanceGeneric(baseType.Module.ImportReference(typeof(ValueTuple<,>))
-				                                                                     .MakeGenericInstanceType(baseType.Module.GetTypeReference<int>(), baseType.Module.ImportReference(properties[i].FieldTypeComponentAware)));
-
-				il.Emit(OpCodes.Newobj, fieldCtor);
-				il.Emit(OpCodes.Stfld, field);
-			}
-
+			il.Emit(OpCodes.Ldfld, field);
 			il.Emit(OpCodes.Ret);
+			
+			get.EndEdit();
 
-			ctor.EndEdit();
+			var set = wrapper.AddMethod($"set_{name}", MethodAttributes.Public | MethodAttributes.HideBySig | MethodAttributes.SpecialName);
+			var paraValue = set.AddParameter<T>("value");
+			set.AddAttribute<CompilerGeneratedAttribute>();
 
-			return new WrapperData(wrapper, ctor, dirtyMaskType, dirtyMaskField);
+			il = set.BeginEdit();
 
-			TypeDefinition CreateDirtyMask()
+			il.EmitLdarg();
+			il.EmitLdarg(paraValue);
+			il.Emit(OpCodes.Stfld, field);
+			il.Emit(OpCodes.Ret);
+			
+			set.EndEdit();
+
+			PropertyDefinition property = new PropertyDefinition(name, PropertyAttributes.None, module.GetTypeReference<T>())
 			{
-				TypeDefinition mask = new TypeDefinition(string.Empty, "ALE__GENERATED__dirtyMask", TypeAttributes.NestedPublic | TypeAttributes.AnsiClass | TypeAttributes.Sealed, baseType.Module.GetTypeReference<Enum>());
+				GetMethod = get,
+				SetMethod = set
+			};
 
-				mask.Fields.Add(new FieldDefinition("value__", FieldAttributes.Public | FieldAttributes.SpecialName | FieldAttributes.RTSpecialName, baseType.Module.GetTypeReference<long>()));
-				FieldDefinition noneField = new FieldDefinition("None", FieldAttributes.Public | FieldAttributes.Static | FieldAttributes.Literal, mask)
+			wrapper.Properties.Add(property);
+
+			return property;
+		}
+
+		private static void CreateSerializeMethod(TypeDefinition wrapper, ModuleDefinition module, PropertyDefinition valuesField, IReadOnlyList<IExposedProperty> properties)
+		{
+			MethodDefinition m = wrapper.AddMethod("Serialize",
+				MethodAttributes.Public | MethodAttributes.Final | MethodAttributes.HideBySig | MethodAttributes.NewSlot | MethodAttributes.Virtual);
+
+			ParameterDefinition paraId = m.AddParameter<int>("id");
+			ParameterDefinition paraWriter = m.AddParameter(module.GetTypeReference(typeof(MessagePackWriter).MakeByRefType()), "writer");
+			ParameterDefinition paraOptions = m.AddParameter<MessagePackSerializerOptions>("options");
+
+			ILProcessor il = m.BeginEdit();
+
+			il.EmitIfElse(properties, (property, index, next, body, fill) =>
+			{
+				// if (id == <id>)
+				fill.Add(ILHelper.Ldarg(il, paraId));
+				if (property.Id == 0)
 				{
-					Constant = 0L
-				};
-
-				mask.Fields.Add(noneField);
-
-				for (int i = 0; i < properties.Count; i++)
+					fill.Add(Instruction.Create(OpCodes.Brtrue, next));
+				}
+				else
 				{
-					FieldDefinition field = new FieldDefinition(properties[i].Name, FieldAttributes.Public | FieldAttributes.Static | FieldAttributes.Literal, mask)
+					fill.Add(ILHelper.Int(property.Id));
+					fill.Add(Instruction.Create(OpCodes.Bne_Un, next));
+				}
+			}, (property, index, next, fill) =>
+			{
+				// writer.Write((Type) values[id])
+				// options.Resolver.GetFormatterWithVerify<Type>().Serialize(ref writer, (Type) values[id], options)
+				fill.AddRange(FormatterHelper.GetWriteValue(property.FieldTypeComponentAware, module, il, paraWriter, paraOptions, list =>
+				{
+					list.Add(Instruction.Create(OpCodes.Call, valuesField.GetMethod));
+					list.Add(ILHelper.Int(property.Id));
+					list.Add(Instruction.Create(OpCodes.Callvirt, module.GetMethod<Dictionary<int, object>>("get_Item")));
+					if (property.IsValueType)
 					{
-						Constant = 1L << i
-					};
+						list.Add(Instruction.Create(OpCodes.Unbox_Any, property.FieldTypeComponentAware));
+					}
+				}));
 
-					mask.Fields.Add(field);
+				if (index <= properties.Count - 1)
+				{
+					fill.Add(Instruction.Create(OpCodes.Ret));
+				}
+			}, fill => { fill.Add(Instruction.Create(OpCodes.Ret)); });
+
+			m.EndEdit();
+		}
+
+		private static void CreateDeserializeMethod(TypeDefinition wrapper, ModuleDefinition module, IReadOnlyList<IExposedProperty> properties)
+		{
+			MethodDefinition m = wrapper.AddMethod<object>("Deserialize",
+				MethodAttributes.Public | MethodAttributes.Final | MethodAttributes.HideBySig | MethodAttributes.NewSlot | MethodAttributes.Virtual);
+
+			ParameterDefinition paraId = m.AddParameter<int>("id");
+			ParameterDefinition paraReader = m.AddParameter(module.GetTypeReference(typeof(MessagePackReader).MakeByRefType()), "reader");
+			ParameterDefinition paraOptions = m.AddParameter<MessagePackSerializerOptions>("options");
+
+			ILProcessor il = m.BeginEdit();
+
+			il.EmitIfElse(properties, (property, index, next, body, fill) =>
+			{
+				// if (id == <id>)
+				fill.Add(ILHelper.Ldarg(il, paraId));
+				if (property.Id == 0)
+				{
+					fill.Add(Instruction.Create(OpCodes.Brtrue, next));
+				}
+				else
+				{
+					fill.Add(ILHelper.Int(property.Id));
+					fill.Add(Instruction.Create(OpCodes.Bne_Un, next));
+				}
+			}, (property, index, next, fill) =>
+			{
+				// return reader.Read()
+				// return options.Resolver.GetFormatterWithVerify<Type>().Deserialize(ref reader, options)
+
+				fill.AddRange(FormatterHelper.GetReadValue(property.FieldTypeComponentAware, module, il, paraReader, paraOptions));
+				if (property.IsValueType)
+				{
+					fill.Add(Instruction.Create(OpCodes.Box, property.FieldTypeComponentAware));
 				}
 
-				return mask;
-			}
-
-			FieldDefinition CreateField(IExposedProperty property)
+				fill.Add(Instruction.Create(OpCodes.Ret));
+			}, fill =>
 			{
-				TypeReference tuple = baseType.Module.ImportReference(typeof(ValueTuple<,>)).MakeGenericInstanceType(baseType.Module.GetTypeReference<int>(), property.FieldTypeComponentAware);
+				// return null
+				fill.Add(Instruction.Create(OpCodes.Ldnull));
+				fill.Add(Instruction.Create(OpCodes.Ret));
+			});
 
-				FieldDefinition f = new FieldDefinition(property.Name, FieldAttributes.Public, tuple);
-				return f;
-			}
+			m.EndEdit();
 		}
 	}
 }
