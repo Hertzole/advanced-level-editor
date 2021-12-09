@@ -82,6 +82,15 @@ namespace Hertzole.ALE.CodeGen
 			return Instruction.Create(OpCodes.Stfld, field);
 		}
 
+		public void MakeProtected()
+		{
+			if ((field.Attributes & FieldAttributes.Private) != 0 && (field.Attributes & FieldAttributes.Family) == 0)
+			{
+				field.Attributes &= ~FieldAttributes.Private;
+				field.Attributes |= FieldAttributes.Family;
+			}
+		}
+
 		public ExposedFieldProperty(FieldDefinition field, int order)
 		{
 			this.field = field;

@@ -248,6 +248,33 @@ namespace Hertzole.ALE.Tests
 			yield return SetValueTest<StructEquatable, StructEquatableValue>(new StructEquatable(42, 24), new StructEquatable(128, 256));
 		}
 
+		[UnityTest]
+		public IEnumerator SetValueParentAndChild()
+		{
+			cube.AddComponent<InheritChild>();
+			ILevelEditorObject newCube = objectManager.CreateObject("cube");
+			IExposedToLevelEditor exposed = newCube.MyGameObject.GetComponent<InheritChild>() as IExposedToLevelEditor;
+
+			Assert.IsNotNull(exposed);
+
+			var parentValue = (int) exposed.GetValue(0);
+			var childValue = (int) exposed.GetValue(1);
+
+			Assert.AreEqual(0, parentValue);
+			Assert.AreEqual(0, childValue);
+
+			exposed.SetValue(0, 10, true);
+			exposed.SetValue(1, 20, true);
+			
+			parentValue = (int) exposed.GetValue(0);
+			childValue = (int) exposed.GetValue(1);
+			
+			Assert.AreEqual(10, parentValue);
+			Assert.AreEqual(20, childValue);
+			
+			yield break;
+		}
+
 		//TODO: Use when classes are supported.
 		// [UnityTest]
 		// public IEnumerator SetValueClass()

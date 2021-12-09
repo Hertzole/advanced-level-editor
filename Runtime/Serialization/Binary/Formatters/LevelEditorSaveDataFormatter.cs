@@ -1,6 +1,7 @@
 ﻿using System.Collections.Generic;
 using MessagePack;
 using MessagePack.Formatters;
+using UnityEngine;
 
 namespace Hertzole.ALE
 {

@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using MessagePack;
 using MessagePack.Formatters;
 using UnityEngine;
@@ -9,17 +10,23 @@ namespace Hertzole.ALE.Formatters
 	{
 		public void Serialize(ref MessagePackWriter writer, TransformWrapper.Wrapper value, MessagePackSerializerOptions options)
 		{
-			IMessagePackFormatter<Vector3> vectorFormatter = options.Resolver.GetFormatterWithVerify<Vector3>();
-
-			writer.WriteArrayHeader(8);
+			writer.WriteArrayHeader(4);
+			
+			// Position
 			writer.WriteInt8(0);
-			vectorFormatter.Serialize(ref writer, value.position, options);
+			value.Serialize(0, ref writer, options);
+			
+			// Rotation
 			writer.WriteInt8(1);
-			vectorFormatter.Serialize(ref writer, value.rotation, options);
+			value.Serialize(1, ref writer, options);
+			
+			// Scale
 			writer.WriteInt8(2);
-			vectorFormatter.Serialize(ref writer, value.scale, options);
+			value.Serialize(2, ref writer, options);
+
+			// Parent
 			writer.WriteInt8(3);
-			options.Resolver.GetFormatterWithVerify<ComponentDataWrapper>().Serialize(ref writer, value.parent, options);
+			value.Serialize(3, ref writer, options);
 		}
 
 		public TransformWrapper.Wrapper Deserialize(ref MessagePackReader reader, MessagePackSerializerOptions options)
@@ -31,13 +38,12 @@ namespace Hertzole.ALE.Formatters
 
 			options.Security.DepthStep(ref reader);
 
-			int length = reader.ReadArrayHeader() / 2;
-			Vector3 position = default;
-			Vector3 rotation = default;
-			Vector3 scale = default;
-			ComponentDataWrapper parent = default;
-
-			IMessagePackFormatter<Vector3> vectorFormatter = options.Resolver.GetFormatterWithVerify<Vector3>();
+			int length = reader.ReadArrayHeader();
+			TransformWrapper.Wrapper wrapper = new TransformWrapper.Wrapper()
+			{
+				Values = new Dictionary<int, object>(4),
+				Dirty = new Dictionary<int, bool>(4)
+			};
 			
 			for (int i = 0; i < length; i++)
 			{
@@ -45,16 +51,20 @@ namespace Hertzole.ALE.Formatters
 				switch (id)
 				{
 					case 0:
-						position = vectorFormatter.Deserialize(ref reader, options);
+						wrapper.Values[0] = wrapper.Deserialize(0, ref reader, options);
+						wrapper.Dirty[0] = true;
 						break;
 					case 1:
-						rotation = vectorFormatter.Deserialize(ref reader, options);
+						wrapper.Values[1] = wrapper.Deserialize(1, ref reader, options);
+						wrapper.Dirty[1] = true;
 						break;
 					case 2:
-						scale = vectorFormatter.Deserialize(ref reader, options);
+						wrapper.Values[2] = wrapper.Deserialize(2, ref reader, options);
+						wrapper.Dirty[2] = true;
 						break;
 					case 3:
-						parent = options.Resolver.GetFormatterWithVerify<ComponentDataWrapper>().Deserialize(ref reader, options);
+						wrapper.Values[3] = wrapper.Deserialize(3, ref reader, options);
+						wrapper.Dirty[3] = true;
 						break;
 					default:
 						reader.Skip();
@@ -63,7 +73,7 @@ namespace Hertzole.ALE.Formatters
 			}
 			
 			reader.Depth--;
-			return new TransformWrapper.Wrapper(position, rotation, scale, parent);
+			return wrapper;
 		}
 	}
 }

@@ -147,7 +147,7 @@ namespace Hertzole.ALE
 
             for (int i = 0; i < exposedComponents.Length; i++)
             {
-                exposedComponents[i].ApplyWrapper(playModeValues[i]);
+                exposedComponents[i].ApplyWrapper(playModeValues[i], true);
             }
 
             if (playModeObjects != null)
@@ -247,7 +247,7 @@ namespace Hertzole.ALE
             {
                 for (int i = 0; i < originalValues.Length; i++)
                 {
-                    exposedComponents[i].ApplyWrapper(originalValues[i]);
+                    exposedComponents[i].ApplyWrapper(originalValues[i], true);
                 }
             }
             

@@ -21,7 +21,7 @@ namespace Hertzole.ALE
 			}
 			
 			writer.WriteArrayHeader(2);
-
+			
 			writer.WriteInt32(value.type.FullName.GetStableHashCode());
 			((LevelEditorResolver) LevelEditorResolver.instance).SerializeWrapper(ref writer, value.wrapper, options);
 		}
@@ -107,7 +107,8 @@ namespace Hertzole.ALE
 				switch (i)
 				{
 					case 0:
-						type = LevelEditorSerializer.GetType(reader.ReadInt32());
+						var typeHash = reader.ReadInt32();
+						type = LevelEditorSerializer.GetType(typeHash);
 						break;
 					case 1:
 						if (type == null)

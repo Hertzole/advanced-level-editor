@@ -81,6 +81,15 @@ namespace Hertzole.ALE.CodeGen
 		{
 			return Instruction.Create(OpCodes.Call, property.SetMethod);
 		}
+		
+		public void MakeProtected()
+		{
+			if ((property.GetMethod.Attributes & MethodAttributes.Private) != 0 && (property.GetMethod.Attributes & MethodAttributes.Family) == 0)
+			{
+				property.GetMethod.Attributes &= ~MethodAttributes.Private;
+				property.GetMethod.Attributes |= MethodAttributes.Family;
+			}
+		}
 
 		public ExposedPropertyProperty(PropertyDefinition property, int order)
 		{

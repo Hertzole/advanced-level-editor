@@ -448,7 +448,7 @@ namespace Hertzole.ALE.CodeGen
 
 			Instruction loopEnd = ILHelper.Ldloc(indexVar);
 
-			il.EmitIfElse(fields, (field, index, last, fill) => // If check
+			il.EmitIfElse(fields, (field, index, last, body, fill) => // If check
 			{
 				Instruction[] keyCheck = FormatterHelper.GetKeyCheck(m, key, stringKey, keyLength, field.Item1,
 					field.Item2, out Instruction lengthLast, out Instruction checkLast, out bool isAdvanced);
@@ -535,7 +535,7 @@ namespace Hertzole.ALE.CodeGen
 
 			Instruction[] bodyStarts = new Instruction[fields.Count];
 
-			il.EmitIfElse(fields, (field, i, last, fill) => // If check
+			il.EmitIfElse(fields, (field, i, last, body, fill) => // If check
 			{
 				fill.Add(ILHelper.Ldloc(hashVar));
 				fill.Add(ILHelper.Int(field.Item1.Name.GetStableHashCode()));
@@ -593,7 +593,7 @@ namespace Hertzole.ALE.CodeGen
 			return m;
 		}
 
-		public void CreateExposedFormatter(TypeDefinition baseType, IReadOnlyList<IExposedProperty> properties, WrapperData wrapperData)
+		public void CreateExposedFormatter(TypeDefinition baseType, IReadOnlyList<IExposedProperty> properties, TypeDefinition wrapper)
 		{
 			string name = $"{baseType.Namespace.Replace('.', '_')}_{baseType.Name}_Formatter";
 			if (name.StartsWith("_"))
@@ -604,7 +604,7 @@ namespace Hertzole.ALE.CodeGen
 			TypeDefinition formatter = new TypeDefinition("Hertzole.ALE.Generated.Formatters", name,
 				TypeAttributes.Public | TypeAttributes.AnsiClass | TypeAttributes.BeforeFieldInit, baseType.Module.GetTypeReference<object>());
 
-			formatter.Interfaces.Add(new InterfaceImplementation(baseType.Module.GetTypeReference(typeof(IMessagePackFormatter<>)).MakeGenericInstanceType(wrapperData.wrapper)));
+			formatter.Interfaces.Add(new InterfaceImplementation(baseType.Module.GetTypeReference(typeof(IMessagePackFormatter<>)).MakeGenericInstanceType(wrapper)));
 			formatter.Interfaces.Add(new InterfaceImplementation(baseType.Module.GetTypeReference(typeof(IMessagePackFormatter))));
 
 			baseType.Module.Types.Add(formatter);
@@ -620,257 +620,199 @@ namespace Hertzole.ALE.CodeGen
 
 			formatter.Methods.Add(ctor);
 
-			CreateSerializeMethod();
-			CreateDeserializeMethod();
+			CreateWrapperSerializeMethod(formatter, baseType.Module, properties, wrapper);
+			CreateWrapperDeserializeMethod(formatter, module, properties, wrapper);
 
-			void CreateSerializeMethod()
-			{
-				var m = formatter.AddMethod("Serialize",
-					MethodAttributes.Public | MethodAttributes.Final | MethodAttributes.HideBySig | MethodAttributes.NewSlot | MethodAttributes.Virtual);
+			resolver.AddWrapperFormatter(formatter, wrapper, baseType);
+		}
 
-				ParameterDefinition writer = m.AddParameter(baseType.Module.GetTypeReference(typeof(MessagePackWriter).MakeByRefType()), "writer");
-				ParameterDefinition value = m.AddParameter(wrapperData.wrapper, "value");
-				ParameterDefinition options = m.AddParameter(baseType.Module.GetTypeReference<MessagePackSerializerOptions>(), "options");
+		private static void CreateWrapperSerializeMethod(TypeDefinition type, ModuleDefinition module, IReadOnlyList<IExposedProperty> properties, TypeDefinition wrapper)
+		{
+			var m = type.AddMethod("Serialize", MethodAttributes.Public | MethodAttributes.Final | MethodAttributes.HideBySig | MethodAttributes.NewSlot | MethodAttributes.Virtual);
 
-				ILProcessor il = m.BeginEdit();
+			var paraWriter = m.AddParameter(typeof(MessagePackWriter).MakeByRefType(), "writer");
+			var paraValue = m.AddParameter(wrapper, "wrapper");
+			var paraOptions = m.AddParameter<MessagePackSerializerOptions>("options");
 
-				m.Body.InitLocals = true;
+			var il = m.BeginEdit();
 
-#if ALE_DEBUG
-				il.Emit(OpCodes.Ldstr, $"Serializing component {baseType.FullName}");
-				il.Emit(OpCodes.Call, baseType.Module.GetMethod(typeof(LevelEditorLogger), "Log", typeof(object)));
-#endif
+			// writer.WriteArrayHeader(propertyCount)
+			il.EmitLdarg(paraWriter);
+			il.EmitInt(properties.Count);
+			il.Emit(OpCodes.Call, module.GetMethod(typeof(MessagePackWriter), nameof(MessagePackWriter.WriteArrayHeader), typeof(int)));
 
-				il.EmitLdarg(writer);
-				il.Emit(OpCodes.Ldc_I4, properties.Count * 2);
-				il.Emit(OpCodes.Call, baseType.Module.GetMethod(typeof(MessagePackWriter), "WriteArrayHeader", typeof(int)));
-
-				MethodReference getResolver = baseType.Module.GetMethod<MessagePackSerializerOptions>("get_Resolver");
-
-				for (int i = 0; i < properties.Count; i++)
-				{
-					il.EmitLdarg(writer);
-					il.EmitLdarg(value);
-					il.Emit(OpCodes.Ldfld, wrapperData.wrapper.GetField(properties[i].Name));
-					FieldReference item1 = baseType.Module.ImportReference(typeof(ValueTuple<,>).GetField("Item1"));
-					item1.DeclaringType = baseType.Module.ImportReference(typeof(ValueTuple<,>)).MakeGenericInstanceType(baseType.Module.GetTypeReference<int>(), properties[i].FieldTypeComponentAware);
-					il.Emit(OpCodes.Ldfld, baseType.Module.ImportReference(item1));
-					il.Emit(OpCodes.Call, baseType.Module.GetMethod(typeof(MessagePackWriter), "WriteInt32", typeof(int)));
-					
-#if ALE_DEBUG
-					// LevelEditorLogger.Log
-					il.Emit(OpCodes.Ldstr, "Writing value | ID: {0} | Value: {1}");
-					il.EmitLdarg(value);
-					il.Emit(OpCodes.Ldfld, wrapperData.wrapper.GetField(properties[i].Name));
-					il.Emit(OpCodes.Ldfld, item1);
-					il.Emit(OpCodes.Box, baseType.Module.GetTypeReference<int>());
-					il.EmitLdarg(value);
-					FieldReference item2 = baseType.Module.ImportReference(typeof(ValueTuple<,>).GetField("Item2"));
-					item2.DeclaringType = baseType.Module.ImportReference(typeof(ValueTuple<,>)).MakeGenericInstanceType(baseType.Module.GetTypeReference<int>(), properties[i].FieldTypeComponentAware);
-					il.Emit(OpCodes.Ldfld, wrapperData.wrapper.GetField(properties[i].Name));
-					il.Emit(OpCodes.Ldfld, item2);
-					if (properties[i].FieldTypeComponentAware.IsValueType)
-					{
-						il.Emit(OpCodes.Box, properties[i].FieldTypeComponentAware);
-					}
-					il.Emit(OpCodes.Call, baseType.Module.GetMethod<string>("Format", typeof(string), typeof(object), typeof(object)));
-					il.Emit(OpCodes.Call, baseType.Module.GetMethod(typeof(LevelEditorLogger), "Log", typeof(object)));
-#endif
-					
-					il.Append(FormatterHelper.GetWriteValue(module, properties[i].FieldTypeComponentAware, wrapperData.wrapper.GetField(properties[i].Name), false, getResolver, true));
-				}
-
-#if ALE_DEBUG
-				il.Emit(OpCodes.Ldstr, $"Finished serializing component {baseType.FullName}");
-				il.Emit(OpCodes.Call, baseType.Module.GetMethod(typeof(LevelEditorLogger), "Log", typeof(object)));
-#endif
-
-				il.Emit(OpCodes.Ret);
-
-				resolver.AddWrapperFormatter(formatter, wrapperData.wrapper, baseType);
-
-				m.EndEdit();
-			}
-
-			void CreateDeserializeMethod()
-			{
-				var m = formatter.AddMethod("Deserialize",
-					MethodAttributes.Public | MethodAttributes.Final | MethodAttributes.HideBySig | MethodAttributes.NewSlot | MethodAttributes.Virtual,
-					wrapperData.wrapper);
-
-				ParameterDefinition reader = m.AddParameter(baseType.Module.GetTypeReference(typeof(MessagePackReader).MakeByRefType()), "reader");
-				m.AddParameter(baseType.Module.GetTypeReference<MessagePackSerializerOptions>(), "options");
-
-				MethodReference getResolver = baseType.Module.GetMethod<MessagePackSerializerOptions>("get_Resolver");
-
-
-				ILProcessor il = m.BeginEdit();
-				Instruction dummy = Instruction.Create(OpCodes.Ret);
+			var writeInt = module.GetMethod(typeof(MessagePackWriter), nameof(MessagePackWriter.WriteInt32), typeof(int));
+			var serialize = wrapper.GetMethod("Serialize");
 			
-				VariableDefinition lengthVar = m.AddLocalVariable<int>("length");
-
-				m.Body.InitLocals = true;
-
-				il.Emit(OpCodes.Ldarg_2);
-				il.Emit(OpCodes.Callvirt, baseType.Module.GetMethod<MessagePackSerializerOptions>("get_Security"));
-				il.Emit(OpCodes.Ldarg_1);
-				il.Emit(OpCodes.Callvirt, baseType.Module.GetMethod<MessagePackSecurity>("DepthStep", typeof(MessagePackReader).MakeByRefType()));
-				il.Emit(OpCodes.Ldarg_1);
-				il.Emit(OpCodes.Call, baseType.Module.GetMethod(typeof(MessagePackReader), "ReadArrayHeader"));
-				il.EmitStloc(lengthVar);
-
-				VariableDefinition maskVar = m.AddLocalVariable(wrapperData.dirtyMaskType, "dirtyMask");
-				il.EmitInt(0);
-				il.Emit(OpCodes.Conv_I8);
-				il.EmitStloc(maskVar);
-
-				List<VariableDefinition> localFields = new List<VariableDefinition>();
-
-				for (int i = 0; i < properties.Count; i++)
-				{
-					VariableDefinition v = m.AddLocalVariable(properties[i].FieldTypeComponentAware, properties[i].Name);
-					localFields.Add(v);
-
-					if (properties[i].IsValueType && !properties[i].IsPrimitive && !properties[i].IsEnum)
-					{
-						il.EmitLdloc(v, true);
-					}
-
-					il.EmitDefaultValue(properties[i].FieldTypeComponentAware);
-
-					if (!properties[i].IsValueType || properties[i].IsPrimitive || properties[i].IsEnum)
-					{
-						il.EmitStloc(v);
-					}
-				}
-
-				VariableDefinition loopIndex = m.AddLocalVariable<int>("loopIndex");
-				VariableDefinition idVar = m.AddLocalVariable<int>("id");
-
-				il.EmitInt(0);
-				Instruction beforeLoop = il.EmitStloc(loopIndex);
-
-				List<Instruction> readFinishes = new List<Instruction>();
-
-				Instruction loopStart = il.EmitLdloc(loopIndex);
-				il.EmitInt(2);
-				Instruction remainder = Instruction.Create(OpCodes.Rem);
-				il.Append(remainder);
-
-				Instruction previous;
-				Instruction[] idRead = FormatterHelper.GetReadValue(module, idVar.VariableType, getResolver);
-
-				il.Append(idRead);
-
-				if (properties.Count > 1)
-				{
-					il.EmitStloc(idVar);
-					if (properties[0].Id == 0)
-					{
-						previous = il.EmitLdloc(idVar);
-					}
-					else
-					{
-						il.EmitLdloc(idVar);
-						previous = il.EmitInt(properties[0].Id);
-					}
-				}
-				else
-				{
-					if (properties[0].Id == 0)
-					{
-						previous = idRead[idRead.Length - 1];
-					}
-					else
-					{
-						previous = il.EmitInt(properties[0].Id);
-					}
-				}
-
-				if (properties.Count == 1)
-				{
-					il.Append(FormatterHelper.GetReadValue(module, properties[0].FieldTypeComponentAware, getResolver));
-					il.EmitStloc(localFields[0]);
-					
-					// dirtyMask |= Wrapper.DirtyMask.Value;
-					il.EmitLdloc(maskVar);
-					il.EmitInt(1 << 0);
-					il.Emit(OpCodes.Conv_I8);
-					il.Emit(OpCodes.Or);
-					Instruction finish = il.EmitStloc(maskVar);
-					readFinishes.Add(finish);
-				}
-				else
-				{
-					for (int i = 0; i < properties.Count; i++)
-					{
-						if (i != 0)
-						{
-							Instruction ifStart = il.EmitLdloc(idVar);
-							il.InsertAfter(previous, Instruction.Create(properties[i - 1].Id == 0 ? OpCodes.Brtrue : OpCodes.Bne_Un, ifStart));
-
-							previous = properties[i].Id != 0 ? il.EmitInt(properties[i].Id) : ifStart;
-						}
-
-						il.Append(FormatterHelper.GetReadValue(module, properties[i].FieldTypeComponentAware, getResolver));
-						il.EmitStloc(localFields[i]);
-						
-						// dirtyMask |= Wrapper.DirtyMask.Value;
-						il.EmitLdloc(maskVar);
-						il.EmitInt(1 << i);
-						il.Emit(OpCodes.Conv_I8);
-						il.Emit(OpCodes.Or);
-						Instruction finish = il.EmitStloc(maskVar);
-						
-						readFinishes.Add(finish);
-					}
-				}
-
-				Instruction skipStart = il.EmitLdarg(reader);
-				il.Emit(OpCodes.Call, baseType.Module.GetMethod(typeof(MessagePackReader), "Skip"));
-
-				// Insert jump to skip on last if check.
-				il.InsertAfter(previous, Instruction.Create(properties[properties.Count - 1].Id == 0 ? OpCodes.Brtrue : OpCodes.Bne_Un, skipStart));
-
-				Instruction loopFinish = il.EmitLdloc(loopIndex);
-				il.EmitInt(1);
-				il.Emit(OpCodes.Add);
-				il.EmitStloc(loopIndex);
-
-				Instruction loopEnd = il.EmitLdloc(loopIndex);
-				il.EmitLdloc(lengthVar);
-				il.Emit(OpCodes.Blt, loopStart);
-
-				il.InsertAfter(beforeLoop, Instruction.Create(OpCodes.Br, loopEnd));
-				il.InsertAfter(remainder, Instruction.Create(OpCodes.Brtrue, loopFinish));
-
-				for (int i = 0; i < readFinishes.Count; i++)
-				{
-					il.InsertAfter(readFinishes[i], Instruction.Create(OpCodes.Br, loopFinish));
-				}
-
-				VariableDefinition depthVar = m.AddLocalVariable<int>("depth");
-
-				il.Emit(OpCodes.Ldarg_1);
-				il.Emit(OpCodes.Dup);
-				il.Emit(OpCodes.Call, baseType.Module.GetMethod(typeof(MessagePackReader), "get_Depth"));
-				il.EmitStloc(depthVar);
-				il.EmitLdloc(depthVar);
-				il.EmitInt(1);
-				il.Emit(OpCodes.Sub);
-				il.Emit(OpCodes.Call, baseType.Module.GetMethod(typeof(MessagePackReader), "set_Depth", typeof(int)));
-				il.EmitLdloc(maskVar);
-				for (int i = 0; i < properties.Count; i++)
-				{
-					il.EmitLdloc(localFields[i]);
-				}
-
-				il.Emit(OpCodes.Newobj, wrapperData.wrapperConstructor);
-
-				il.Emit(OpCodes.Ret);
-
-				m.EndEdit();
+			for (int i = 0; i < properties.Count; i++)
+			{
+				// writer.WriteInt32(id)
+				il.EmitLdarg(paraWriter);
+				il.EmitInt(properties[i].Id);
+				il.Emit(OpCodes.Call, writeInt);
+				
+				// value.Serialize(id, ref writer, options)
+				il.EmitLdarg(paraValue, true);
+				il.EmitInt(properties[i].Id);
+				il.EmitLdarg(paraWriter);
+				il.EmitLdarg(paraOptions);
+				il.Emit(OpCodes.Call, serialize);
 			}
+
+			il.Emit(OpCodes.Ret);
+			
+			m.EndEdit();
+		}
+
+		private static void CreateWrapperDeserializeMethod(TypeDefinition type, ModuleDefinition module, IReadOnlyList<IExposedProperty> properties, TypeDefinition wrapper)
+		{
+			var m = type.AddMethod("Deserialize", MethodAttributes.Public | MethodAttributes.Final | MethodAttributes.HideBySig | MethodAttributes.NewSlot | MethodAttributes.Virtual, wrapper);
+
+			var paraReader = m.AddParameter(typeof(MessagePackReader).MakeByRefType(), "reader");
+			var paraOptions = m.AddParameter<MessagePackSerializerOptions>("options");
+
+			var varLength = m.AddLocalVariable<int>("length");
+			var varResult = m.AddLocalVariable(wrapper, "wrapper");
+			var varWrapper = m.AddLocalVariable(wrapper);
+			var varIndex = m.AddLocalVariable<int>("i");
+			var varId = m.AddLocalVariable<int>("id");
+			var varDepth = m.AddLocalVariable<int>("depth");
+
+			var il = m.BeginEdit();
+			
+			il.EmitIfElse((next, fill) =>
+			{
+				// if (reader.TryReadNil())
+				fill.Add(ILHelper.Ldarg(il, paraReader));
+				fill.Add(Instruction.Create(OpCodes.Call, module.GetMethod(typeof(MessagePackReader), nameof(MessagePackReader.TryReadNil))));
+				fill.Add(Instruction.Create(OpCodes.Brfalse, next));
+			}, (next, fill) =>
+			{
+				// throw new InvalidOperationException("typecode is null, struct not supported.")
+				fill.Add(Instruction.Create(OpCodes.Ldstr, "typecode is null, struct not supported."));
+				fill.Add(Instruction.Create(OpCodes.Newobj, module.GetConstructor<InvalidOperationException>()));
+				fill.Add(Instruction.Create(OpCodes.Throw));
+			}, fill =>
+			{
+				// options.Security.DepthStep(ref reader)
+				fill.Add(ILHelper.Ldarg(il, paraOptions));
+				fill.Add(Instruction.Create(OpCodes.Callvirt, module.GetMethod<MessagePackSerializerOptions>("get_Security")));
+				fill.Add(ILHelper.Ldarg(il, paraReader));
+				fill.Add(Instruction.Create(OpCodes.Callvirt, module.GetMethod<MessagePackSecurity>(nameof(MessagePackSecurity.DepthStep))));
+			});
+
+			// int length = reader.ReadArrayHeader()
+			il.EmitLdarg(paraReader);
+			il.Emit(OpCodes.Call, module.GetMethod(typeof(MessagePackReader), nameof(MessagePackReader.ReadArrayHeader)));
+			il.EmitStloc(varLength);
+			
+			// Wrapper wrapper = default(Wrapper)
+			il.EmitLdloc(varWrapper, true);
+			il.Emit(OpCodes.Initobj, wrapper);
+			
+			// wrapper.Values = new Dictionary<int, object>(count)
+			il.EmitLdloc(varWrapper, true);
+			il.EmitInt(properties.Count);
+			il.Emit(OpCodes.Newobj, module.GetConstructor<Dictionary<int, object>>(typeof(int)));
+			il.Emit(OpCodes.Call, wrapper.GetMethod("set_Values"));
+			
+			// wrapper.Dirty = new Dictionary<int, bool>(count)
+			il.EmitLdloc(varWrapper, true);
+			il.EmitInt(properties.Count);
+			il.Emit(OpCodes.Newobj, module.GetConstructor<Dictionary<int, bool>>(typeof(int)));
+			il.Emit(OpCodes.Call, wrapper.GetMethod("set_Dirty"));
+			
+			// Wrapper result = wrapper
+			il.EmitLdloc(varWrapper);
+			il.EmitStloc(varResult);
+			
+			// for(int i = 0; i < length; i++)
+			Instruction loopEndier = ILHelper.Ldloc(varIndex);
+			il.EmitInt(0);
+			il.EmitStloc(varIndex);
+			il.Emit(OpCodes.Br, loopEndier);
+	
+			// Loop start
+			Instruction loopStart = il.EmitLdarg(paraReader);
+			il.Emit(OpCodes.Call, module.GetMethod(typeof(MessagePackReader), nameof(MessagePackReader.ReadInt32)));
+			il.EmitStloc(varId);
+
+			var getValues = wrapper.GetMethod("get_Values");
+			var getDirty = wrapper.GetMethod("get_Dirty");
+			var deserialize = wrapper.GetMethod("Deserialize");
+			var setValueItem = module.GetMethod<Dictionary<int, object>>("set_Item");
+			var setDirtyItem = module.GetMethod<Dictionary<int, bool>>("set_Item");
+
+			Instruction loopEnd = ILHelper.Ldloc(varIndex);
+
+			il.EmitIfElse(properties, (item, index, next, body, fill) =>
+			{
+				// if (id == <item id>)
+				fill.Add(ILHelper.Ldloc(varId));
+				
+				if (item.Id == 0)
+				{
+					fill.Add(Instruction.Create(OpCodes.Brtrue, index == properties.Count - 1 ? loopEnd : next));
+				}
+				else
+				{
+					fill.Add(ILHelper.Int(item.Id));
+					fill.Add(Instruction.Create(OpCodes.Bne_Un, index == properties.Count - 1 ? loopEnd : next));
+				}
+			}, (item, index, next, fill) =>
+			{
+				// result.Values[id] = result.Deserialize(id, ref reader, options)
+				fill.Add(ILHelper.Ldloc(varResult, true));
+				fill.Add(Instruction.Create(OpCodes.Call, getValues));
+				fill.Add(ILHelper.Int(item.Id));
+				fill.Add(ILHelper.Ldloc(varResult, true));
+				fill.Add(ILHelper.Int(item.Id));
+				fill.Add(ILHelper.Ldarg(il, paraReader));
+				fill.Add(ILHelper.Ldarg(il, paraOptions));
+				fill.Add(Instruction.Create(OpCodes.Call, deserialize));
+				fill.Add(Instruction.Create(OpCodes.Callvirt, setValueItem));
+				
+				// result.Dirty[id] = true
+				fill.Add(ILHelper.Ldloc(varResult, true));
+				fill.Add(Instruction.Create(OpCodes.Call, getDirty));
+				fill.Add(ILHelper.Int(item.Id));
+				fill.Add(ILHelper.Bool(true));
+				fill.Add(Instruction.Create(OpCodes.Callvirt, setDirtyItem));
+				
+				// continue
+				if (index < properties.Count - 1)
+				{
+					fill.Add(Instruction.Create(OpCodes.Br, loopEnd));
+				}
+			}, fill =>
+			{
+				// i++
+				fill.Add(loopEnd);
+				fill.Add(ILHelper.Int(1));
+				fill.Add(Instruction.Create(OpCodes.Add));
+				fill.Add(ILHelper.Stloc(varIndex));
+				
+				// i < length
+				fill.Add(loopEndier);
+				fill.Add(ILHelper.Ldloc(varLength));
+				fill.Add(Instruction.Create(OpCodes.Blt, loopStart));
+			});
+
+			// reader.Depth--
+			il.EmitLdarg(paraReader);
+			il.Emit(OpCodes.Dup);
+			il.Emit(OpCodes.Call, module.GetMethod(typeof(MessagePackReader), "get_Depth"));
+			il.EmitStloc(varDepth);
+			il.EmitLdloc(varDepth);
+			il.EmitInt(1);
+			il.Emit(OpCodes.Sub);
+			il.Emit(OpCodes.Call, module.GetMethod(typeof(MessagePackReader), "set_Depth"));
+			
+			// return result
+			il.EmitLdloc(varResult);
+			il.Emit(OpCodes.Ret);
+
+			m.EndEdit();
 		}
 	}
 }

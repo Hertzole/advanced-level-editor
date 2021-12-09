@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Reflection;
+using System.Runtime.CompilerServices;
 using System.Text;
 using MessagePack;
 using MessagePack.Formatters;
@@ -266,6 +267,36 @@ namespace Hertzole.ALE.CodeGen.Helpers
 			}
 		}
 
+		public static IEnumerable<Instruction> GetWriteValue(TypeReference type, ModuleDefinition module, ILProcessor il, ParameterDefinition writerParameter, ParameterDefinition optionsParameter, Action<List<Instruction>> loadField = null)
+		{
+			List<Instruction> ins = new List<Instruction>();
+
+			bool isStandard = IsStandardWriteType(type);
+			if (!isStandard)
+			{
+				ins.Add(ILHelper.Ldarg(il, optionsParameter));
+				ins.Add(Instruction.Create(OpCodes.Callvirt, module.GetMethod<MessagePackSerializerOptions>("get_Resolver")));
+				ins.Add(Instruction.Create(OpCodes.Call, module.GetMethod(typeof(FormatterResolverExtensions), "GetFormatterWithVerify").MakeGenericMethod(type)));
+			}
+			
+			ins.Add(ILHelper.Ldarg(il, writerParameter));
+			ins.Add(ILHelper.Ldarg(il));
+
+			loadField?.Invoke(ins);
+
+			if (isStandard)
+			{
+				ins.Add(GetWriteStandardValue(type, module));
+			}
+			else
+			{
+				ins.Add(ILHelper.Ldarg(il, optionsParameter));
+				ins.Add(Instruction.Create(OpCodes.Callvirt, module.GetMethod(typeof(IMessagePackFormatter<>), "Serialize").MakeHostInstanceGeneric(module.GetTypeReference(typeof(IMessagePackFormatter<>)).MakeGenericInstanceType(type))));
+			}
+			
+			return ins;
+		}
+
 		public static Instruction[] GetWriteValue(ModuleDefinition module, TypeReference type, FieldDefinition field, bool isLastField, MethodReference getResolver = null, bool isComponentFormatter = false)
 		{
 			List<Instruction> ins = new List<Instruction>();
@@ -393,6 +424,14 @@ namespace Hertzole.ALE.CodeGen.Helpers
 			{
 				writeMethod = module.GetMethod(typeof(MessagePackWriter), "WriteUInt64", typeof(ulong));
 			}
+			else if (type.Is<float>())
+			{
+				writeMethod = module.GetMethod(typeof(MessagePackWriter), "Write", typeof(float));
+			}
+			else if (type.Is<double>())
+			{
+				writeMethod = module.GetMethod(typeof(MessagePackWriter), "Write", typeof(double));
+			}
 			else
 			{
 				throw new NotSupportedException($"{type.FullName} is not a standard type.");
@@ -405,6 +444,34 @@ namespace Hertzole.ALE.CodeGen.Helpers
 		{
 			return type.Is<byte>() | type.Is<sbyte>() | type.Is<short>() | type.Is<ushort>() | type.Is<int>() | type.Is<uint>() | type.Is<long>() | type.Is<ulong>() |
 			       type.Is<string>() | type.Is<char>() | type.Is<bool>() | type.Is<float>() | type.Is<double>();
+		}
+
+		public static IEnumerable<Instruction> GetReadValue(TypeReference type, ModuleDefinition module, ILProcessor il, ParameterDefinition readerParameter, ParameterDefinition optionsParameter)
+		{
+			List<Instruction> ins = new List<Instruction>();
+
+			bool isStandard = IsStandardReadType(type);
+
+			if (!isStandard)
+			{
+				ins.Add(ILHelper.Ldarg(il, optionsParameter));
+				ins.Add(Instruction.Create(OpCodes.Callvirt, module.GetMethod<MessagePackSerializerOptions>("get_Resolver")));
+				ins.Add(Instruction.Create(OpCodes.Call, module.GetMethod(typeof(FormatterResolverExtensions), "GetFormatterWithVerify").MakeGenericMethod(type)));
+			}
+			
+			ins.Add(ILHelper.Ldarg(il, readerParameter));
+
+			if (!isStandard)
+			{
+				ins.Add(ILHelper.Ldarg(il, optionsParameter));
+				ins.Add(Instruction.Create(OpCodes.Callvirt, module.GetMethod(typeof(IMessagePackFormatter<>), "Deserialize").MakeHostInstanceGeneric(module.GetTypeReference(typeof(IMessagePackFormatter<>)).MakeGenericInstanceType(type))));
+			}
+			else
+			{
+				ins.Add(GetReadStandardValue(type, module));
+			}
+
+			return ins;
 		}
 
 		public static Instruction[] GetReadValue(ModuleDefinition module, TypeReference type, MethodReference getResolver = null, VariableDefinition resolverVariable = null)
