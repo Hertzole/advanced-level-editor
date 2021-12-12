@@ -275,6 +275,120 @@ namespace Hertzole.ALE.Tests
 			yield break;
 		}
 
+		[UnityTest]
+		public IEnumerator SetValueParentOnly()
+		{
+			cube.AddComponent<InheritParent>();
+			ILevelEditorObject newCube = objectManager.CreateObject("cube");
+			IExposedToLevelEditor exposed = newCube.MyGameObject.GetComponent<InheritParent>() as IExposedToLevelEditor;
+
+			Assert.IsNotNull(exposed);
+
+			var value = (int) exposed.GetValue(0);
+
+			Assert.AreEqual(0, value);
+
+			exposed.SetValue(0, 10, true);
+			
+			value = (int) exposed.GetValue(0);
+			
+			Assert.AreEqual(10, value);
+		
+			yield break;
+		}
+
+		[UnityTest]
+		public IEnumerator SetValueChildOnly()
+		{
+			cube.AddComponent<InheritChild>();
+			ILevelEditorObject newCube = objectManager.CreateObject("cube");
+			IExposedToLevelEditor exposed = newCube.MyGameObject.GetComponent<InheritChild>() as IExposedToLevelEditor;
+
+			Assert.IsNotNull(exposed);
+
+			var value = (int) exposed.GetValue(1);
+
+			Assert.AreEqual(0, value);
+
+			exposed.SetValue(1, 10, true);
+			
+			value = (int) exposed.GetValue(1);
+			
+			Assert.AreEqual(10, value);
+		
+			yield break;
+		}
+
+		[UnityTest]
+		public IEnumerator SetValueParentInChild()
+		{
+			cube.AddComponent<InheritChild>();
+			ILevelEditorObject newCube = objectManager.CreateObject("cube");
+			IExposedToLevelEditor exposed = newCube.MyGameObject.GetComponent<InheritChild>() as IExposedToLevelEditor;
+
+			Assert.IsNotNull(exposed);
+
+			var value = (int) exposed.GetValue(0);
+
+			Assert.AreEqual(0, value);
+
+			exposed.SetValue(0, 10, true);
+			
+			value = (int) exposed.GetValue(0);
+			
+			Assert.AreEqual(10, value);
+		
+			yield break;
+		}
+
+		[UnityTest]
+		public IEnumerator EventChanging()
+		{
+			yield return EventTest<IntValue>(0, (exposed, action) => exposed.OnValueChanging += action);
+		}
+
+		[UnityTest]
+		public IEnumerator EventChanged()
+		{
+			yield return EventTest<IntValue>(0, (exposed, action) => exposed.OnValueChanged += action);
+		}
+
+		[UnityTest]
+		public IEnumerator EventChangingParent()
+		{
+			yield return EventTest<InheritParent>(0, (exposed, action) => exposed.OnValueChanging += action);
+		}
+
+		[UnityTest]
+		public IEnumerator EventChangedParent()
+		{
+			yield return EventTest<InheritParent>(0, (exposed, action) => exposed.OnValueChanged += action);
+		}
+
+		[UnityTest]
+		public IEnumerator EventChangingChild()
+		{
+			yield return EventTest<InheritChild>(1, (exposed, action) => exposed.OnValueChanging += action);
+		}
+
+		[UnityTest]
+		public IEnumerator EventChangedChild()
+		{
+			yield return EventTest<InheritChild>(1, (exposed, action) => exposed.OnValueChanged += action);
+		}
+
+		[UnityTest]
+		public IEnumerator EventChangingParentThroughChild()
+		{
+			yield return EventTest<InheritChild>(0, (exposed, action) => exposed.OnValueChanging += action);
+		}
+
+		[UnityTest]
+		public IEnumerator EventChangedParentThroughChild()
+		{
+			yield return EventTest<InheritChild>(0, (exposed, action) => exposed.OnValueChanged += action);
+		}
+
 		//TODO: Use when classes are supported.
 		// [UnityTest]
 		// public IEnumerator SetValueClass()
@@ -356,6 +470,35 @@ namespace Hertzole.ALE.Tests
 			Assert.AreEqual(newValue1, value1);
 			Assert.AreEqual(newValue2, value2);
 
+			yield return null;
+		}
+		
+		private IEnumerator EventTest<T>(int id, Action<IExposedToLevelEditor, Action<int, object>> subscribeToEvent) where T : Component
+		{
+			cube.AddComponent<T>();
+			ILevelEditorObject newCube = objectManager.CreateObject("cube");
+			IExposedToLevelEditor exposed = newCube.MyGameObject.GetComponent<T>() as IExposedToLevelEditor;
+			sceneObjects.Add(newCube.MyGameObject);
+
+			Assert.IsNotNull(exposed);
+
+			int changedId = -1;
+			object changedValue = null;
+			bool eventCalled = false;
+
+			subscribeToEvent.Invoke(exposed, (id, value) =>
+			{
+				eventCalled = true;
+				changedId = id;
+				changedValue = value;
+			});
+
+			exposed.SetValue(0, 10, true);
+
+			Assert.AreEqual(true, eventCalled);
+			Assert.AreEqual(0, changedId);
+			Assert.AreEqual(10, changedValue);
+		
 			yield return null;
 		}
 
@@ -465,34 +608,6 @@ namespace Hertzole.ALE.Tests
 
 			[ExposeToLevelEditor(0)]
 			private string Value { get; set; }
-
-			private int editingId = 0;
-			private object editValue;
-			
-			protected virtual bool TEMPLATE(object value, ref bool changed)
-			{
-				if (editingId == 512)
-				{
-					if (value is string str1)
-					{
-						this.value = str1;
-						editValue = str1;
-						changed = true;
-						return true;
-					}
-				}
-				if (editingId == 0)
-				{
-					if (value is string str2)
-					{
-						Value = str2;
-						editValue = str2;
-						changed = true;
-						return true;
-					}
-				}
-				return false;
-			}
 		}
 
 		private class CharValue : MonoBehaviour
@@ -715,13 +830,13 @@ namespace Hertzole.ALE.Tests
 
 		private struct Struct
 		{
-			public int _x;
-			public int _y;
+			public int x;
+			public int y;
 
 			public Struct(int x, int y)
 			{
-				this._x = x;
-				this._y = y;
+				this.x = x;
+				this.y = y;
 			}
 		}
 
@@ -729,13 +844,13 @@ namespace Hertzole.ALE.Tests
 		private struct StructEquality
 #pragma warning restore 660,661
 		{
-			public int _x;
-			public int _y;
+			public int x;
+			public int y;
 
 			public StructEquality(int x, int y)
 			{
-				this._x = x;
-				this._y = y;
+				this.x = x;
+				this.y = y;
 			}
 
 			public static bool operator ==(StructEquality left, StructEquality right)
@@ -751,18 +866,18 @@ namespace Hertzole.ALE.Tests
 
 		private struct StructEquals
 		{
-			public int _x;
-			public int _y;
+			public int x;
+			public int y;
 
 			public StructEquals(int x, int y)
 			{
-				this._x = x;
-				this._y = y;
+				this.x = x;
+				this.y = y;
 			}
 
 			public bool Equals(StructEquals other)
 			{
-				return _x == other._x && _y == other._y;
+				return x == other.x && y == other.y;
 			}
 
 			public override bool Equals(object obj)
@@ -774,25 +889,25 @@ namespace Hertzole.ALE.Tests
 			{
 				unchecked
 				{
-					return (_x * 397) ^ _y;
+					return (x * 397) ^ y;
 				}
 			}
 		}
 
 		private struct StructEquatable : IEquatable<StructEquatable>
 		{
-			public int _x;
-			public int _y;
+			public int x;
+			public int y;
 
 			public StructEquatable(int x, int y)
 			{
-				this._x = x;
-				this._y = y;
+				this.x = x;
+				this.y = y;
 			}
 
 			public bool Equals(StructEquatable other)
 			{
-				return _x == other._x && _y == other._y;
+				return x == other.x && y == other.y;
 			}
 
 			public override bool Equals(object obj)
@@ -804,7 +919,7 @@ namespace Hertzole.ALE.Tests
 			{
 				unchecked
 				{
-					return (_x * 397) ^ _y;
+					return (x * 397) ^ y;
 				}
 			}
 

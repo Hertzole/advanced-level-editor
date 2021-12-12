@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 using System.Threading;
-using Hertzole.ALE.CodeGen.Data;
 using Hertzole.ALE.CodeGen.Helpers;
 using Mono.Cecil;
 using Mono.Cecil.Cil;
@@ -18,10 +17,6 @@ namespace Hertzole.ALE.CodeGen
 		private readonly List<int> usedIds = new List<int>();
 		private readonly List<int> allUsedIds = new List<int>();
 		private readonly List<TypeDefinition> parents = new List<TypeDefinition>();
-
-		private FieldDefinition valueChangingField;
-		private FieldDefinition valueChangedField;
-		private WrapperData wrapperData;
 
 		private const string BEGIN_EDIT_METHOD = "ALE__GENERATED__BeginEdit";
 		private const string MODIFY_VALUE_METHOD = "ALE__GENERATED__ModifyValue";
@@ -49,8 +44,6 @@ namespace Hertzole.ALE.CodeGen
 
 		private void ProcessType(TypeDefinition type, bool checkParents)
 		{
-			wrapperData = null;
-
 			if (!SetInterface(checkParents, type, parents, out bool isChild))
 			{
 				return;
@@ -59,8 +52,8 @@ namespace Hertzole.ALE.CodeGen
 			allExposedProperties.Clear();
 			allUsedIds.Clear();
 
-			IReadOnlyList<IExposedProperty> properties = GetExposedProperties(type);
-			if (properties == null)
+			GetExposedProperties(type, resultExposedProperties, usedIds);
+			if (resultExposedProperties.Count == 0)
 			{
 				return;
 			}
@@ -68,9 +61,9 @@ namespace Hertzole.ALE.CodeGen
 			GetAllExposedProperties(type, allExposedProperties, allUsedIds);
 
 			bool hasVisibleFields = false;
-			for (int i = 0; i < properties.Count; i++)
+			for (int i = 0; i < resultExposedProperties.Count; i++)
 			{
-				if (properties[i].Visible)
+				if (resultExposedProperties[i].Visible)
 				{
 					hasVisibleFields = true;
 					break;
@@ -80,26 +73,23 @@ namespace Hertzole.ALE.CodeGen
 			TypeDefinition wrapper = WrapperProcessor.CreateWrapper(type, Module, allExposedProperties);
 			Formatters.CreateExposedFormatter(type, allExposedProperties, wrapper);
 
-			valueChangingField = CreateEvent(nameof(IExposedToLevelEditor.OnValueChanging));
-			valueChangedField = CreateEvent(nameof(IExposedToLevelEditor.OnValueChanged));
-
 			CreateProperty<string>(type, Module, "ComponentName", type.Name, isChild);
 			CreateProperty<string>(type, Module, "TypeName", type.FullName, isChild);
 			CreateProperty<int>(type, Module, "Order", 0, isChild);
 			CreateProperty<Type>(type, Module, "ComponentType", type, isChild);
 			CreateProperty<bool>(type, Module, "HasVisibleFields", hasVisibleFields, isChild);
 
-			CreateBeginEdit(type, Module, properties, isChild, out FieldDefinition editingIdField, out FieldDefinition beginEditValueField);
-			CreateModifyValue(type, Module, properties, isChild, out FieldDefinition lastModifyValueField, valueChangingField, editingIdField);
+			CreateBeginEdit(type, Module, resultExposedProperties, isChild, out FieldDefinition editingIdField, out FieldDefinition beginEditValueField);
+			CreateModifyValue(type, Module, resultExposedProperties, isChild, out FieldDefinition lastModifyValueField, editingIdField);
 			if (!isChild)
 			{
-				CreateEndEdit(type, Module, valueChangedField, editingIdField, lastModifyValueField, beginEditValueField);
+				CreateEndEdit(type, Module, editingIdField, lastModifyValueField, beginEditValueField);
 			}
 
-			CreateGetProperties(type, Module, properties, isChild);
-			CreateGetValue(type, Module, properties, isChild);
+			CreateGetProperties(type, Module, resultExposedProperties, isChild);
+			CreateGetValue(type, Module, resultExposedProperties, isChild);
 			CreateGetWrapper(type, Module, allExposedProperties, isChild, wrapper);
-			CreateApplyWrapper(type, Module, properties, isChild);
+			CreateApplyWrapper(type, Module, resultExposedProperties, isChild);
 		}
 
 		private bool SetInterface(bool checkParents, TypeDefinition type, IList<TypeDefinition> parentList, out bool isChild)
@@ -144,10 +134,10 @@ namespace Hertzole.ALE.CodeGen
 			}
 		}
 
-		private FieldDefinition CreateEvent(string eventName)
+		private static FieldDefinition CreateEvent(string eventName, TypeDefinition type, ModuleDefinition module)
 		{
-			TypeReference action = Module.ImportReference(typeof(Action<int, object>));
-			CustomAttribute compilerGenerated = new CustomAttribute(Module.ImportReference(typeof(CompilerGeneratedAttribute).GetConstructor(Array.Empty<Type>())));
+			TypeReference action = module.GetTypeReference<Action<int, object>>();
+			CustomAttribute compilerGenerated = new CustomAttribute(module.GetConstructor<CompilerGeneratedAttribute>());
 
 			FieldDefinition eventField;
 			MethodDefinition addMethod;
@@ -161,7 +151,7 @@ namespace Hertzole.ALE.CodeGen
 			void CreateInternalEvent()
 			{
 				EventDefinition resultEvent = new EventDefinition($"ALE__GENERATED__EVENT__{eventName}", EventAttributes.None, action);
-				eventField = Type.AddField($"ALE__GENERATED__EVENT__{eventName}", FieldAttributes.Private, action);
+				eventField = type.AddField($"ALE__GENERATED__EVENT__{eventName}", FieldAttributes.Private, action);
 				eventField.CustomAttributes.Add(compilerGenerated);
 
 				addMethod = CreateAddRemoveMethod($"add_ALE__GENERATED__EVENT__{eventName}", false);
@@ -170,12 +160,12 @@ namespace Hertzole.ALE.CodeGen
 				resultEvent.AddMethod = addMethod;
 				resultEvent.RemoveMethod = removeMethod;
 
-				Type.Events.Add(resultEvent);
+				type.Events.Add(resultEvent);
 			}
 
 			MethodDefinition CreateAddRemoveMethod(string name, bool remove)
 			{
-				MethodDefinition method = Type.AddMethod(name, MethodAttributes.Private | MethodAttributes.HideBySig | MethodAttributes.SpecialName);
+				MethodDefinition method = type.AddMethod(name, MethodAttributes.Private | MethodAttributes.HideBySig | MethodAttributes.SpecialName);
 				method.CustomAttributes.Add(compilerGenerated);
 
 				// method.Parameters.Add(new ParameterDefinition("value", ParameterAttributes.None, action))
@@ -200,7 +190,7 @@ namespace Hertzole.ALE.CodeGen
 				// Action<int, object> value2 = (Action<int, object>) Delegate.Combine/Remove(action2, value)
 				il.EmitLdloc(varLocal2);
 				il.EmitLdarg(paraValue);
-				il.Emit(OpCodes.Call, Module.GetMethod<Delegate>(remove ? nameof(Delegate.Remove) : nameof(Delegate.Combine), typeof(Delegate), typeof(Delegate)));
+				il.Emit(OpCodes.Call, module.GetMethod<Delegate>(remove ? nameof(Delegate.Remove) : nameof(Delegate.Combine), typeof(Delegate), typeof(Delegate)));
 				il.Emit(OpCodes.Castclass, action);
 				il.EmitStloc(varLocal3);
 				// action = Interlocked.CompareExchange(ref this.GENERATED__EVENT, value2, action2)
@@ -208,7 +198,7 @@ namespace Hertzole.ALE.CodeGen
 				il.Emit(OpCodes.Ldflda, eventField);
 				il.EmitLdloc(varLocal3);
 				il.EmitLdloc(varLocal2);
-				il.Emit(OpCodes.Call, Module.GetGenericMethod(typeof(Interlocked), nameof(Interlocked.CompareExchange), action));
+				il.Emit(OpCodes.Call, module.GetGenericMethod(typeof(Interlocked), nameof(Interlocked.CompareExchange), action));
 				il.EmitStloc(varLocal1);
 				// if ((object) action == action2)
 				il.EmitLdloc(varLocal1);
@@ -234,14 +224,14 @@ namespace Hertzole.ALE.CodeGen
 				e.AddMethod = eAdd;
 				e.RemoveMethod = eRemove;
 
-				Type.Events.Add(e);
+				type.Events.Add(e);
 			}
 
 			MethodDefinition CreateOverrideEventAddRemoveMethod(bool remove, MethodReference targetMethod)
 			{
-				MethodDefinition m = Type.AddMethodOverride($"Hertzole.ALE.IExposedToLevelEditor.{(remove ? "remove" : "add")}_{eventName}",
+				MethodDefinition m = type.AddMethodOverride($"Hertzole.ALE.IExposedToLevelEditor.{(remove ? "remove" : "add")}_{eventName}",
 					MethodAttributes.Private | MethodAttributes.Final | MethodAttributes.HideBySig | MethodAttributes.SpecialName | MethodAttributes.NewSlot | MethodAttributes.Virtual,
-					Module.GetMethod<IExposedToLevelEditor>($"{(remove ? "remove" : "add")}_{eventName}", typeof(Action<int, object>)));
+					module.GetMethod<IExposedToLevelEditor>($"{(remove ? "remove" : "add")}_{eventName}", typeof(Action<int, object>)));
 
 				ParameterDefinition paraValue = m.AddParameter<Action<int, object>>("value");
 
@@ -451,7 +441,7 @@ namespace Hertzole.ALE.CodeGen
 			return m;
 		}
 
-		private void CreateModifyValue(TypeDefinition type, ModuleDefinition module, IReadOnlyList<IExposedProperty> properties, bool isChild, out FieldDefinition lastModifyValueField, FieldReference valueChangingField, FieldReference editingIdField)
+		private void CreateModifyValue(TypeDefinition type, ModuleDefinition module, IReadOnlyList<IExposedProperty> properties, bool isChild, out FieldDefinition lastModifyValueField, FieldReference editingIdField)
 		{
 			const string last_modify_value = "ALE__GENERATED__lastModifyValue";
 
@@ -461,6 +451,8 @@ namespace Hertzole.ALE.CodeGen
 
 			if (!isChild)
 			{
+				FieldDefinition valueChangingField = CreateEvent(nameof(IExposedToLevelEditor.OnValueChanging), type, module);
+				
 				MethodDefinition m = type.AddMethodOverride("Hertzole.ALE.IExposedToLevelEditor.ModifyValue", // Name
 					MethodAttributes.Private | MethodAttributes.Final | MethodAttributes.HideBySig | MethodAttributes.NewSlot | MethodAttributes.Virtual, // Attributes
 					module.GetMethod<IExposedToLevelEditor>("ModifyValue", typeof(object), typeof(bool))); // Overrides
@@ -784,7 +776,7 @@ namespace Hertzole.ALE.CodeGen
 			return m;
 		}
 
-		private static void CreateEndEdit(TypeDefinition type, ModuleDefinition module, FieldReference valueChangedField, FieldReference editingIdField, FieldReference lastModifyValueField, FieldReference beginEditValueField)
+		private static void CreateEndEdit(TypeDefinition type, ModuleDefinition module,  FieldReference editingIdField, FieldReference lastModifyValueField, FieldReference beginEditValueField)
 		{
 			MethodDefinition m = type.AddMethodOverride("Hertzole.ALE.IExposedToLevelEditor.EndEdit",
 				MethodAttributes.Private | MethodAttributes.Final | MethodAttributes.HideBySig | MethodAttributes.NewSlot | MethodAttributes.Virtual,
@@ -792,6 +784,8 @@ namespace Hertzole.ALE.CodeGen
 
 			ParameterDefinition paraNotify = m.AddParameter<bool>("notify");
 			ParameterDefinition paraUndo = m.AddParameter<ILevelEditorUndo>("undo");
+
+			FieldDefinition valueChangedField = CreateEvent(nameof(IExposedToLevelEditor.OnValueChanged), type, module);
 
 			ILProcessor il = m.BeginEdit();
 
@@ -1303,9 +1297,6 @@ namespace Hertzole.ALE.CodeGen
 					fill.Add(ILHelper.Ldarg(il));
 					fill.Add(property.GetLoadInstruction());
 					fill.Add(Instruction.Create(OpCodes.Brtrue, clearList));
-
-					Console.WriteLine("AAAAAAAAAA FUCK");
-					Console.WriteLine($"AAAAAAAAAAAAAAAAAAA {property.FieldType.GetCollectionType()}");
 					
 					// list = new List<Type>()
 					fill.Add(ILHelper.Ldarg(il));
@@ -1399,88 +1390,22 @@ namespace Hertzole.ALE.CodeGen
 			return false;
 		}
 
-		private IReadOnlyList<IExposedProperty> GetExposedProperties(TypeDefinition type)
+		private void GetExposedProperties(TypeDefinition type, List<IExposedProperty> properties, ICollection<int> usedPropertyIds)
 		{
-			resultExposedProperties.Clear();
-			usedIds.Clear();
+			properties.Clear();
+			usedPropertyIds.Clear();
 
-			if (type.HasFields)
+			FindExposedFields(type, properties);
+			FindExposedProperties(type, properties);
+
+			if (properties.Count == 0)
 			{
-				for (int i = 0; i < type.Fields.Count; i++)
-				{
-					if (type.Fields[i].TryGetAttribute<ExposeToLevelEditorAttribute>(out CustomAttribute attribute))
-					{
-						int customOrder = attribute.GetField(nameof(ExposeToLevelEditorAttribute.order), 0);
-						if (customOrder > 0)
-						{
-							// Add this after all the fields and properties.
-							customOrder += type.Fields.Count + type.Properties.Count;
-						}
-						else if (customOrder < 0)
-						{
-							// Add this before all the fields and properties.
-							customOrder -= type.Fields.Count + type.Properties.Count;
-						}
-						else
-						{
-							// Just the index it is in the file.
-							customOrder = i;
-						}
-
-						resultExposedProperties.Add(new ExposedFieldProperty(type.Fields[i], customOrder));
-					}
-				}
+				return;
 			}
 
-			if (type.HasProperties)
-			{
-				for (int i = 0; i < type.Properties.Count; i++)
-				{
-					if (type.Properties[i].TryGetAttribute<ExposeToLevelEditorAttribute>(out CustomAttribute attribute))
-					{
-						int customOrder = attribute.GetField(nameof(ExposeToLevelEditorAttribute.order), 0);
-						if (customOrder > 0)
-						{
-							// Add this after all the fields and properties.
-							customOrder += type.Fields.Count + type.Properties.Count;
-						}
-						else if (customOrder < 0)
-						{
-							// Add this before all the fields and properties.
-							customOrder -= type.Fields.Count + type.Properties.Count;
-						}
-						else
-						{
-							// Just the index it is in the file and after all the fields.
-							customOrder = type.Fields.Count + i;
-						}
+			FindDuplicateExposedProperties(properties, usedPropertyIds, 0);
 
-						resultExposedProperties.Add(new ExposedPropertyProperty(type.Properties[i], customOrder));
-					}
-				}
-			}
-
-			if (resultExposedProperties.Count == 0)
-			{
-				return null;
-			}
-
-			for (int i = 0; i < resultExposedProperties.Count; i++)
-			{
-				if (usedIds.Contains(resultExposedProperties[i].Id))
-				{
-					Error($"{resultExposedProperties[i].Name} has a duplicate ID {resultExposedProperties[i].Id}. IDs need to be unique.");
-					return null;
-				}
-
-				usedIds.Add(resultExposedProperties[i].Id);
-				// Must generate a formatter for this type.
-				Formatters.AddTypeToGenerate(resultExposedProperties[i].FieldType);
-			}
-
-			resultExposedProperties.Sort((x, y) => x.Order.CompareTo(y.Order));
-
-			return resultExposedProperties;
+			properties.Sort((x, y) => x.Order.CompareTo(y.Order));
 		}
 
 		private void GetAllExposedProperties(TypeDefinition type, List<IExposedProperty> properties, ICollection<int> usedPropertyIds)
@@ -1493,6 +1418,24 @@ namespace Hertzole.ALE.CodeGen
 			bool start = properties.Count == 0;
 			int myPropertyStart = properties.Count;
 
+			FindExposedFields(type, properties);
+			FindExposedProperties(type, properties);
+
+			if (properties.Count == 0)
+			{
+				return;
+			}
+
+			FindDuplicateExposedProperties(properties, usedPropertyIds, myPropertyStart);
+
+			if (start)
+			{
+				properties.Sort((x, y) => x.Order.CompareTo(y.Order));
+			}
+		}
+
+		private static void FindExposedFields(TypeDefinition type, List<IExposedProperty> properties)
+		{
 			if (type.HasFields)
 			{
 				for (int i = 0; i < type.Fields.Count; i++)
@@ -1520,7 +1463,10 @@ namespace Hertzole.ALE.CodeGen
 					}
 				}
 			}
+		}
 
+		private static void FindExposedProperties(TypeDefinition type, List<IExposedProperty> properties)
+		{
 			if (type.HasProperties)
 			{
 				for (int i = 0; i < type.Properties.Count; i++)
@@ -1548,12 +1494,10 @@ namespace Hertzole.ALE.CodeGen
 					}
 				}
 			}
-
-			if (properties.Count == 0)
-			{
-				return;
-			}
-
+		}
+		
+		private void FindDuplicateExposedProperties(List<IExposedProperty> properties, ICollection<int> usedPropertyIds, int myPropertyStart)
+		{
 			for (int i = myPropertyStart; i < properties.Count; i++)
 			{
 				if (usedPropertyIds.Contains(properties[i].Id))
@@ -1564,11 +1508,6 @@ namespace Hertzole.ALE.CodeGen
 				usedPropertyIds.Add(properties[i].Id);
 				// Must generate a formatter for this type.
 				Formatters.AddTypeToGenerate(properties[i].FieldType);
-			}
-
-			if (start)
-			{
-				properties.Sort((x, y) => x.Order.CompareTo(y.Order));
 			}
 		}
 	}

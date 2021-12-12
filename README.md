@@ -42,7 +42,7 @@ What needs to be done before 1.0.0 verified.
 - [x] Level editor gizmos
 - [x] Play mode
 - [x] Save all exposed values in play mode
-- [ ] Auto serialize unknown types³
+- [x] Auto serialize unknown types³
 - [ ] Auto expose unknown types
 - [x] Integrate custom serializers
 - [ ] Menu items
@@ -88,15 +88,21 @@ The supported inspector fields.
 ³ It will automatically serialize structs but not classes.
 
 ## 📦 Installation 
-#### Without package manager
-To install it without the package manager, download the project as a zip file and extract it from the packages folder. From there, put the files either inside your assets folder or in your packages folder.
-#### With package manager
+
 Currently, only the development package is available. It's updated with each commit to the master branch.   
 
-1. Open the package manager and click 'Add from Git url' in the top right corner
-2. Paste in `https://github.com/Hertzole/advanced-level-editor.git#dev-package` and click enter
-3. Wait an eternity for Unity to realize that you have installed the package.
-4. It should now be installed. Either create it from scratch or import the "Complete" sample and modify that. I recommend the sample because it's currently quite a pain to set everything up...
+1. Add the OpenUPM registry.
+   Click in the menu bar Edit → Project Settings... → Package Manager
+   Add a new scoped registry with the following parameters:  
+   Name: `OpenUPM`  
+   URL: `https://package.openupm.com`  
+   Scopes:  
+   - `com.openupm`  
+   - `com.neuecc.messagepack`
+2. Open the package manager and click 'Add from Git url' in the top right corner
+3. Paste in `https://github.com/Hertzole/advanced-level-editor.git#dev-package` and click enter
+4. Wait an eternity for Unity to realize that you have installed the package.
+5. It should now be installed. Either create a level editor from scratch or import the "Complete" sample and modify that. I recommend the sample because it's currently quite a pain to set everything up...
 
 ## 🔨 Getting Started
 

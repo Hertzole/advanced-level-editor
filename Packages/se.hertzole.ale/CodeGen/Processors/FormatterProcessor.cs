@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using Hertzole.ALE.CodeGen.Data;
 using Hertzole.ALE.CodeGen.Helpers;
 using MessagePack;
 using MessagePack.Formatters;
