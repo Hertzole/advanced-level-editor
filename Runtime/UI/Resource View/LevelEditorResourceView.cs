@@ -133,7 +133,7 @@ namespace Hertzole.ALE
 		protected virtual void InitializeResources(IReadOnlyList<ILevelEditorResource> resourcesList)
 		{
 #if !ALE_STRIP_SAFETY || UNITY_EDITOR
-			if (!(resourcesList is LevelEditorResource[]))
+			if (!(resourcesList is IReadOnlyList<LevelEditorResource>))
 			{
 				throw new NotSupportedException("LevelEditorResourceView only works with LevelEditorResource classes.");
 			}

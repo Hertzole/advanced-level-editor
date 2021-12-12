@@ -47,6 +47,14 @@ namespace Hertzole.ALE.Formatters
 			
 			for (int i = 0; i < length; i++)
 			{
+#if ALE_COMPATIBILITY_0 || ALE_COMPATIBILITY_1
+				// This is for old save files.
+				if (i > 3)
+				{
+					continue;
+				}
+#endif
+				
 				byte id = reader.ReadByte();
 				switch (id)
 				{

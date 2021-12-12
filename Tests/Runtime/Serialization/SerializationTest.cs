@@ -195,35 +195,35 @@ namespace Hertzole.ALE.Tests
 		}
 
 		// Works but possible bug in MessagePack with Json deserialization?
-		// [UnityTest]
-		// public IEnumerator SaveByteArray()
-		// {
-		// 	cube.AddComponent<ByteArrayTest>();
-		//
-		// 	ILevelEditorObject newCube = objectManager.CreateObject("cube");
-		// 	uint cubeId = newCube.InstanceID;
-		//
-		// 	ByteArrayTest bytes = newCube.MyGameObject.GetComponent<ByteArrayTest>();
-		// 	bytes.value = new byte[] { 1, 2, 3, 4, 5, 6, 7, 8, 9 };
-		//
-		// 	yield return null;
-		//
-		// 	Save();
-		// 	objectManager.DeleteAllObjects();
-		//
-		// 	yield return null;
-		//
-		// 	Load();
-		//
-		// 	yield return null;
-		//
-		// 	newCube = objectManager.GetObject(cubeId);
-		// 	Assert.IsNotNull(newCube);
-		//
-		// 	bytes = newCube.MyGameObject.GetComponent<ByteArrayTest>();
-		// 	
-		// 	Assert.IsTrue(new byte[] { 1, 2, 3, 4, 5, 6, 7, 8, 9 }.IsSameAs(bytes.value));
-		// }
+		[UnityTest]
+		public IEnumerator SaveByteArray()
+		{
+			cube.AddComponent<ByteArrayTest>();
+		
+			ILevelEditorObject newCube = objectManager.CreateObject("cube");
+			uint cubeId = newCube.InstanceID;
+		
+			ByteArrayTest bytes = newCube.MyGameObject.GetComponent<ByteArrayTest>();
+			bytes.value = new byte[] { 1, 2, 3, 4, 5, 6, 7, 8, 9 };
+		
+			yield return null;
+		
+			Save();
+			objectManager.DeleteAllObjects();
+		
+			yield return null;
+		
+			Load();
+		
+			yield return null;
+		
+			newCube = objectManager.GetObject(cubeId);
+			Assert.IsNotNull(newCube);
+		
+			bytes = newCube.MyGameObject.GetComponent<ByteArrayTest>();
+			
+			Assert.IsTrue(new byte[] { 1, 2, 3, 4, 5, 6, 7, 8, 9 }.IsSameAs(bytes.value));
+		}
 
 		[UnityTest]
 		public IEnumerator SaveByteList()
@@ -752,6 +752,95 @@ namespace Hertzole.ALE.Tests
 
 			Assert.IsTrue(trsRefList.Value.IsSameAs(new List<TempTestScript>
 				{ newCapsule.MyGameObject.GetComponent<TempTestScript>(), newCylinder.MyGameObject.GetComponent<TempTestScript>() }));
+		}
+
+		[UnityTest]
+		public IEnumerator SaveInheritanceParent()
+		{
+			cube.AddComponent<InheritParent>();
+
+			ILevelEditorObject newCube = objectManager.CreateObject("cube");
+			uint cubeId = newCube.InstanceID;
+
+			InheritParent parent = newCube.MyGameObject.GetComponent<InheritParent>();
+			parent.parentValue = 420;
+
+			yield return null;
+
+			Save();
+			objectManager.DeleteAllObjects();
+
+			yield return null;
+
+			Load();
+
+			yield return null;
+
+			newCube = objectManager.GetObject(cubeId);
+			Assert.IsNotNull(newCube);
+
+			parent = newCube.MyGameObject.GetComponent<InheritParent>();
+			Assert.AreEqual(420, parent.parentValue);
+		}
+
+		[UnityTest]
+		public IEnumerator SaveInheritanceChild()
+		{
+			cube.AddComponent<InheritChild>();
+
+			ILevelEditorObject newCube = objectManager.CreateObject("cube");
+			uint cubeId = newCube.InstanceID;
+
+			InheritChild child = newCube.MyGameObject.GetComponent<InheritChild>();
+			child.childValue = 420;
+
+			yield return null;
+
+			Save();
+			objectManager.DeleteAllObjects();
+
+			yield return null;
+
+			Load();
+
+			yield return null;
+
+			newCube = objectManager.GetObject(cubeId);
+			Assert.IsNotNull(newCube);
+
+			child = newCube.MyGameObject.GetComponent<InheritChild>();
+			Assert.AreEqual(420, child.childValue);
+		}
+
+		[UnityTest]
+		public IEnumerator SaveInheritanceChildAndParent()
+		{
+			cube.AddComponent<InheritChild>();
+
+			ILevelEditorObject newCube = objectManager.CreateObject("cube");
+			uint cubeId = newCube.InstanceID;
+
+			InheritChild child = newCube.MyGameObject.GetComponent<InheritChild>();
+			child.parentValue = 69;
+			child.childValue = 420;
+
+			yield return null;
+
+			Save();
+			objectManager.DeleteAllObjects();
+
+			yield return null;
+
+			Load();
+
+			yield return null;
+
+			newCube = objectManager.GetObject(cubeId);
+			Assert.IsNotNull(newCube);
+
+			child = newCube.MyGameObject.GetComponent<InheritChild>();
+			Assert.AreEqual(69, child.parentValue);
+			Assert.AreEqual(420, child.childValue);
 		}
 
 		private void Save()
