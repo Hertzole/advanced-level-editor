@@ -146,7 +146,7 @@ namespace Hertzole.ALE
 				newResources[i] = new LevelEditorResource(resourcesList[i] as LevelEditorResource);
 			}
 #else
-            LevelEditorResource[] newResources = resources as LevelEditorResource[];
+            LevelEditorResource[] newResources = resourcesList as LevelEditorResource[];
 #endif
 
 			// Need to create a copy here or else the children will not work in the asset view.
