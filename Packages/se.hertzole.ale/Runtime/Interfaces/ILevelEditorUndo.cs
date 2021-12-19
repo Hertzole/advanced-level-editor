@@ -1,8 +1,13 @@
-﻿namespace Hertzole.ALE
+﻿using System;
+
+namespace Hertzole.ALE
 {
     public interface ILevelEditorUndo
     {
-        ILevelEditorObjectManager ObjectManager { get; }
+        ILevelEditor LevelEditor { get; }
+
+        event Action<IUndoAction> OnUndo; 
+        event Action<IUndoAction> OnRedo; 
 
         /// <summary>
         /// Adds an action to the history.

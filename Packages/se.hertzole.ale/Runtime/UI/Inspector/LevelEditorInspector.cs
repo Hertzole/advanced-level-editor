@@ -155,6 +155,11 @@ namespace Hertzole.ALE
 
 			for (int i = 0; i < activeComponents.Count; i++)
 			{
+				if (activeComponents[i].Editor != null)
+				{
+					activeComponents[i].Editor.Deconstruct();
+				}
+				
 				pooledComponents.Push(activeComponents[i]);
 				activeComponents[i].gameObject.SetActive(false);
 			}
@@ -198,6 +203,7 @@ namespace Hertzole.ALE
 					{
 						editor.Initialize(this, (Component) components[i], components[i], compUI.FieldHolder);
 						editor.BuildUI();
+						compUI.Editor = editor;
 					}
 					else
 					{

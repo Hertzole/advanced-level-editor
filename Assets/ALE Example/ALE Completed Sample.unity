@@ -1379,6 +1379,86 @@ PrefabInstance:
       objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: cdbe1b506ab388e439a9d4208c7ce3f7, type: 3}
+--- !u!1 &760442228
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 760442230}
+  - component: {fileID: 760442229}
+  m_Layer: 0
+  m_Name: Handles
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &760442229
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 760442228}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 746410afdaf840e6b8c9ea75b0e8559e, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  targetCamera: {fileID: 1687258584}
+  space: 0
+  transformType: 0
+  pivot: 0
+  centerType: 0
+  scaleType: 0
+  movementSnap: 0.25
+  rotationSnap: 15
+  scaleSnap: 1
+  selectInput: Select
+  dragInput: Drag Handle
+  snapInput: Snap
+  xColor: {r: 1, g: 0, b: 0, a: 1}
+  yColor: {r: 0, g: 1, b: 0, a: 1}
+  zColor: {r: 0, g: 0, b: 1, a: 1}
+  allColor: {r: 0.7, g: 0.7, b: 0.7, a: 0.8}
+  selectedColor: {r: 1, g: 1, b: 0, a: 0.8}
+  hoverColor: {r: 1, g: 0.75, b: 0, a: 0.8}
+  planesOpacity: 0.5
+  handleScale: 1
+  handleLength: 1
+  handleWidth: 0.03
+  planeSize: 0.35
+  arrowSize: 0.3
+  boxSize: 0.3
+  circleDetail: 40
+  allMoveHandleLengthMultiplier: 1
+  allRotateHandleLengthMultiplier: 1.4
+  allScaleHandleLengthMultiplier: 1.6
+  minSelectedDistanceCheck: 0.01
+  moveSpeedMultiplier: 1
+  scaleSpeedMultiplier: 1
+  rotateSpeedMultiplier: 1
+  allRotateSpeedMultiplier: 20
+  useFirstSelectedAsMain: 1
+  circularRotationMethod: 0
+  forceUpdatePivotPointOnChange: 1
+--- !u!4 &760442230
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 760442228}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_RootOrder: 5
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1001 &766384903
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -1883,7 +1963,7 @@ Transform:
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children: []
   m_Father: {fileID: 0}
-  m_RootOrder: 4
+  m_RootOrder: 3
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1001 &954493418
 PrefabInstance:
@@ -2201,7 +2281,7 @@ RectTransform:
   - {fileID: 1937666420}
   - {fileID: 1281808689}
   m_Father: {fileID: 0}
-  m_RootOrder: 3
+  m_RootOrder: 2
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 0, y: 0}
@@ -3432,12 +3512,12 @@ Transform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1687258581}
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: -10}
+  m_LocalRotation: {x: 0.23911732, y: 0.36964318, z: -0.099045455, w: 0.89239943}
+  m_LocalPosition: {x: -6.1237173, y: 5, z: -6.1237364}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children: []
   m_Father: {fileID: 0}
-  m_RootOrder: 0
+  m_RootOrder: 6
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!114 &1687258586
 MonoBehaviour:
@@ -3850,7 +3930,7 @@ Transform:
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children: []
   m_Father: {fileID: 0}
-  m_RootOrder: 5
+  m_RootOrder: 4
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1001 &1890552812
 PrefabInstance:
@@ -4176,7 +4256,7 @@ Transform:
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children: []
   m_Father: {fileID: 0}
-  m_RootOrder: 2
+  m_RootOrder: 1
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!114 &1918987437
 MonoBehaviour:
@@ -4239,6 +4319,34 @@ MonoBehaviour:
     type: 0
     action: Stop Playmode
     action2: 
+  - name: Select
+    type: 0
+    action: Left Mouse
+    action2: 
+  - name: Drag Handle
+    type: 2
+    action: Mouse X
+    action2: Mouse Y
+  - name: Snap
+    type: 0
+    action: Snap
+    action2: 
+  - name: Handle Set Move
+    type: 0
+    action: Handle Set Move
+    action2: 
+  - name: Handle Set Rotate
+    type: 0
+    action: Handle Set Rotate
+    action2: 
+  - name: Handle Set Scale
+    type: 0
+    action: Handle Set Scale
+    action2: 
+  - name: Handle Set All
+    type: 0
+    action: Handle Set All
+    action2: 
 --- !u!114 &1918987438
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -4266,6 +4374,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 3b6043b563f7efa4085ee625cb3637f9, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  undo: {fileID: 1918987434}
 --- !u!114 &1918987440
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -4297,6 +4406,12 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   resourcePanel: {fileID: 954493420}
+  handle: {fileID: 760442229}
+  selectAction: Select
+  moveTypeInput: Handle Set Move
+  rotateTypeInput: Handle Set Rotate
+  scaleTypeInput: Handle Set Scale
+  allType: Handle Set All
 --- !u!114 &1918987442
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -4309,7 +4424,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 6bbf7295baea3544a934866eed7c064f, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  objectManager: {fileID: 1918987434}
+  levelEditor: {fileID: 1918987434}
   input: {fileID: 1918987434}
   handleUndoRedoInput: 1
   modifierAction: Ctrl Modifier
@@ -5071,7 +5186,7 @@ MonoBehaviour:
       tabs:
       - content: {fileID: 504214657}
         id: 0f645cf5-74ca-444b-add6-d726d526dfe7
-        minimumSize: {x: 300, y: 300}
+        minimumSize: {x: 400, y: 300}
         tabLabel: Inspector
         tabIcon: {fileID: 21300000, guid: af82817dd71bd7649a9d8778f431e84f, type: 3}
     anchorDirection: 2
@@ -5316,7 +5431,7 @@ Light:
   m_BounceIntensity: 1
   m_ColorTemperature: 6570
   m_UseColorTemperature: 0
-  m_BoundingSphereOverride: {x: 1.3555853e-19, y: 0, z: 0, w: NaN}
+  m_BoundingSphereOverride: {x: 4.5904e-41, y: 0, z: 0, w: 0}
   m_UseBoundingSphereOverride: 0
   m_UseViewFrustumForShadowCasterCull: 1
   m_ShadowRadius: 0
@@ -5333,7 +5448,7 @@ Transform:
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children: []
   m_Father: {fileID: 0}
-  m_RootOrder: 1
+  m_RootOrder: 0
   m_LocalEulerAnglesHint: {x: 45, y: 130, z: 90}
 --- !u!1001 &1084794324234327296
 PrefabInstance:

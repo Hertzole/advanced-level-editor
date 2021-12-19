@@ -7,5 +7,7 @@
         void OnModeDisable();
 
         void OnModeUpdate();
+
+        void OnModeLateUpdate();
     }
 }

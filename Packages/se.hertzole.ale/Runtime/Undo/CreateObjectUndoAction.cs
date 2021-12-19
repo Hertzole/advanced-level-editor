@@ -24,12 +24,12 @@ namespace Hertzole.ALE
 
         public void Redo(ILevelEditorUndo undo)
         {
-            obj = undo.ObjectManager.CreateObject(resource, position, rotation, parent, instanceID, false);
+            obj = undo.LevelEditor.ObjectManager.CreateObject(resource, position, rotation, parent, instanceID, false);
         }
 
         public void Undo(ILevelEditorUndo undo)
         {
-            undo.ObjectManager.DeleteObject(obj, false);
+            undo.LevelEditor.ObjectManager.DeleteObject(obj, false);
         }
 
         public override string ToString()

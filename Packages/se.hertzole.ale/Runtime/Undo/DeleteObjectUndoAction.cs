@@ -23,7 +23,7 @@ namespace Hertzole.ALE
 		
 		public void Undo(ILevelEditorUndo undo)
 		{
-			ILevelEditorObject newObj = undo.ObjectManager.CreateObject(targetId, targetInstanceId, false);
+			ILevelEditorObject newObj = undo.LevelEditor.ObjectManager.CreateObject(targetId, targetInstanceId, false);
 			
 			IExposedToLevelEditor[] exposed = newObj.GetExposedComponents();
 			
@@ -39,7 +39,7 @@ namespace Hertzole.ALE
 		{
 			if(LevelEditorWorld.TryGetObject(targetInstanceId, out var target))
 			{
-				undo.ObjectManager.DeleteObject(target, false);
+				undo.LevelEditor.ObjectManager.DeleteObject(target, false);
 			}
 		}
 	}

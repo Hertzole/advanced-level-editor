@@ -59,6 +59,28 @@ namespace Hertzole.ALE
 			GL.End();
 		}
 
+		public void DrawTriangles(IReadOnlyList<Vector3> lines, Color color)
+		{
+			if (lines.Count == 0)
+			{
+				return;
+			}
+
+			linesMaterial.SetPass(0);
+
+			GL.Begin(GL.TRIANGLES);
+			GL.Color(color);
+
+			for (int i = 0; i < lines.Count; i += 3)
+			{
+				GL.Vertex(lines[i]);
+				GL.Vertex(lines[i + 1]);
+				GL.Vertex(lines[i + 2]);
+			}
+
+			GL.End();
+		}
+
 		public void DrawSquare(Vector3 center, Vector2 size, Quaternion rotation, Color color)
 		{
 			linesMaterial.SetPass(0);
