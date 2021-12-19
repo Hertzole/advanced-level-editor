@@ -154,11 +154,14 @@ namespace Hertzole.ALE
                     case Vector2 v2:
                         v = new Vector3(v2.x, v2.y, 0);
                         break;
+                    case Vector3 v3:
+                        v = v3;
+                        break;
                     case Vector4 v4:
                         v = new Vector3(v4.x, v4.y, v4.z);
                         break;
                     default:
-                        v = (Vector3)value;
+                        v = Vector3.zero;
                         break;
                 }
                 xField.SetTextWithoutNotify(v.x.ToString(CultureInfo.InvariantCulture));

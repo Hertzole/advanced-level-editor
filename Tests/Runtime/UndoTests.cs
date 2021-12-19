@@ -19,7 +19,7 @@ namespace Hertzole.ALE.Tests
 		{
 			undo = levelEditor.gameObject.AddComponent<LevelEditorUndo>();
 			undo.HandleUndoRedoInput = false;
-			undo.ObjectManager = objectManager;
+			undo.LevelEditor = levelEditor;
 			levelEditor.Undo = undo;
 			objectManager.Undo = undo;
 		}

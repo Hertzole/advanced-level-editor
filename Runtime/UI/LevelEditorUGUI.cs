@@ -172,7 +172,7 @@ namespace Hertzole.ALE
 			}
 		}
 
-		protected virtual void OnSelectionChanged(object sender, SelectionEvent e)
+		protected virtual void OnSelectionChanged(object sender, SelectionEventArgs e)
 		{
 			if (InspectorPanel != null)
 			{

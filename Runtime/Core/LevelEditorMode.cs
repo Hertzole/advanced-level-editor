@@ -16,5 +16,7 @@ namespace Hertzole.ALE
         public virtual void OnModeEnable() { }
 
         public virtual void OnModeUpdate() { }
+
+        public virtual void OnModeLateUpdate() { }
     }
 }

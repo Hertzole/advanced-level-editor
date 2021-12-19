@@ -2,12 +2,12 @@
 
 namespace Hertzole.ALE
 {
-    public class SelectionEvent : EventArgs
+    public class SelectionEventArgs : EventArgs
     {
         public ILevelEditorObject OldObject { get; private set; }
         public ILevelEditorObject NewObject { get; private set; }
 
-        public SelectionEvent(ILevelEditorObject oldObject, ILevelEditorObject newObject)
+        public SelectionEventArgs(ILevelEditorObject oldObject, ILevelEditorObject newObject)
         {
             OldObject = oldObject;
             NewObject = newObject;
@@ -16,7 +16,9 @@ namespace Hertzole.ALE
 
     public interface ILevelEditorSelection
     {
-        ILevelEditorObject Selection { get; set; }
-        event EventHandler<SelectionEvent> OnSelectionChanged;
+        ILevelEditorObject Selection { get; }
+        event EventHandler<SelectionEventArgs> OnSelectionChanged;
+
+        void SetSelection(ILevelEditorObject target, bool registerUndo = true);
     }
 }

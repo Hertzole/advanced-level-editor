@@ -146,6 +146,8 @@ namespace Hertzole.ALE
         }
 
         public abstract void BuildUI();
+
+        public virtual void Deconstruct() { }
     }
 
     public abstract class LevelEditorComponentEditor<T> : LevelEditorComponentEditor where T : Component

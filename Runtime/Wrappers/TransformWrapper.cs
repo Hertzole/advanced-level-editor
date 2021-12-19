@@ -21,6 +21,12 @@ namespace Hertzole.ALE
 
         private int editingId;
 
+        private Vector3 previousPosition;
+        private Vector3 previousRotation;
+        private Vector3 previousScale;
+
+        private Transform myTransform;
+        
         private object beginEditValue;
         private object lastEditValue;
 
@@ -43,6 +49,45 @@ namespace Hertzole.ALE
             new ExposedProperty(SCALE_ID, typeof(Vector3), SCALE, null, true),
             new ExposedProperty(PARENT_ID, typeof(Transform), PARENT, null, false)
         };
+
+        private void Awake()
+        {
+            myTransform = transform;
+        }
+
+        private void Update()
+        {
+            Vector3 position = myTransform.position;
+            Vector3 rotation = myTransform.eulerAngles;
+            Vector3 scale = myTransform.localScale;
+            
+            if (previousPosition != position)
+            {
+                beginEditValue = previousPosition;
+                previousPosition = position;
+                lastEditValue = position;
+
+                InvokeOnValueChanged(POSITION_ID, position);
+            }
+            
+            if (previousRotation != rotation)
+            {
+                beginEditValue = previousRotation;
+                previousRotation = rotation;
+                lastEditValue = ROTATION_ID;
+
+                InvokeOnValueChanged(ROTATION_ID, rotation);
+            }
+            
+            if (previousScale != scale)
+            {
+                beginEditValue = previousScale;
+                previousScale = scale;
+                lastEditValue = scale;
+
+                InvokeOnValueChanged(SCALE_ID, scale);
+            }
+        }
 
         public override IReadOnlyList<ExposedField> GetProperties()
         {
@@ -72,16 +117,16 @@ namespace Hertzole.ALE
             switch (id)
             {
                 case POSITION_ID:
-                    beginEditValue = transform.position;
+                    beginEditValue = Target.position;
                     break;
                 case ROTATION_ID:
-                    beginEditValue = transform.eulerAngles;
+                    beginEditValue = Target.eulerAngles;
                     break;
                 case SCALE_ID:
-                    beginEditValue = transform.localScale;
+                    beginEditValue = Target.localScale;
                     break;
                 case PARENT_ID:
-                    beginEditValue = new ComponentDataWrapper(transform.parent);
+                    beginEditValue = new ComponentDataWrapper(Target.parent);
                     break;
                 default:
                     throw new InvalidExposedPropertyException(id);
@@ -95,34 +140,34 @@ namespace Hertzole.ALE
              switch (editingId)
             {
                 case POSITION_ID:
-                    if (transform.position != (Vector3) value)
+                    if (Target.position != (Vector3) value)
                     {
-                        transform.position = (Vector3) value;
+                        Target.position = (Vector3) value;
                         changed = true;
-                        lastEditValue = transform.position;
+                        lastEditValue = Target.position;
                     }
 
                     break;
                 case ROTATION_ID:
-                    if (transform.eulerAngles != (Vector3) value)
+                    if (Target.eulerAngles != (Vector3) value)
                     {
-                        transform.eulerAngles = (Vector3) value;
+                        Target.eulerAngles = (Vector3) value;
                         changed = true;
-                        lastEditValue = transform.eulerAngles;
+                        lastEditValue = Target.eulerAngles;
                     }
 
                     break;
                 case SCALE_ID:
-                    if (transform.localScale != (Vector3) value)
+                    if (Target.localScale != (Vector3) value)
                     {
-                        transform.localScale = (Vector3) value;
+                        Target.localScale = (Vector3) value;
                         changed = true;
-                        lastEditValue = transform.localScale;
+                        lastEditValue = Target.localScale;
                     }
 
                     break;
                 case PARENT_ID:
-                    if (value is ComponentDataWrapper wrapper && !wrapper.Equals(transform.parent))
+                    if (value is ComponentDataWrapper wrapper && !wrapper.Equals(Target.parent))
                     {
                         SetParent(wrapper);
                     }

@@ -140,7 +140,7 @@ namespace Hertzole.ALE
 			treeControl.RebindItem(sender);
 		}
 
-		private void OnSelectionChanged(object sender, SelectionEvent e)
+		private void OnSelectionChanged(object sender, SelectionEventArgs e)
 		{
 			if (selectedThroughUI)
 			{
@@ -268,7 +268,7 @@ namespace Hertzole.ALE
 
 			if (realLevelEditor != null)
 			{
-				realLevelEditor.Selection.Selection = e.New;
+				realLevelEditor.Selection.SetSelection(e.New);
 			}
 		}
 	}

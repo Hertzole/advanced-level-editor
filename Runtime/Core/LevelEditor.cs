@@ -135,6 +135,14 @@ namespace Hertzole.ALE
 			}
 		}
 
+		private void LateUpdate()
+		{
+			if (selectedMode >= 0 && editorModes.Length > 0 && (PlayMode != null && !PlayMode.IsPlaying || PlayMode == null))
+			{
+				editorModes[selectedMode].OnModeLateUpdate();
+			}
+		}
+
 		private void OnEnable()
 		{
 			if (ObjectManager != null)

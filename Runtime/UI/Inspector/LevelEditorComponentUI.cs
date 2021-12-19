@@ -30,6 +30,8 @@ namespace Hertzole.ALE
         public string Title { get { return titleLabel == null ? string.Empty : titleLabel.text; } set { if (titleLabel != null) { titleLabel.text = value; } } }
 
         public RectTransform FieldHolder { get { if (fieldsHolder == null) { fieldsHolder = (RectTransform)transform; } return fieldsHolder; } }
+        
+        public LevelEditorComponentEditor Editor { get; set; }
 
 #if OBSOLETE
         private void Awake()

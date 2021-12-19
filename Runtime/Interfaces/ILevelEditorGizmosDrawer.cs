@@ -9,6 +9,8 @@ namespace Hertzole.ALE
 
 		void DrawQuads(IReadOnlyList<Vector3> lines, Color color);
 
+		void DrawTriangles(IReadOnlyList<Vector3> lines, Color color);
+
 		void DrawSquare(Vector3 center, Vector2 size, Quaternion rotation, Color color);
 
 		void DrawWireCube(Vector3 center, Vector3 size, Quaternion rotation, Color color);

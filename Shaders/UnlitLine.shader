@@ -19,7 +19,8 @@ Shader "Hertzole/ALE/Unlit Line"
 		CGINCLUDE
 		#pragma target 4.0
 		ENDCG
-		Blend Off
+		Blend SrcAlpha OneMinusSrcAlpha
+		BlendOp Add, Add
 		AlphaToMask Off
 		Cull Off
 		ColorMask RGBA
@@ -122,7 +123,7 @@ Shader "Hertzole/ALE/Unlit Line"
 }
 /*ASEBEGIN
 Version=18800
-0;0;1920;1019;579.8488;550.6888;1;True;True
+194;192;1920;1019;446.8909;615.7991;1.144864;True;True
 Node;AmplifyShaderEditor.PosVertexDataNode;29;-409.6176,89.52882;Inherit;False;0;0;5;FLOAT3;0;FLOAT;1;FLOAT;2;FLOAT;3;FLOAT;4
 Node;AmplifyShaderEditor.UnityObjToViewPosHlpNode;28;-173.6181,81.52882;Inherit;False;1;0;FLOAT3;0,0,0;False;4;FLOAT3;0;FLOAT;1;FLOAT;2;FLOAT;3
 Node;AmplifyShaderEditor.RangedFloatNode;31;22.38176,138.5288;Inherit;False;Constant;_Float0;Float 0;3;0;Create;True;0;0;0;False;0;False;0.99;0;0;0;0;1;FLOAT;0
@@ -130,11 +131,11 @@ Node;AmplifyShaderEditor.SimpleMultiplyOpNode;30;182.3817,36.52877;Inherit;False
 Node;AmplifyShaderEditor.UnityProjectorMatrixNode;37;134.1512,-113.6888;Inherit;False;0;1;FLOAT4x4;0
 Node;AmplifyShaderEditor.RangedFloatNode;3;179.0142,268.8065;Inherit;False;Property;_Size;Size;1;0;Create;True;0;0;0;False;0;False;10;8;0;40;0;1;FLOAT;0
 Node;AmplifyShaderEditor.ColorNode;2;86.17599,-483.1918;Inherit;False;InstancedProperty;_Color;Color;0;0;Create;True;0;0;0;False;0;False;1,1,1,1;1,1,1,1;True;0;5;COLOR;0;FLOAT;1;FLOAT;2;FLOAT;3;FLOAT;4
-Node;AmplifyShaderEditor.VertexColorNode;34;769.2817,-415.8712;Inherit;False;0;5;COLOR;0;FLOAT;1;FLOAT;2;FLOAT;3;FLOAT;4
 Node;AmplifyShaderEditor.IntNode;4;-412.509,-27.95518;Inherit;False;Property;_ZTest;ZTest;2;0;Create;True;0;0;0;False;0;False;8;8;False;0;1;INT;0
 Node;AmplifyShaderEditor.SimpleMultiplyOpNode;33;331.3819,-31.47124;Inherit;False;2;2;0;FLOAT4x4;0,0,0,0,0,1,0,0,0,0,1,0,0,0,0,1;False;1;FLOAT3;0,0,0;False;1;FLOAT3;0
 Node;AmplifyShaderEditor.ProjectionMatrixNode;36;-66.61843,-87.47122;Inherit;False;0;1;FLOAT4x4;0
-Node;AmplifyShaderEditor.TemplateMultiPassMasterNode;1;961.2346,-128.0902;Float;False;True;-1;2;;200;1;Hertzole/ALE/Unlit Line;0770190933193b94aaa3065e307002fa;True;Unlit;0;0;Unlit;2;True;0;1;False;-1;0;False;-1;0;1;False;-1;0;False;-1;True;0;False;-1;0;False;-1;False;False;False;False;False;False;True;0;False;-1;True;2;False;-1;True;True;True;True;True;0;False;-1;False;False;False;True;False;255;False;-1;255;False;-1;255;False;-1;7;False;-1;1;False;-1;1;False;-1;1;False;-1;7;False;-1;1;False;-1;1;False;-1;1;False;-1;True;1;False;-1;True;5;True;4;True;False;0;False;-1;0;False;-1;True;5;RenderType=Geometry=RenderType;DisableBatching=True=DisableBatching;Queue=Geometry=Queue=4;ForceNoShadowCasting=True;IgnoreProjector=True;True;4;0;False;False;False;False;False;False;False;False;False;False;False;False;False;False;False;False;False;False;True;1;LightMode=ForwardBase;False;0;;0;0;Standard;1;Vertex Position,InvertActionOnDeselection;1;0;1;True;False;;False;0
+Node;AmplifyShaderEditor.VertexColorNode;34;405.2157,-439.9132;Inherit;False;0;5;COLOR;0;FLOAT;1;FLOAT;2;FLOAT;3;FLOAT;4
+Node;AmplifyShaderEditor.TemplateMultiPassMasterNode;1;531.9106,-128.0902;Float;False;True;-1;2;;200;1;Hertzole/ALE/Unlit Line;0770190933193b94aaa3065e307002fa;True;Unlit;0;0;Unlit;2;True;2;5;False;-1;10;False;-1;0;1;False;-1;10;False;-1;True;0;False;-1;1;False;-1;False;False;False;False;False;False;True;0;False;-1;True;2;False;-1;True;True;True;True;True;0;False;-1;False;False;False;True;False;255;False;-1;255;False;-1;255;False;-1;7;False;-1;1;False;-1;1;False;-1;1;False;-1;7;False;-1;1;False;-1;1;False;-1;1;False;-1;True;1;False;-1;True;5;True;4;True;False;0;False;-1;0;False;-1;True;5;RenderType=Geometry=RenderType;DisableBatching=True=DisableBatching;Queue=Geometry=Queue=4;ForceNoShadowCasting=True;IgnoreProjector=True;True;4;0;False;False;False;False;False;False;False;False;False;False;False;False;False;False;False;False;False;False;True;1;LightMode=ForwardBase;False;0;;0;0;Standard;1;Vertex Position,InvertActionOnDeselection;1;0;1;True;False;;False;0
 WireConnection;28;0;29;0
 WireConnection;30;0;28;0
 WireConnection;30;1;31;0
@@ -143,4 +144,4 @@ WireConnection;33;1;30;0
 WireConnection;1;0;34;0
 WireConnection;1;1;33;0
 ASEEND*/
-//CHKSM=008F7F48E04B604988ED527D9A94939BAB3A82CC
+//CHKSM=12A0B501AFF4F43C2B1EC59CC25AB1BBC1DF60F3
