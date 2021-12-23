@@ -1,142 +1,155 @@
-﻿using Mono.Cecil;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Linq;
 using System.Threading;
+using Mono.Cecil;
 using Unity.CompilationPipeline.Common.ILPostProcessing;
 
 namespace Hertzole.ALE.CodeGen
 {
-    public sealed class PostProcessorAssemblyResolver : IAssemblyResolver
-    {
-        private readonly string[] assemblyReferences;
-        private readonly Dictionary<string, AssemblyDefinition> assemblyCache = new Dictionary<string, AssemblyDefinition>();
-        private readonly ICompiledAssembly compiledAssembly;
-        private AssemblyDefinition selfAssembly;
+	public sealed class PostProcessorAssemblyResolver : IAssemblyResolver
+	{
+		private readonly string[] assemblyReferences;
+		private readonly string[] assemblyReferencesFileName;
+		private readonly string[] assemblyReferencesParents;
 
-        public PostProcessorAssemblyResolver(ICompiledAssembly compiledAssembly)
-        {
-            this.compiledAssembly = compiledAssembly;
-            assemblyReferences = compiledAssembly.References;
-        }
+		private readonly Dictionary<string, AssemblyDefinition> assemblyCache = new Dictionary<string, AssemblyDefinition>();
+		private readonly ICompiledAssembly compiledAssembly;
+		private AssemblyDefinition selfAssembly;
 
-        public void Dispose() { }
+		public PostProcessorAssemblyResolver(ICompiledAssembly compiledAssembly)
+		{
+			this.compiledAssembly = compiledAssembly;
+			assemblyReferences = compiledAssembly.References;
 
-        public AssemblyDefinition Resolve(AssemblyNameReference name)
-        {
-            return Resolve(name, new ReaderParameters(ReadingMode.Deferred));
-        }
+			assemblyReferencesFileName = new string[assemblyReferences.Length];
+			for (int i = 0; i < assemblyReferences.Length; i++)
+			{
+				assemblyReferencesFileName[i] = Path.GetFileName(assemblyReferences[i]);
+			}
 
-        public AssemblyDefinition Resolve(AssemblyNameReference name, ReaderParameters parameters)
-        {
-            lock (assemblyCache)
-            {
-                if (name.Name == compiledAssembly.Name)
-                {
-                    return selfAssembly;
-                }
+			assemblyReferencesParents = new string[assemblyReferences.Length];
+			for (int i = 0; i < assemblyReferences.Length; i++)
+			{
+				assemblyReferencesParents[i] = Path.GetDirectoryName(assemblyReferences[i]);
+			}
+		}
 
-                string fileName = FindFile(name);
-                if (fileName == null)
-                {
-                    return null;
-                }
+		public void Dispose()
+		{
+			GC.SuppressFinalize(this);
+		}
 
-                DateTime lastWriteTime = File.GetLastWriteTime(fileName);
-                string cacheKey = $"{fileName}{lastWriteTime}";
-                if (assemblyCache.TryGetValue(cacheKey, out AssemblyDefinition result))
-                {
-                    return result;
-                }
+		public AssemblyDefinition Resolve(AssemblyNameReference name)
+		{
+			return Resolve(name, new ReaderParameters(ReadingMode.Deferred));
+		}
 
-                parameters.AssemblyResolver = this;
+		public AssemblyDefinition Resolve(AssemblyNameReference name, ReaderParameters parameters)
+		{
+			lock (assemblyCache)
+			{
+				if (name.Name == compiledAssembly.Name)
+				{
+					return selfAssembly;
+				}
 
-                MemoryStream ms = MemoryStreamFor(fileName);
-                string pdb = $"{fileName}.pdb";
-                if (File.Exists(pdb))
-                {
-                    parameters.SymbolStream = MemoryStreamFor(pdb);
-                }
+				string fileName = FindFile(name);
+				if (fileName == null)
+				{
+					return null;
+				}
 
-                AssemblyDefinition assemblyDefinition = AssemblyDefinition.ReadAssembly(ms, parameters);
-                assemblyCache.Add(cacheKey, assemblyDefinition);
+				DateTime lastWriteTime = File.GetLastWriteTime(fileName);
+				string cacheKey = fileName + lastWriteTime;
 
-                return assemblyDefinition;
-            }
-        }
+				if (assemblyCache.TryGetValue(cacheKey, out AssemblyDefinition result))
+				{
+					return result;
+				}
 
-        private string FindFile(AssemblyNameReference name)
-        {
-            string fileName = assemblyReferences.FirstOrDefault(r => Path.GetFileName(r) == $"{name.Name}.dll");
-            if (fileName != null)
-            {
-                return fileName;
-            }
+				parameters.AssemblyResolver = this;
 
-            // perhaps the type comes from an exe instead
-            fileName = assemblyReferences.FirstOrDefault(r => Path.GetFileName(r) == $"{name.Name}.exe");
-            if (fileName != null)
-            {
-                return fileName;
-            }
+				MemoryStream ms = MemoryStreamFor(fileName);
 
-            //Unfortunately the current ICompiledAssembly API only provides direct references.
-            //It is very much possible that a postprocessor ends up investigating a type in a directly
-            //referenced assembly, that contains a field that is not in a directly referenced assembly.
-            //if we don't do anything special for that situation, it will fail to resolve.  We should fix this
-            //in the ILPostProcessing API. As a workaround, we rely on the fact here that the indirect references
-            //are always located next to direct references, so we search in all directories of direct references we
-            //got passed, and if we find the file in there, we resolve to it.
-            return assemblyReferences
-                .Select(Path.GetDirectoryName)
-                .Distinct()
-                .Select(parentDir => Path.Combine(parentDir, $"{name.Name}.dll"))
-                .FirstOrDefault(File.Exists);
-        }
+				string pdb = fileName + ".pdb";
+				if (File.Exists(pdb))
+				{
+					parameters.SymbolStream = MemoryStreamFor(pdb);
+				}
 
-        private static MemoryStream MemoryStreamFor(string fileName)
-        {
-            return Retry(10, TimeSpan.FromSeconds(1), () =>
-            {
-                byte[] byteArray;
-                using (FileStream fs = new FileStream(fileName, FileMode.Open, FileAccess.Read, FileShare.ReadWrite))
-                {
-                    byteArray = new byte[fs.Length];
-                    int readLength = fs.Read(byteArray, 0, (int)fs.Length);
-                    if (readLength != fs.Length)
-                    {
-                        throw new InvalidOperationException("File read length is not full length of file.");
-                    }
-                }
+				AssemblyDefinition assemblyDefinition = AssemblyDefinition.ReadAssembly(ms, parameters);
+				assemblyCache.Add(cacheKey, assemblyDefinition);
+				return assemblyDefinition;
+			}
+		}
 
-                return new MemoryStream(byteArray);
-            });
-        }
+		private string FindFile(IMetadataScope name)
+		{
+			string dllName = name.Name + ".dll";
+			string exeName = name.Name + ".exe";
+			for (int i = 0; i < assemblyReferencesFileName.Length; i++)
+			{
+				string fileName = assemblyReferencesFileName[i];
+				if (fileName == dllName || fileName == exeName)
+				{
+					return assemblyReferences[i];
+				}
+			}
 
-        private static MemoryStream Retry(int retryCount, TimeSpan waitTime, Func<MemoryStream> func)
-        {
-            try
-            {
-                return func();
-            }
-            catch (IOException)
-            {
-                if (retryCount == 0)
-                {
-                    throw;
-                }
+			for (int i = 0; i < assemblyReferencesParents.Length; i++)
+			{
+				string candidate = Path.Combine(assemblyReferencesParents[i], name.Name + ".dll");
+				if (File.Exists(candidate))
+				{
+					return candidate;
+				}
+			}
 
-                Console.WriteLine($"Caught IO Exception, trying {retryCount} more times");
-                Thread.Sleep(waitTime);
+			return null;
+		}
 
-                return Retry(retryCount - 1, waitTime, func);
-            }
-        }
+		private static MemoryStream MemoryStreamFor(string fileName)
+		{
+			return Retry(10, TimeSpan.FromSeconds(1), () =>
+			{
+				byte[] byteArray;
+				using (FileStream fs = new FileStream(fileName, FileMode.Open, FileAccess.Read, FileShare.ReadWrite))
+				{
+					byteArray = new byte[fs.Length];
+					int readLength = fs.Read(byteArray, 0, (int) fs.Length);
+					if (readLength != fs.Length)
+					{
+						throw new InvalidOperationException("File read length is not full length of file.");
+					}
+				}
 
-        public void AddAssemblyDefinitionBeingOperatedOn(AssemblyDefinition assemblyDefinition)
-        {
-            selfAssembly = assemblyDefinition;
-        }
-    }
+				return new MemoryStream(byteArray);
+			});
+		}
+
+		private static MemoryStream Retry(int retryCount, TimeSpan waitTime, Func<MemoryStream> func)
+		{
+			try
+			{
+				return func();
+			}
+			catch (IOException)
+			{
+				if (retryCount == 0)
+				{
+					throw;
+				}
+
+				Console.WriteLine($"Caught IO Exception, trying {retryCount} more times");
+				Thread.Sleep(waitTime);
+				return Retry(retryCount - 1, waitTime, func);
+			}
+		}
+
+		public void AddAssemblyDefinitionBeingOperatedOn(AssemblyDefinition assemblyDefinition)
+		{
+			selfAssembly = assemblyDefinition;
+		}
+	}
 }

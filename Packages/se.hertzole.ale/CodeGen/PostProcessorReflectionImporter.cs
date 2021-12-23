@@ -1,22 +1,59 @@
-﻿using Mono.Cecil;
-using System.Linq;
-using System.Reflection;
+﻿using System.Reflection;
+using Mono.Cecil;
+using Mono.Collections.Generic;
 
 namespace Hertzole.ALE.CodeGen
 {
-    public sealed class PostProcessorReflectionImporter : DefaultReflectionImporter
-    {
-        private const string SYSTEM_PRIVATE_CORELIB = "System.Private.CoreLib";
-        private readonly AssemblyNameReference correctCorlib;
+	public sealed class PostProcessorReflectionImporter : DefaultReflectionImporter
+	{
+		private readonly AssemblyNameReference correctCorlib;
+		private const string SYSTEM_PRIVATE_CORELIB = "System.Private.CoreLib";
 
-        public PostProcessorReflectionImporter(ModuleDefinition module) : base(module)
-        {
-            correctCorlib = module.AssemblyReferences.FirstOrDefault(a => a.Name == "mscorlib" || a.Name == "netstandard" || a.Name == SYSTEM_PRIVATE_CORELIB);
-        }
+		public PostProcessorReflectionImporter(ModuleDefinition module) : base(module)
+		{
+			Collection<AssemblyNameReference> references = module.AssemblyReferences;
+			for (int i = 0; i < references.Count; i++)
+			{
+				string name = references[i].Name;
+				if (name == "mscorlib" || name == "netstandard" || name == SYSTEM_PRIVATE_CORELIB)
+				{
+					correctCorlib = references[i];
+				}
+			}
+		}
 
-        public override AssemblyNameReference ImportReference(AssemblyName reference)
-        {
-            return correctCorlib != null && reference.Name == SYSTEM_PRIVATE_CORELIB ? correctCorlib : base.ImportReference(reference);
-        }
-    }
+		public override AssemblyNameReference ImportReference(AssemblyName name)
+		{
+			if (correctCorlib != null && name.Name == SYSTEM_PRIVATE_CORELIB)
+			{
+				return correctCorlib;
+			}
+
+			if (TryImportFast(name, out AssemblyNameReference reference))
+			{
+				return reference;
+			}
+
+			return base.ImportReference(name);
+		}
+
+		private bool TryImportFast(AssemblyName name, out AssemblyNameReference assemblyReference)
+		{
+			string fullName = name.FullName;
+
+			Collection<AssemblyNameReference> references = module.AssemblyReferences;
+			for (int i = 0; i < references.Count; i++)
+			{
+				AssemblyNameReference reference = references[i];
+				if (fullName == reference.FullName)
+				{
+					assemblyReference = reference;
+					return true;
+				}
+			}
+
+			assemblyReference = null;
+			return false;
+		}
+	}
 }
