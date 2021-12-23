@@ -1,21 +1,18 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
-using System.Linq;
 using Mono.Cecil;
 using Mono.Cecil.Cil;
 using Unity.CompilationPipeline.Common.Diagnostics;
 using Unity.CompilationPipeline.Common.ILPostProcessing;
-using UnityEditor;
 
 namespace Hertzole.ALE.CodeGen
 {
 	public sealed class LevelEditorILProcessor : ILPostProcessor
 	{
-		private const string RUNTIME_ASSEMBLY = "Hertzole.ALE";
-
 		private readonly List<DiagnosticMessage> diagnostics = new List<DiagnosticMessage>();
 		private Weaver weaver;
+		private const string RUNTIME_ASSEMBLY = "Hertzole.ALE";
 
 		public override ILPostProcessor GetInstance()
 		{
@@ -24,7 +21,15 @@ namespace Hertzole.ALE.CodeGen
 
 		public override bool WillProcess(ICompiledAssembly compiledAssembly)
 		{
-			return compiledAssembly.References.Any(filePath => Path.GetFileNameWithoutExtension(filePath) == RUNTIME_ASSEMBLY);
+			for (int i = 0; i < compiledAssembly.References.Length; i++)
+			{
+				if (Path.GetFileNameWithoutExtension(compiledAssembly.References[i]) == RUNTIME_ASSEMBLY)
+				{
+					return true;
+				}
+			}
+
+			return false;
 		}
 
 		public override ILPostProcessResult Process(ICompiledAssembly compiledAssembly)
@@ -33,6 +38,10 @@ namespace Hertzole.ALE.CodeGen
 			{
 				return null;
 			}
+
+#if ALE_DEBUG
+			Stopwatch sw = Stopwatch.StartNew();
+#endif
 
 			diagnostics.Clear();
 
@@ -67,6 +76,11 @@ namespace Hertzole.ALE.CodeGen
 			};
 
 			assemblyDefinition.Write(pe, writerParameters);
+
+#if ALE_DEBUG
+			sw.Stop();
+			diagnostics.AddWarning($"ALE ILPostProcessor took {sw.ElapsedMilliseconds}ms ({sw.ElapsedTicks} ticks) when processing {compiledAssembly.Name}.");
+#endif
 
 			return new ILPostProcessResult(new InMemoryAssembly(pe.ToArray(), pdb.ToArray()), diagnostics);
 		}

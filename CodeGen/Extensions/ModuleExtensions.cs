@@ -1,8 +1,6 @@
 ﻿using Mono.Cecil;
 using System;
-using System.Linq;
 using System.Reflection;
-using UnityEngine;
 
 namespace Hertzole.ALE.CodeGen
 {
