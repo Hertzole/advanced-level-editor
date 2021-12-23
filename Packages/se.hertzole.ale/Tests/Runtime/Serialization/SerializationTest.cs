@@ -194,37 +194,6 @@ namespace Hertzole.ALE.Tests
 			Assert.AreEqual<byte>(20, byte8.Value2, "Byte 8 property value 2 failed.");
 		}
 
-		// Works but possible bug in MessagePack with Json deserialization?
-		[UnityTest]
-		public IEnumerator SaveByteArray()
-		{
-			cube.AddComponent<ByteArrayTest>();
-		
-			ILevelEditorObject newCube = objectManager.CreateObject("cube");
-			uint cubeId = newCube.InstanceID;
-		
-			ByteArrayTest bytes = newCube.MyGameObject.GetComponent<ByteArrayTest>();
-			bytes.value = new byte[] { 1, 2, 3, 4, 5, 6, 7, 8, 9 };
-		
-			yield return null;
-		
-			Save();
-			objectManager.DeleteAllObjects();
-		
-			yield return null;
-		
-			Load();
-		
-			yield return null;
-		
-			newCube = objectManager.GetObject(cubeId);
-			Assert.IsNotNull(newCube);
-		
-			bytes = newCube.MyGameObject.GetComponent<ByteArrayTest>();
-			
-			Assert.IsTrue(new byte[] { 1, 2, 3, 4, 5, 6, 7, 8, 9 }.IsSameAs(bytes.value));
-		}
-
 		[UnityTest]
 		public IEnumerator SaveByteList()
 		{
@@ -841,6 +810,39 @@ namespace Hertzole.ALE.Tests
 			child = newCube.MyGameObject.GetComponent<InheritChild>();
 			Assert.AreEqual(69, child.parentValue);
 			Assert.AreEqual(420, child.childValue);
+		}
+
+		[UnityTest]
+		public IEnumerator SaveCustomStruct()
+		{
+			cube.AddComponent<CustomStructTest>();
+
+			var newCube = objectManager.CreateObject("cube");
+			uint cubeId = newCube.InstanceID;
+
+			var structTest = newCube.MyGameObject.GetComponent<CustomStructTest>();
+			structTest.value = new MyStruct() { test1 = 42, test2 = "Hello world" };
+			structTest.Value = new MyStruct() { test1 = 69, test2 = "Look ma!" };
+
+			yield return null;
+			
+			Save();
+			objectManager.DeleteAllObjects();
+
+			yield return null;
+			
+			Load();
+
+			yield return null;
+
+			newCube = objectManager.GetObject(cubeId);
+			Assert.IsNotNull(newCube);
+
+			structTest = newCube.MyGameObject.GetComponent<CustomStructTest>();
+			Assert.AreEqual(structTest.value.test1, 42);
+			Assert.AreEqual(structTest.value.test2, "Hello world");
+			Assert.AreEqual(structTest.Value.test1, 69);
+			Assert.AreEqual(structTest.Value.test2, "Look ma!");
 		}
 
 		private void Save()

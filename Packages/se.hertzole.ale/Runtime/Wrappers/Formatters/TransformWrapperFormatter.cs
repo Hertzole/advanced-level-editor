@@ -10,7 +10,7 @@ namespace Hertzole.ALE.Formatters
 	{
 		public void Serialize(ref MessagePackWriter writer, TransformWrapper.Wrapper value, MessagePackSerializerOptions options)
 		{
-			writer.WriteArrayHeader(4);
+			writer.WriteArrayHeader(8);
 			
 			// Position
 			writer.WriteInt8(0);
@@ -45,16 +45,8 @@ namespace Hertzole.ALE.Formatters
 				Dirty = new Dictionary<int, bool>(4)
 			};
 			
-			for (int i = 0; i < length; i++)
+			for (int i = 0; i < length / 2; i++)
 			{
-#if ALE_COMPATIBILITY_0 || ALE_COMPATIBILITY_1
-				// This is for old save files.
-				if (i > 3)
-				{
-					continue;
-				}
-#endif
-				
 				byte id = reader.ReadByte();
 				switch (id)
 				{

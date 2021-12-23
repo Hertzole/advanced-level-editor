@@ -9,15 +9,20 @@ namespace Hertzole.ALE.Formatters
 	{
 		public void Serialize(ref MessagePackWriter writer, RigidbodyWrapper.Wrapper value, MessagePackSerializerOptions options)
 		{
-			writer.WriteArrayHeader(5);
+			writer.WriteArrayHeader(10);
+			
 			writer.WriteInt8(0);
 			value.Serialize(0, ref writer, options);
+			
 			writer.WriteInt8(1);
 			value.Serialize(1, ref writer, options);
+			
 			writer.WriteInt8(2);
 			value.Serialize(2, ref writer, options);
+			
 			writer.WriteInt8(3);
 			value.Serialize(3, ref writer, options);
+			
 			writer.WriteInt8(4);
 			value.Serialize(4, ref writer, options);
 		}
@@ -39,16 +44,8 @@ namespace Hertzole.ALE.Formatters
 				Dirty = new Dictionary<int, bool>(5)
 			};
 
-			for (int i = 0; i < length; i++)
+			for (int i = 0; i < length / 2; i++)
 			{
-#if ALE_COMPATIBILITY_0 || ALE_COMPATIBILITY_1
-				// This is for old formats.
-				if (i > 4)
-				{
-					continue;
-				}
-#endif
-
 				byte id = reader.ReadByte();
 				switch (id)
 				{
