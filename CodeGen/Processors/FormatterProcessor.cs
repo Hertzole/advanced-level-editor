@@ -218,7 +218,7 @@ namespace Hertzole.ALE.CodeGen
 				}
 
 				il.EmitLdarg(writer);
-				il.EmitInt(fields.Count);
+				il.EmitInt(fields.Count * 2);
 				il.Emit(OpCodes.Call, module.GetMethod(typeof(MessagePackWriter), "WriteArrayHeader", typeof(int)));
 
 				for (int i = 0; i < fields.Count; i++)
@@ -583,6 +583,8 @@ namespace Hertzole.ALE.CodeGen
 
 			il.Append(whileStart);
 			il.EmitLdloc(lengthVar);
+			il.EmitInt(2);
+			il.Emit(OpCodes.Div);
 			il.Emit(OpCodes.Blt, loopStart);
 
 			il.Emit(OpCodes.Ret);
@@ -637,7 +639,7 @@ namespace Hertzole.ALE.CodeGen
 
 			// writer.WriteArrayHeader(propertyCount)
 			il.EmitLdarg(paraWriter);
-			il.EmitInt(properties.Count);
+			il.EmitInt(properties.Count * 2);
 			il.Emit(OpCodes.Call, module.GetMethod(typeof(MessagePackWriter), nameof(MessagePackWriter.WriteArrayHeader), typeof(int)));
 
 			var writeInt = module.GetMethod(typeof(MessagePackWriter), nameof(MessagePackWriter.WriteInt32), typeof(int));
@@ -794,6 +796,8 @@ namespace Hertzole.ALE.CodeGen
 				// i < length
 				fill.Add(loopEndier);
 				fill.Add(ILHelper.Ldloc(varLength));
+				fill.Add(ILHelper.Int(2));
+				fill.Add(Instruction.Create(OpCodes.Div));
 				fill.Add(Instruction.Create(OpCodes.Blt, loopStart));
 			});
 
