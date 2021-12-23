@@ -817,20 +817,23 @@ namespace Hertzole.ALE.Tests
 		{
 			cube.AddComponent<CustomStructTest>();
 
-			var newCube = objectManager.CreateObject("cube");
+			ILevelEditorObject newCube = objectManager.CreateObject("cube");
 			uint cubeId = newCube.InstanceID;
 
-			var structTest = newCube.MyGameObject.GetComponent<CustomStructTest>();
-			structTest.value = new MyStruct() { test1 = 42, test2 = "Hello world" };
-			structTest.Value = new MyStruct() { test1 = 69, test2 = "Look ma!" };
+			CustomStructTest structTest = newCube.MyGameObject.GetComponent<CustomStructTest>();
+			structTest.value = new MyStruct
+				{ test1 = 42, test2 = "Hello world" };
+
+			structTest.Value = new MyStruct
+				{ test1 = 69, test2 = "Look ma!" };
 
 			yield return null;
-			
+
 			Save();
 			objectManager.DeleteAllObjects();
 
 			yield return null;
-			
+
 			Load();
 
 			yield return null;
@@ -843,6 +846,145 @@ namespace Hertzole.ALE.Tests
 			Assert.AreEqual(structTest.value.test2, "Hello world");
 			Assert.AreEqual(structTest.Value.test1, 69);
 			Assert.AreEqual(structTest.Value.test2, "Look ma!");
+		}
+
+		[UnityTest]
+		public IEnumerator SaveNestedStruct()
+		{
+			cube.AddComponent<NestedStructTest>();
+
+			ILevelEditorObject newCube = objectManager.CreateObject("cube");
+			uint cubeId = newCube.InstanceID;
+
+			NestedStructTest structTest = newCube.MyGameObject.GetComponent<NestedStructTest>();
+			structTest.value = new NestedStruct
+			{
+				nestedValue = new ChildStruct
+					{ value1 = 42, value2 = false },
+				value = 69
+			};
+
+			structTest.Value = new NestedStruct
+			{
+				nestedValue = new ChildStruct
+					{ value1 = 420, value2 = true },
+				value = 690
+			};
+
+			yield return null;
+
+			Save();
+			objectManager.DeleteAllObjects();
+
+			yield return null;
+
+			Load();
+
+			yield return null;
+
+			newCube = objectManager.GetObject(cubeId);
+			Assert.IsNotNull(newCube);
+
+			structTest = newCube.MyGameObject.GetComponent<NestedStructTest>();
+			Assert.AreEqual(structTest.value.nestedValue.value1, 42);
+			Assert.AreEqual(structTest.value.nestedValue.value2, false);
+			Assert.AreEqual(structTest.value.value, 69);
+			Assert.AreEqual(structTest.Value.nestedValue.value1, 420);
+			Assert.AreEqual(structTest.Value.nestedValue.value2, true);
+			Assert.AreEqual(structTest.Value.value, 690);
+		}
+
+		[UnityTest]
+		public IEnumerator SaveEnumNormal()
+		{
+			cube.AddComponent<EnumTest>();
+
+			ILevelEditorObject newCube = objectManager.CreateObject("cube");
+			uint cubeId = newCube.InstanceID;
+
+			EnumTest enumTest = newCube.MyGameObject.GetComponent<EnumTest>();
+			enumTest.value = NormalEnum.Value2;
+			enumTest.Value = NormalEnum.Value4;
+
+			yield return null;
+
+			Save();
+			objectManager.DeleteAllObjects();
+
+			yield return null;
+
+			Load();
+
+			yield return null;
+
+			newCube = objectManager.GetObject(cubeId);
+			Assert.IsNotNull(newCube);
+
+			enumTest = newCube.MyGameObject.GetComponent<EnumTest>();
+			Assert.AreEqual(enumTest.value, NormalEnum.Value2);
+			Assert.AreEqual(enumTest.Value, NormalEnum.Value4);
+		}
+
+		[UnityTest]
+		public IEnumerator SaveEnumByte()
+		{
+			cube.AddComponent<ByteEnumTest>();
+
+			ILevelEditorObject newCube = objectManager.CreateObject("cube");
+			uint cubeId = newCube.InstanceID;
+
+			ByteEnumTest enumTest = newCube.MyGameObject.GetComponent<ByteEnumTest>();
+			enumTest.value = ByteEnum.Value2;
+			enumTest.Value = ByteEnum.Value4;
+
+			yield return null;
+
+			Save();
+			objectManager.DeleteAllObjects();
+
+			yield return null;
+
+			Load();
+
+			yield return null;
+
+			newCube = objectManager.GetObject(cubeId);
+			Assert.IsNotNull(newCube);
+
+			enumTest = newCube.MyGameObject.GetComponent<ByteEnumTest>();
+			Assert.AreEqual(enumTest.value, ByteEnum.Value2);
+			Assert.AreEqual(enumTest.Value, ByteEnum.Value4);
+		}
+
+		[UnityTest]
+		public IEnumerator SaveEnumByteFlag()
+		{
+			cube.AddComponent<ByteFlagsEnumTest>();
+
+			ILevelEditorObject newCube = objectManager.CreateObject("cube");
+			uint cubeId = newCube.InstanceID;
+
+			ByteFlagsEnumTest enumTest = newCube.MyGameObject.GetComponent<ByteFlagsEnumTest>();
+			enumTest.value = ByteFlagsEnum.Value1 | ByteFlagsEnum.Value3;
+			enumTest.Value = ByteFlagsEnum.Value2 | ByteFlagsEnum.Value4;
+
+			yield return null;
+
+			Save();
+			objectManager.DeleteAllObjects();
+
+			yield return null;
+
+			Load();
+
+			yield return null;
+
+			newCube = objectManager.GetObject(cubeId);
+			Assert.IsNotNull(newCube);
+
+			enumTest = newCube.MyGameObject.GetComponent<ByteFlagsEnumTest>();
+			Assert.AreEqual(enumTest.value, ByteFlagsEnum.Value1 | ByteFlagsEnum.Value3);
+			Assert.AreEqual(enumTest.Value, ByteFlagsEnum.Value2 | ByteFlagsEnum.Value4);
 		}
 
 		private void Save()
