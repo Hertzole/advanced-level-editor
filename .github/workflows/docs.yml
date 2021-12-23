@@ -1,0 +1,19 @@
+name: Documentation
+on: [push]
+
+jobs:
+  build:
+    name: Build documentation
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v2
+      with:
+        lfs: true
+        persist-credentials: false
+    - uses: redkubes/docusaurus-deploy-action@v1
+      with:
+        source-folder: docs
+        git-user: Hertzole
+        git-password: ${{ secrets.GITHUB_TOKEN }}
+        deployment-branch: gh-pages

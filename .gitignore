@@ -70,3 +70,19 @@ crashlytics-build.properties
 # Temporary auto-generated Android Assets
 /[Aa]ssets/[Ss]treamingAssets/aa.meta
 /[Aa]ssets/[Ss]treamingAssets/aa/*
+
+# Docs
+/[Dd]ocs/node_modules
+/[Dd]ocs/build
+/[Dd]ocs/.docusaurus
+/[Dd]ocs/.cache-loader
+/[Dd]ocs/.DS_Store
+/[Dd]ocs/.env.local
+/[Dd]ocs/.env.development.local
+/[Dd]ocs/.env.test.local
+/[Dd]ocs/.env.production.local
+/[Dd]ocs/npm-debug.log*
+/[Dd]ocs/yarn-debug.log*
+/[Dd]ocs/yarn-error.log*
+
+
