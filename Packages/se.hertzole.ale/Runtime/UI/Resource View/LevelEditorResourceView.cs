@@ -139,15 +139,12 @@ namespace Hertzole.ALE
 			}
 #endif
 
-#if UNITY_EDITOR // This needs to be done to avoid a problem with opening up the resources object in the editor.
+			// This needs to be done to avoid a problem with opening up the resources object in the editor.
 			LevelEditorResource[] newResources = new LevelEditorResource[resourcesList.Count];
 			for (int i = 0; i < newResources.Length; i++)
 			{
 				newResources[i] = new LevelEditorResource(resourcesList[i] as LevelEditorResource);
 			}
-#else
-            LevelEditorResource[] newResources = resourcesList as LevelEditorResource[];
-#endif
 
 			// Need to create a copy here or else the children will not work in the asset view.
 			LevelEditorResource[] resourcesCopy = new LevelEditorResource[newResources.Length];

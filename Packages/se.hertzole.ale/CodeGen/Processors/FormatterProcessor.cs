@@ -69,18 +69,24 @@ namespace Hertzole.ALE.CodeGen
 				}
 			}
 			
-			var resolved = type.Resolve();
+			TypeDefinition resolved = type.Resolve();
 			if (resolved == null)
 			{
 				return;
 			}
 
-			AddTypeFields(resolved);
-			
 			if (standardTypes.Contains(resolved) || typesToGenerate.Contains(resolved) || resolved.IsCollection() || resolved.IsComponent())
 			{
 				return;
 			}
+			
+			if (resolved.IsEnum())
+			{
+				typesToGenerate.Add(resolved);
+				return;
+			}
+			
+			AddTypeFields(resolved);
 
 			if (resolved.IsClass && !resolved.IsValueType && !resolved.IsComponent())
 			{
@@ -110,6 +116,10 @@ namespace Hertzole.ALE.CodeGen
 							AddTypeToGenerate(genericType);
 						}
 					}
+				}
+				else
+				{
+					AddTypeToGenerate(type.Fields[i].FieldType);
 				}
 			}
 		}

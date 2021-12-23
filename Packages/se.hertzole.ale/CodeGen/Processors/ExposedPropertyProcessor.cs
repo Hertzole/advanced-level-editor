@@ -1283,7 +1283,7 @@ namespace Hertzole.ALE.CodeGen
 				
 				fill.Add(ILHelper.Ldarg(il, paraWrapper));
 				fill.Add(ILHelper.Int(property.Id));
-				fill.Add(Instruction.Create(OpCodes.Callvirt, module.GetMethod(typeof(LevelEditorExtensions), nameof(LevelEditorExtensions.IsDirty))));
+				fill.Add(Instruction.Create(OpCodes.Call, module.GetMethod(typeof(LevelEditorExtensions), nameof(LevelEditorExtensions.IsDirty))));
 				fill.Add(Instruction.Create(OpCodes.Brfalse, next));
 			}, (property, index, next, fill) =>
 			{
