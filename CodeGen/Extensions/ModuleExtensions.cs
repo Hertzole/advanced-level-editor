@@ -1,115 +1,204 @@
-﻿using Mono.Cecil;
-using System;
+﻿using System;
+using System.Collections.Generic;
 using System.Reflection;
+using Mono.Cecil;
 
 namespace Hertzole.ALE.CodeGen
 {
-    public static partial class WeaverExtensions
-    {
-        public static TypeReference GetTypeReference<T>(this ModuleDefinition module)
-        {
-            return module.ImportReference(typeof(T));
-        }
+	public static partial class WeaverExtensions
+	{
+		private static readonly Dictionary<(Type type, string methodName), MethodReference> cachedMethods = new Dictionary<(Type, string), MethodReference>(new CachedMethodsComparer());
+		private static readonly Dictionary<(Type type, string methodName, Type[] parameters), MethodReference> cachedParameterMethods = new Dictionary<(Type, string, Type[]), MethodReference>(new CachedParametersMethodsComparer());
 
-        public static TypeReference GetTypeReference(this ModuleDefinition module, Type type)
-        {
-            return module.ImportReference(type);
-        }
+		private class CachedMethodsComparer : IEqualityComparer<(Type type, string methodName)>
+		{
+			public bool Equals((Type type, string methodName) x, (Type type, string methodName) y)
+			{
+				if (x.methodName != y.methodName)
+				{
+					return false;
+				}
 
-        public static TypeReference Void(this ModuleDefinition module)
-        {
-            return module.ImportReference(typeof(void));
-        }
-        
-        public static MethodReference GetMethod<T>(this ModuleDefinition module, string methodName)
-        {
-            return module.GetMethod(typeof(T), methodName);
-        }
+				if (x.type != y.type)
+				{
+					return false;
+				}
 
-        public static MethodReference GetMethod(this ModuleDefinition module, Type type, string methodName)
-        {
-            MethodInfo method = type.GetMethod(methodName);
-            if (method == null)
-            {
-                throw new ArgumentException($"There's no method called '{methodName}' in type '{type}'");
-            }
-            
-            return module.ImportReference(method);
-        }
+				return true;
+			}
 
-        public static MethodReference GetMethod<T>(this ModuleDefinition module, string methodName, params Type[] parameters)
-        {
-            return module.GetMethod(typeof(T), methodName, parameters);
-        }
+			public int GetHashCode((Type type, string methodName) obj)
+			{
+				unchecked
+				{
+					return (obj.type.GetHashCode() * 397) ^ obj.methodName.GetHashCode();
+				}
+			}
+		}
+		
+		private class CachedParametersMethodsComparer : IEqualityComparer<(Type type, string methodName, Type[] parameters)>
+		{
+			public bool Equals((Type type, string methodName, Type[] parameters) x, (Type type, string methodName, Type[] parameters) y)
+			{
+				if (x.methodName != y.methodName)
+				{
+					return false;
+				}
 
-        public static MethodReference GetMethod(this ModuleDefinition module, Type type, string methodName, params Type[] parameters)
-        {
-            MethodInfo method = type.GetMethod(methodName, parameters);
-            if (method == null)
-            {
-                throw new ArgumentException($"There's no method called {methodName} in {type}.");
-            }
-            
-            return module.ImportReference(method);
-        }
+				if (x.type != y.type)
+				{
+					return false;
+				}
 
-        public static MethodReference GetGenericMethod(this ModuleDefinition module, Type type, string methodName, Type[] parameters, params TypeReference[] genericParameters)
-        {
-            MethodInfo[] methods = type.GetMethods();
-            MethodInfo resultMethod = null;
-            for (int i = 0; i < methods.Length; i++)
-            {
-                if (methods[i].Name == methodName && methods[i].IsGenericMethod && parameters.Length == methods[i].GetParameters().Length - methods[i].GetGenericArguments().Length)
-                {
-                    resultMethod = methods[i];
-                    break;
-                }
-            }
+				if (x.parameters.Length != y.parameters.Length)
+				{
+					return false;
+				}
 
-            if (resultMethod == null)
-            {
-                throw new ArgumentException($"There's no method called {methodName} in {type.FullName}.", nameof(methodName));
-            }
+				return x.parameters.IsSameAs(y.parameters);
+			}
 
-            return module.ImportReference(module.ImportReference(resultMethod).MakeGenericMethod(genericParameters));
-        }
+			public int GetHashCode((Type type, string methodName, Type[] parameters) obj)
+			{
+				unchecked
+				{
+					int hashCode = obj.Item1.GetHashCode();
+					hashCode = (hashCode * 397) ^ obj.Item2.GetHashCode();
+					hashCode = (hashCode * 397) ^ obj.Item3.GetHashCode();
+					return hashCode;
+				}
+			}
+		}
 
-        public static MethodReference GetGenericMethod(this ModuleDefinition module, Type type, string methodName, params TypeReference[] genericParameters)
-        {
-            MethodInfo[] methods = type.GetMethods();
-            MethodInfo resultMethod = null;
-            for (int i = 0; i < methods.Length; i++)
-            {
-                if (methods[i].Name == methodName && methods[i].IsGenericMethod)
-                {
-                    resultMethod = methods[i];
-                    break;
-                }
-            }
+		public static TypeReference GetTypeReference<T>(this ModuleDefinition module)
+		{
+			return module.ImportReference(typeof(T));
+		}
 
-            if (resultMethod == null)
-            {
-                throw new ArgumentException($"There's no method called {methodName} in {type.FullName}.", nameof(methodName));
-            }
+		public static TypeReference GetTypeReference(this ModuleDefinition module, Type type)
+		{
+			return module.ImportReference(type);
+		}
 
-            return module.ImportReference(module.ImportReference(resultMethod).MakeGenericMethod(genericParameters));
-        }
+		public static TypeReference Void(this ModuleDefinition module)
+		{
+			return module.ImportReference(typeof(void));
+		}
 
-        public static MethodReference GetConstructor<T>(this ModuleDefinition module, params Type[] parameters)
-        {
-            return module.GetConstructor(typeof(T), parameters);
-        }
+		public static MethodReference GetMethod<T>(this ModuleDefinition module, string methodName)
+		{
+			return module.GetMethod(typeof(T), methodName);
+		}
 
-        public static MethodReference GetConstructor(this ModuleDefinition module, Type type, params Type[] parameters)
-        {
-            var result = module.ImportReference(type.GetConstructor(parameters));
+		public static MethodReference GetMethod(this ModuleDefinition module, Type type, string methodName)
+		{
+			if (cachedMethods.TryGetValue((type, methodName), out MethodReference cachedMethod))
+			{
+				return cachedMethod;
+			}
 
-            if (result == null)
-            {
-                throw new ArgumentException($"There's no constructor with those parameters in type {type.FullName}");
-            }
-            
-            return result;
-        }
-    }
+			MethodInfo method = type.GetMethod(methodName);
+			if (method == null)
+			{
+				throw new ArgumentException($"There's no method called '{methodName}' in type '{type}'");
+			}
+
+			MethodReference result = module.ImportReference(method);
+
+			cachedMethods.Add((type, methodName), result);
+
+			return result;
+		}
+
+		public static MethodReference GetMethod<T>(this ModuleDefinition module, string methodName, params Type[] parameters)
+		{
+			return module.GetMethod(typeof(T), methodName, parameters);
+		}
+
+		public static MethodReference GetMethod(this ModuleDefinition module, Type type, string methodName, params Type[] parameters)
+		{
+			if (cachedParameterMethods.TryGetValue((type, methodName, parameters), out MethodReference cachedMethod))
+			{
+				return cachedMethod;
+			}
+
+			MethodInfo method = type.GetMethod(methodName, parameters);
+			if (method == null)
+			{
+				throw new ArgumentException($"There's no method called {methodName} in {type}.");
+			}
+
+			MethodReference result = module.ImportReference(method);
+
+			cachedParameterMethods.Add((type, methodName, parameters), result);
+
+			return result;
+		}
+
+		public static MethodReference GetGenericMethod(this ModuleDefinition module, Type type, string methodName, Type[] parameters, params TypeReference[] genericParameters)
+		{
+			MethodInfo[] methods = type.GetMethods();
+			MethodInfo resultMethod = null;
+			for (int i = 0; i < methods.Length; i++)
+			{
+				if (methods[i].Name == methodName && methods[i].IsGenericMethod && parameters.Length == methods[i].GetParameters().Length - methods[i].GetGenericArguments().Length)
+				{
+					resultMethod = methods[i];
+					break;
+				}
+			}
+
+			if (resultMethod == null)
+			{
+				throw new ArgumentException($"There's no method called {methodName} in {type.FullName}.", nameof(methodName));
+			}
+
+			return module.ImportReference(module.ImportReference(resultMethod).MakeGenericMethod(genericParameters));
+		}
+
+		public static MethodReference GetGenericMethod(this ModuleDefinition module, Type type, string methodName, params TypeReference[] genericParameters)
+		{
+			MethodInfo[] methods = type.GetMethods();
+			MethodInfo resultMethod = null;
+			for (int i = 0; i < methods.Length; i++)
+			{
+				if (methods[i].Name == methodName && methods[i].IsGenericMethod)
+				{
+					resultMethod = methods[i];
+					break;
+				}
+			}
+
+			if (resultMethod == null)
+			{
+				throw new ArgumentException($"There's no method called {methodName} in {type.FullName}.", nameof(methodName));
+			}
+
+			return module.ImportReference(module.ImportReference(resultMethod).MakeGenericMethod(genericParameters));
+		}
+
+		public static MethodReference GetConstructor<T>(this ModuleDefinition module, params Type[] parameters)
+		{
+			return module.GetConstructor(typeof(T), parameters);
+		}
+
+		public static MethodReference GetConstructor(this ModuleDefinition module, Type type, params Type[] parameters)
+		{
+			if (cachedParameterMethods.TryGetValue((type, ".ctor", parameters), out var cachedMethod))
+			{
+				return cachedMethod;
+			}
+			
+			MethodReference result = module.ImportReference(type.GetConstructor(parameters));
+
+			if (result == null)
+			{
+				throw new ArgumentException($"There's no constructor with those parameters in type {type.FullName}");
+			}
+			
+			cachedParameterMethods.Add((type, ".ctor", parameters), result);
+
+			return result;
+		}
+	}
 }

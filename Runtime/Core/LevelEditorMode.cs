@@ -2,7 +2,7 @@
 
 namespace Hertzole.ALE
 {
-    public class LevelEditorMode : MonoBehaviour, ILevelEditorMode
+    public abstract class LevelEditorMode : MonoBehaviour, ILevelEditorMode
     {
         public ILevelEditor LevelEditor { get; set; }
         public ILevelEditorInput Input { get { return LevelEditor.Input; } }

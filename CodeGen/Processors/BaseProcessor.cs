@@ -32,5 +32,20 @@ namespace Hertzole.ALE.CodeGen
         {
             Weaver.Error(sequencePoint, message);
         }
+
+        protected void Warning(string message)
+        {
+            Weaver.Warning(message);
+        }
+
+        protected void Warning(MethodDefinition methodDefinition, string message)
+        {
+            Weaver.Warning(methodDefinition, message);
+        }
+
+        protected void Warning(SequencePoint sequencePoint, string message)
+        {
+            Weaver.Warning(sequencePoint, message);
+        }
     }
 }

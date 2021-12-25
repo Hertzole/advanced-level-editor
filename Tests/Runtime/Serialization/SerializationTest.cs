@@ -895,6 +895,72 @@ namespace Hertzole.ALE.Tests
 		}
 
 		[UnityTest]
+		public IEnumerator SaveIgnoresNonSerialized()
+		{
+			cube.AddComponent<NonSerializedValueTest>();
+
+			ILevelEditorObject newCube = objectManager.CreateObject("cube");
+			uint cubeId = newCube.InstanceID;
+
+			NonSerializedValueTest structTest = newCube.MyGameObject.GetComponent<NonSerializedValueTest>();
+			structTest.value = new StructWithNonSerialized() { value1 = 42, value2 = true };
+			structTest.Value = new StructWithNonSerialized() { value1 = 69, value2 = true };
+
+			yield return null;
+
+			Save();
+			objectManager.DeleteAllObjects();
+
+			yield return null;
+
+			Load();
+
+			yield return null;
+
+			newCube = objectManager.GetObject(cubeId);
+			Assert.IsNotNull(newCube);
+
+			structTest = newCube.MyGameObject.GetComponent<NonSerializedValueTest>();
+			Assert.AreEqual(structTest.value.value1, 42);
+			Assert.AreEqual(structTest.value.value2, false);
+			Assert.AreEqual(structTest.Value.value1, 69);
+			Assert.AreEqual(structTest.Value.value2, false);
+		}
+
+		[UnityTest]
+		public IEnumerator SaveNonSerializableStruct()
+		{
+			cube.AddComponent<NonSerializedStructTest>();
+
+			ILevelEditorObject newCube = objectManager.CreateObject("cube");
+			uint cubeId = newCube.InstanceID;
+
+			NonSerializedStructTest structTest = newCube.MyGameObject.GetComponent<NonSerializedStructTest>();
+			structTest.value = new NonSerializedStruct() { value1 = 42, value2 = true };
+			structTest.Value = new NonSerializedStruct() { value1 = 69, value2 = true };
+
+			yield return null;
+
+			Save();
+			objectManager.DeleteAllObjects();
+
+			yield return null;
+
+			Load();
+
+			yield return null;
+
+			newCube = objectManager.GetObject(cubeId);
+			Assert.IsNotNull(newCube);
+
+			structTest = newCube.MyGameObject.GetComponent<NonSerializedStructTest>();
+			Assert.AreEqual(structTest.value.value1, 0);
+			Assert.AreEqual(structTest.value.value2, false);
+			Assert.AreEqual(structTest.Value.value1, 0);
+			Assert.AreEqual(structTest.Value.value2, false);
+		}
+
+		[UnityTest]
 		public IEnumerator SaveEnumNormal()
 		{
 			cube.AddComponent<EnumTest>();

@@ -15,7 +15,7 @@ namespace Hertzole.ALE.CodeGen
 			for (int i = 0; i < references.Count; i++)
 			{
 				string name = references[i].Name;
-				if (name == "mscorlib" || name == "netstandard" || name == SYSTEM_PRIVATE_CORELIB)
+				if (name == "netstandard" || name == "mscorlib" || name == SYSTEM_PRIVATE_CORELIB)
 				{
 					correctCorlib = references[i];
 				}
