@@ -89,20 +89,7 @@ The supported inspector fields.
 
 ## 📦 Installation 
 
-Currently, only the development package is available. It's updated with each commit to the master branch.   
-
-1. Add the OpenUPM registry.
-   Click in the menu bar Edit → Project Settings... → Package Manager
-   Add a new scoped registry with the following parameters:  
-   Name: `OpenUPM`  
-   URL: `https://package.openupm.com`  
-   Scopes:  
-   - `com.openupm`  
-   - `com.neuecc.messagepack`
-2. Open the package manager and click 'Add from Git url' in the top right corner
-3. Paste in `https://github.com/Hertzole/advanced-level-editor.git#dev-package` and click enter
-4. Wait an eternity for Unity to realize that you have installed the package.
-5. It should now be installed. Either create a level editor from scratch or import the "Complete" sample and modify that. I recommend the sample because it's currently quite a pain to set everything up...
+See the [documentation for installation](https://hertzole.github.io/advanced-level-editor/docs/getting-started/installation).
 
 ## 🔨 Getting Started
 

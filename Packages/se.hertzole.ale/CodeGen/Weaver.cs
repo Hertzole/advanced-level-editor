@@ -34,6 +34,21 @@ namespace Hertzole.ALE.CodeGen
         {
             diagnostics.AddError(sequencePoint, message);
         }
+        
+        public void Warning(string message)
+        {
+            diagnostics.AddWarning(message);
+        }
+
+        public void Warning(MethodDefinition methodDefinition, string message)
+        {
+            diagnostics.AddWarning(methodDefinition, message);
+        }
+
+        public void Warning(SequencePoint sequencePoint, string message)
+        {
+            diagnostics.AddWarning(sequencePoint, message);
+        }
 
         public void ProcessAssembly(ModuleDefinition module, string[] defines)
         {

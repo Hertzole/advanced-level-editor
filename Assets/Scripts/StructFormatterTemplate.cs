@@ -25,23 +25,25 @@ public class StructFormatterTemplate : IMessagePackFormatter<SaveData>
 		}
 
 		options.Security.DepthStep(ref reader);
-		string message = null;
-		int number = 0;
+// 		string message = null;
+// 		int number = 0;
+//
+// #if ALE_COMPATIBILITY_0
+// 		if (options is LevelEditorSerializerOptions levelEditorOptions && levelEditorOptions.SaveVersion == 0)
+// 		{
+// 			DeserializeFormat0(ref reader, options, ref message, ref number);
+// 		}
+// 		else
+// #endif
+// 		{
+// 			DeserializeFormat1(ref reader, options, ref message, ref number);
+// 		}
 
-#if ALE_COMPATIBILITY_0
-		if (options is LevelEditorSerializerOptions levelEditorOptions && levelEditorOptions.SaveVersion == 0)
-		{
-			DeserializeFormat0(ref reader, options, ref message, ref number);
-		}
-		else
-#endif
-		{
-			DeserializeFormat1(ref reader, options, ref message, ref number);
-		}
+		reader.ReadArrayHeader();
 
 		SaveData result = default;
-		result.message = message;
-		result.number = number;
+		// result.message = message;
+		// result.number = number;
 		reader.Depth--;
 		return result;
 	}

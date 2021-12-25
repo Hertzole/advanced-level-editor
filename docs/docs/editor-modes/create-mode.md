@@ -2,6 +2,6 @@
 sidebar_position: 4
 ---
 
-# Custom Types
+# Create A Mode
 
 TODO

@@ -79,7 +79,7 @@ namespace Hertzole.ALE.CodeGen
 
 #if ALE_DEBUG
 			sw.Stop();
-			diagnostics.AddWarning($"ALE ILPostProcessor took {sw.ElapsedMilliseconds}ms ({sw.ElapsedTicks} ticks) when processing {compiledAssembly.Name}.");
+			diagnostics.AddWarning($"ALE ILPostProcessor took {sw.ElapsedMilliseconds}ms when processing {compiledAssembly.Name}.");
 #endif
 
 			return new ILPostProcessResult(new InMemoryAssembly(pe.ToArray(), pdb.ToArray()), diagnostics);

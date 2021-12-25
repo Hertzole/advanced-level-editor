@@ -31,6 +31,7 @@ namespace Hertzole.ALE.CodeGen
 			typesToGenerate = new List<TypeDefinition>();
 			standardTypes = new List<TypeDefinition>
 			{
+				// C# primitives
 				module.ImportReference(typeof(byte)).Resolve(),
 				module.ImportReference(typeof(sbyte)).Resolve(),
 				module.ImportReference(typeof(short)).Resolve(),
@@ -45,16 +46,31 @@ namespace Hertzole.ALE.CodeGen
 				module.ImportReference(typeof(double)).Resolve(),
 				module.ImportReference(typeof(decimal)).Resolve(),
 				module.ImportReference(typeof(bool)).Resolve(),
+				
+				// Unity primitives
+				module.ImportReference(typeof(AnimationCurve)).Resolve(),
+				module.ImportReference(typeof(Bounds)).Resolve(),
+				module.ImportReference(typeof(BoundsInt)).Resolve(),
+				module.ImportReference(typeof(Color32)).Resolve(),
+				module.ImportReference(typeof(Color)).Resolve(),
+				module.ImportReference(typeof(GradientAlphaKey)).Resolve(),
+				module.ImportReference(typeof(GradientColorKey)).Resolve(),
+				module.ImportReference(typeof(Gradient)).Resolve(),
+				module.ImportReference(typeof(Keyframe)).Resolve(),
+				module.ImportReference(typeof(LayerMask)).Resolve(),
+				module.ImportReference(typeof(Matrix4x4)).Resolve(),
+				module.ImportReference(typeof(Quaternion)).Resolve(),
+				module.ImportReference(typeof(Rect)).Resolve(),
+				module.ImportReference(typeof(RectInt)).Resolve(),
+				module.ImportReference(typeof(RectOffset)).Resolve(),
 				module.ImportReference(typeof(Vector2)).Resolve(),
 				module.ImportReference(typeof(Vector2Int)).Resolve(),
 				module.ImportReference(typeof(Vector3)).Resolve(),
 				module.ImportReference(typeof(Vector3Int)).Resolve(),
 				module.ImportReference(typeof(Vector4)).Resolve(),
-				module.ImportReference(typeof(Quaternion)).Resolve(),
-				module.ImportReference(typeof(Bounds)).Resolve(),
-				module.ImportReference(typeof(Rect)).Resolve(),
-				module.ImportReference(typeof(Color)).Resolve(),
-				module.ImportReference(typeof(Color32)).Resolve(),
+				module.ImportReference(typeof(WrapMode)).Resolve(),
+				
+				// ALE primitives
 				module.ImportReference(typeof(LevelEditorIdentifier)).Resolve()
 			};
 		}
@@ -135,7 +151,10 @@ namespace Hertzole.ALE.CodeGen
 				}
 
 				TypeDefinition formatter = CreateFormatterForType(typesToGenerate[i]);
-				resolver.AddTypeFormatter(formatter, typesToGenerate[i]);
+				if (formatter != null)
+				{
+					resolver.AddTypeFormatter(formatter, typesToGenerate[i]);
+				}
 			}
 		}
 
@@ -170,6 +189,12 @@ namespace Hertzole.ALE.CodeGen
 				{
 					// Don't serialize fields with NonSerialized attribute.
 					if (type.Fields[i].IsNotSerialized)
+					{
+						continue;
+					}
+
+					// Ignore private and protected fields.
+					if (!type.Fields[i].IsPublic)
 					{
 						continue;
 					}
@@ -210,7 +235,6 @@ namespace Hertzole.ALE.CodeGen
 				ILProcessor il = m.BeginEdit();
 
 				m.Body.InitLocals = true;
-
 				bool hasNonStandardType = false;
 				for (int i = 0; i < fields.Count; i++)
 				{
@@ -271,6 +295,8 @@ namespace Hertzole.ALE.CodeGen
 				ParameterDefinition readerPara = m.AddParameter(module.ImportReference(typeof(MessagePackReader).MakeByRefType()), "reader");
 				ParameterDefinition optionsPara = m.AddParameter<MessagePackSerializerOptions>("options");
 
+				VariableDefinition result = m.AddLocalVariable(type);
+				
 				ILProcessor il = m.BeginEdit();
 
 				m.Body.InitLocals = true;
@@ -289,89 +315,105 @@ namespace Hertzole.ALE.CodeGen
 				il.Emit(OpCodes.Callvirt, module.GetMethod<MessagePackSerializerOptions>("get_Security"));
 				il.EmitLdarg(readerPara);
 				il.Emit(OpCodes.Callvirt, module.GetMethod<MessagePackSecurity>("DepthStep"));
-
+			
+				Instruction createResult = ILHelper.Ldloc(result, true);
 				List<VariableDefinition> localFields = new List<VariableDefinition>();
 
-				for (int i = 0; i < fields.Count; i++)
+				if (fields.Count > 0)
 				{
-					VariableDefinition v = m.AddLocalVariable(fields[i].Item1.FieldType);
-					localFields.Add(v);
-
-					TypeReference fieldType = fields[i].Item1.FieldType;
-
-					if (fieldType.IsValueType && !fieldType.IsPrimitive && !fieldType.IsEnum())
+					for (int i = 0; i < fields.Count; i++)
 					{
-						il.EmitLdloc(v, true);
+						VariableDefinition v = m.AddLocalVariable(fields[i].Item1.FieldType);
+						localFields.Add(v);
+
+						TypeReference fieldType = fields[i].Item1.FieldType;
+
+						if (fieldType.IsValueType && !fieldType.IsPrimitive && !fieldType.IsEnum())
+						{
+							il.EmitLdloc(v, true);
+						}
+
+						il.EmitDefaultValue(fieldType);
+
+						if (!fieldType.IsValueType || fieldType.IsPrimitive || fieldType.IsEnum())
+						{
+							il.EmitStloc(v);
+						}
 					}
 
-					il.EmitDefaultValue(fieldType);
+					Instruction deserializeFormat1 = Instruction.Create(OpCodes.Ldarg_1);
+					
+	#if ALE_COMPATIBILITY_0
+					VariableDefinition levelEditorOptions = m.AddLocalVariable<LevelEditorSerializerOptions>();
+					
+					// LevelEditorSerializerOptions levelEditorSerializerOptions = options as LevelEditorSerializerOptions
+					il.EmitLdarg(optionsPara);
+					il.Emit(OpCodes.Isinst, module.GetTypeReference<LevelEditorSerializerOptions>());
+					il.EmitStloc(levelEditorOptions);
 
-					if (!fieldType.IsValueType || fieldType.IsPrimitive || fieldType.IsEnum())
+					
+					// if (levelEditorSerializerOptions != null && levelEditorSerializerOptions.SaveVersion == 0)
+					il.EmitLdloc(levelEditorOptions);
+					il.Emit(OpCodes.Brfalse, deserializeFormat1);
+
+					il.EmitLdloc(levelEditorOptions);
+					il.Emit(OpCodes.Callvirt, module.GetMethod<LevelEditorSerializerOptions>("get_SaveVersion"));
+					il.Emit(OpCodes.Brtrue, deserializeFormat1);
+
+					// Create the compatibility method for format 0.
+					MethodDefinition deserializeMethod0 = CreateDeserializeMethod0(formatter, fields);
+					
+					// DeserializeFormat0(ref reader, options, <other parameters>)
+					il.EmitLdarg(readerPara);
+					il.EmitLdarg(optionsPara);
+					for (int i = 0; i < localFields.Count; i++)
 					{
-						il.EmitStloc(v);
+						il.EmitLdloc(localFields[i], true);
 					}
+					
+					il.Emit(OpCodes.Call, deserializeMethod0);
+					il.Emit(OpCodes.Br, createResult);
+	#endif
+
+					MethodDefinition deserializeMethod1 = CreateDeserializeMethod1(formatter, fields);
+					
+					// DeserializeFormat1(ref reader, options, <other parameters>)
+					il.Append(deserializeFormat1);
+					il.EmitLdarg(optionsPara);
+					for (int i = 0; i < localFields.Count; i++)
+					{
+						il.EmitLdloc(localFields[i], true);
+					}
+					
+					il.Emit(OpCodes.Call, deserializeMethod1);
 				}
-
-				Instruction deserializeFormat1 = Instruction.Create(OpCodes.Ldarg_1);
-				VariableDefinition result = m.AddLocalVariable(type);
-				Instruction createResult = ILHelper.Ldloc(result, true);
-				
-#if ALE_COMPATIBILITY_0
-				VariableDefinition levelEditorOptions = m.AddLocalVariable<LevelEditorSerializerOptions>();
-				
-				// LevelEditorSerializerOptions levelEditorSerializerOptions = options as LevelEditorSerializerOptions
-				il.EmitLdarg(optionsPara);
-				il.Emit(OpCodes.Isinst, module.GetTypeReference<LevelEditorSerializerOptions>());
-				il.EmitStloc(levelEditorOptions);
-
-				
-				// if (levelEditorSerializerOptions != null && levelEditorSerializerOptions.SaveVersion == 0)
-				il.EmitLdloc(levelEditorOptions);
-				il.Emit(OpCodes.Brfalse, deserializeFormat1);
-
-				il.EmitLdloc(levelEditorOptions);
-				il.Emit(OpCodes.Callvirt, module.GetMethod<LevelEditorSerializerOptions>("get_SaveVersion"));
-				il.Emit(OpCodes.Brtrue, deserializeFormat1);
-
-				// Create the compatibility method for format 0.
-				MethodDefinition deserializeMethod0 = CreateDeserializeMethod0(formatter, fields);
-				
-				// DeserializeFormat0(ref reader, options, <other parameters>)
-				il.EmitLdarg(readerPara);
-				il.EmitLdarg(optionsPara);
-				for (int i = 0; i < localFields.Count; i++)
+				else
 				{
-					il.EmitLdloc(localFields[i], true);
+					// reader.ReadArrayHeader()
+					il.EmitLdarg(readerPara);
+					il.Emit(OpCodes.Call, module.GetMethod(typeof(MessagePackReader), nameof(MessagePackReader.ReadArrayHeader)));
+					il.Emit(OpCodes.Pop);
 				}
-				
-				il.Emit(OpCodes.Call, deserializeMethod0);
-				il.Emit(OpCodes.Br, createResult);
-#endif
-
-				MethodDefinition deserializeMethod1 = CreateDeserializeMethod1(formatter, fields);
-				
-				// DeserializeFormat1(ref reader, options, <other parameters>)
-				il.Append(deserializeFormat1);
-				il.EmitLdarg(optionsPara);
-				for (int i = 0; i < localFields.Count; i++)
-				{
-					il.EmitLdloc(localFields[i], true);
-				}
-				
-				il.Emit(OpCodes.Call, deserializeMethod1);
 
 				VariableDefinition depth = m.AddLocalVariable<int>();
-     
-                il.Append(createResult);
+
+				il.Append(createResult);
  				il.Emit(OpCodes.Initobj, module.ImportReference(type));
- 				for (int i = 0; i < fields.Count; i++)
- 				{
-	                il.EmitLdloc(result, true);
-	                il.EmitLdloc(localFields[i]);
- 					il.Emit(OpCodes.Stfld, module.ImportReference(fields[i].Item1));
+                if (fields.Count > 0)
+                {
+	                for (int i = 0; i < fields.Count; i++)
+	                {
+		                il.EmitLdloc(result, true);
+		                il.EmitLdloc(localFields[i]);
+		                il.Emit(OpCodes.Stfld, module.ImportReference(fields[i].Item1));
+	                }
                 }
-     
- 				il.EmitLdarg(readerPara);
+                else
+                {
+	                il.EmitLdloc(result);
+                }
+
+                il.EmitLdarg(readerPara);
  				il.Emit(OpCodes.Dup);
  				il.Emit(OpCodes.Call, module.GetMethod(typeof(MessagePackReader), "get_Depth"));
  				il.EmitStloc(depth);
@@ -380,7 +422,10 @@ namespace Hertzole.ALE.CodeGen
  				il.Emit(OpCodes.Sub);
  				il.Emit(OpCodes.Call, module.GetMethod(typeof(MessagePackReader), "set_Depth"));
 
-                il.EmitLdloc(result);
+                if (fields.Count > 0)
+                {
+					il.EmitLdloc(result);
+                }
  				il.Emit(OpCodes.Ret);
 
                 m.EndEdit();
