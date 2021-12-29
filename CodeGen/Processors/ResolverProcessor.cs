@@ -15,7 +15,7 @@ namespace Hertzole.ALE.CodeGen
 	{
 		private bool isBuildingPlayer;
 		
-		private readonly List<(TypeReference, TypeReference)> allFormatters = new List<(TypeReference, TypeReference)>();
+		private readonly List<(TypeReference formatter, TypeReference type)> allFormatters = new List<(TypeReference, TypeReference)>();
 		private readonly List<TypeReference> customDataTypes = new List<TypeReference>();
 		private readonly List<TypeDefinition> enums = new List<TypeDefinition>();
 		private readonly ModuleDefinition module;
@@ -65,6 +65,11 @@ namespace Hertzole.ALE.CodeGen
 		public void AddEnum(TypeDefinition type)
 		{
 			enums.Add(type);
+		}
+
+		public void AddTypeWithoutFormatter(TypeReference type)
+		{
+			allFormatters.Add((null, type));
 		}
 
 		public void EndEditing(bool isBuilding)
@@ -281,15 +286,27 @@ namespace Hertzole.ALE.CodeGen
 
 			il.EmitSwitch(allFormatters, (formatter, i) => // Case
 			{
-				if (formatter.Item2.IsEnum())
+				MethodReference ctor;
+				
+				if (formatter.type.IsArray())
 				{
-					MethodReference ctor = module.GetConstructor(typeof(GenericEnumFormatter<>)).MakeHostInstanceGeneric(module.GetTypeReference(typeof(GenericEnumFormatter<>)).MakeGenericInstanceType(module.ImportReference(formatter.Item2)));
-					i.Emit(OpCodes.Newobj, ctor);
-					i.Emit(OpCodes.Ret);
+					ctor = module.GetGenericConstructor(typeof(ArrayFormatter<>), formatter.type.GetCollectionType());
+				}
+				else if (formatter.type.IsList())
+				{
+					ctor = module.GetGenericConstructor(typeof(ListFormatter<>), formatter.type.GetCollectionType());
+				}
+				else if (formatter.Item2.IsEnum())
+				{
+					ctor = module.GetGenericConstructor(typeof(GenericEnumFormatter<>), formatter.type);
+				}
+				else if (formatter.Item2.IsNullable(out TypeReference nullableType))
+				{
+					ctor = module.GetGenericConstructor(typeof(NullableFormatter<>), nullableType);
 				}
 				else
 				{
-					MethodReference constructor = module.ImportReference(formatter.Item1).Resolve().GetConstructor();
+					ctor = module.ImportReference(formatter.Item1).Resolve().GetConstructor();
 
 					if (formatter.Item1 is GenericInstanceType genericType)
 					{
@@ -299,11 +316,8 @@ namespace Hertzole.ALE.CodeGen
 							genericTypes[j] = GetGenericParameterType(module.ImportReference(genericType.GenericArguments[j]));
 						}
 						
-						constructor = constructor.MakeHostInstanceGeneric(formatter.Item1.Resolve().MakeGenericInstanceType(genericTypes));
+						ctor = ctor.MakeHostInstanceGeneric(formatter.Item1.Resolve().MakeGenericInstanceType(genericTypes));
 					}
-					
-					i.Emit(OpCodes.Newobj, module.ImportReference(constructor));
-					i.Emit(OpCodes.Ret);
 
 					TypeReference GetGenericParameterType(TypeReference targetType)
 					{
@@ -321,6 +335,9 @@ namespace Hertzole.ALE.CodeGen
 						return module.ImportReference(targetType);
 					}
 				}
+				
+				i.Emit(OpCodes.Newobj, module.ImportReference(ctor));
+				i.Emit(OpCodes.Ret);
 			}, i => // Default
 			{
 				i.Emit(OpCodes.Ldnull);

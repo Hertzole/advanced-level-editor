@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Reflection;
 using Mono.Cecil;
+using Mono.Cecil.Rocks;
 
 namespace Hertzole.ALE.CodeGen
 {
@@ -97,17 +98,24 @@ namespace Hertzole.ALE.CodeGen
 				return cachedMethod;
 			}
 
-			MethodInfo method = type.GetMethod(methodName);
-			if (method == null)
+			try
 			{
-				throw new ArgumentException($"There's no method called '{methodName}' in type '{type}'");
+				MethodInfo method = type.GetMethod(methodName);
+				if (method == null)
+				{
+					throw new ArgumentException($"There's no method called '{methodName}' in type '{type}'");
+				}
+
+				MethodReference result = module.ImportReference(method);
+
+				cachedMethods.Add((type, methodName), result);
+
+				return result;
 			}
-
-			MethodReference result = module.ImportReference(method);
-
-			cachedMethods.Add((type, methodName), result);
-
-			return result;
+			catch (AmbiguousMatchException)
+			{
+				throw new AmbiguousMatchException($"There's multiple methods called {methodName} in type {type}.");
+			}
 		}
 
 		public static MethodReference GetMethod<T>(this ModuleDefinition module, string methodName, params Type[] parameters)
@@ -199,6 +207,11 @@ namespace Hertzole.ALE.CodeGen
 			cachedParameterMethods.Add((type, ".ctor", parameters), result);
 
 			return result;
+		}
+
+		public static MethodReference GetGenericConstructor(this ModuleDefinition module, Type type, params TypeReference[] genericParameters)
+		{
+			return module.GetConstructor(type).MakeHostInstanceGeneric(module.GetTypeReference(type).MakeGenericInstanceType(genericParameters));
 		}
 	}
 }

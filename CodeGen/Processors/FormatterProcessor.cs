@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Data;
 using Hertzole.ALE.CodeGen.Helpers;
 using MessagePack;
 using MessagePack.Formatters;
@@ -17,9 +18,9 @@ namespace Hertzole.ALE.CodeGen
 	{
 		private readonly ModuleDefinition module;
 		private readonly ResolverProcessor resolver;
-		private readonly List<TypeDefinition> standardTypes;
+		private readonly HashSet<TypeReference> standardTypeReferences;
 
-		private readonly List<TypeDefinition> typesToGenerate;
+		private readonly HashSet<TypeReference> typesToGenerate;
 		private readonly Weaver weaver;
 
 		public FormatterProcessor(Weaver weaver, ModuleDefinition moduleDefinition, ResolverProcessor resolverProcessor)
@@ -28,89 +29,290 @@ namespace Hertzole.ALE.CodeGen
 			module = moduleDefinition;
 			resolver = resolverProcessor;
 
-			typesToGenerate = new List<TypeDefinition>();
-			standardTypes = new List<TypeDefinition>
+			typesToGenerate = new HashSet<TypeReference>(new TypeReferencerComparer());
+			standardTypeReferences = new HashSet<TypeReference>(new TypeReferencerComparer())
 			{
 				// C# primitives
-				module.ImportReference(typeof(byte)).Resolve(),
-				module.ImportReference(typeof(sbyte)).Resolve(),
-				module.ImportReference(typeof(short)).Resolve(),
-				module.ImportReference(typeof(ushort)).Resolve(),
-				module.ImportReference(typeof(int)).Resolve(),
-				module.ImportReference(typeof(uint)).Resolve(),
-				module.ImportReference(typeof(long)).Resolve(),
-				module.ImportReference(typeof(ulong)).Resolve(),
-				module.ImportReference(typeof(char)).Resolve(),
-				module.ImportReference(typeof(string)).Resolve(),
-				module.ImportReference(typeof(float)).Resolve(),
-				module.ImportReference(typeof(double)).Resolve(),
-				module.ImportReference(typeof(decimal)).Resolve(),
-				module.ImportReference(typeof(bool)).Resolve(),
+				module.ImportReference(typeof(byte)),
+				module.ImportReference(typeof(sbyte)),
+				module.ImportReference(typeof(short)),
+				module.ImportReference(typeof(ushort)),
+				module.ImportReference(typeof(int)),
+				module.ImportReference(typeof(uint)),
+				module.ImportReference(typeof(long)),
+				module.ImportReference(typeof(ulong)),
+				module.ImportReference(typeof(char)),
+				module.ImportReference(typeof(string)),
+				module.ImportReference(typeof(float)),
+				module.ImportReference(typeof(double)),
+				module.ImportReference(typeof(decimal)),
+				module.ImportReference(typeof(bool)),
 				
+				// C# primitives + array
+				module.ImportReference(typeof(byte[])),
+				module.ImportReference(typeof(sbyte[])),
+				module.ImportReference(typeof(short[])),
+				module.ImportReference(typeof(ushort[])),
+				module.ImportReference(typeof(int[])),
+				module.ImportReference(typeof(uint[])),
+				module.ImportReference(typeof(long[])),
+				module.ImportReference(typeof(ulong[])),
+				module.ImportReference(typeof(char[])),
+				module.ImportReference(typeof(string[])),
+				module.ImportReference(typeof(float[])),
+				module.ImportReference(typeof(double[])),
+				module.ImportReference(typeof(decimal[])),
+				module.ImportReference(typeof(bool[])),
+				
+				// C# primitives + list
+				module.ImportReference(typeof(List<byte>)),
+				module.ImportReference(typeof(List<sbyte>)),
+				module.ImportReference(typeof(List<short>)),
+				module.ImportReference(typeof(List<ushort>)),
+				module.ImportReference(typeof(List<int>)),
+				module.ImportReference(typeof(List<uint>)),
+				module.ImportReference(typeof(List<long>)),
+				module.ImportReference(typeof(List<ulong>)),
+				module.ImportReference(typeof(List<char>)),
+				module.ImportReference(typeof(List<string>)),
+				module.ImportReference(typeof(List<float>)),
+				module.ImportReference(typeof(List<double>)),
+				module.ImportReference(typeof(List<decimal>)),
+				module.ImportReference(typeof(List<bool>)),
+				
+				// C# primitives + nullable
+				module.ImportReference(typeof(byte?)),
+				module.ImportReference(typeof(sbyte?)),
+				module.ImportReference(typeof(short?)),
+				module.ImportReference(typeof(ushort?)),
+				module.ImportReference(typeof(int?)),
+				module.ImportReference(typeof(uint?)),
+				module.ImportReference(typeof(long?)),
+				module.ImportReference(typeof(ulong?)),
+				module.ImportReference(typeof(char?)),
+				module.ImportReference(typeof(float?)),
+				module.ImportReference(typeof(double?)),
+				module.ImportReference(typeof(decimal?)),
+				module.ImportReference(typeof(bool?)),
+				
+				// C# primitives + array + nullable
+				module.ImportReference(typeof(byte?[])),
+				module.ImportReference(typeof(sbyte?[])),
+				module.ImportReference(typeof(short?[])),
+				module.ImportReference(typeof(ushort?[])),
+				module.ImportReference(typeof(int?[])),
+				module.ImportReference(typeof(uint?[])),
+				module.ImportReference(typeof(long?[])),
+				module.ImportReference(typeof(ulong?[])),
+				module.ImportReference(typeof(char?[])),
+				module.ImportReference(typeof(float?[])),
+				module.ImportReference(typeof(double?[])),
+				module.ImportReference(typeof(decimal?[])),
+				module.ImportReference(typeof(bool?[])),
+				
+				// C# primitives + list + nullable
+				module.ImportReference(typeof(List<byte?>)),
+				module.ImportReference(typeof(List<sbyte?>)),
+				module.ImportReference(typeof(List<short?>)),
+				module.ImportReference(typeof(List<ushort?>)),
+				module.ImportReference(typeof(List<int?>)),
+				module.ImportReference(typeof(List<uint?>)),
+				module.ImportReference(typeof(List<long?>)),
+				module.ImportReference(typeof(List<ulong?>)),
+				module.ImportReference(typeof(List<char?>)),
+				module.ImportReference(typeof(List<string?>)),
+				module.ImportReference(typeof(List<float?>)),
+				module.ImportReference(typeof(List<double?>)),
+				module.ImportReference(typeof(List<decimal?>)),
+				module.ImportReference(typeof(List<bool?>)),
+
 				// Unity primitives
-				module.ImportReference(typeof(AnimationCurve)).Resolve(),
-				module.ImportReference(typeof(Bounds)).Resolve(),
-				module.ImportReference(typeof(BoundsInt)).Resolve(),
-				module.ImportReference(typeof(Color32)).Resolve(),
-				module.ImportReference(typeof(Color)).Resolve(),
-				module.ImportReference(typeof(GradientAlphaKey)).Resolve(),
-				module.ImportReference(typeof(GradientColorKey)).Resolve(),
-				module.ImportReference(typeof(Gradient)).Resolve(),
-				module.ImportReference(typeof(Keyframe)).Resolve(),
-				module.ImportReference(typeof(LayerMask)).Resolve(),
-				module.ImportReference(typeof(Matrix4x4)).Resolve(),
-				module.ImportReference(typeof(Quaternion)).Resolve(),
-				module.ImportReference(typeof(Rect)).Resolve(),
-				module.ImportReference(typeof(RectInt)).Resolve(),
-				module.ImportReference(typeof(RectOffset)).Resolve(),
-				module.ImportReference(typeof(Vector2)).Resolve(),
-				module.ImportReference(typeof(Vector2Int)).Resolve(),
-				module.ImportReference(typeof(Vector3)).Resolve(),
-				module.ImportReference(typeof(Vector3Int)).Resolve(),
-				module.ImportReference(typeof(Vector4)).Resolve(),
-				module.ImportReference(typeof(WrapMode)).Resolve(),
+				module.ImportReference(typeof(AnimationCurve)),
+				module.ImportReference(typeof(Bounds)),
+				module.ImportReference(typeof(BoundsInt)),
+				module.ImportReference(typeof(Color32)),
+				module.ImportReference(typeof(Color)),
+				module.ImportReference(typeof(GradientAlphaKey)),
+				module.ImportReference(typeof(GradientColorKey)),
+				module.ImportReference(typeof(Gradient)),
+				module.ImportReference(typeof(Keyframe)),
+				module.ImportReference(typeof(LayerMask)),
+				module.ImportReference(typeof(Matrix4x4)),
+				module.ImportReference(typeof(Quaternion)),
+				module.ImportReference(typeof(Rect)),
+				module.ImportReference(typeof(RectInt)),
+				module.ImportReference(typeof(RectOffset)),
+				module.ImportReference(typeof(Vector2)),
+				module.ImportReference(typeof(Vector2Int)),
+				module.ImportReference(typeof(Vector3)),
+				module.ImportReference(typeof(Vector3Int)),
+				module.ImportReference(typeof(Vector4)),
+				module.ImportReference(typeof(WrapMode)),
+
+				// Unity primitives + array
+				module.ImportReference(typeof(AnimationCurve[])),
+				module.ImportReference(typeof(Bounds[])),
+				module.ImportReference(typeof(BoundsInt[])),
+				module.ImportReference(typeof(Color32[])),
+				module.ImportReference(typeof(Color[])),
+				module.ImportReference(typeof(GradientAlphaKey[])),
+				module.ImportReference(typeof(GradientColorKey[])),
+				module.ImportReference(typeof(Gradient[])),
+				module.ImportReference(typeof(Keyframe[])),
+				module.ImportReference(typeof(LayerMask[])),
+				module.ImportReference(typeof(Matrix4x4[])),
+				module.ImportReference(typeof(Quaternion[])),
+				module.ImportReference(typeof(Rect[])),
+				module.ImportReference(typeof(RectInt[])),
+				module.ImportReference(typeof(RectOffset[])),
+				module.ImportReference(typeof(Vector2[])),
+				module.ImportReference(typeof(Vector2Int[])),
+				module.ImportReference(typeof(Vector3[])),
+				module.ImportReference(typeof(Vector3Int[])),
+				module.ImportReference(typeof(Vector4[])),
+				module.ImportReference(typeof(WrapMode[])),
+
+				// Unity primitives + list
+				module.ImportReference(typeof(List<AnimationCurve>)),
+				module.ImportReference(typeof(List<Bounds>)),
+				module.ImportReference(typeof(List<BoundsInt>)),
+				module.ImportReference(typeof(List<Color32>)),
+				module.ImportReference(typeof(List<Color>)),
+				module.ImportReference(typeof(List<GradientAlphaKey>)),
+				module.ImportReference(typeof(List<GradientColorKey>)),
+				module.ImportReference(typeof(List<Gradient>)),
+				module.ImportReference(typeof(List<Keyframe>)),
+				module.ImportReference(typeof(List<LayerMask>)),
+				module.ImportReference(typeof(List<Matrix4x4>)),
+				module.ImportReference(typeof(List<Quaternion>)),
+				module.ImportReference(typeof(List<Rect>)),
+				module.ImportReference(typeof(List<RectInt>)),
+				module.ImportReference(typeof(List<RectOffset>)),
+				module.ImportReference(typeof(List<Vector2>)),
+				module.ImportReference(typeof(List<Vector2Int>)),
+				module.ImportReference(typeof(List<Vector3>)),
+				module.ImportReference(typeof(List<Vector3Int>)),
+				module.ImportReference(typeof(List<Vector4>)),
+				module.ImportReference(typeof(List<WrapMode>)),
+
+				// Unity primitives + nullable
+				module.ImportReference(typeof(Bounds?)),
+				module.ImportReference(typeof(BoundsInt?)),
+				module.ImportReference(typeof(Color32?)),
+				module.ImportReference(typeof(Color?)),
+				module.ImportReference(typeof(GradientAlphaKey?)),
+				module.ImportReference(typeof(GradientColorKey?)),
+				module.ImportReference(typeof(Keyframe?)),
+				module.ImportReference(typeof(LayerMask?)),
+				module.ImportReference(typeof(Matrix4x4?)),
+				module.ImportReference(typeof(Quaternion?)),
+				module.ImportReference(typeof(Rect?)),
+				module.ImportReference(typeof(RectInt?)),
+				module.ImportReference(typeof(Vector2?)),
+				module.ImportReference(typeof(Vector2Int?)),
+				module.ImportReference(typeof(Vector3?)),
+				module.ImportReference(typeof(Vector3Int?)),
+				module.ImportReference(typeof(Vector4?)),
+				module.ImportReference(typeof(WrapMode?)),
+
+				// Unity primitives + array + nullable
+				module.ImportReference(typeof(Bounds?[])),
+				module.ImportReference(typeof(BoundsInt?[])),
+				module.ImportReference(typeof(Color32?[])),
+				module.ImportReference(typeof(Color?[])),
+				module.ImportReference(typeof(GradientAlphaKey?[])),
+				module.ImportReference(typeof(GradientColorKey?[])),
+				module.ImportReference(typeof(Keyframe?[])),
+				module.ImportReference(typeof(LayerMask?[])),
+				module.ImportReference(typeof(Matrix4x4?[])),
+				module.ImportReference(typeof(Quaternion?[])),
+				module.ImportReference(typeof(Rect?[])),
+				module.ImportReference(typeof(RectInt?[])),
+				module.ImportReference(typeof(Vector2?[])),
+				module.ImportReference(typeof(Vector2Int?[])),
+				module.ImportReference(typeof(Vector3?[])),
+				module.ImportReference(typeof(Vector3Int?[])),
+				module.ImportReference(typeof(Vector4?[])),
+				module.ImportReference(typeof(WrapMode?[])),
+
+				// Unity primitives + list + nullable
+				module.ImportReference(typeof(List<Bounds?>)),
+				module.ImportReference(typeof(List<BoundsInt?>)),
+				module.ImportReference(typeof(List<Color32?>)),
+				module.ImportReference(typeof(List<Color?>)),
+				module.ImportReference(typeof(List<GradientAlphaKey?>)),
+				module.ImportReference(typeof(List<GradientColorKey?>)),
+				module.ImportReference(typeof(List<Keyframe?>)),
+				module.ImportReference(typeof(List<LayerMask?>)),
+				module.ImportReference(typeof(List<Matrix4x4?>)),
+				module.ImportReference(typeof(List<Quaternion?>)),
+				module.ImportReference(typeof(List<Rect?>)),
+				module.ImportReference(typeof(List<RectInt?>)),
+				module.ImportReference(typeof(List<Vector2?>)),
+				module.ImportReference(typeof(List<Vector2Int?>)),
+				module.ImportReference(typeof(List<Vector3?>)),
+				module.ImportReference(typeof(List<Vector3Int?>)),
+				module.ImportReference(typeof(List<Vector4?>)),
+				module.ImportReference(typeof(List<WrapMode?>)),
 				
-				// ALE primitives
-				module.ImportReference(typeof(LevelEditorIdentifier)).Resolve()
+				// ALE types
+				module.ImportReference(typeof(LevelEditorIdentifier)),
+				
+				// ALE types + nullable
+				module.ImportReference(typeof(LevelEditorIdentifier?)),
 			};
 		}
 
 		public void AddTypeToGenerate(TypeReference type)
 		{
-			if (type.IsGenericInstance && type is GenericInstanceType genericInstance)
-			{
-				for (int i = 0; i < genericInstance.GenericArguments.Count; i++)
-				{
-					AddTypeToGenerate(genericInstance.GenericArguments[i].GetElementType());
-				}
-			}
-			
-			TypeDefinition resolved = type.Resolve();
-			if (resolved == null)
+			if (standardTypeReferences.Contains(type) || type.IsComponent())
 			{
 				return;
 			}
 
-			if (standardTypes.Contains(resolved) || typesToGenerate.Contains(resolved) || resolved.IsCollection() || resolved.IsComponent())
+			if (type is GenericInstanceType genericType)
+			{
+				for (int i = 0; i < genericType.GenericArguments.Count; i++)
+				{
+					AddTypeToGenerate(genericType.GenericArguments[i].GetCollectionType());
+				}
+
+				if (type.IsList())
+				{
+					typesToGenerate.Add(type);
+				}
+
+				return;
+			}
+
+			if (type.IsArray())
+			{
+				typesToGenerate.Add(type);
+				AddTypeToGenerate(type.GetCollectionType());
+				return;
+			}
+
+			TypeDefinition resolved = type.Resolve();
+			if (resolved == null || typesToGenerate.Contains(resolved) || resolved.IsCollection() || resolved.IsComponent())
 			{
 				return;
 			}
-			
+
 			if (resolved.IsEnum())
 			{
 				typesToGenerate.Add(resolved);
 				return;
 			}
 			
-			AddTypeFields(resolved);
-
 			if (resolved.IsClass && !resolved.IsValueType && !resolved.IsComponent())
 			{
 				weaver.Error($"{resolved.FullName} is a normal class and can not be serialized yet. Only structs can be automatically serialized.");
 				return;
 			}
 
-			typesToGenerate.Add(resolved);
+			AddTypeFields(resolved);
+
+			typesToGenerate.Add(type);
 		}
 
 		private void AddTypeFields(TypeDefinition type)
@@ -122,11 +324,11 @@ namespace Hertzole.ALE.CodeGen
 
 			for (int i = 0; i < type.Fields.Count; i++)
 			{
-				if (type.Fields[i].FieldType.IsGenericInstance && type.Fields[i].FieldType is GenericInstanceType genericInstance)
+				if (type.Fields[i].FieldType is GenericInstanceType genericInstance)
 				{
 					for (int j = 0; j < genericInstance.GenericArguments.Count; j++)
 					{
-						TypeReference genericType =genericInstance.GenericArguments[j].GetCollectionType();
+						TypeReference genericType = genericInstance.GenericArguments[j].GetElementType();
 						if (genericType != null)
 						{
 							AddTypeToGenerate(genericType);
@@ -142,18 +344,32 @@ namespace Hertzole.ALE.CodeGen
 
 		public void EndEditing()
 		{
-			for (int i = 0; i < typesToGenerate.Count; i++)
+			foreach (TypeReference type in typesToGenerate)
 			{
-				if (typesToGenerate[i].IsEnum())
+				TypeDefinition resolved = type.Resolve();
+
+				if (resolved != null && resolved.IsEnum())
 				{
-					resolver.AddEnum(typesToGenerate[i]);
+					resolver.AddEnum(resolved);
 					continue;
 				}
-
-				TypeDefinition formatter = CreateFormatterForType(typesToGenerate[i]);
-				if (formatter != null)
+				
+				if (type.IsArray() || type.IsList() || type.IsNullable(out _))
 				{
-					resolver.AddTypeFormatter(formatter, typesToGenerate[i]);
+					resolver.AddTypeWithoutFormatter(type);
+				}
+				else
+				{
+					if (resolved == null)
+					{
+						throw new NoNullAllowedException($"Type {type} could not be resolved. This should be checked beforehand!");
+					}
+					
+					TypeDefinition formatter = CreateFormatterForType(resolved);
+					if (formatter != null)
+					{
+						resolver.AddTypeFormatter(formatter, type);
+					}
 				}
 			}
 		}

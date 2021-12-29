@@ -25,6 +25,9 @@ namespace Hertzole.ALE.CodeGen
 		private const string GET_WRAPPER_METHOD = "ALE__GENERATED__GetWrapper";
 		private const string APPLY_WRAPPER_METHOD = "ALE__GENERATED__ApplyWrapper";
 
+		private MethodReference getPropertiesClear;
+		private MethodReference getPropertiesAddRange;
+
 		public override bool IsValidClass(TypeDefinition type)
 		{
 			if (type.ImplementsInterface<IExposedToLevelEditor>())
@@ -546,7 +549,7 @@ namespace Hertzole.ALE.CodeGen
 			VariableDefinition[] localVariables = new VariableDefinition[properties.Count];
 			for (int i = 0; i < localVariables.Length; i++)
 			{
-				localVariables[i] = m.AddLocalVariable(properties[i].FieldTypeComponentAware);
+				localVariables[i] = m.AddLocalVariable(properties[i].FieldType.IsNullable(out var nullableType) ? nullableType : properties[i].FieldTypeComponentAware);
 			}
 
 			il.EmitIfElse(properties, (item, index, target, body, fill) =>
@@ -566,7 +569,8 @@ namespace Hertzole.ALE.CodeGen
 			}, (item, index, last, fill) =>
 			{
 				MethodReference equals = module.ImportReference(item.FieldTypeResolved.GetEqualsMethod(out bool isInEquality));
-
+				bool skipAssignValue = false;
+				
 				if (item.IsComponent)
 				{
 					// ComponentDataWrapper wrapper = (ComponentDataWrapper) value
@@ -658,6 +662,118 @@ namespace Hertzole.ALE.CodeGen
 						fill.Add(item.GetSetInstruction());
 					}
 				}
+				else if (item.FieldType.IsNullable(out TypeReference nullableType))
+				{
+					// We want to handle the value assignment ourselves.
+					skipAssignValue = true;
+
+					var nullInt1 = m.AddLocalVariable<int?>(); // 5
+					var tempInt = m.AddLocalVariable<int>(); // 6
+					var tempNullable = m.AddLocalVariable(item.FieldType); // 7
+					var nullInt2 = m.AddLocalVariable<int?>(); // 8
+
+					GenericInstanceType nullableContainer = module.GetTypeReference(typeof(Nullable<>)).MakeGenericInstanceType(nullableType);
+					GenericInstanceType nullableInt = module.GetTypeReference(typeof(Nullable<>)).MakeGenericInstanceType(module.GetTypeReference<int>());
+
+					fill.AddRange(ILHelper.IfElse((elseCheck, list) =>
+					{
+						// if (value is Type)
+						list.Add(ILHelper.Ldarg(il, paraValue));
+						list.Add(Instruction.Create(OpCodes.Isinst, nullableType));
+						list.Add(Instruction.Create(OpCodes.Brfalse, elseCheck));
+
+					}, (next, list) =>
+					{
+						Instruction temp = ILHelper.Ldloc(tempNullable, true);
+						Instruction temp2 = ILHelper.Stloc(nullInt1);
+						
+						// var val = (Type) value
+						list.Add(ILHelper.Ldarg(il, paraValue));
+						list.Add(Instruction.Create(OpCodes.Unbox_Any, nullableType));
+						list.Add(ILHelper.Stloc(localVariables[index]));
+
+						// if (field != val)
+						list.Add(ILHelper.Ldarg(il));
+						list.Add(item.GetLoadInstruction());
+						list.Add(ILHelper.Stloc(tempNullable));
+
+						list.Add(ILHelper.Ldloc(tempNullable, true));
+						list.Add(Instruction.Create(OpCodes.Call, nullableContainer.GetMethod("get_HasValue")));
+						list.Add(Instruction.Create(OpCodes.Brtrue, temp));
+						
+						list.Add(ILHelper.Ldloc(nullInt2, true));
+						list.Add(Instruction.Create(OpCodes.Initobj, module.GetTypeReference<int?>()));
+						list.Add(ILHelper.Ldloc(nullInt2));
+						list.Add(Instruction.Create(OpCodes.Br, temp2));
+
+						list.Add(temp);
+						list.Add(Instruction.Create(OpCodes.Call, nullableContainer.GetMethod("GetValueOrDefault")));
+						list.Add(Instruction.Create(OpCodes.Newobj, nullableInt.GetMethod(".ctor")));
+
+						list.Add(temp2);
+						list.Add(ILHelper.Ldloc(localVariables[index]));
+						list.Add(ILHelper.Stloc(tempInt));
+						
+						// field = val
+						list.Add(ILHelper.Ldloc(nullInt1, true));
+						list.Add(Instruction.Create(OpCodes.Call, module.GetMethod<int?>("GetValueOrDefault", Array.Empty<Type>())));
+						list.Add(ILHelper.Ldloc(tempInt));
+						list.Add(Instruction.Create(OpCodes.Ceq));
+						list.Add(ILHelper.Ldloc(nullInt1, true));
+						list.Add(Instruction.Create(OpCodes.Call, module.GetMethod<int?>("get_HasValue")));
+						list.Add(Instruction.Create(OpCodes.And));
+						list.Add(Instruction.Create(OpCodes.Brtrue, next));
+
+						list.Add(ILHelper.Ldarg(il));
+						list.Add(ILHelper.Ldloc(localVariables[index]));
+						list.Add(Instruction.Create(OpCodes.Newobj, nullableContainer.GetMethod(".ctor")));
+						list.Add(item.GetSetInstruction());
+						
+						// ALE__GENERATED__lastModifyValue = var
+						list.Add(ILHelper.Ldarg(il));
+						list.Add(ILHelper.Ldloc(localVariables[index]));
+						list.Add(Instruction.Create(OpCodes.Box, nullableType));
+						list.Add(Instruction.Create(OpCodes.Stfld, lastModifyValueField));
+
+						// changed = true
+						list.Add(ILHelper.Ldarg(il, paraChanged));
+						list.Add(ILHelper.Bool(true));
+						list.Add(Instruction.Create(OpCodes.Stind_I1));
+
+						// return true
+						list.Add(ILHelper.Bool(true));
+						list.Add(Instruction.Create(OpCodes.Ret));
+					}, list =>
+					{
+						// if (value == null && field.HasValue)
+						list.Add(ILHelper.Ldarg(il, paraValue));
+						list.Add(Instruction.Create(OpCodes.Brtrue, last));
+
+						list.Add(ILHelper.Ldarg(il));
+						list.Add(item.GetLoadInstruction(true));
+						list.Add(Instruction.Create(OpCodes.Call, module.GetMethod(typeof(Nullable<>), "get_HasValue").MakeHostInstanceGeneric(module.GetTypeReference(typeof(Nullable<>)).MakeGenericInstanceType(nullableType))));
+						list.Add(Instruction.Create(OpCodes.Brfalse, last));
+						
+						// field = null
+						list.Add(ILHelper.Ldarg(il));
+						list.Add(item.GetLoadInstruction(true));
+						list.Add(Instruction.Create(OpCodes.Initobj, item.FieldType));
+					
+						// ALE__GENERATED__lastModifyValue = null
+						list.Add(ILHelper.Ldarg(il));
+						list.Add(Instruction.Create(OpCodes.Ldnull));
+						list.Add(Instruction.Create(OpCodes.Stfld, lastModifyValueField));
+						
+						// changed = true
+						list.Add(ILHelper.Ldarg(il, paraChanged));
+						list.Add(ILHelper.Bool(true));
+						list.Add(Instruction.Create(OpCodes.Stind_I1));
+
+						// return true
+						list.Add(ILHelper.Bool(true));
+						list.Add(Instruction.Create(OpCodes.Ret));
+					}));
+				}
 				else if (!item.IsValueType && !item.IsCollection)
 				{
 					// Type var = value as Type
@@ -739,20 +855,23 @@ namespace Hertzole.ALE.CodeGen
 					fill.Add(item.GetSetInstruction());
 				}
 
-				// ALE__GENERATED__lastModifyValue = var
-				fill.Add(ILHelper.Ldarg(il));
-				fill.Add(ILHelper.Ldloc(localVariables[index]));
-				fill.Add(Instruction.Create(OpCodes.Box, item.FieldTypeComponentAware));
-				fill.Add(Instruction.Create(OpCodes.Stfld, lastModifyValueField));
+				if (!skipAssignValue)
+				{
+					// ALE__GENERATED__lastModifyValue = var
+					fill.Add(ILHelper.Ldarg(il));
+					fill.Add(ILHelper.Ldloc(localVariables[index]));
+					fill.Add(Instruction.Create(OpCodes.Box, item.FieldTypeComponentAware));
+					fill.Add(Instruction.Create(OpCodes.Stfld, lastModifyValueField));
+					
+					// changed = true
+					fill.Add(ILHelper.Ldarg(il, paraChanged));
+					fill.Add(ILHelper.Bool(true));
+					fill.Add(Instruction.Create(OpCodes.Stind_I1));
 
-				// changed = true
-				fill.Add(ILHelper.Ldarg(il, paraChanged));
-				fill.Add(ILHelper.Bool(true));
-				fill.Add(Instruction.Create(OpCodes.Stind_I1));
-
-				// return true
-				fill.Add(ILHelper.Bool(true));
-				fill.Add(Instruction.Create(OpCodes.Ret));
+					// return true
+					fill.Add(ILHelper.Bool(true));
+					fill.Add(Instruction.Create(OpCodes.Ret));
+				}
 			}, fill =>
 			{
 				if (isChild)
@@ -847,7 +966,7 @@ namespace Hertzole.ALE.CodeGen
 			m.EndEdit();
 		}
 
-		private static void CreateGetProperties(TypeDefinition type, ModuleDefinition module, IReadOnlyList<IExposedProperty> properties, bool isChild)
+		private void CreateGetProperties(TypeDefinition type, ModuleDefinition module, IReadOnlyList<IExposedProperty> properties, bool isChild)
 		{
 			const string properties_list_field = "ALE__GENERATED__propertiesList";
 			FieldDefinition propertiesListField;
@@ -868,6 +987,8 @@ namespace Hertzole.ALE.CodeGen
 
 			if (!isChild)
 			{
+				getPropertiesClear ??= module.GetMethod<List<ExposedField>>(nameof(List<ExposedField>.Clear));
+				
 				MethodDefinition m = type.AddMethodOverride<IReadOnlyList<ExposedField>>("Hertzole.ALE.IExposedToLevelEditor.GetProperties",
 					MethodAttributes.Private | MethodAttributes.Final | MethodAttributes.HideBySig | MethodAttributes.NewSlot | MethodAttributes.Virtual,
 					module.GetMethod<IExposedToLevelEditor>(nameof(IExposedToLevelEditor.GetProperties)));
@@ -877,7 +998,7 @@ namespace Hertzole.ALE.CodeGen
 				// ALE__GENERATED__propertiesList.Clear()
 				il.EmitLdarg();
 				il.Emit(OpCodes.Ldfld, propertiesListField);
-				il.Emit(OpCodes.Callvirt, module.GetMethod<List<ExposedField>>(nameof(List<ExposedField>.Clear)));
+				il.Emit(OpCodes.Callvirt, getPropertiesClear);
 				// ALE__GENERATED__GetProperties(ALE__GENERATED_propertiesList)
 				il.EmitLdarg();
 				il.EmitLdarg();
@@ -951,7 +1072,7 @@ namespace Hertzole.ALE.CodeGen
 			ctor.EndEdit();
 		}
 
-		private static MethodDefinition CreateGetPropertiesMethod(TypeDefinition type, ModuleDefinition module, bool isChild, FieldReference cachedPropertiesField)
+		private MethodDefinition CreateGetPropertiesMethod(TypeDefinition type, ModuleDefinition module, bool isChild, FieldReference cachedPropertiesField)
 		{
 			MethodDefinition m;
 			if (isChild)
@@ -967,6 +1088,8 @@ namespace Hertzole.ALE.CodeGen
 
 			ILProcessor il = m.BeginEdit();
 
+			getPropertiesAddRange ??= module.GetMethod<List<ExposedField>>(nameof(List<ExposedField>.AddRange));
+			
 			if (isChild)
 			{
 				MethodDefinition baseMethod = type.GetMethodInBaseType(GET_PROPERTIES_METHOD, false);
@@ -981,7 +1104,7 @@ namespace Hertzole.ALE.CodeGen
 			il.EmitLdarg(paraList);
 			il.EmitLdarg();
 			il.Emit(OpCodes.Ldfld, cachedPropertiesField);
-			il.Emit(OpCodes.Callvirt, module.GetMethod<List<ExposedField>>(nameof(List<ExposedField>.AddRange)));
+			il.Emit(OpCodes.Callvirt, getPropertiesAddRange);
 			il.Emit(OpCodes.Ret);
 
 			m.EndEdit();
@@ -1077,7 +1200,7 @@ namespace Hertzole.ALE.CodeGen
 					}
 					else
 					{
-						list.Add(Instruction.Create(OpCodes.Newobj, module.GetConstructor<ComponentDataWrapper>(item.IsGameObject ? typeof(GameObject) : typeof(Transform))));
+						list.Add(Instruction.Create(OpCodes.Newobj, module.GetConstructor<ComponentDataWrapper>(item.IsGameObject ? typeof(GameObject) : typeof(Component))));
 					}
 				}
 
@@ -1163,7 +1286,7 @@ namespace Hertzole.ALE.CodeGen
 			il.Emit(OpCodes.Initobj, wrapper);
 
 			// wrapper.values = new Dictionary<int, object>(1) { { id, value } }
-			MethodReference addValueMethod = module.GetMethod<Dictionary<int, object>>("Add");
+			MethodReference addValueMethod = module.GetMethod<Dictionary<int, object>>("Add").MakeHostInstanceGeneric(module.GetTypeReference(typeof(Dictionary<,>)).MakeGenericInstanceType(module.GetTypeReference<int>(), module.GetTypeReference<object>()));
 			il.EmitLdloc(varWrapper, true);
 			il.EmitInt(properties.Count);
 			il.Emit(OpCodes.Newobj, module.GetConstructor<Dictionary<int, object>>(typeof(int)));
@@ -1202,7 +1325,7 @@ namespace Hertzole.ALE.CodeGen
 			il.Emit(OpCodes.Call, wrapper.GetProperty(nameof(IExposedWrapper.Values)).SetMethod);
 
 			// wrapper.dirty = new Dictionary<int, bool>(1) { { id, false } }
-			MethodReference addDirtyMethod = module.GetMethod<Dictionary<int, bool>>("Add");
+			MethodReference addDirtyMethod = module.GetMethod<Dictionary<int, bool>>("Add").MakeHostInstanceGeneric(module.GetTypeReference(typeof(Dictionary<,>)).MakeGenericInstanceType(module.GetTypeReference<int>(), module.GetTypeReference<bool>()));
 			il.EmitLdloc(varWrapper, true);
 			il.EmitInt(properties.Count);
 			il.Emit(OpCodes.Newobj, module.GetConstructor<Dictionary<int, bool>>(typeof(int)));
@@ -1287,10 +1410,24 @@ namespace Hertzole.ALE.CodeGen
 				fill.Add(Instruction.Create(OpCodes.Brfalse, next));
 			}, (property, index, next, fill) =>
 			{
-				Instruction startSetValue = ILHelper.Ldarg(il);
-
+				Instruction startSetValue = ILHelper.Ldarg(il, property.IsList ? paraWrapper : null);
+				
 				if (property.IsList)
 				{
+					bool component = false;
+					VariableDefinition tempComponent = null;
+					VariableDefinition tempList;
+					if (property.FieldType.GetCollectionType().IsComponent())
+					{
+						component = true;
+						tempComponent = m.AddLocalVariable<ComponentDataWrapper>();
+						tempList = m.AddLocalVariable(property.FieldType.GetCollectionType().MakeArrayType());
+					}
+					else
+					{
+						tempList = m.AddLocalVariable(property.FieldType);
+					}
+
 					Instruction clearList = ILHelper.Ldarg(il);
 
 					// if (list == null)
@@ -1311,24 +1448,51 @@ namespace Hertzole.ALE.CodeGen
 					fill.Add(property.GetLoadInstruction());
 					fill.Add(Instruction.Create(OpCodes.Callvirt, module.GetMethod(typeof(List<>), "Clear").MakeHostInstanceGeneric(
 						module.GetTypeReference(typeof(List<>)).MakeGenericInstanceType(property.FieldType.GetCollectionType()))));
+
+					// value = wrapper.GetValue<Type>(id) || Type[] tempValue = wrapper.GetValue<Type>(id)
+					fill.Add(startSetValue);
+					fill.Add(ILHelper.Int(property.Id));
+					fill.Add(Instruction.Create(OpCodes.Call, module.GetMethod(typeof(LevelEditorExtensions), nameof(LevelEditorExtensions.GetValue)).MakeGenericMethod(property.FieldTypeComponentAware)));
+					fill.Add(ILHelper.Stloc(component ? tempComponent : tempList));
+						
+					// if (tempValue != null)
+					fill.Add(ILHelper.Ldloc(component ? tempComponent : tempList, property.IsComponent));
+					if (component)
+					{
+						fill.Add(Instruction.Create(OpCodes.Call, module.GetMethod<ComponentDataWrapper>("GetObjects", System.Type.EmptyTypes).MakeGenericMethod(property.FieldType.GetCollectionType())));
+						fill.Add(ILHelper.Stloc(tempList));
+						fill.Add(ILHelper.Ldloc(tempList));
+					}
+					
+					fill.Add(Instruction.Create(OpCodes.Brfalse, next));
+						
+					fill.Add(ILHelper.Ldarg(il));
+					fill.Add(property.GetLoadInstruction());
+					fill.Add(ILHelper.Ldloc(tempList));
+					if (component)
+					{
+						fill.Add(Instruction.Create(OpCodes.Callvirt, module.ImportReference(typeof(List<>).GetMethod("AddRange"))
+                                                                            .MakeGenericMethod(module.GetTypeReference(typeof(IEnumerable<>))
+                                                                                                     .MakeGenericInstanceType(property.FieldType.GetCollectionType()))
+                                                                            .MakeHostInstanceGeneric(module.GetTypeReference(typeof(List<>))
+                                                                                                           .MakeGenericInstanceType(property.FieldType.GetCollectionType()))));
+					}
+				}
+				else
+				{
+					// value = wrapper.GetValue<Type>(id)
+					fill.Add(startSetValue);
+					fill.Add(ILHelper.Ldarg(il, paraWrapper));
+					fill.Add(ILHelper.Int(property.Id));
+					fill.Add(Instruction.Create(OpCodes.Call, module.GetMethod(typeof(LevelEditorExtensions), nameof(LevelEditorExtensions.GetValue)).MakeGenericMethod(property.FieldTypeComponentAware)));
 				}
 
-				// value = wrapper.GetValue<Type>(id)
-				fill.Add(startSetValue);
-				if (property.IsList)
-				{
-					fill.Add(property.GetLoadInstruction());
-				}
-				
-				fill.Add(ILHelper.Ldarg(il, paraWrapper));
-				fill.Add(ILHelper.Int(property.Id));
-				fill.Add(Instruction.Create(OpCodes.Call, module.GetMethod(typeof(LevelEditorExtensions), nameof(LevelEditorExtensions.GetValue)).MakeGenericMethod(property.FieldTypeComponentAware)));
-				if (property.IsComponent)
+				if (property.IsComponent && !property.IsList)
 				{
 					VariableDefinition localVar = m.AddLocalVariable<ComponentDataWrapper>();
 					fill.Add(ILHelper.Stloc(localVar));
 					fill.Add(ILHelper.Ldloc(localVar, true));
-					if (property.IsCollection)
+					if (property.IsCollection && !property.IsList)
 					{
 						fill.Add(Instruction.Create(OpCodes.Call, module.GetMethod<ComponentDataWrapper>("GetObjects", System.Type.EmptyTypes).MakeGenericMethod(property.FieldType.GetCollectionType())));
 						if (property.IsList)
@@ -1340,15 +1504,16 @@ namespace Hertzole.ALE.CodeGen
 							                                                                                   .MakeGenericInstanceType(property.FieldType.GetCollectionType()))));
 						}
 					}
-					else
+					else if(!property.IsList)
 					{
 						fill.Add(Instruction.Create(OpCodes.Call, module.GetMethod<ComponentDataWrapper>("GetObject", System.Type.EmptyTypes).MakeGenericMethod(property.FieldType)));
 					}
 				}
-				else if (property.IsList)
+				else if (!property.IsComponent && property.IsList)
 				{
-					var addRange = module.GetMethod(typeof(List<>), "AddRange").MakeGenericMethod(property.FieldType.GetCollectionType())
-					                     .MakeHostInstanceGeneric(module.GetTypeReference(typeof(List<>)).MakeGenericInstanceType(property.FieldType.GetCollectionType()));
+					MethodReference addRange = module.GetMethod(typeof(List<>), "AddRange").MakeGenericMethod(property.FieldType.GetCollectionType())
+					                                 .MakeHostInstanceGeneric(module.GetTypeReference(typeof(List<>)).MakeGenericInstanceType(property.FieldType.GetCollectionType()));
+					
 					fill.Add(Instruction.Create(OpCodes.Callvirt, addRange));
 				}
 

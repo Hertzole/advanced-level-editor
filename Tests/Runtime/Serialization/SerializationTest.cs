@@ -1,16 +1,23 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using Hertzole.ALE.Tests.TestScripts;
 using UnityEngine;
 using UnityEngine.Assertions;
 using UnityEngine.TestTools;
+using Object = UnityEngine.Object;
 
 namespace Hertzole.ALE.Tests
 {
 	public abstract class SerializationTest : LevelEditorTest
 	{
 		private string filePath;
+
+		public const int VALUE_0_ID = 0;
+		public const int VALUE_5_ID = 5;
+		public const int VALUE_10_ID = 10;
+		public const int VALUE_100_ID = 100;
 
 		protected override void OnSceneSetup(List<GameObject> objects)
 		{
@@ -27,6 +34,181 @@ namespace Hertzole.ALE.Tests
 			{
 				File.Delete(filePath);
 			}
+		}
+
+		[UnityTest]
+		public IEnumerator SaveByteField()
+		{
+			yield return RunTest<ByteField1, byte>(69);
+			yield return RunTest<ByteField2, byte>(42);
+		}
+		
+		[UnityTest]
+		public IEnumerator SaveByteFields()
+		{
+			yield return RunTest<ByteFields1, byte>(42, 69);
+			yield return RunTest<ByteFields2, byte>(69, 42);
+		}
+
+		[UnityTest]
+		public IEnumerator SaveByteProperty()
+		{
+			yield return RunTest<ByteProperty1, byte>(69);
+			yield return RunTest<ByteProperty2, byte>(42);
+		}
+		
+		[UnityTest]
+		public IEnumerator SaveByteProperties()
+		{
+			yield return RunTest<ByteProperties1, byte>(42, 69);
+			yield return RunTest<ByteProperties2, byte>(69, 42);
+		}
+
+		[UnityTest]
+		public IEnumerator SaveByteNullableField()
+		{
+			yield return RunTest<ByteNullableField1, byte?>(69);
+			yield return RunTest<ByteNullableField2, byte?>(42);
+			yield return RunTest<ByteNullableField1, byte?>(null);
+			yield return RunTest<ByteNullableField2, byte?>(null);
+		}
+		
+		[UnityTest]
+		public IEnumerator SaveByteNullableFields()
+		{
+			yield return RunTest<ByteNullableFields1, byte?>(42, 69);
+			yield return RunTest<ByteNullableFields2, byte?>(69, 42);
+			yield return RunTest<ByteNullableFields1, byte?>(null, 69);
+			yield return RunTest<ByteNullableFields2, byte?>(69, null);
+		}
+		
+		[UnityTest]
+		public IEnumerator SaveByteNullableProperty()
+		{
+			yield return RunTest<ByteNullableProperty1, byte?>(69);
+			yield return RunTest<ByteNullableProperty2, byte?>(42);
+			yield return RunTest<ByteNullableProperty1, byte?>(null);
+			yield return RunTest<ByteNullableProperty2, byte?>(null);
+		}
+		
+		[UnityTest]
+		public IEnumerator SaveByteNullableProperties()
+		{
+			yield return RunTest<ByteNullableProperties1, byte?>(null, 69);
+			yield return RunTest<ByteNullableProperties2, byte?>(69, null);
+		}
+		
+		// Works in binary but not JSON due to special treatment from MessagePack.
+		// [UnityTest]
+		// public IEnumerator SaveByteArrayField()
+		// {
+		// 	yield return RunTest<ByteArrayField1, byte[]>(new byte[] { 69, 42 });
+		// 	yield return RunTest<ByteArrayField2, byte[]>(new byte[] { 42, 69 });
+		// }
+		//
+		// [UnityTest]
+		// public IEnumerator SaveByteArrayFields()
+		// {
+		// 	yield return RunTest<ByteArrayFields1, byte[]>(new byte[] { 69, 42 }, new byte[] { 10, 20 });
+		// 	yield return RunTest<ByteArrayFields2, byte[]>(new byte[] { 42, 69 }, new byte[] { 20, 10 });
+		// }
+		//
+		// [UnityTest]
+		// public IEnumerator SaveByteArrayProperty()
+		// {
+		// 	yield return RunTest<ByteArrayProperty1, byte[]>(new byte[] { 69, 42 });
+		// 	yield return RunTest<ByteArrayProperty2, byte[]>(new byte[] { 42, 69 });
+		// }
+		//
+		// [UnityTest]
+		// public IEnumerator SaveByteArrayProperties()
+		// {
+		// 	yield return RunTest<ByteArrayProperties1, byte[]>(new byte[] { 69, 42 }, new byte[] { 10, 20 });
+		// 	yield return RunTest<ByteArrayProperties2, byte[]>(new byte[] { 42, 69 }, new byte[] { 20, 10 });
+		// }
+		
+		[UnityTest]
+		public IEnumerator SaveByteArrayNullableField()
+		{
+			yield return RunTest<ByteArrayNullableField1, byte?[]>(new byte?[] { null, 42 });
+			yield return RunTest<ByteArrayNullableField2, byte?[]>(new byte?[] { 42, null });
+		}
+
+		[UnityTest]
+		public IEnumerator SaveByteArrayNullableFields()
+		{
+			yield return RunTest<ByteArrayNullableFields1, byte?[]>(new byte?[] { null, 42 }, new byte?[] { 10, null });
+			yield return RunTest<ByteArrayNullableFields2, byte?[]>(new byte?[] { 42, null }, new byte?[] { null, 10 });
+		}
+		
+		[UnityTest]
+		public IEnumerator SaveByteArrayNullableProperty()
+		{
+			yield return RunTest<ByteArrayNullableProperty1, byte?[]>(new byte?[] { null, 42 });
+			yield return RunTest<ByteArrayNullableProperty2, byte?[]>(new byte?[] { 42, null });
+		}
+		
+		[UnityTest]
+		public IEnumerator SaveByteArrayNullableProperties()
+		{
+			yield return RunTest<ByteArrayNullableProperties1, byte?[]>(new byte?[] { 69, null }, new byte?[] { null, 20 });
+			yield return RunTest<ByteArrayNullableProperties2, byte?[]>(new byte?[] { null, 69 }, new byte?[] { 20, null });
+		}
+		
+		[UnityTest]
+		public IEnumerator SaveByteListField()
+		{
+			yield return RunTest<ByteListField1, List<byte>>(new List<byte> { 69, 42 });
+			yield return RunTest<ByteListField2, List<byte>>(new List<byte> { 42, 69 });
+		}
+
+		[UnityTest]
+		public IEnumerator SaveByteListFields()
+		{
+			yield return RunTest<ByteListFields1, List<byte>>(new List<byte> { 69, 42 }, new List<byte> { 10, 20 });
+			yield return RunTest<ByteListFields2, List<byte>>(new List<byte> { 42, 69 }, new List<byte> { 20, 10 });
+		}
+		
+		[UnityTest]
+		public IEnumerator SaveByteListProperty()
+		{
+			yield return RunTest<ByteListProperty1, List<byte>>(new List<byte> { 69, 42 });
+			yield return RunTest<ByteListProperty2, List<byte>>(new List<byte> { 42, 69 });
+		}
+		
+		[UnityTest]
+		public IEnumerator SaveByteListProperties()
+		{
+			yield return RunTest<ByteListProperties1, List<byte>>(new List<byte> { 69, 42 }, new List<byte> { 10, 20 });
+			yield return RunTest<ByteListProperties2, List<byte>>(new List<byte> { 42, 69 }, new List<byte> { 20, 10 });
+		}
+		
+		[UnityTest]
+		public IEnumerator SaveByteListNullableField()
+		{
+			yield return RunTest<ByteListNullableField1, List<byte?>>(new List<byte?> { null, 42 });
+			yield return RunTest<ByteListNullableField2, List<byte?>>(new List<byte?> { 42, null });
+		}
+
+		[UnityTest]
+		public IEnumerator SaveByteListNullableFields()
+		{
+			yield return RunTest<ByteListNullableFields1, List<byte?>>(new List<byte?> { null, 42 }, new List<byte?> { 10, null });
+			yield return RunTest<ByteListNullableFields2, List<byte?>>(new List<byte?> { 42, null }, new List<byte?> { null, 10 });
+		}
+		
+		[UnityTest]
+		public IEnumerator SaveByteListNullableProperty()
+		{
+			yield return RunTest<ByteListNullableProperty1, List<byte?>>(new List<byte?> { null, 42 });
+			yield return RunTest<ByteListNullableProperty2, List<byte?>>(new List<byte?> { 42, null });
+		}
+		
+		[UnityTest]
+		public IEnumerator SaveByteListNullableProperties()
+		{
+			yield return RunTest<ByteListNullableProperties1, List<byte?>>(new List<byte?> { 69, null }, new List<byte?> { null, 20 });
+			yield return RunTest<ByteListNullableProperties2, List<byte?>>(new List<byte?> { null, 69 }, new List<byte?> { 20, null });
 		}
 
 		[UnityTest]
@@ -121,107 +303,107 @@ namespace Hertzole.ALE.Tests
 			Assert.AreEqual(true, rb.isKinematic);
 		}
 
-		[UnityTest]
-		public IEnumerator SaveByte()
-		{
-			cube.AddComponent<ByteTest1>();
-			cube.AddComponent<ByteTest2>();
-			cube.AddComponent<ByteTest3>();
-			cube.AddComponent<ByteTest4>();
-			cube.AddComponent<ByteTest5>();
-			cube.AddComponent<ByteTest6>();
-			cube.AddComponent<ByteTest7>();
-			cube.AddComponent<ByteTest8>();
-
-			ILevelEditorObject newCube = objectManager.CreateObject(resources.GetResource("cube"));
-			uint cubeId = newCube.InstanceID;
-
-			ByteTest1 byte1 = newCube.MyGameObject.GetComponent<ByteTest1>();
-			byte1.value = 5;
-			ByteTest2 byte2 = newCube.MyGameObject.GetComponent<ByteTest2>();
-			byte2.value = 6;
-			ByteTest3 byte3 = newCube.MyGameObject.GetComponent<ByteTest3>();
-			byte3.value1 = 3;
-			byte3.value2 = 4;
-			ByteTest4 byte4 = newCube.MyGameObject.GetComponent<ByteTest4>();
-			byte4.value1 = 10;
-			byte4.value2 = 20;
-			ByteTest5 byte5 = newCube.MyGameObject.GetComponent<ByteTest5>();
-			byte5.Value = 5;
-			ByteTest6 byte6 = newCube.MyGameObject.GetComponent<ByteTest6>();
-			byte6.Value = 6;
-			ByteTest7 byte7 = newCube.MyGameObject.GetComponent<ByteTest7>();
-			byte7.Value1 = 3;
-			byte7.Value2 = 4;
-			ByteTest8 byte8 = newCube.MyGameObject.GetComponent<ByteTest8>();
-			byte8.Value1 = 10;
-			byte8.Value2 = 20;
-
-			yield return null;
-
-			Save();
-			objectManager.DeleteAllObjects();
-
-			yield return null;
-
-			Load();
-
-			yield return null;
-
-			newCube = objectManager.GetObject(cubeId);
-			Assert.IsNotNull(newCube);
-
-			byte1 = newCube.MyGameObject.GetComponent<ByteTest1>();
-			Assert.AreEqual<byte>(5, byte1.value, "Byte 1 field value failed.");
-			byte2 = newCube.MyGameObject.GetComponent<ByteTest2>();
-			Assert.AreEqual<byte>(6, byte2.value, "Byte 2 field value failed.");
-			byte3 = newCube.MyGameObject.GetComponent<ByteTest3>();
-			Assert.AreEqual<byte>(3, byte3.value1, "Byte 3 field value 1 failed.");
-			Assert.AreEqual<byte>(4, byte3.value2, "Byte 3 field value 2 failed.");
-			byte4 = newCube.MyGameObject.GetComponent<ByteTest4>();
-			Assert.AreEqual<byte>(10, byte4.value1, "Byte 4 field value 1 failed.");
-			Assert.AreEqual<byte>(20, byte4.value2, "Byte 4 field value 2 failed.");
-
-			byte5 = newCube.MyGameObject.GetComponent<ByteTest5>();
-			Assert.AreEqual<byte>(5, byte5.Value, "Byte 5 property value failed.");
-			byte6 = newCube.MyGameObject.GetComponent<ByteTest6>();
-			Assert.AreEqual<byte>(6, byte6.Value, "Byte 6 property value failed.");
-			byte7 = newCube.MyGameObject.GetComponent<ByteTest7>();
-			Assert.AreEqual<byte>(3, byte7.Value1, "Byte 7 property value 1 failed.");
-			Assert.AreEqual<byte>(4, byte7.Value2, "Byte 7 property value 2 failed.");
-			byte8 = newCube.MyGameObject.GetComponent<ByteTest8>();
-			Assert.AreEqual<byte>(10, byte8.Value1, "Byte 8 property value 1 failed.");
-			Assert.AreEqual<byte>(20, byte8.Value2, "Byte 8 property value 2 failed.");
-		}
-
-		[UnityTest]
-		public IEnumerator SaveByteList()
-		{
-			cube.AddComponent<ByteListTest>();
-
-			ILevelEditorObject newCube = objectManager.CreateObject("cube");
-			uint cubeId = newCube.InstanceID;
-
-			ByteListTest bytes = newCube.MyGameObject.GetComponent<ByteListTest>();
-			bytes.value = new List<byte> { 1, 2, 3, 4, 5, 6, 7, 8, 9 };
-
-			yield return null;
-
-			Save();
-			objectManager.DeleteAllObjects();
-
-			yield return null;
-
-			Load();
-
-			yield return null;
-
-			newCube = objectManager.GetObject(cubeId);
-			Assert.IsNotNull(newCube);
-
-			bytes = newCube.MyGameObject.GetComponent<ByteListTest>();
-			Assert.IsTrue(bytes.value.IsSameAs(new List<byte> { 1, 2, 3, 4, 5, 6, 7, 8, 9 }));
-		}
+		// [UnityTest]
+		// public IEnumerator SaveByte()
+		// {
+		// 	cube.AddComponent<ByteTest1>();
+		// 	cube.AddComponent<ByteTest2>();
+		// 	cube.AddComponent<ByteTest3>();
+		// 	cube.AddComponent<ByteTest4>();
+		// 	cube.AddComponent<ByteTest5>();
+		// 	cube.AddComponent<ByteTest6>();
+		// 	cube.AddComponent<ByteTest7>();
+		// 	cube.AddComponent<ByteTest8>();
+		//
+		// 	ILevelEditorObject newCube = objectManager.CreateObject(resources.GetResource("cube"));
+		// 	uint cubeId = newCube.InstanceID;
+		//
+		// 	ByteTest1 byte1 = newCube.MyGameObject.GetComponent<ByteTest1>();
+		// 	byte1.value = 5;
+		// 	ByteTest2 byte2 = newCube.MyGameObject.GetComponent<ByteTest2>();
+		// 	byte2.value = 6;
+		// 	ByteTest3 byte3 = newCube.MyGameObject.GetComponent<ByteTest3>();
+		// 	byte3.value1 = 3;
+		// 	byte3.value2 = 4;
+		// 	ByteTest4 byte4 = newCube.MyGameObject.GetComponent<ByteTest4>();
+		// 	byte4.value1 = 10;
+		// 	byte4.value2 = 20;
+		// 	ByteTest5 byte5 = newCube.MyGameObject.GetComponent<ByteTest5>();
+		// 	byte5.Value = 5;
+		// 	ByteTest6 byte6 = newCube.MyGameObject.GetComponent<ByteTest6>();
+		// 	byte6.Value = 6;
+		// 	ByteTest7 byte7 = newCube.MyGameObject.GetComponent<ByteTest7>();
+		// 	byte7.Value1 = 3;
+		// 	byte7.Value2 = 4;
+		// 	ByteTest8 byte8 = newCube.MyGameObject.GetComponent<ByteTest8>();
+		// 	byte8.Value1 = 10;
+		// 	byte8.Value2 = 20;
+		//
+		// 	yield return null;
+		//
+		// 	Save();
+		// 	objectManager.DeleteAllObjects();
+		//
+		// 	yield return null;
+		//
+		// 	Load();
+		//
+		// 	yield return null;
+		//
+		// 	newCube = objectManager.GetObject(cubeId);
+		// 	Assert.IsNotNull(newCube);
+		//
+		// 	byte1 = newCube.MyGameObject.GetComponent<ByteTest1>();
+		// 	Assert.AreEqual<byte>(5, byte1.value, "Byte 1 field value failed.");
+		// 	byte2 = newCube.MyGameObject.GetComponent<ByteTest2>();
+		// 	Assert.AreEqual<byte>(6, byte2.value, "Byte 2 field value failed.");
+		// 	byte3 = newCube.MyGameObject.GetComponent<ByteTest3>();
+		// 	Assert.AreEqual<byte>(3, byte3.value1, "Byte 3 field value 1 failed.");
+		// 	Assert.AreEqual<byte>(4, byte3.value2, "Byte 3 field value 2 failed.");
+		// 	byte4 = newCube.MyGameObject.GetComponent<ByteTest4>();
+		// 	Assert.AreEqual<byte>(10, byte4.value1, "Byte 4 field value 1 failed.");
+		// 	Assert.AreEqual<byte>(20, byte4.value2, "Byte 4 field value 2 failed.");
+		//
+		// 	byte5 = newCube.MyGameObject.GetComponent<ByteTest5>();
+		// 	Assert.AreEqual<byte>(5, byte5.Value, "Byte 5 property value failed.");
+		// 	byte6 = newCube.MyGameObject.GetComponent<ByteTest6>();
+		// 	Assert.AreEqual<byte>(6, byte6.Value, "Byte 6 property value failed.");
+		// 	byte7 = newCube.MyGameObject.GetComponent<ByteTest7>();
+		// 	Assert.AreEqual<byte>(3, byte7.Value1, "Byte 7 property value 1 failed.");
+		// 	Assert.AreEqual<byte>(4, byte7.Value2, "Byte 7 property value 2 failed.");
+		// 	byte8 = newCube.MyGameObject.GetComponent<ByteTest8>();
+		// 	Assert.AreEqual<byte>(10, byte8.Value1, "Byte 8 property value 1 failed.");
+		// 	Assert.AreEqual<byte>(20, byte8.Value2, "Byte 8 property value 2 failed.");
+		// }
+		//
+		// [UnityTest]
+		// public IEnumerator SaveByteList()
+		// {
+		// 	cube.AddComponent<ByteListTest>();
+		//
+		// 	ILevelEditorObject newCube = objectManager.CreateObject("cube");
+		// 	uint cubeId = newCube.InstanceID;
+		//
+		// 	ByteListTest bytes = newCube.MyGameObject.GetComponent<ByteListTest>();
+		// 	bytes.value = new List<byte> { 1, 2, 3, 4, 5, 6, 7, 8, 9 };
+		//
+		// 	yield return null;
+		//
+		// 	Save();
+		// 	objectManager.DeleteAllObjects();
+		//
+		// 	yield return null;
+		//
+		// 	Load();
+		//
+		// 	yield return null;
+		//
+		// 	newCube = objectManager.GetObject(cubeId);
+		// 	Assert.IsNotNull(newCube);
+		//
+		// 	bytes = newCube.MyGameObject.GetComponent<ByteListTest>();
+		// 	Assert.IsTrue(bytes.value.IsSameAs(new List<byte> { 1, 2, 3, 4, 5, 6, 7, 8, 9 }));
+		// }
 
 		[UnityTest]
 		public IEnumerator SaveVector3()
@@ -1051,6 +1233,105 @@ namespace Hertzole.ALE.Tests
 			enumTest = newCube.MyGameObject.GetComponent<ByteFlagsEnumTest>();
 			Assert.AreEqual(enumTest.value, ByteFlagsEnum.Value1 | ByteFlagsEnum.Value3);
 			Assert.AreEqual(enumTest.Value, ByteFlagsEnum.Value2 | ByteFlagsEnum.Value4);
+		}
+
+		private IEnumerator RunTest<TType, TValue>(TValue newValue) where TType : Component, IValue<TValue>
+		{
+			cube.AddComponent<TType>();
+
+			ILevelEditorObject newCube = objectManager.CreateObject("cube");
+			uint cubeId = newCube.InstanceID;
+
+			TType type = newCube.MyGameObject.GetComponent<TType>();
+
+			type.Value = newValue;
+			
+			Assert.AreEqual(newValue, type.Value, "Value was not set.");
+
+			Save();
+			
+			objectManager.DeleteAllObjects();
+
+			yield return null;
+			
+			Load();
+
+			yield return null;
+			
+			newCube = objectManager.GetObject(cubeId);
+			Assert.IsNotNull(newCube, "Object was not loaded.");
+
+			type = newCube.MyGameObject.GetComponent<TType>();
+
+			if (newValue is ICollection newValueCollection && type.Value is ICollection valueCollection)
+			{
+				Assert.IsTrue(newValueCollection.IsSameAs(valueCollection), $"Collection was not the same.");
+			}
+			else
+			{
+				Assert.AreEqual(newValue, type.Value, "Value was not properly saved.");
+			}
+
+			Object.Destroy(cube.GetComponent<TType>());
+
+			objectManager.DeleteObject(newCube);
+
+			yield return null;
+		}
+
+		private IEnumerator RunTest<TType, TValue>(TValue newValue1, TValue newValue2) where TType : Component, IValues<TValue>
+		{
+			cube.AddComponent<TType>();
+
+			ILevelEditorObject newCube = objectManager.CreateObject("cube");
+			uint cubeId = newCube.InstanceID;
+
+			TType type = newCube.MyGameObject.GetComponent<TType>();
+
+			type.Value1 = newValue1;
+			type.Value2 = newValue2;
+
+			Assert.AreEqual(newValue1, type.Value1, "Value 1 was not set.");
+			Assert.AreEqual(newValue2, type.Value2, "Value 2 was not set.");
+
+			Save();
+
+			objectManager.DeleteAllObjects();
+
+			yield return null;
+			
+			Load();
+
+			yield return null;
+			
+			newCube = objectManager.GetObject(cubeId);
+			Assert.IsNotNull(newCube, "Object was not loaded.");
+
+			type = newCube.MyGameObject.GetComponent<TType>();
+			
+			if (newValue1 is ICollection newValue1Collection && type.Value1 is ICollection value1Collection)
+			{
+				Assert.IsTrue(newValue1Collection.IsSameAs(value1Collection), $"Collection 1 was not the same.");
+			}
+			else
+			{
+				Assert.AreEqual(newValue1, type.Value1, "Value 1 was not properly saved.");
+			}
+			
+			if (newValue2 is ICollection newValue2Collection && type.Value2 is ICollection value2Collection)
+			{
+				Assert.IsTrue(newValue2Collection.IsSameAs(value2Collection), $"Collection 2 was not the same.");
+			}
+			else
+			{
+				Assert.AreEqual(newValue2, type.Value2, "Value 2 was not properly saved.");
+			}
+
+			Object.Destroy(cube.GetComponent<TType>());
+
+			objectManager.DeleteObject(newCube);
+
+			yield return null;
 		}
 
 		private void Save()

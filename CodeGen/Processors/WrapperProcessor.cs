@@ -5,6 +5,7 @@ using Hertzole.ALE.CodeGen.Helpers;
 using MessagePack;
 using Mono.Cecil;
 using Mono.Cecil.Cil;
+using Mono.Cecil.Rocks;
 
 namespace Hertzole.ALE.CodeGen
 {
@@ -81,6 +82,8 @@ namespace Hertzole.ALE.CodeGen
 
 			ILProcessor il = m.BeginEdit();
 
+			MethodReference getItem = module.GetMethod<Dictionary<int, object>>("get_Item").MakeHostInstanceGeneric(module.GetTypeReference(typeof(Dictionary<,>)).MakeGenericInstanceType(module.GetTypeReference<int>(), module.GetTypeReference<object>()));
+			
 			il.EmitIfElse(properties, (property, index, next, body, fill) =>
 			{
 				// if (id == <id>)
@@ -102,7 +105,7 @@ namespace Hertzole.ALE.CodeGen
 				{
 					list.Add(Instruction.Create(OpCodes.Call, valuesField.GetMethod));
 					list.Add(ILHelper.Int(property.Id));
-					list.Add(Instruction.Create(OpCodes.Callvirt, module.GetMethod<Dictionary<int, object>>("get_Item")));
+					list.Add(Instruction.Create(OpCodes.Callvirt, getItem));
 					if (property.IsValueType)
 					{
 						list.Add(Instruction.Create(OpCodes.Unbox_Any, property.FieldTypeComponentAware));
