@@ -2,6 +2,7 @@
 using System.CodeDom;
 using System.Collections.Generic;
 using System.Reflection;
+using MessagePack.Formatters;
 using Mono.Cecil;
 using Mono.Cecil.Cil;
 using Mono.Cecil.Rocks;
@@ -146,15 +147,15 @@ namespace Hertzole.ALE.CodeGen
 				return type;
 			}
 
-			if (type.IsArray())
+			if (type is ArrayType array)
 			{
-				return type.Module.ImportReference(type.Resolve());
+				return type.Module.ImportReference(array.ElementType);
 			}
 
 			if (type.IsList() && type is GenericInstanceType generic && generic.GenericArguments.Count == 1)
 			{
-				TypeDefinition resolved = generic.GenericArguments[0].GetElementType().Resolve();
-				return type.Module.ImportReference(resolved);
+				TypeReference listType = generic.GenericArguments[0].GetCollectionType();
+				return type.Module.ImportReference(listType);
 			}
 
 			return type;
@@ -219,6 +220,18 @@ namespace Hertzole.ALE.CodeGen
 			}
 
 			return resolved.IsEnum || resolved.Is<Enum>() || resolved.IsSubclassOf<Enum>();
+		}
+
+		public static bool IsNullable(this TypeReference type, out TypeReference nullableType)
+		{
+			if (type.Is(typeof(Nullable<>)) && type is GenericInstanceType generic)
+			{
+				nullableType = generic.GenericArguments[0];
+				return true;
+			}
+
+			nullableType = null;
+			return false;
 		}
 
 		public static PropertyDefinition GetProperty(this TypeDefinition type, string property)

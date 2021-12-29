@@ -26,6 +26,9 @@ public class NewExposedTemplate : MonoBehaviour
 	protected GameObject[] references;
 	protected List<GameObject> referencesList;
 
+	private byte? nullableByte;
+	private List<byte?> nullableList = new List<byte?>();
+
 	public event Action<int, object> OnValueChanging;
 	public event Action<int, object> OnValueChanged;
 
@@ -77,6 +80,12 @@ public class NewExposedTemplate : MonoBehaviour
 			return true;
 		}
 
+		if (id == 100)
+		{
+			startEditValue = nullableByte;
+			return true;
+		}
+
 		return false;
 	}
 
@@ -106,6 +115,7 @@ public class NewExposedTemplate : MonoBehaviour
 				value1 = str;
 				lastValue = str;
 				changed = true;
+				return true;
 			}
 		}
 		else if (editingId == 1)
@@ -115,6 +125,7 @@ public class NewExposedTemplate : MonoBehaviour
 				value2 = intVal;
 				lastValue = intVal;
 				changed = true;
+				return true;
 			}
 		}
 		else if (editingId == 2)
@@ -124,6 +135,24 @@ public class NewExposedTemplate : MonoBehaviour
 				value3 = byteVal;
 				lastValue = byteVal;
 				changed = true;
+				return true;
+			}
+		}
+		else if (editingId == 100)
+		{
+			if (value is byte byteVal && nullableByte != byteVal)
+			{
+				nullableByte = byteVal;
+				lastValue = byteVal;
+				changed = true;
+				return true;
+			}
+			else if (value is null && nullableByte != null)
+			{
+				nullableByte = null;
+				lastValue = null;
+				changed = true;
+				return true;
 			}
 		}
 		else if (editingId == 3)
@@ -133,8 +162,10 @@ public class NewExposedTemplate : MonoBehaviour
 				reference = wrapper.GetObject<GameObject>();
 				lastValue = wrapper;
 				changed = true;
+				return true;
 			}
 		}
+		
 
 		return false;
 	}
@@ -188,6 +219,12 @@ public class NewExposedTemplate : MonoBehaviour
 			return true;
 		}
 
+		if (id == 100)
+		{
+			value = nullableByte;
+			return true;
+		}
+
 		value = null;
 		return false;
 	}
@@ -213,13 +250,15 @@ public class NewExposedTemplate : MonoBehaviour
 				{ 0, value1 },
 				{ 2, value2 },
 				{ 2, value3 },
-				{ 3, new ComponentDataWrapper(reference) }
+				{ 3, new ComponentDataWrapper(reference) },
+				{100, nullableByte}
 			},
 			Dirty = new Dictionary<int, bool>(3)
 			{
 				{ 0, false },
 				{ 1, false },
-				{ 2, false }
+				{ 2, false },
+				{ 100, false }
 			}
 		};
 	}
@@ -266,8 +305,35 @@ public class NewExposedTemplate : MonoBehaviour
 			{
 				referencesList.Clear();
 			}
-			
-			referencesList.AddRange(wrapper.GetValue<ComponentDataWrapper>(11).GetObjects<GameObject>());
+
+			var tempList = wrapper.GetValue<ComponentDataWrapper>(11).GetObjects<GameObject>();
+			if (tempList != null)
+			{
+				referencesList.AddRange(tempList);
+			}
+		}
+
+		if (wrapper.IsDirty(100))
+		{
+			nullableByte = wrapper.GetValue<byte?>(100);
+		}
+
+		if (wrapper.IsDirty(200))
+		{
+			if (nullableList == null)
+			{
+				nullableList = new List<byte?>();
+			}
+			else
+			{
+				nullableList.Clear();
+			}
+
+			var tempValue = wrapper.GetValue<List<byte?>>(200);
+			if (tempValue != null)
+			{
+				nullableList.AddRange(tempValue);
+			}
 		}
 	}
 
@@ -290,6 +356,10 @@ public class NewExposedTemplate : MonoBehaviour
 			{
 				writer.Write((byte) Values[2]);
 			}
+			else if (id == 100)
+			{
+				options.Resolver.GetFormatterWithVerify<byte?>().Serialize(ref writer, (byte?) Values[100], options);
+			}
 		}
 
 		object IExposedWrapper.Deserialize(int id, ref MessagePackReader reader, MessagePackSerializerOptions options)
@@ -307,6 +377,11 @@ public class NewExposedTemplate : MonoBehaviour
 			if (id == 2)
 			{
 				return reader.ReadByte();
+			}
+
+			if (id == 100)
+			{
+				return options.Resolver.GetFormatterWithVerify<byte?>().Deserialize(ref reader, options);
 			}
 
 			return null;

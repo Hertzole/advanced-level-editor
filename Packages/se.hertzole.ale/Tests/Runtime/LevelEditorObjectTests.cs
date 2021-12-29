@@ -9,75 +9,75 @@ namespace Hertzole.ALE.Tests
 {
     public class LevelEditorObjectTests : LevelEditorTest
     {
-        [UnityTest]
-        public IEnumerator ResetByteOnSpawn()
-        {
-            cube.AddComponent<ByteTest1>();
-            cube.AddComponent<ByteTest2>();
-            cube.AddComponent<ByteTest3>();
-            cube.AddComponent<ByteTest4>();
-            cube.AddComponent<ByteTest5>();
-            cube.AddComponent<ByteTest6>();
-            cube.AddComponent<ByteTest7>();
-            cube.AddComponent<ByteTest8>();
-
-            yield return null;
-
-            ILevelEditorObject newCube = objectManager.CreateObject("cube");
-            var byte1 = newCube.MyGameObject.GetComponent<ByteTest1>();
-            var byte2 = newCube.MyGameObject.GetComponent<ByteTest2>();
-            var byte3 = newCube.MyGameObject.GetComponent<ByteTest3>();
-            var byte4 = newCube.MyGameObject.GetComponent<ByteTest4>();
-            var byte5 = newCube.MyGameObject.GetComponent<ByteTest5>();
-            var byte6 = newCube.MyGameObject.GetComponent<ByteTest6>();
-            var byte7 = newCube.MyGameObject.GetComponent<ByteTest7>();
-            var byte8 = newCube.MyGameObject.GetComponent<ByteTest8>();
-
-            byte1.value = 1;
-            byte2.value = 3;
-            byte3.value1 = 4;
-            byte3.value2 = 5;
-            byte4.value1 = 6;
-            byte4.value2 = 7;
-            byte5.Value = 8;
-            byte6.Value = 9;
-            byte7.Value1 = 10;
-            byte7.Value2 = 11;
-            byte8.Value1 = 12;
-            byte8.Value2 = 13;
-
-            yield return null;
-
-            objectManager.DeleteObject(newCube);
-
-            yield return null;
-
-            newCube = objectManager.CreateObject("cube");
-            
-            yield return null;
-
-            byte1 = newCube.MyGameObject.GetComponent<ByteTest1>();
-            byte2 = newCube.MyGameObject.GetComponent<ByteTest2>();
-            byte3 = newCube.MyGameObject.GetComponent<ByteTest3>();
-            byte4 = newCube.MyGameObject.GetComponent<ByteTest4>();
-            byte5 = newCube.MyGameObject.GetComponent<ByteTest5>();
-            byte6 = newCube.MyGameObject.GetComponent<ByteTest6>();
-            byte7 = newCube.MyGameObject.GetComponent<ByteTest7>();
-            byte8 = newCube.MyGameObject.GetComponent<ByteTest8>();
-            
-            Assert.AreEqual<byte>(byte1.value, 0);
-            Assert.AreEqual<byte>(byte2.value, 0);
-            Assert.AreEqual<byte>(byte3.value1, 0);
-            Assert.AreEqual<byte>(byte3.value2, 0);
-            Assert.AreEqual<byte>(byte4.value1, 0);
-            Assert.AreEqual<byte>(byte4.value2, 0);
-            Assert.AreEqual<byte>(byte5.Value, 0);
-            Assert.AreEqual<byte>(byte6.Value, 0);
-            Assert.AreEqual<byte>(byte7.Value1, 0);
-            Assert.AreEqual<byte>(byte7.Value2, 0);
-            Assert.AreEqual<byte>(byte8.Value1, 0);
-            Assert.AreEqual<byte>(byte8.Value2, 0);
-        }
+        // [UnityTest]
+        // public IEnumerator ResetByteOnSpawn()
+        // {
+        //     cube.AddComponent<ByteTest1>();
+        //     cube.AddComponent<ByteTest2>();
+        //     cube.AddComponent<ByteTest3>();
+        //     cube.AddComponent<ByteTest4>();
+        //     cube.AddComponent<ByteTest5>();
+        //     cube.AddComponent<ByteTest6>();
+        //     cube.AddComponent<ByteTest7>();
+        //     cube.AddComponent<ByteTest8>();
+        //
+        //     yield return null;
+        //
+        //     ILevelEditorObject newCube = objectManager.CreateObject("cube");
+        //     var byte1 = newCube.MyGameObject.GetComponent<ByteTest1>();
+        //     var byte2 = newCube.MyGameObject.GetComponent<ByteTest2>();
+        //     var byte3 = newCube.MyGameObject.GetComponent<ByteTest3>();
+        //     var byte4 = newCube.MyGameObject.GetComponent<ByteTest4>();
+        //     var byte5 = newCube.MyGameObject.GetComponent<ByteTest5>();
+        //     var byte6 = newCube.MyGameObject.GetComponent<ByteTest6>();
+        //     var byte7 = newCube.MyGameObject.GetComponent<ByteTest7>();
+        //     var byte8 = newCube.MyGameObject.GetComponent<ByteTest8>();
+        //
+        //     byte1.value = 1;
+        //     byte2.value = 3;
+        //     byte3.value1 = 4;
+        //     byte3.value2 = 5;
+        //     byte4.value1 = 6;
+        //     byte4.value2 = 7;
+        //     byte5.Value = 8;
+        //     byte6.Value = 9;
+        //     byte7.Value1 = 10;
+        //     byte7.Value2 = 11;
+        //     byte8.Value1 = 12;
+        //     byte8.Value2 = 13;
+        //
+        //     yield return null;
+        //
+        //     objectManager.DeleteObject(newCube);
+        //
+        //     yield return null;
+        //
+        //     newCube = objectManager.CreateObject("cube");
+        //     
+        //     yield return null;
+        //
+        //     byte1 = newCube.MyGameObject.GetComponent<ByteTest1>();
+        //     byte2 = newCube.MyGameObject.GetComponent<ByteTest2>();
+        //     byte3 = newCube.MyGameObject.GetComponent<ByteTest3>();
+        //     byte4 = newCube.MyGameObject.GetComponent<ByteTest4>();
+        //     byte5 = newCube.MyGameObject.GetComponent<ByteTest5>();
+        //     byte6 = newCube.MyGameObject.GetComponent<ByteTest6>();
+        //     byte7 = newCube.MyGameObject.GetComponent<ByteTest7>();
+        //     byte8 = newCube.MyGameObject.GetComponent<ByteTest8>();
+        //     
+        //     Assert.AreEqual<byte>(byte1.value, 0);
+        //     Assert.AreEqual<byte>(byte2.value, 0);
+        //     Assert.AreEqual<byte>(byte3.value1, 0);
+        //     Assert.AreEqual<byte>(byte3.value2, 0);
+        //     Assert.AreEqual<byte>(byte4.value1, 0);
+        //     Assert.AreEqual<byte>(byte4.value2, 0);
+        //     Assert.AreEqual<byte>(byte5.Value, 0);
+        //     Assert.AreEqual<byte>(byte6.Value, 0);
+        //     Assert.AreEqual<byte>(byte7.Value1, 0);
+        //     Assert.AreEqual<byte>(byte7.Value2, 0);
+        //     Assert.AreEqual<byte>(byte8.Value1, 0);
+        //     Assert.AreEqual<byte>(byte8.Value2, 0);
+        // }
         
         [UnityTest]
         public IEnumerator ResetVectorOnSpawn()

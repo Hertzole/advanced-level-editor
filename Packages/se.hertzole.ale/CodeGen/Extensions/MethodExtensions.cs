@@ -541,7 +541,6 @@ namespace Hertzole.ALE.CodeGen
 
             for (int i = 0; i < varList.Count; i++)
             {
-                Console.WriteLine($"Adding debug variable {varList[i].name} to {varList[i].variableDefinition} in type {method.Name}");
                 method.DebugInformation.Scope.Variables.Add(new VariableDebugInformation(varList[i].variableDefinition, varList[i].name));
             }
             
@@ -559,6 +558,79 @@ namespace Hertzole.ALE.CodeGen
             method.CustomAttributes.Add(attribute);
 
             return attribute;
+        }
+
+        public static MethodReference GetMethod(this TypeReference type, string methodName)
+        {
+            return GetMethodInternal(type, methodName, true, Array.Empty<TypeReference>());
+        }
+        
+        private static MethodReference GetMethodInternal(this TypeReference type, string methodName, bool ignoreParameters, TypeReference[] parameters)
+        {
+            var resolved = type.Resolve();
+            if (resolved == null)
+            {
+                throw new ArgumentException($"Can't find method {methodName} in {type} because it can not be resolved.");
+            }
+
+            var methods = resolved.Methods;
+            for (int i = 0; i < methods.Count; i++)
+            {
+                if (methods[i].Name == methodName && DoParametersMatch(ignoreParameters, methods[i], parameters))
+                {
+                    MethodReference result;
+                    
+                    if (type is GenericInstanceType generic)
+                    {
+                        result = type.Module.ImportReference(resolved.Methods[i].MakeHostInstanceGeneric(generic));
+                    }
+                    else
+                    {
+                        result = type.Module.ImportReference(resolved.Methods[i]);
+                    }
+
+                    // if (ignoreParameters)
+                    // {
+                    //     cachedMethods.Add((type, methodName), result);
+                    // }
+                    // else
+                    // {
+                    //     cachedParameterMethods.Add((type, methodName, parameters), result);
+                    // }
+						
+                    return result;
+                }
+            }
+            
+            if (ignoreParameters)
+            {
+                throw new ArgumentException($"There's no method called {methodName} in {type}.");
+            }
+
+            throw new ArgumentException($"There's no method called {methodName} in {type} with parameters {parameters.ToDebugString()}.");
+        }
+
+        private static bool DoParametersMatch(bool ignoreParameters, MethodDefinition method, TypeReference[] parameters)
+        {
+            if (ignoreParameters)
+            {
+                return true;
+            }
+
+            if (method.Parameters.Count != parameters.Length)
+            {
+                return false;
+            }
+
+            for (int i = 0; i < method.Parameters.Count; i++)
+            {
+                if (method.Parameters[i].ParameterType.FullName != parameters[i].FullName)
+                {
+                    return false;
+                }
+            }
+
+            return true;
         }
     }
 }
