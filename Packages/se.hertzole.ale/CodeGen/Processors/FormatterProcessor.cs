@@ -120,7 +120,6 @@ namespace Hertzole.ALE.CodeGen
 				module.ImportReference(typeof(List<long?>)),
 				module.ImportReference(typeof(List<ulong?>)),
 				module.ImportReference(typeof(List<char?>)),
-				module.ImportReference(typeof(List<string?>)),
 				module.ImportReference(typeof(List<float?>)),
 				module.ImportReference(typeof(List<double?>)),
 				module.ImportReference(typeof(List<decimal?>)),
@@ -532,7 +531,7 @@ namespace Hertzole.ALE.CodeGen
 				il.EmitLdarg(readerPara);
 				il.Emit(OpCodes.Callvirt, module.GetMethod<MessagePackSecurity>("DepthStep"));
 			
-				Instruction createResult = ILHelper.Ldloc(result, true);
+				Instruction[] createResult = ILHelper.Ldloc(result, true);
 				List<VariableDefinition> localFields = new List<VariableDefinition>();
 
 				if (fields.Count > 0)
@@ -613,7 +612,7 @@ namespace Hertzole.ALE.CodeGen
 
 				VariableDefinition depth = m.AddLocalVariable<int>();
 
-				il.Append(createResult);
+				il.Append(createResult[0]);
  				il.Emit(OpCodes.Initobj, module.ImportReference(type));
                 if (fields.Count > 0)
                 {
@@ -793,21 +792,21 @@ namespace Hertzole.ALE.CodeGen
 			il.EmitInt(0);
 			il.EmitStloc(indexVar);
 
-			Instruction whileStart = ILHelper.Ldloc(indexVar);
-			il.Emit(OpCodes.Br, whileStart);
+			Instruction[] whileStart = ILHelper.Ldloc(indexVar);
+			il.Emit(OpCodes.Br, whileStart[0]);
 			
 			// int hash = reader.ReadInt32()
 			Instruction loopStart = il.EmitLdarg(reader);
 			il.Emit(OpCodes.Call, module.GetMethod(typeof(MessagePackReader), "ReadInt32"));
 			il.EmitStloc(hashVar);
 			
-			Instruction loopEnd = ILHelper.Ldloc(indexVar);
+			Instruction[] loopEnd = ILHelper.Ldloc(indexVar);
 
 			Instruction[] bodyStarts = new Instruction[fields.Count];
 
 			il.EmitIfElse(fields, (field, i, last, body, fill) => // If check
 			{
-				fill.Add(ILHelper.Ldloc(hashVar));
+				fill.AddRange(ILHelper.Ldloc(hashVar));
 				fill.Add(ILHelper.Int(field.Item1.Name.GetStableHashCode()));
 				
 				if (field.Item1.TryGetAttributes<FormerlyHashedAsAttribute>(out CustomAttribute[] hashedAttributes))
@@ -816,7 +815,7 @@ namespace Hertzole.ALE.CodeGen
 					
 					for (int j = 0; j < hashedAttributes.Length; j++)
 					{
-						fill.Add(ILHelper.Ldloc(hashVar));
+						fill.AddRange(ILHelper.Ldloc(hashVar));
 						fill.Add(ILHelper.Int(hashedAttributes[j].GetConstructorArgument(0, string.Empty).GetStableHashCode()));
 
 						if (j == hashedAttributes.Length - 1)
@@ -837,7 +836,7 @@ namespace Hertzole.ALE.CodeGen
 			{
 				Instruction[] read = FormatterHelper.GetReadValue(module, field.Item1.FieldType, il, reader, options, parameters[i], resolverVar);
 				fill.AddRange(read);
-				fill.Add(Instruction.Create(OpCodes.Br, loopEnd));
+				fill.Add(Instruction.Create(OpCodes.Br, loopEnd[0]));
 
 				bodyStarts[i] = read[0];
 
@@ -999,10 +998,10 @@ namespace Hertzole.ALE.CodeGen
 			il.EmitStloc(varResult);
 			
 			// for(int i = 0; i < length; i++)
-			Instruction loopEndier = ILHelper.Ldloc(varIndex);
+			Instruction[] loopEndier = ILHelper.Ldloc(varIndex);
 			il.EmitInt(0);
 			il.EmitStloc(varIndex);
-			il.Emit(OpCodes.Br, loopEndier);
+			il.Emit(OpCodes.Br, loopEndier[0]);
 	
 			// Loop start
 			Instruction loopStart = il.EmitLdarg(paraReader);
@@ -1015,29 +1014,29 @@ namespace Hertzole.ALE.CodeGen
 			var setValueItem = module.GetMethod<Dictionary<int, object>>("set_Item");
 			var setDirtyItem = module.GetMethod<Dictionary<int, bool>>("set_Item");
 
-			Instruction loopEnd = ILHelper.Ldloc(varIndex);
+			Instruction[] loopEnd = ILHelper.Ldloc(varIndex);
 
 			il.EmitIfElse(properties, (item, index, next, body, fill) =>
 			{
 				// if (id == <item id>)
-				fill.Add(ILHelper.Ldloc(varId));
-				
+				fill.AddRange(ILHelper.Ldloc(varId));
+
 				if (item.Id == 0)
 				{
-					fill.Add(Instruction.Create(OpCodes.Brtrue, index == properties.Count - 1 ? loopEnd : next));
+					fill.Add(Instruction.Create(OpCodes.Brtrue, index == properties.Count - 1 ? loopEnd[0] : next));
 				}
 				else
 				{
 					fill.Add(ILHelper.Int(item.Id));
-					fill.Add(Instruction.Create(OpCodes.Bne_Un, index == properties.Count - 1 ? loopEnd : next));
+					fill.Add(Instruction.Create(OpCodes.Bne_Un, index == properties.Count - 1 ? loopEnd[0] : next));
 				}
 			}, (item, index, next, fill) =>
 			{
 				// result.Values[id] = result.Deserialize(id, ref reader, options)
-				fill.Add(ILHelper.Ldloc(varResult, true));
+				fill.AddRange(ILHelper.Ldloc(varResult, true));
 				fill.Add(Instruction.Create(OpCodes.Call, getValues));
 				fill.Add(ILHelper.Int(item.Id));
-				fill.Add(ILHelper.Ldloc(varResult, true));
+				fill.AddRange(ILHelper.Ldloc(varResult, true));
 				fill.Add(ILHelper.Int(item.Id));
 				fill.Add(ILHelper.Ldarg(il, paraReader));
 				fill.Add(ILHelper.Ldarg(il, paraOptions));
@@ -1045,7 +1044,7 @@ namespace Hertzole.ALE.CodeGen
 				fill.Add(Instruction.Create(OpCodes.Callvirt, setValueItem));
 				
 				// result.Dirty[id] = true
-				fill.Add(ILHelper.Ldloc(varResult, true));
+				fill.AddRange(ILHelper.Ldloc(varResult, true));
 				fill.Add(Instruction.Create(OpCodes.Call, getDirty));
 				fill.Add(ILHelper.Int(item.Id));
 				fill.Add(ILHelper.Bool(true));
@@ -1054,19 +1053,19 @@ namespace Hertzole.ALE.CodeGen
 				// continue
 				if (index < properties.Count - 1)
 				{
-					fill.Add(Instruction.Create(OpCodes.Br, loopEnd));
+					fill.Add(Instruction.Create(OpCodes.Br, loopEnd[0]));
 				}
 			}, fill =>
 			{
 				// i++
-				fill.Add(loopEnd);
+				fill.AddRange(loopEnd);
 				fill.Add(ILHelper.Int(1));
 				fill.Add(Instruction.Create(OpCodes.Add));
-				fill.Add(ILHelper.Stloc(varIndex));
+				fill.AddRange(ILHelper.Stloc(varIndex));
 				
 				// i < length
-				fill.Add(loopEndier);
-				fill.Add(ILHelper.Ldloc(varLength));
+				fill.AddRange(loopEndier);
+				fill.AddRange(ILHelper.Ldloc(varLength));
 				fill.Add(ILHelper.Int(2));
 				fill.Add(Instruction.Create(OpCodes.Div));
 				fill.Add(Instruction.Create(OpCodes.Blt, loopStart));

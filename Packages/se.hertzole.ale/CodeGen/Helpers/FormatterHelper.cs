@@ -195,15 +195,13 @@ namespace Hertzole.ALE.CodeGen.Helpers
 			{
 				ulong id = GetKeyName(field.Name);
 
-				List<Instruction> i = new List<Instruction>
-				{
-					ILHelper.Ldloc(keyLength)
-				};
+				List<Instruction> i = new List<Instruction>();
+				i.AddRange(ILHelper.Ldloc(keyLength));
 
 				length = ILHelper.Int(field.Name.Length);
 				i.Add(length);
 
-				i.Add(ILHelper.Ldloc(key));
+				i.AddRange(ILHelper.Ldloc(key));
 				i.Add(ILHelper.ULong(id));
 
 				if (id < int.MaxValue)
@@ -240,18 +238,16 @@ namespace Hertzole.ALE.CodeGen.Helpers
 					throw new NullReferenceException("Couldn't find the sequence equals method.");
 				}
 
-				List<Instruction> i = new List<Instruction>
-				{
-					ILHelper.Ldloc(keyLength)
-				};
+				List<Instruction> i = new List<Instruction>();
+				i.AddRange(ILHelper.Ldloc(keyLength));
 
 				length = ILHelper.Int(field.Name.Length);
 				i.Add(length);
 
-				i.Add(ILHelper.Ldloc(stringKey));
+				i.AddRange(ILHelper.Ldloc(stringKey));
 				i.Add(Instruction.Create(OpCodes.Call, fieldSpan));
-				i.Add(ILHelper.Stloc(v));
-				i.Add(ILHelper.Ldloc(v, true));
+				i.AddRange(ILHelper.Stloc(v));
+				i.AddRange(ILHelper.Ldloc(v, true));
 				i.Add(ILHelper.Int(GetHeaderLength(binaryLength)));
 				i.Add(Instruction.Create(OpCodes.Call, method.Module.ImportReference(typeof(ReadOnlySpan<byte>).GetMethod("Slice", new[] { typeof(int) }))));
 				i.Add(Instruction.Create(OpCodes.Call, seqEqual));
@@ -497,7 +493,7 @@ namespace Hertzole.ALE.CodeGen.Helpers
 						throw new ArgumentNullException(nameof(resolverVariable), "If you don't provide a getResolver call, you'll need to provide a resolver variable.");
 					}
 
-					ins.Add(ILHelper.Ldloc(resolverVariable));
+					ins.AddRange(ILHelper.Ldloc(resolverVariable));
 					ins.Add(Instruction.Create(OpCodes.Call, module.ImportReference(module.ImportReference(typeof(FormatterResolverExtensions).GetMethod("GetFormatterWithVerify")).MakeGenericMethod(type))));
 				}
 			}
@@ -589,7 +585,7 @@ namespace Hertzole.ALE.CodeGen.Helpers
 					throw new ArgumentNullException(nameof(resolverVariable), "If you don't provide a getResolver call, you'll need to provide a resolver variable.");
 				}
 
-				ins.Add(ILHelper.Ldloc(resolverVariable));
+				ins.AddRange(ILHelper.Ldloc(resolverVariable));
 				ins.Add(Instruction.Create(OpCodes.Call, module.ImportReference(module.ImportReference(typeof(FormatterResolverExtensions).GetMethod("GetFormatterWithVerify")).MakeGenericMethod(type))));
 			}
 			else

@@ -188,7 +188,7 @@ namespace Hertzole.ALE.CodeGen
 
 				// Loop start
 				// Action<int, object> action2 = action
-				Instruction loopStart = il.EmitLdloc(varLocal1);
+				Instruction[] loopStart = il.EmitLdloc(varLocal1);
 				il.EmitStloc(varLocal2);
 				// Action<int, object> value2 = (Action<int, object>) Delegate.Combine/Remove(action2, value)
 				il.EmitLdloc(varLocal2);
@@ -206,7 +206,7 @@ namespace Hertzole.ALE.CodeGen
 				// if ((object) action == action2)
 				il.EmitLdloc(varLocal1);
 				il.EmitLdloc(varLocal2);
-				il.Emit(OpCodes.Bne_Un, loopStart);
+				il.Emit(OpCodes.Bne_Un, loopStart[0]);
 
 				// End loop
 				// End method
@@ -477,14 +477,14 @@ namespace Hertzole.ALE.CodeGen
 					// if (ALE__GENERATED__ModifyValue(value, ref changed))
 					list.Add(ILHelper.Ldarg(il));
 					list.Add(ILHelper.Ldarg(il, paraValue));
-					list.Add(ILHelper.Ldloc(varChanged, true));
+					list.AddRange(ILHelper.Ldloc(varChanged, true));
 					list.Add(Instruction.Create(OpCodes.Callvirt, modifyValueMethod));
 					list.Add(Instruction.Create(OpCodes.Brfalse, target));
 				}, (last, list) =>
 				{
 					// if (notify && changed)
 					list.Add(ILHelper.Ldarg(il, paraNotify));
-					list.Add(ILHelper.Ldloc(varChanged));
+					list.AddRange(ILHelper.Ldloc(varChanged));
 					list.Add(Instruction.Create(OpCodes.And));
 					list.Add(Instruction.Create(OpCodes.Brfalse, methodEnd));
 
@@ -580,10 +580,10 @@ namespace Hertzole.ALE.CodeGen
 
 					fill.Add(ILHelper.Ldarg(il, paraValue));
 					fill.Add(Instruction.Create(OpCodes.Unbox_Any, module.GetTypeReference<ComponentDataWrapper>()));
-					fill.Add(ILHelper.Stloc(localVariables[index]));
+					fill.AddRange(ILHelper.Stloc(localVariables[index]));
 
 					// if (!wrapper.Equals(value))
-					fill.Add(ILHelper.Ldloc(localVariables[index], true));
+					fill.AddRange(ILHelper.Ldloc(localVariables[index], true));
 					fill.Add(ILHelper.Ldarg(il));
 					fill.Add(item.GetLoadInstruction());
 					if (item.IsCollection)
@@ -636,7 +636,7 @@ namespace Hertzole.ALE.CodeGen
 							// value.AddRange(wrapper.GetObjects<Type>())
 							fill.Add(addStart);
 							fill.Add(item.GetLoadInstruction());
-							fill.Add(ILHelper.Ldloc(localVariables[index], true));
+							fill.AddRange(ILHelper.Ldloc(localVariables[index], true));
 							fill.Add(Instruction.Create(OpCodes.Call, module.GetMethod<ComponentDataWrapper>("GetObjects", Array.Empty<Type>()).MakeGenericMethod(item.FieldType.GetCollectionType())));
 							fill.Add(Instruction.Create(OpCodes.Callvirt, module.GetMethod(typeof(List<>), "AddRange").MakeHostInstanceGeneric(
 								module.GetTypeReference(typeof(List<>)).MakeGenericInstanceType(item.FieldType.GetCollectionType()))));
@@ -644,20 +644,20 @@ namespace Hertzole.ALE.CodeGen
 						else
 						{
 							// valueArray = wrapper.GetObjects<Type>()
-							fill.Add(ILHelper.Ldloc(localVariables[index], true));
+							fill.AddRange(ILHelper.Ldloc(localVariables[index], true));
 							fill.Add(Instruction.Create(OpCodes.Call, module.GetMethod<ComponentDataWrapper>("GetObjects", Array.Empty<Type>()).MakeGenericMethod(item.FieldType.GetCollectionType())));
 							fill.Add(item.GetSetInstruction());
 						}
 
 						// ALE__GENERATED__lastModifyValue = wrapper
 						fill.Add(ILHelper.Ldarg(il));
-						fill.Add(ILHelper.Ldloc(localVariables[index]));
+						fill.AddRange(ILHelper.Ldloc(localVariables[index]));
 						fill.Add(Instruction.Create(OpCodes.Box, module.GetTypeReference<ComponentDataWrapper>()));
 						fill.Add(Instruction.Create(OpCodes.Stfld, lastModifyValueField));
 					}
 					else
 					{
-						fill.Add(ILHelper.Ldloc(localVariables[index], true));
+						fill.AddRange(ILHelper.Ldloc(localVariables[index], true));
 						fill.Add(Instruction.Create(OpCodes.Call, module.GetMethod<ComponentDataWrapper>("GetObject", Array.Empty<Type>()).MakeGenericMethod(item.FieldType.GetCollectionType())));
 						fill.Add(item.GetSetInstruction());
 					}
@@ -684,54 +684,54 @@ namespace Hertzole.ALE.CodeGen
 
 					}, (next, list) =>
 					{
-						Instruction temp = ILHelper.Ldloc(tempNullable, true);
-						Instruction temp2 = ILHelper.Stloc(nullInt1);
-						
+						Instruction[] temp = ILHelper.Ldloc(tempNullable, true);
+						Instruction[] temp2 = ILHelper.Stloc(nullInt1);
+
 						// var val = (Type) value
 						list.Add(ILHelper.Ldarg(il, paraValue));
 						list.Add(Instruction.Create(OpCodes.Unbox_Any, nullableType));
-						list.Add(ILHelper.Stloc(localVariables[index]));
+						list.AddRange(ILHelper.Stloc(localVariables[index]));
 
 						// if (field != val)
 						list.Add(ILHelper.Ldarg(il));
 						list.Add(item.GetLoadInstruction());
-						list.Add(ILHelper.Stloc(tempNullable));
+						list.AddRange(ILHelper.Stloc(tempNullable));
 
-						list.Add(ILHelper.Ldloc(tempNullable, true));
+						list.AddRange(ILHelper.Ldloc(tempNullable, true));
 						list.Add(Instruction.Create(OpCodes.Call, nullableContainer.GetMethod("get_HasValue")));
-						list.Add(Instruction.Create(OpCodes.Brtrue, temp));
-						
-						list.Add(ILHelper.Ldloc(nullInt2, true));
-						list.Add(Instruction.Create(OpCodes.Initobj, module.GetTypeReference<int?>()));
-						list.Add(ILHelper.Ldloc(nullInt2));
-						list.Add(Instruction.Create(OpCodes.Br, temp2));
+						list.Add(Instruction.Create(OpCodes.Brtrue, temp[0]));
 
-						list.Add(temp);
+						list.AddRange(ILHelper.Ldloc(nullInt2, true));
+						list.Add(Instruction.Create(OpCodes.Initobj, module.GetTypeReference<int?>()));
+						list.AddRange(ILHelper.Ldloc(nullInt2));
+						list.Add(Instruction.Create(OpCodes.Br, temp2[0]));
+
+						list.AddRange(temp);
 						list.Add(Instruction.Create(OpCodes.Call, nullableContainer.GetMethod("GetValueOrDefault")));
 						list.Add(Instruction.Create(OpCodes.Newobj, nullableInt.GetMethod(".ctor")));
 
-						list.Add(temp2);
-						list.Add(ILHelper.Ldloc(localVariables[index]));
-						list.Add(ILHelper.Stloc(tempInt));
+						list.AddRange(temp2);
+						list.AddRange(ILHelper.Ldloc(localVariables[index]));
+						list.AddRange(ILHelper.Stloc(tempInt));
 						
 						// field = val
-						list.Add(ILHelper.Ldloc(nullInt1, true));
+						list.AddRange(ILHelper.Ldloc(nullInt1, true));
 						list.Add(Instruction.Create(OpCodes.Call, module.GetMethod<int?>("GetValueOrDefault", Array.Empty<Type>())));
-						list.Add(ILHelper.Ldloc(tempInt));
+						list.AddRange(ILHelper.Ldloc(tempInt));
 						list.Add(Instruction.Create(OpCodes.Ceq));
-						list.Add(ILHelper.Ldloc(nullInt1, true));
+						list.AddRange(ILHelper.Ldloc(nullInt1, true));
 						list.Add(Instruction.Create(OpCodes.Call, module.GetMethod<int?>("get_HasValue")));
 						list.Add(Instruction.Create(OpCodes.And));
 						list.Add(Instruction.Create(OpCodes.Brtrue, next));
 
 						list.Add(ILHelper.Ldarg(il));
-						list.Add(ILHelper.Ldloc(localVariables[index]));
+						list.AddRange(ILHelper.Ldloc(localVariables[index]));
 						list.Add(Instruction.Create(OpCodes.Newobj, nullableContainer.GetMethod(".ctor")));
 						list.Add(item.GetSetInstruction());
 						
 						// ALE__GENERATED__lastModifyValue = var
 						list.Add(ILHelper.Ldarg(il));
-						list.Add(ILHelper.Ldloc(localVariables[index]));
+						list.AddRange(ILHelper.Ldloc(localVariables[index]));
 						list.Add(Instruction.Create(OpCodes.Box, nullableType));
 						list.Add(Instruction.Create(OpCodes.Stfld, lastModifyValueField));
 
@@ -779,20 +779,20 @@ namespace Hertzole.ALE.CodeGen
 					// Type var = value as Type
 					fill.Add(ILHelper.Ldarg(il, paraValue));
 					fill.Add(Instruction.Create(OpCodes.Isinst, item.FieldTypeComponentAware));
-					fill.Add(ILHelper.Stloc(localVariables[index]));
+					fill.AddRange(ILHelper.Stloc(localVariables[index]));
 
 					// if (var != null)
-					fill.Add(ILHelper.Ldloc(localVariables[index]));
+					fill.AddRange(ILHelper.Ldloc(localVariables[index]));
 					fill.Add(Instruction.Create(OpCodes.Brfalse, last));
 
 					// value = var
 					fill.Add(ILHelper.Ldarg(il));
-					fill.Add(ILHelper.Ldloc(localVariables[index]));
+					fill.AddRange(ILHelper.Ldloc(localVariables[index]));
 					fill.Add(item.GetSetInstruction());
 
 					// ALE__GENERATED__lastModifyValue = var
 					fill.Add(ILHelper.Ldarg(il));
-					fill.Add(ILHelper.Ldloc(localVariables[index]));
+					fill.AddRange(ILHelper.Ldloc(localVariables[index]));
 					fill.Add(Instruction.Create(OpCodes.Stfld, lastModifyValueField));
 				}
 				else if (item.IsValueType && !item.IsCollection)
@@ -805,7 +805,7 @@ namespace Hertzole.ALE.CodeGen
 					// int var = (Type) value
 					fill.Add(ILHelper.Ldarg(il, paraValue));
 					fill.Add(Instruction.Create(OpCodes.Unbox_Any, item.FieldTypeComponentAware));
-					fill.Add(ILHelper.Stloc(localVariables[index]));
+					fill.AddRange(ILHelper.Stloc(localVariables[index]));
 
 					bool objectEquals = equals.DeclaringType.FullName == module.GetTypeReference<object>().FullName;
 
@@ -817,11 +817,11 @@ namespace Hertzole.ALE.CodeGen
 					if (!isInEquality && item.IsProperty && item.IsValueType && !item.IsPrimitive)
 					{
 						VariableDefinition propertyVar = m.AddLocalVariable(item.FieldTypeComponentAware);
-						fill.Add(ILHelper.Stloc(propertyVar));
-						fill.Add(ILHelper.Ldloc(propertyVar, true));
+						fill.AddRange(ILHelper.Stloc(propertyVar));
+						fill.AddRange(ILHelper.Ldloc(propertyVar, true));
 					}
 
-					fill.Add(ILHelper.Ldloc(localVariables[index]));
+					fill.AddRange(ILHelper.Ldloc(localVariables[index]));
 					if (!item.FieldType.IsPrimitive)
 					{
 						// If it's a value type and it's using the generic Equals(object), it needs to be boxed.
@@ -851,7 +851,7 @@ namespace Hertzole.ALE.CodeGen
 
 					// localVar = var
 					fill.Add(ILHelper.Ldarg(il));
-					fill.Add(ILHelper.Ldloc(localVariables[index]));
+					fill.AddRange(ILHelper.Ldloc(localVariables[index]));
 					fill.Add(item.GetSetInstruction());
 				}
 
@@ -859,7 +859,7 @@ namespace Hertzole.ALE.CodeGen
 				{
 					// ALE__GENERATED__lastModifyValue = var
 					fill.Add(ILHelper.Ldarg(il));
-					fill.Add(ILHelper.Ldloc(localVariables[index]));
+					fill.AddRange(ILHelper.Ldloc(localVariables[index]));
 					fill.Add(Instruction.Create(OpCodes.Box, item.FieldTypeComponentAware));
 					fill.Add(Instruction.Create(OpCodes.Stfld, lastModifyValueField));
 					
@@ -1134,13 +1134,13 @@ namespace Hertzole.ALE.CodeGen
 					// if (ALE__GENERATED__GetValue(id, out value))
 					list.Add(ILHelper.Ldarg(il));
 					list.Add(ILHelper.Ldarg(il, paraId));
-					list.Add(ILHelper.Ldloc(varValue, true));
+					list.AddRange(ILHelper.Ldloc(varValue, true));
 					list.Add(Instruction.Create(OpCodes.Callvirt, helperMethod));
 					list.Add(Instruction.Create(OpCodes.Brfalse, last));
 				}, (last, list) =>
 				{
 					// return value
-					list.Add(ILHelper.Ldloc(varValue));
+					list.AddRange(ILHelper.Ldloc(varValue));
 					list.Add(Instruction.Create(OpCodes.Ret));
 				}, list =>
 				{
@@ -1453,22 +1453,22 @@ namespace Hertzole.ALE.CodeGen
 					fill.Add(startSetValue);
 					fill.Add(ILHelper.Int(property.Id));
 					fill.Add(Instruction.Create(OpCodes.Call, module.GetMethod(typeof(LevelEditorExtensions), nameof(LevelEditorExtensions.GetValue)).MakeGenericMethod(property.FieldTypeComponentAware)));
-					fill.Add(ILHelper.Stloc(component ? tempComponent : tempList));
+					fill.AddRange(ILHelper.Stloc(component ? tempComponent : tempList));
 						
 					// if (tempValue != null)
-					fill.Add(ILHelper.Ldloc(component ? tempComponent : tempList, property.IsComponent));
+					fill.AddRange(ILHelper.Ldloc(component ? tempComponent : tempList, property.IsComponent));
 					if (component)
 					{
 						fill.Add(Instruction.Create(OpCodes.Call, module.GetMethod<ComponentDataWrapper>("GetObjects", System.Type.EmptyTypes).MakeGenericMethod(property.FieldType.GetCollectionType())));
-						fill.Add(ILHelper.Stloc(tempList));
-						fill.Add(ILHelper.Ldloc(tempList));
+						fill.AddRange(ILHelper.Stloc(tempList));
+						fill.AddRange(ILHelper.Ldloc(tempList));
 					}
 					
 					fill.Add(Instruction.Create(OpCodes.Brfalse, next));
 						
 					fill.Add(ILHelper.Ldarg(il));
 					fill.Add(property.GetLoadInstruction());
-					fill.Add(ILHelper.Ldloc(tempList));
+					fill.AddRange(ILHelper.Ldloc(tempList));
 					if (component)
 					{
 						fill.Add(Instruction.Create(OpCodes.Callvirt, module.ImportReference(typeof(List<>).GetMethod("AddRange"))
@@ -1490,8 +1490,8 @@ namespace Hertzole.ALE.CodeGen
 				if (property.IsComponent && !property.IsList)
 				{
 					VariableDefinition localVar = m.AddLocalVariable<ComponentDataWrapper>();
-					fill.Add(ILHelper.Stloc(localVar));
-					fill.Add(ILHelper.Ldloc(localVar, true));
+					fill.AddRange(ILHelper.Stloc(localVar));
+					fill.AddRange(ILHelper.Ldloc(localVar, true));
 					if (property.IsCollection && !property.IsList)
 					{
 						fill.Add(Instruction.Create(OpCodes.Call, module.GetMethod<ComponentDataWrapper>("GetObjects", System.Type.EmptyTypes).MakeGenericMethod(property.FieldType.GetCollectionType())));
