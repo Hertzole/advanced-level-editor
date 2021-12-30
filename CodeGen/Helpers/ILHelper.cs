@@ -7,8 +7,18 @@ namespace Hertzole.ALE.CodeGen.Helpers
 {
 	public static class ILHelper
 	{
-		public static Instruction Stloc(VariableDefinition variable)
+		public static Instruction[] Stloc(VariableDefinition variable)
 		{
+			if (variable.Index >= 255)
+			{
+				Instruction[] results = new Instruction[2];
+
+				results[0] = Instruction.Create(OpCodes.Stloc, variable);
+				results[1] = Instruction.Create(OpCodes.Nop);
+				
+				return results;
+			}
+			
 			Instruction result;
 			
 			switch (variable.Index)
@@ -30,35 +40,46 @@ namespace Hertzole.ALE.CodeGen.Helpers
 					break;
 			}
 
-			return result;
+			return new Instruction[1] { result };
 		}
 		
-		public static Instruction Ldloc(VariableDefinition variable, bool ldloc_a = false)
+		public static Instruction[] Ldloc(VariableDefinition variable, bool ldloc_a = false)
 		{
-			Instruction result;
+			Instruction[] result;
 			
 			if (ldloc_a)
 			{
-				result = Instruction.Create(variable.Index < 256 ?  OpCodes.Ldloca_S : OpCodes.Ldloca, variable);
+				result = new Instruction[1] { Instruction.Create(variable.Index < 256 ? OpCodes.Ldloca_S : OpCodes.Ldloca, variable) };
+				return result;
+			}
+
+			if (variable.Index >= 255)
+			{
+				result = new Instruction[2]
+				{
+					Instruction.Create(OpCodes.Nop),
+					Instruction.Create(OpCodes.Ldloc, variable),
+				};
+
 				return result;
 			}
 
 			switch (variable.Index)
 			{
 				case 0:
-					result = Instruction.Create(OpCodes.Ldloc_0);
+					result = new Instruction[1] { Instruction.Create(OpCodes.Ldloc_0) };
 					break;
 				case 1:
-					result = Instruction.Create(OpCodes.Ldloc_1);
+					result = new Instruction[1] { Instruction.Create(OpCodes.Ldloc_1) };
 					break;
 				case 2:
-					result = Instruction.Create(OpCodes.Ldloc_2);
+					result = new Instruction[1] { Instruction.Create(OpCodes.Ldloc_2) };
 					break;
 				case 3:
-					result = Instruction.Create(OpCodes.Ldloc_3);
+					result = new Instruction[1] { Instruction.Create(OpCodes.Ldloc_3) };
 					break;
 				default:
-					result = Instruction.Create(OpCodes.Ldloc_S, variable);
+					result = new Instruction[1] { Instruction.Create(OpCodes.Ldloc_S, variable) };
 					break;
 			}
 

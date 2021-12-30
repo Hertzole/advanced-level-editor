@@ -75,16 +75,16 @@ namespace Hertzole.ALE.CodeGen
 			il.EmitStloc(variable);
 		}
 
-		public static Instruction EmitStloc(this ILProcessor il, VariableDefinition variable)
+		public static IEnumerable<Instruction> EmitStloc(this ILProcessor il, VariableDefinition variable)
 		{
-			Instruction result = ILHelper.Stloc(variable);
+			Instruction[] result = ILHelper.Stloc(variable);
 			il.Append(result);
 			return result;
 		}
 
-		public static Instruction EmitLdloc(this ILProcessor il, VariableDefinition variable, bool ldloc_a = false)
+		public static Instruction[] EmitLdloc(this ILProcessor il, VariableDefinition variable, bool ldloc_a = false)
 		{
-			Instruction result = ILHelper.Ldloc(variable, ldloc_a);
+			Instruction[] result = ILHelper.Ldloc(variable, ldloc_a);
 			il.Append(result);
 			return result;
 		}
