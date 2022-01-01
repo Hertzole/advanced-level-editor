@@ -47,6 +47,10 @@ namespace Hertzole.ALE.CodeGen
 				module.ImportReference(typeof(double)),
 				module.ImportReference(typeof(decimal)),
 				module.ImportReference(typeof(bool)),
+				module.ImportReference(typeof(Guid)),
+				module.ImportReference(typeof(DateTime)),
+				module.ImportReference(typeof(TimeSpan)),
+				module.ImportReference(typeof(Uri)),
 				
 				// C# primitives + array
 				module.ImportReference(typeof(byte[])),
@@ -63,6 +67,10 @@ namespace Hertzole.ALE.CodeGen
 				module.ImportReference(typeof(double[])),
 				module.ImportReference(typeof(decimal[])),
 				module.ImportReference(typeof(bool[])),
+				module.ImportReference(typeof(Guid[])),
+				module.ImportReference(typeof(DateTime[])),
+				module.ImportReference(typeof(TimeSpan[])),
+				module.ImportReference(typeof(Uri[])),
 				
 				// C# primitives + list
 				module.ImportReference(typeof(List<byte>)),
@@ -79,6 +87,10 @@ namespace Hertzole.ALE.CodeGen
 				module.ImportReference(typeof(List<double>)),
 				module.ImportReference(typeof(List<decimal>)),
 				module.ImportReference(typeof(List<bool>)),
+				module.ImportReference(typeof(List<Guid>)),
+				module.ImportReference(typeof(List<DateTime>)),
+				module.ImportReference(typeof(List<TimeSpan>)),
+				module.ImportReference(typeof(List<Uri>)),
 				
 				// C# primitives + nullable
 				module.ImportReference(typeof(byte?)),
@@ -94,6 +106,9 @@ namespace Hertzole.ALE.CodeGen
 				module.ImportReference(typeof(double?)),
 				module.ImportReference(typeof(decimal?)),
 				module.ImportReference(typeof(bool?)),
+				module.ImportReference(typeof(Guid?)),
+				module.ImportReference(typeof(DateTime?)),
+				module.ImportReference(typeof(TimeSpan?)),
 				
 				// C# primitives + array + nullable
 				module.ImportReference(typeof(byte?[])),
@@ -109,6 +124,9 @@ namespace Hertzole.ALE.CodeGen
 				module.ImportReference(typeof(double?[])),
 				module.ImportReference(typeof(decimal?[])),
 				module.ImportReference(typeof(bool?[])),
+				module.ImportReference(typeof(Guid?[])),
+				module.ImportReference(typeof(DateTime?[])),
+				module.ImportReference(typeof(TimeSpan?[])),
 				
 				// C# primitives + list + nullable
 				module.ImportReference(typeof(List<byte?>)),
@@ -124,6 +142,9 @@ namespace Hertzole.ALE.CodeGen
 				module.ImportReference(typeof(List<double?>)),
 				module.ImportReference(typeof(List<decimal?>)),
 				module.ImportReference(typeof(List<bool?>)),
+				module.ImportReference(typeof(List<Guid?>)),
+				module.ImportReference(typeof(List<DateTime?>)),
+				module.ImportReference(typeof(List<TimeSpan?>)),
 
 				// Unity primitives
 				module.ImportReference(typeof(AnimationCurve)),

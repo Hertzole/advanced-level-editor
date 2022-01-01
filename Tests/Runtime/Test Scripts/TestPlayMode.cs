@@ -6,7 +6,7 @@ namespace Hertzole.ALE.Tests.TestScripts
 {
 	public class TestPlayMode : MonoBehaviour, ILevelEditorPlayMode
 	{
-		public bool IsPlaying { get; }
+		public bool IsPlaying { get; private set; }
 		public event Action OnStartPlayMode;
 		public event Action OnStopPlayMode;
 
@@ -29,6 +29,10 @@ namespace Hertzole.ALE.Tests.TestScripts
 			{
 				allObjects[i].StartPlayMode();
 			}
+
+			IsPlaying = true;
+			
+			OnStartPlayMode?.Invoke();
 		}
 
 		public void StopPlayMode(ILevelEditor levelEditor)
@@ -38,6 +42,10 @@ namespace Hertzole.ALE.Tests.TestScripts
 			{
 				allObjects[i].StopPlayMode();
 			}
+
+			IsPlaying = false;
+			
+			OnStopPlayMode?.Invoke();
 		}
 	}
 }
