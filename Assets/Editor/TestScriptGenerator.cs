@@ -40,6 +40,16 @@ namespace Hertzole.ALE.Editor
 					AssetDatabase.Refresh();
 				}
 			}
+			EditorGUILayout.Space(30);
+			if (GUILayout.Button("Stloc Test"))
+			{
+				string saveLocation = EditorUtility.SaveFilePanel("Save Test Script", Application.dataPath, $"StlocTest", "cs");
+				if (!string.IsNullOrWhiteSpace(saveLocation))
+				{
+					WriteStloc(saveLocation);
+					AssetDatabase.Refresh();
+				}
+			}
 		}
 
 		private static void WriteTest(string type, string typeName, string saveLocation)
@@ -48,6 +58,47 @@ namespace Hertzole.ALE.Editor
 			sb.Append(TEMPLATE);
 			sb.Replace("REPLACE_NAME", typeName);
 			sb.Replace("REPLACE_TYPE", type);
+			File.WriteAllText(saveLocation, sb.ToString());
+		}
+
+		private static void WriteStloc(string saveLocation)
+		{
+			sb.Clear();
+
+			for (int i = 0; i < 500; i++)
+			{
+				sb.AppendLine($"\t\tint variable{i} = {i};");
+				sb.AppendLine($"\t\tvariable{i} *= 2;");
+			}
+
+			string lines = sb.ToString();
+
+			sb.Clear();
+
+			sb.Append("\t\tDebug.Log($\"");
+			for (int i = 0; i < 500; i++)
+			{
+				sb.Append($"Var {i}: {{variable{i}}}, ");
+			}
+
+			sb.Append("\");");
+
+			string log = sb.ToString();
+			
+			sb.Clear();
+			sb.AppendLine(@"using UnityEngine;
+
+public class ExtremeStloc
+{
+	public void Method()
+	{
+REPLACE_ME
+LOG
+	}
+}");
+
+			sb.Replace("REPLACE_ME", lines);
+			sb.Replace("LOG", log);
 			File.WriteAllText(saveLocation, sb.ToString());
 		}
 

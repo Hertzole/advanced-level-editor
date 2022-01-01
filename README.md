@@ -7,7 +7,7 @@
 
 ⚠ **ALE IS IN VERY EARLY DEVELOPMENT! ANYTHING CAN CHANGE SUDDENLY! USE AT YOUR OWN RISK** ⚠
 
-![Built level editor](https://i.imgur.com/Q8Wgo8n.png)
+![Built level editor](https://i.imgur.com/KXStiWT.png)
 *Image is what ALE currently looks like. Will get periodically updated along with ALE. Keep in mind everything is a work in progress!*
 
 ## ❓ What is it?
@@ -26,7 +26,7 @@ ALE is still in EARLY development. There's still a lot to do and it's nowhere cl
 #### Required
 What needs to be done before 1.0.0 verified.  
 - [x] Binary serialization and deserialization
-- [x] JSON serialization and deserialization
+- [x] JSON serialization and deserialization ([see note](https://hertzole.github.io/advanced-level-editor/docs/serialization/json-serialization))
 - [x] Unified serializer for binary and JSON
 - [x] Editor camera
 - [ ] Full 2D support

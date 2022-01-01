@@ -6,7 +6,7 @@ sidebar_position: 1
 
 ALE will attempt to serialize all your exposed components and custom fields. 
 The serialization backend is provided by [MessagePack for C#](https://github.com/neuecc/MessagePack-CSharp)
-to enable fast and performant serialization both to Binary and JSON.
+to enable fast and performant serialization both to Binary and JSON ([see JSON note](/docs/serialization/json-serialization)).
 
 ## Exposed Components
 
