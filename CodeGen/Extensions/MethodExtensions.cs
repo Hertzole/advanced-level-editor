@@ -520,7 +520,10 @@ namespace Hertzole.ALE.CodeGen
 
         public static ILProcessor BeginEdit(this MethodDefinition method)
         {
-            editingMethods.Add(method, new List<VariableDefinitionInfo>());
+            if (!editingMethods.ContainsKey(method))
+            {
+                editingMethods.Add(method, new List<VariableDefinitionInfo>());
+            }
             
             return method.Body.GetILProcessor();
         }
