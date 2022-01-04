@@ -58,7 +58,7 @@ What needs to be done before 1.0.0 verified.
 What would be really nice to have before 1.0.0 verified.  
 - [ ] Orientation gizmos
 - [ ] Scene grid
-- [ ] Manipulation handles
+- [x] Manipulation handles
 - [ ] Adaptive editor GUI
 - [ ] Tilemap integration
 - [ ] ProBuilder integration
