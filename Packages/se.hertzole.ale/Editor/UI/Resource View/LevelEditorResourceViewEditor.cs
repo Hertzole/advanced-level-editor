@@ -1,5 +1,4 @@
 ﻿using UnityEditor;
-using UnityEngine;
 
 namespace Hertzole.ALE.Editor
 {
@@ -16,15 +15,7 @@ namespace Hertzole.ALE.Editor
         private SerializedProperty iconHandling;
         private SerializedProperty generateAsync;
         private SerializedProperty asyncWaitMethod;
-        private SerializedProperty isOrthographic;
-        private SerializedProperty backgroundColor;
-        private SerializedProperty padding;
-        private SerializedProperty previewDirection;
-        private SerializedProperty imageSize;
-
-        private bool generatePreview = true;
-
-        private Texture previewTexture;
+        private SerializedProperty previewSettings;
 
         private void OnEnable()
         {
@@ -38,11 +29,7 @@ namespace Hertzole.ALE.Editor
             iconHandling = serializedObject.FindProperty(nameof(iconHandling));
             generateAsync = serializedObject.FindProperty(nameof(generateAsync));
             asyncWaitMethod = serializedObject.FindProperty(nameof(asyncWaitMethod));
-            isOrthographic = serializedObject.FindProperty(nameof(isOrthographic));
-            backgroundColor = serializedObject.FindProperty(nameof(backgroundColor));
-            padding = serializedObject.FindProperty(nameof(padding));
-            previewDirection = serializedObject.FindProperty(nameof(previewDirection));
-            imageSize = serializedObject.FindProperty(nameof(imageSize));
+            previewSettings = serializedObject.FindProperty(nameof(previewSettings));
         }
 
         public override void OnInspectorGUI()
@@ -63,53 +50,7 @@ namespace Hertzole.ALE.Editor
 
             EditorGUILayout.Space();
 
-            EditorGUI.BeginChangeCheck();
-            EditorGUILayout.PropertyField(isOrthographic);
-            EditorGUILayout.PropertyField(backgroundColor);
-            padding.floatValue = EditorGUILayout.Slider(padding.displayName, padding.floatValue, -0.25f, 0.25f);
-
-            EditorGUILayout.PropertyField(previewDirection);
-            EditorGUILayout.PropertyField(imageSize);
-
-            if (EditorGUI.EndChangeCheck())
-            {
-                generatePreview = true;
-            }
-
-            EditorGUIHelper.DrawFancyFoldout(isOrthographic, "Preview", false, () =>
-            {
-                if (generatePreview)
-                {
-                    if (previewTexture != null)
-                    {
-                        DestroyImmediate(previewTexture);
-                    }
-
-                    RuntimePreviewGenerator.OrthographicMode = isOrthographic.boolValue;
-                    RuntimePreviewGenerator.Padding = padding.floatValue;
-                    RuntimePreviewGenerator.BackgroundColor = backgroundColor.colorValue;
-                    RuntimePreviewGenerator.PreviewDirection = previewDirection.vector3Value;
-
-                    GameObject go = GameObject.CreatePrimitive(PrimitiveType.Cube);
-                    previewTexture = RuntimePreviewGenerator.GenerateModelPreview(go.transform, imageSize.vector2IntValue.x, imageSize.vector2IntValue.y, true);
-                    DestroyImmediate(go);
-
-                    generatePreview = false;
-                }
-
-                Color oColor = GUI.backgroundColor;
-                GUI.backgroundColor = Color.clear;
-                GUILayout.BeginHorizontal();
-                GUILayout.FlexibleSpace();
-
-
-                GUILayout.Box(previewTexture, GUILayout.MaxWidth(EditorGUIUtility.currentViewWidth));
-
-                GUILayout.FlexibleSpace();
-                GUILayout.EndHorizontal();
-                GUI.backgroundColor = oColor;
-
-            });
+            EditorGUILayout.PropertyField(previewSettings);
 
             serializedObject.ApplyModifiedProperties();
         }
