@@ -55,6 +55,8 @@ namespace Hertzole.ALE
 		public ILevelEditorUndo Undo { get; set; }
 
 		public IReadOnlyList<ILevelEditorMode> EditorModes { get { return editorModes; } set { editorModes = value.ToArrayFast(); } }
+		
+		public event EventHandler<EditorModeChangeEventArgs> OnEditorModeChanged;
 
 		public bool IsDirty { get; private set; }
 
@@ -229,13 +231,18 @@ namespace Hertzole.ALE
 				return;
 			}
 
+			ILevelEditorMode previousMode = null;
+			
 			if (selectedMode >= 0)
 			{
+				previousMode = editorModes[selectedMode];
 				editorModes[selectedMode].OnModeDisable();
 			}
 
 			selectedMode = newMode;
 			editorModes[selectedMode].OnModeEnable();
+			
+			OnEditorModeChanged?.Invoke(this, new EditorModeChangeEventArgs(previousMode, editorModes[selectedMode]));
 		}
 
 		public void SetMode<T>() where T : ILevelEditorMode
