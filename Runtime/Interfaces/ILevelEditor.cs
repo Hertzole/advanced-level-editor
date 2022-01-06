@@ -1,38 +1,53 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 
 namespace Hertzole.ALE
 {
-    public interface ILevelEditor
-    {
-        ILevelEditorSnapping Snapping { get; }
+	public class EditorModeChangeEventArgs : EventArgs
+	{
+		public ILevelEditorMode PreviousMode { get; }
+		public ILevelEditorMode NewMode { get; }
 
-        ILevelEditorCamera LevelEditorCamera { get; set; }
-        ILevelEditorUI UI { get; set; }
-        ILevelEditorSaveManager SaveManager { get; set; }
-        ILevelEditorObjectManager ObjectManager { get; set; }
-        ILevelEditorInput Input { get; set; }
-        ILevelEditorSelection Selection { get; set; }
-        ILevelEditorPlayMode PlayMode { get; set; }
-        ILevelEditorUndo Undo { get; set; }
-        
-        IReadOnlyList<ILevelEditorMode> EditorModes { get; set; }
+		public EditorModeChangeEventArgs(ILevelEditorMode previousMode, ILevelEditorMode newMode)
+		{
+			PreviousMode = previousMode;
+			NewMode = newMode;
+		}
+	}
 
-        bool IsDirty { get; }
+	public interface ILevelEditor
+	{
+		ILevelEditorSnapping Snapping { get; }
 
-        void SetMode(int newMode, bool wrapAroundOutOfRange = false);
+		ILevelEditorCamera LevelEditorCamera { get; set; }
+		ILevelEditorUI UI { get; set; }
+		ILevelEditorSaveManager SaveManager { get; set; }
+		ILevelEditorObjectManager ObjectManager { get; set; }
+		ILevelEditorInput Input { get; set; }
+		ILevelEditorSelection Selection { get; set; }
+		ILevelEditorPlayMode PlayMode { get; set; }
+		ILevelEditorUndo Undo { get; set; }
 
-        void SetMode<T>() where T : ILevelEditorMode;
+		IReadOnlyList<ILevelEditorMode> EditorModes { get; set; }
 
-        T GetMode<T>() where T : ILevelEditorMode;
-        
-        bool TryGetEditorMode<T>(out T mode) where T : ILevelEditorMode;
+		event EventHandler<EditorModeChangeEventArgs> OnEditorModeChanged; 
 
-        void NewLevel();
+		bool IsDirty { get; }
 
-        void MarkDirty();
+		void SetMode(int newMode, bool wrapAroundOutOfRange = false);
 
-        bool StartPlayMode(out string failReason);
+		void SetMode<T>() where T : ILevelEditorMode;
 
-        bool StopPlayMode(out string failReason);
-    }
+		T GetMode<T>() where T : ILevelEditorMode;
+
+		bool TryGetEditorMode<T>(out T mode) where T : ILevelEditorMode;
+
+		void NewLevel();
+
+		void MarkDirty();
+
+		bool StartPlayMode(out string failReason);
+
+		bool StopPlayMode(out string failReason);
+	}
 }
