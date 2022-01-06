@@ -218,6 +218,14 @@ namespace Hertzole.ALE
 #endif
         }
 
+        public static void ApplySettings(PreviewGeneratorSettings settings)
+        {
+            OrthographicMode = settings.IsOrthographic;
+            BackgroundColor = settings.BackgroundColor;
+            Padding = settings.Padding;
+            PreviewDirection = settings.PreviewDirection;
+        }
+
         public static Texture2D GenerateMaterialPreview(Material material, PrimitiveType previewObject, int width = 64, int height = 64)
         {
             return GenerateMaterialPreviewWithShader(material, previewObject, null, null, width, height);

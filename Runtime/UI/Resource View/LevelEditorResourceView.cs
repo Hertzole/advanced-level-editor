@@ -49,16 +49,8 @@ namespace Hertzole.ALE
 		private bool generateAsync;
 		[SerializeField]
 		private WaitMethod asyncWaitMethod = WaitMethod.EndOfFrame;
-		[SerializeField]
-		private bool isOrthographic = true;
-		[SerializeField]
-		private Color backgroundColor = Color.clear;
-		[SerializeField]
-		private float padding;
-		[SerializeField]
-		private Vector3 previewDirection = new Vector3(-1f, -1f, -1f);
-		[SerializeField]
-		private Vector2Int imageSize = new Vector2Int(128, 128);
+		[SerializeField] 
+		private PreviewGeneratorSettings previewSettings = PreviewGeneratorSettings.Default;
 
 		private bool creatingIcons;
 
@@ -320,7 +312,7 @@ namespace Hertzole.ALE
 				}
 
 				Texture2D icon = GetIconTexture(go.transform);
-				Sprite spriteIcon = Sprite.Create(icon, new Rect(0, 0, imageSize.x, imageSize.y), new Vector2(0.5f, 0.5f));
+				Sprite spriteIcon = Sprite.Create(icon, new Rect(0, 0, previewSettings.ImageSize.x, previewSettings.ImageSize.y), new Vector2(0.5f, 0.5f));
 
 				if (iconHandling == IconHandling.SaveInMemory)
 				{
@@ -337,13 +329,10 @@ namespace Hertzole.ALE
 
 		public Texture2D GetIconTexture(Transform obj)
 		{
-			RuntimePreviewGenerator.OrthographicMode = isOrthographic;
-			RuntimePreviewGenerator.BackgroundColor = backgroundColor;
-			RuntimePreviewGenerator.Padding = padding;
-			RuntimePreviewGenerator.PreviewDirection = previewDirection;
+			RuntimePreviewGenerator.ApplySettings(previewSettings);
 			RuntimePreviewGenerator.MarkTextureNonReadable = true;
 
-			return RuntimePreviewGenerator.GenerateModelPreview(obj, imageSize.x, imageSize.y, true);
+			return RuntimePreviewGenerator.GenerateModelPreview(obj, previewSettings.ImageSize.x, previewSettings.ImageSize.y, true);
 		}
 
 		private void OnClickAssetButton(object sender, AssetButtonClickArgs args)
