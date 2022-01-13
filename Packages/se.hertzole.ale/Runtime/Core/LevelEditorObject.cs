@@ -9,20 +9,8 @@ namespace Hertzole.ALE
     [DisallowMultipleComponent]
     [AddComponentMenu("")]
 #endif
-    public class LevelEditorObject : MonoBehaviour, ILevelEditorObject, IEquatable<LevelEditorObject>, IEquatable<ILevelEditorObject>
+    public class LevelEditorObject : MonoBehaviour, ILevelEditorObject, IEquatable<LevelEditorObject>
     {
-        // private struct ValueInfo
-        // {
-        //     public int id;
-        //     public object value;
-        //
-        //     public ValueInfo(int id, object value)
-        //     {
-        //         this.id = id;
-        //         this.value = value;
-        //     }
-        // }
-
         private bool gotComponents = false;
         private bool gotPlayModeObjects = false;
 
