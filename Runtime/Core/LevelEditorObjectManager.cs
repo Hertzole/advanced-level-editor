@@ -18,7 +18,7 @@ namespace Hertzole.ALE
         [SerializeField, RequireType(typeof(ILevelEditorUndo))]
         private GameObject undo = null;
 
-        private uint instanceID = 0;
+        private uint nextInstanceID = 0;
 
         private ILevelEditorResources realResources;
         private ILevelEditorUndo undoComp;
@@ -76,83 +76,98 @@ namespace Hertzole.ALE
         public ILevelEditorObject CreateObject(ILevelEditorResource resource, Vector3 position, Quaternion rotation, Transform parent, uint instanceID, bool registerUndo = true)
         {
             LevelEditorLogger.Log($"Create object | Resource: {resource} | Position: {position} | Rotation: {rotation} | Parent: {parent} | Instance ID: {instanceID} | Register undo: {registerUndo}");
-            
+
             if (resource.Asset is GameObject go)
             {
-                if (objectsWithId.ContainsKey(instanceID))
+                return CreateLevelEditorObject((p, r, par) =>
                 {
-                    throw new DuplicateIDException($"There already is an object with the instance ID {instanceID}.");
-                }
+                    GameObject objGo = Instantiate(go, p, r, par);
+                    return objGo.GetOrAddComponent<LevelEditorObject>();
+                }, resource, instanceID, registerUndo, position, rotation, parent);
+            }
 
-                LevelEditorObjectEventSpawningEvent args = new LevelEditorObjectEventSpawningEvent(resource);
-
-                OnCreatingObject?.Invoke(this, args);
-
-                if (args.Cancel)
+            if (resource.Asset is Component comp)
+            {
+                return CreateLevelEditorObject((p, r, par) =>
                 {
-                    LevelEditorLogger.Log("CreateObject canceled. Returning null.");
-                    return null;
-                }
+                    Component objGo = Instantiate(comp, p, r, par);
+                    return objGo.gameObject.GetOrAddComponent<LevelEditorObject>();
+                }, resource, instanceID, registerUndo, position, rotation, parent);
+            }
 
-                ILevelEditorObject obj;
+            Debug.LogError($"Tried to create {resource.Name} ({resource.ID}) but the asset is not a prefab.");
+            return null;
+        }
 
-                if (poolObjects && pooledObjects.ContainsKey(resource.ID) && pooledObjects[resource.ID].Count > 0)
-                {
-                    obj = pooledObjects[resource.ID].Pop();
-                    obj.MyGameObject.transform.SetPositionAndRotation(position, rotation);
-                    obj.MyGameObject.transform.SetParent(parent);
-                }
-                else
-                {
-                    GameObject objGo = Instantiate(go, position, rotation, parent);
-                    obj = objGo.GetOrAddComponent<LevelEditorObject>();
-                    obj.ID = resource.ID;
+        private ILevelEditorObject CreateLevelEditorObject(Func<Vector3, Quaternion, Transform, ILevelEditorObject> createObject, ILevelEditorResource resource, uint instanceID, bool registerUndo, Vector3 position, Quaternion rotation, Transform parent)
+        {
+            if (objectsWithId.ContainsKey(instanceID))
+            {
+                throw new DuplicateIDException($"There already is an object with the instance ID {instanceID}.");
+            }
 
-                    LevelEditorComponentWrapper.AddWrappers(objGo);
-                    obj.GetExposedComponents();
-                }
+            LevelEditorObjectEventSpawningEvent args = new LevelEditorObjectEventSpawningEvent(resource);
 
-                obj.MyGameObject.name = resource.Name;
-                obj.InstanceID = instanceID;
-                obj.MyGameObject.SetActive(true);
+            OnCreatingObject?.Invoke(this, args);
 
-                if (instanceID >= this.instanceID)
-                {
-                    this.instanceID = instanceID;
-                }
+            if (args.Cancel)
+            {
+                LevelEditorLogger.Log("CreateObject canceled. Returning null.");
+                return null;
+            }
+            
+            ILevelEditorObject obj;
 
-                if (!activeObjects.ContainsKey(resource.ID))
-                {
-                    activeObjects.Add(resource.ID, new List<ILevelEditorObject>());
-                }
-
-                if (!objectCount.ContainsKey(resource.ID))
-                {
-                    objectCount.Add(resource.ID, 0);
-                }
-
-                activeObjects[resource.ID].Add(obj);
-                objectCount[resource.ID]++;
-                allObjects.Add(obj);
-
-                obj.OnUnPooled();
-
-                objectsWithId[obj.InstanceID] = obj;
-
-                OnCreatedObject?.Invoke(this, new LevelEditorObjectEvent(obj));
-
-                if (registerUndo && Undo != null)
-                {
-                    undoComp.AddAction(new CreateObjectUndoAction(resource, position, rotation, parent, instanceID, obj));
-                }
-
-                return obj;
+            if (poolObjects && pooledObjects.ContainsKey(resource.ID) && pooledObjects[resource.ID].Count > 0)
+            {
+                obj = pooledObjects[resource.ID].Pop();
+                obj.MyGameObject.transform.SetPositionAndRotation(position, rotation);
+                obj.MyGameObject.transform.SetParent(parent);
             }
             else
             {
-                Debug.LogError($"Tried to create {resource.Name} ({resource.ID}) but the asset is not a prefab.");
-                return null;
+                obj = createObject.Invoke(position, rotation, parent);
+                obj.ID = resource.ID;
+
+                LevelEditorComponentWrapper.AddWrappers(obj.MyGameObject);
+                obj.GetExposedComponents();
             }
+            
+            obj.MyGameObject.name = resource.Name;
+            obj.InstanceID = instanceID;
+            obj.MyGameObject.SetActive(true);
+
+            if (instanceID >= nextInstanceID)
+            {
+                nextInstanceID = instanceID;
+            }
+
+            if (!activeObjects.ContainsKey(resource.ID))
+            {
+                activeObjects.Add(resource.ID, new List<ILevelEditorObject>());
+            }
+
+            if (!objectCount.ContainsKey(resource.ID))
+            {
+                objectCount.Add(resource.ID, 0);
+            }
+
+            activeObjects[resource.ID].Add(obj);
+            objectCount[resource.ID]++;
+            allObjects.Add(obj);
+
+            obj.OnUnPooled();
+
+            objectsWithId[obj.InstanceID] = obj;
+
+            OnCreatedObject?.Invoke(this, new LevelEditorObjectEvent(obj));
+
+            if (registerUndo && Undo != null)
+            {
+                undoComp.AddAction(new CreateObjectUndoAction(resource, position, rotation, parent, instanceID, obj));
+            }
+
+            return obj;
         }
 
         public void CreateObjectsFromSaveData(LevelEditorSaveData data)
@@ -273,7 +288,7 @@ namespace Hertzole.ALE
 
         public void ResetInstanceID()
         {
-            instanceID = 0;
+            nextInstanceID = 0;
         }
 
         public List<ILevelEditorObject> GetAllObjects()
@@ -304,7 +319,7 @@ namespace Hertzole.ALE
 
         public uint GetNextInstanceID()
         {
-            return instanceID + 1;
+            return nextInstanceID + 1;
         }
     }
 }
