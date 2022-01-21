@@ -17,6 +17,7 @@ namespace Hertzole.ALE.CodeGen
 		private readonly List<int> usedIds = new List<int>();
 		private readonly List<int> allUsedIds = new List<int>();
 		private readonly List<TypeDefinition> parents = new List<TypeDefinition>();
+		private readonly HashSet<TypeDefinition> processedTypes = new HashSet<TypeDefinition>(new TypeDefinitionComparer());
 
 		private const string BEGIN_EDIT_METHOD = "ALE__GENERATED__BeginEdit";
 		private const string MODIFY_VALUE_METHOD = "ALE__GENERATED__ModifyValue";
@@ -47,10 +48,12 @@ namespace Hertzole.ALE.CodeGen
 
 		private void ProcessType(TypeDefinition type, bool checkParents)
 		{
-			if (!SetInterface(checkParents, type, parents, out bool isChild))
+			if (processedTypes.Contains(type))
 			{
 				return;
 			}
+
+			SetInterface(checkParents, type, parents, out bool isChild);
 
 			allExposedProperties.Clear();
 			allUsedIds.Clear();
@@ -58,6 +61,7 @@ namespace Hertzole.ALE.CodeGen
 			GetExposedProperties(type, resultExposedProperties, usedIds);
 			if (resultExposedProperties.Count == 0)
 			{
+				processedTypes.Add(type);
 				return;
 			}
 
@@ -93,9 +97,11 @@ namespace Hertzole.ALE.CodeGen
 			CreateGetValue(type, Module, resultExposedProperties, isChild);
 			CreateGetWrapper(type, Module, allExposedProperties, isChild, wrapper);
 			CreateApplyWrapper(type, Module, resultExposedProperties, isChild);
+		
+			processedTypes.Add(type);
 		}
 
-		private bool SetInterface(bool checkParents, TypeDefinition type, IList<TypeDefinition> parentList, out bool isChild)
+		private void SetInterface(bool checkParents, TypeDefinition type, IList<TypeDefinition> parentList, out bool isChild)
 		{
 			if (checkParents)
 			{
@@ -104,14 +110,9 @@ namespace Hertzole.ALE.CodeGen
 
 			isChild = false;
 
-			if (type.ImplementsInterface<IExposedToLevelEditor>())
-			{
-				return false;
-			}
-
 			for (int i = 0; i < parentList.Count; i++)
 			{
-				if (parentList[i].ImplementsInterface<IExposedToLevelEditor>())
+				if (processedTypes.Contains(parentList[i]))
 				{
 					isChild = true;
 					break;
@@ -120,10 +121,8 @@ namespace Hertzole.ALE.CodeGen
 
 			if (!isChild)
 			{
-				Type.Interfaces.Add(new InterfaceImplementation(Module.GetTypeReference<IExposedToLevelEditor>()));
+				type.Interfaces.Add(new InterfaceImplementation(Module.GetTypeReference<IExposedToLevelEditor>()));
 			}
-
-			return true;
 		}
 
 		private void CheckParents(TypeDefinition type, IList<TypeDefinition> parentsList)

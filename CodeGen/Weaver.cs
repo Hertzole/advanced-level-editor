@@ -77,6 +77,8 @@ namespace Hertzole.ALE.CodeGen
                 processors[i].IsBuildingPlayer = isBuildingPlayer;
             }
 
+            CustomAttribute processedAttribute = new CustomAttribute(module.GetConstructor<ALEProcessedAttribute>());
+
             IEnumerable<TypeDefinition> types = module.GetTypes();
             foreach (TypeDefinition type in types)
             {
@@ -84,6 +86,8 @@ namespace Hertzole.ALE.CodeGen
                 {
                     continue;
                 }
+
+                bool dirty = false;
 
                 for (int i = 0; i < processors.Length; i++)
                 {
@@ -95,7 +99,12 @@ namespace Hertzole.ALE.CodeGen
                     processors[i].Type = type;
 
                     processors[i].ProcessClass(type);
-                    type.CustomAttributes.Add(new CustomAttribute(module.ImportReference(typeof(ALEProcessedAttribute).GetConstructor(Type.EmptyTypes))));
+                    dirty = true;
+                }
+                
+                if(dirty)
+                {
+                    type.CustomAttributes.Add(processedAttribute);
                 }
             }
 
