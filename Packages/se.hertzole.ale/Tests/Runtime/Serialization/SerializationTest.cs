@@ -707,10 +707,11 @@ namespace Hertzole.ALE.Tests
 
 			if (newValue is ICollection newValueCollection && type.Value is ICollection valueCollection)
 			{
-				Assert.IsTrue(newValueCollection.IsSameAs(valueCollection), $"Collection was not the same.");
+				Assert.IsTrue(newValueCollection.IsSameAs(valueCollection), "Collection was not the same.");
 			}
 			else
 			{
+				Debug.Log(newValue + " | " + type.Value);
 				Assert.AreEqual(newValue, type.Value, "Value was not properly saved.");
 			}
 
@@ -772,12 +773,12 @@ namespace Hertzole.ALE.Tests
 			yield return null;
 		}
 
-		private void Save()
+		protected void Save()
 		{
 			saveManager.SaveLevel("Test Level", filePath);
 		}
 
-		private void Load()
+		protected void Load()
 		{
 			saveManager.LoadLevel(filePath);
 		}

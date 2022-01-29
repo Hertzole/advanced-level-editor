@@ -52,10 +52,9 @@ namespace Hertzole.ALE.CodeGen
 
         public void ProcessAssembly(ModuleDefinition module, string[] defines)
         {
-            RegisterTypeProcessor typeRegister = new RegisterTypeProcessor(module);
             ResolverProcessor resolver = new ResolverProcessor(module);
             FormatterProcessor formatter = new FormatterProcessor(this, module, resolver);
-            CustomDataProcessor customData = new CustomDataProcessor(this, module, typeRegister, resolver, formatter);
+            CustomDataProcessor customData = new CustomDataProcessor(this, module, resolver, formatter);
 
             bool isBuildingPlayer = true;
             for (int i = 0; i < defines.Length; i++)
@@ -71,7 +70,6 @@ namespace Hertzole.ALE.CodeGen
             {
                 processors[i].Weaver = this;
                 processors[i].Module = module;
-                processors[i].TypeRegister = typeRegister;
                 processors[i].Resolver = resolver;
                 processors[i].Formatters = formatter;
                 processors[i].IsBuildingPlayer = isBuildingPlayer;
@@ -109,7 +107,6 @@ namespace Hertzole.ALE.CodeGen
             }
 
             customData.EndEditing();
-            typeRegister.EndEditing(isBuildingPlayer);
             formatter.EndEditing(); // Important to be before resolver!
             resolver.EndEditing(isBuildingPlayer);
         }

@@ -58,8 +58,39 @@ namespace Hertzole.ALE.CodeGen
 			{
 				return;
 			}
+			
+			if (type is GenericInstanceType genericType)
+			{
+				for (int i = 0; i < genericType.GenericArguments.Count; i++)
+				{
+					AddCustomDataType(genericType.GenericArguments[i]);
+				}
 
-			customDataTypes.Add(module.ImportReference(type));
+				customDataTypes.Add(type);
+
+				return;
+			}
+			
+			if (type.IsArray())
+			{
+				customDataTypes.Add(type);
+				AddCustomDataType(type.GetCollectionType());
+				return;
+			}
+			
+			TypeDefinition resolved = type.Resolve();
+			if (resolved == null || customDataTypes.Contains(resolved) || resolved.IsCollection() || resolved.IsComponent())
+			{
+				return;
+			}
+
+			if (resolved.IsEnum())
+			{
+				customDataTypes.Add(resolved);
+				return;
+			}
+
+			customDataTypes.Add(type);
 		}
 
 		public void AddEnum(TypeDefinition type)
@@ -210,6 +241,22 @@ namespace Hertzole.ALE.CodeGen
 					{
 						il.EmitInt(formerHashedAttributes[j].GetConstructorArgument(0, string.Empty).GetStableHashCode());
 						il.Emit(OpCodes.Call, module.GetMethod(typeof(LevelEditorSerializer), "RegisterType", typeof(int)).MakeGenericMethod(wrapperFormatters[i].Item3));
+					}
+				}
+			}
+
+			for (int i = 0; i < customDataTypes.Count; i++)
+			{
+				il.EmitInt(customDataTypes[i].GetFullName().GetStableHashCode());
+				il.Emit(OpCodes.Call, module.GetMethod(typeof(LevelEditorSerializer), "RegisterType", typeof(int)).MakeGenericMethod(customDataTypes[i]));
+
+				var resolved = customDataTypes[i].Resolve();
+				if (resolved != null && resolved.TryGetAttributes<FormerlyHashedAsAttribute>(out CustomAttribute[] formerHashedAttributes))
+				{
+					for (int j = 0; j < formerHashedAttributes.Length; j++)
+					{
+						il.EmitInt(formerHashedAttributes[j].GetConstructorArgument(0, string.Empty).GetStableHashCode());
+						il.Emit(OpCodes.Call, module.GetMethod(typeof(LevelEditorSerializer), "RegisterType", typeof(int)).MakeGenericMethod(customDataTypes[i]));
 					}
 				}
 			}

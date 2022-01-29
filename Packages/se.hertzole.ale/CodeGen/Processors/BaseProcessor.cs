@@ -8,7 +8,6 @@ namespace Hertzole.ALE.CodeGen
         public Weaver Weaver { get; set; }
         public ModuleDefinition Module { get; set; }
         public TypeDefinition Type { get; set; }
-        public RegisterTypeProcessor TypeRegister { get; set; }
         public ResolverProcessor Resolver { get; set; }
         public FormatterProcessor Formatters { get; set; }
         

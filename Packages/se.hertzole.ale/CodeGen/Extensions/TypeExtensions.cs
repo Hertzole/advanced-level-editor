@@ -2,6 +2,7 @@
 using System.CodeDom;
 using System.Collections.Generic;
 using System.Reflection;
+using System.Text;
 using MessagePack.Formatters;
 using Mono.Cecil;
 using Mono.Cecil.Cil;
@@ -125,6 +126,41 @@ namespace Hertzole.ALE.CodeGen
 
 				// Go to the next base type.
 				baseType = resolved.BaseType;
+			}
+		}
+
+		private static readonly object lockObj = new object();
+		private static readonly StringBuilder sb = new StringBuilder();
+		
+		public static string GetFullName(this TypeReference type)
+		{
+			lock (lockObj)
+			{
+				sb.Clear();
+				sb.Append(type.Namespace + ".");
+				sb.Append(type.Name);
+
+				if (type is GenericInstanceType genericType)
+				{
+					sb.Append("<");
+
+					for (int i = 0; i < genericType.GenericArguments.Count; i++)
+					{
+						if (!string.IsNullOrEmpty(genericType.GenericArguments[i].Namespace))
+						{
+							sb.Append(genericType.GenericArguments[i].Namespace + ".");
+						}
+						sb.Append(genericType.GenericArguments[i].Name);
+						if (i != genericType.GenericArguments.Count - 1)
+						{
+							sb.Append(", ");
+						}
+					}
+
+					sb.Append(">");
+				}
+
+				return sb.ToString();
 			}
 		}
 
