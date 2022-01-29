@@ -12,15 +12,13 @@ namespace Hertzole.ALE.CodeGen
 		private readonly MethodDefinition addDataMethod;
 		private readonly FormatterProcessor formatterProcessor;
 		private readonly ModuleDefinition module;
-		private readonly RegisterTypeProcessor registerTypeProcessor;
 		private readonly ResolverProcessor resolverProcessor;
 		private readonly Weaver weaver;
 
-		public CustomDataProcessor(Weaver weaver, ModuleDefinition module, RegisterTypeProcessor registerTypeProcessor, ResolverProcessor resolverProcessor, FormatterProcessor formatterProcessor)
+		public CustomDataProcessor(Weaver weaver, ModuleDefinition module, ResolverProcessor resolverProcessor, FormatterProcessor formatterProcessor)
 		{
 			this.weaver = weaver;
 			this.module = module;
-			this.registerTypeProcessor = registerTypeProcessor;
 			this.resolverProcessor = resolverProcessor;
 			this.formatterProcessor = formatterProcessor;
 
@@ -71,6 +69,12 @@ namespace Hertzole.ALE.CodeGen
 							}
 						}
 
+						if (back.OpCode == OpCodes.Ldfld && back.Operand is FieldDefinition field)
+						{
+							dataType = field.FieldType;
+							break;
+						}
+
 						back = back.Previous;
 					}
 
@@ -83,7 +87,6 @@ namespace Hertzole.ALE.CodeGen
 					dataType = module.ImportReference(dataType);
 
 					resolverProcessor.AddCustomDataType(dataType);
-					registerTypeProcessor.AddType(dataType);
 					formatterProcessor.AddTypeToGenerate(dataType);
 					resolverProcessor.AddTypeFormatter(
 						module.GetTypeReference(typeof(DictionaryFormatter<,>)).MakeGenericInstanceType(module.GetTypeReference<string>(), dataType),

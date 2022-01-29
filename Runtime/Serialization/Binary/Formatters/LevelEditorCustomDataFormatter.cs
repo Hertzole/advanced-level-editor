@@ -19,7 +19,8 @@ namespace Hertzole.ALE
 
 			writer.WriteArrayHeader(2);
 
-			writer.WriteInt32(value.type.FullName.GetStableHashCode());
+			LevelEditorLogger.Log($"Writing hash {value.type.GetFullName().GetStableHashCode()} for type {value.type.GetFullName()}");
+			writer.WriteInt32(value.type.GetFullName().GetStableHashCode());
 			((LevelEditorResolver) LevelEditorResolver.instance).SerializeDynamic(value.type, ref writer, value.value, options);
 		}
 
@@ -103,7 +104,9 @@ namespace Hertzole.ALE
 				switch (i)
 				{
 					case 0:
-						type = LevelEditorSerializer.GetType(reader.ReadInt32());
+						int typeHash = reader.ReadInt32();
+						type = LevelEditorSerializer.GetType(typeHash);
+						LevelEditorLogger.Log($"Read type hash {typeHash} | {type}");
 						break;
 					case 1:
 						if (type == null)

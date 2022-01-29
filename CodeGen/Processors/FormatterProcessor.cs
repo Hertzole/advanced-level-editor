@@ -168,6 +168,7 @@ namespace Hertzole.ALE.CodeGen
 				module.ImportReference(typeof(Vector3Int)),
 				module.ImportReference(typeof(Vector4)),
 				module.ImportReference(typeof(WrapMode)),
+				module.ImportReference(typeof(RangeInt)),
 
 				// Unity primitives + array
 				module.ImportReference(typeof(AnimationCurve[])),
@@ -191,6 +192,7 @@ namespace Hertzole.ALE.CodeGen
 				module.ImportReference(typeof(Vector3Int[])),
 				module.ImportReference(typeof(Vector4[])),
 				module.ImportReference(typeof(WrapMode[])),
+				module.ImportReference(typeof(RangeInt[])),
 
 				// Unity primitives + list
 				module.ImportReference(typeof(List<AnimationCurve>)),
@@ -214,6 +216,7 @@ namespace Hertzole.ALE.CodeGen
 				module.ImportReference(typeof(List<Vector3Int>)),
 				module.ImportReference(typeof(List<Vector4>)),
 				module.ImportReference(typeof(List<WrapMode>)),
+				module.ImportReference(typeof(List<RangeInt>)),
 
 				// Unity primitives + nullable
 				module.ImportReference(typeof(Bounds?)),
@@ -234,6 +237,7 @@ namespace Hertzole.ALE.CodeGen
 				module.ImportReference(typeof(Vector3Int?)),
 				module.ImportReference(typeof(Vector4?)),
 				module.ImportReference(typeof(WrapMode?)),
+				module.ImportReference(typeof(RangeInt?)),
 
 				// Unity primitives + array + nullable
 				module.ImportReference(typeof(Bounds?[])),
@@ -254,6 +258,7 @@ namespace Hertzole.ALE.CodeGen
 				module.ImportReference(typeof(Vector3Int?[])),
 				module.ImportReference(typeof(Vector4?[])),
 				module.ImportReference(typeof(WrapMode?[])),
+				module.ImportReference(typeof(RangeInt?[])),
 
 				// Unity primitives + list + nullable
 				module.ImportReference(typeof(List<Bounds?>)),
@@ -274,7 +279,8 @@ namespace Hertzole.ALE.CodeGen
 				module.ImportReference(typeof(List<Vector3Int?>)),
 				module.ImportReference(typeof(List<Vector4?>)),
 				module.ImportReference(typeof(List<WrapMode?>)),
-				
+				module.ImportReference(typeof(List<RangeInt?>)),
+
 				// ALE types
 				module.ImportReference(typeof(LevelEditorIdentifier)),
 				
@@ -294,7 +300,7 @@ namespace Hertzole.ALE.CodeGen
 			{
 				for (int i = 0; i < genericType.GenericArguments.Count; i++)
 				{
-					AddTypeToGenerate(genericType.GenericArguments[i].GetCollectionType());
+					AddTypeToGenerate(genericType.GenericArguments[i]);
 				}
 
 				if (type.IsList())
