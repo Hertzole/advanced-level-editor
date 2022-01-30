@@ -121,6 +121,7 @@ namespace Hertzole.ALE
 
 			for (int i = 0; i < ids.Length; i++)
 			{
+				bool found = false;
 				for (int j = 0; j < objects.Count; j++)
 				{
 					if (objects[j].InstanceID == ids[i])
@@ -128,21 +129,30 @@ namespace Hertzole.ALE
 						if (typeof(T) == typeof(GameObject))
 						{
 							values.Add(objects[j].MyGameObject as T);
+							found = true;
 							break;
 						}
 
 						if (typeof(T) == typeof(Transform))
 						{
 							values.Add(objects[j].MyGameObject.transform as T);
+							found = true;
 							break;
 						}
 					
 						if (objects[j].MyGameObject.TryGetComponent(out T val))
 						{
 							values.Add(val);
+							found = true;
 							break;
 						}
 					}
+				}
+
+				// If nothing was found, just add null.
+				if (!found)
+				{
+					values.Add(null);
 				}
 			}
 			

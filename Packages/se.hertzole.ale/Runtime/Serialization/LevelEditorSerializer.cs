@@ -35,6 +35,8 @@ namespace Hertzole.ALE
 		{
 			SetCompression(compress);
 
+			// Debug.Log(MessagePackSerializer.SerializeToJson(data, Options));
+
 			return MessagePackSerializer.Serialize(data, Options);
 		}
 

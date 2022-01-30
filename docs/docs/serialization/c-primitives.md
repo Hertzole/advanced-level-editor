@@ -10,3 +10,9 @@ and `char`. There's also some special structs that also can be serialized. These
 
 It also supports all these types as an array (for example `int[]`), as lists (for example `List<int>`), and as nullable 
 (for example `int?`).
+
+:::tip Fully Tested
+
+All the types above are covered by serialization tests! They are completely safe to use without any surprise issues.
+
+:::

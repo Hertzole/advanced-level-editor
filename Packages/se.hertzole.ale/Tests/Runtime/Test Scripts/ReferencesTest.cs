@@ -54,26 +54,26 @@ namespace Hertzole.ALE.Tests.TestScripts
 	public class TempTestScriptReferenceScript : MonoBehaviour
 	{
 		[ExposeToLevelEditor(0)]
-		public TempTestScript value;
+		public ScriptReference value;
 		[ExposeToLevelEditor(1)]
-		public TempTestScript Value { get; set; }
+		public ScriptReference Value { get; set; }
 	}
 
 	public class TempTestScriptReferenceArrayScript : MonoBehaviour
 	{
 		[ExposeToLevelEditor(0)]
-		public TempTestScript[] value;
+		public ScriptReference[] value;
 		[ExposeToLevelEditor(1)]
-		public TempTestScript[] Value { get; set; }
+		public ScriptReference[] Value { get; set; }
 	}
 
 	public class TempTestScriptReferenceListScript : MonoBehaviour
 	{
 		[ExposeToLevelEditor(0)]
-		public List<TempTestScript> value = new List<TempTestScript>();
+		public List<ScriptReference> value = new List<ScriptReference>();
 		[ExposeToLevelEditor(1)]
-		public List<TempTestScript> Value { get; set; } = new List<TempTestScript>();
+		public List<ScriptReference> Value { get; set; } = new List<ScriptReference>();
 	}
 
-	public class TempTestScript : MonoBehaviour { }
+	public class ScriptReference : MonoBehaviour { }
 }

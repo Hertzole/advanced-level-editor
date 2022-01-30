@@ -1,5 +1,7 @@
 // DO NOT MODIFY! THIS IS A GENERATED FILE!
 
+#nullable enable
+
 using System;
 using System.Collections.Generic;
 using UnityEngine;
@@ -7,9 +9,11 @@ using static Hertzole.ALE.Tests.SerializationTest;
 
 // ReSharper disable ConvertToAutoProperty
 
+#pragma warning disable CS8618
+
 namespace Hertzole.ALE.Tests.TestScripts
 {
-	public class SByteField1 : MonoBehaviour, IValue<sbyte>
+	public class SbyteField1 : MonoBehaviour, IValue<sbyte>
 	{
 		[ExposeToLevelEditor(VALUE_0_ID)]
 		private sbyte value;
@@ -18,7 +22,7 @@ namespace Hertzole.ALE.Tests.TestScripts
 		public sbyte Value { get { return value; } set { this.value = value; } }
 	}
 
-	public class SByteField2 : MonoBehaviour, IValue<sbyte>
+	public class SbyteField2 : MonoBehaviour, IValue<sbyte>
 	{
 		[ExposeToLevelEditor(VALUE_100_ID)]
 		private sbyte value;
@@ -27,7 +31,7 @@ namespace Hertzole.ALE.Tests.TestScripts
 		public sbyte Value { get { return value; } set { this.value = value; } }
 	}
 
-	public class SByteFields1 : MonoBehaviour, IValues<sbyte>
+	public class SbyteFields1 : MonoBehaviour, IValues<sbyte>
 	{
 		[ExposeToLevelEditor(VALUE_0_ID)]
 		private sbyte value1;
@@ -41,7 +45,7 @@ namespace Hertzole.ALE.Tests.TestScripts
 		public sbyte Value2 { get { return value2; } set { value2 = value; } }
 	}
 
-	public class SByteFields2 : MonoBehaviour, IValues<sbyte>
+	public class SbyteFields2 : MonoBehaviour, IValues<sbyte>
 	{
 		[ExposeToLevelEditor(VALUE_10_ID)]
 		private sbyte value1;
@@ -55,7 +59,7 @@ namespace Hertzole.ALE.Tests.TestScripts
 		public sbyte Value2 { get { return value2; } set { value2 = value; } }
 	}
 
-	public class SByteProperty1 : MonoBehaviour, IValue<sbyte>
+	public class SbyteProperty1 : MonoBehaviour, IValue<sbyte>
 	{
 		public int ValueID { get { return VALUE_0_ID; } }
 
@@ -63,7 +67,7 @@ namespace Hertzole.ALE.Tests.TestScripts
 		public sbyte Value { get; set; }
 	}
 
-	public class SByteProperty2 : MonoBehaviour, IValue<sbyte>
+	public class SbyteProperty2 : MonoBehaviour, IValue<sbyte>
 	{
 		public int ValueID { get { return VALUE_100_ID; } }
 
@@ -71,7 +75,7 @@ namespace Hertzole.ALE.Tests.TestScripts
 		public sbyte Value { get; set; }
 	}
 
-	public class SByteProperties1 : MonoBehaviour, IValues<sbyte>
+	public class SbyteProperties1 : MonoBehaviour, IValues<sbyte>
 	{
 		public int Value1ID { get { return VALUE_0_ID; } }
 		public int Value2ID { get { return VALUE_5_ID; } }
@@ -82,7 +86,7 @@ namespace Hertzole.ALE.Tests.TestScripts
 		public sbyte Value2 { get; set; }
 	}
 
-	public class SByteProperties2 : MonoBehaviour, IValues<sbyte>
+	public class SbyteProperties2 : MonoBehaviour, IValues<sbyte>
 	{
 		public int Value1ID { get { return VALUE_10_ID; } }
 		public int Value2ID { get { return VALUE_100_ID; } }
@@ -93,7 +97,7 @@ namespace Hertzole.ALE.Tests.TestScripts
 		public sbyte Value2 { get; set; }
 	}
 
-	public class SByteArrayField1 : MonoBehaviour, IValue<sbyte[]>
+	public class SbyteArrayField1 : MonoBehaviour, IValue<sbyte[]>
 	{
 		[ExposeToLevelEditor(VALUE_0_ID)]
 		private sbyte[] value;
@@ -102,7 +106,7 @@ namespace Hertzole.ALE.Tests.TestScripts
 		public sbyte[] Value { get { return value; } set { this.value = value; } }
 	}
 
-	public class SByteArrayField2 : MonoBehaviour, IValue<sbyte[]>
+	public class SbyteArrayField2 : MonoBehaviour, IValue<sbyte[]>
 	{
 		[ExposeToLevelEditor(VALUE_100_ID)]
 		private sbyte[] value;
@@ -111,7 +115,7 @@ namespace Hertzole.ALE.Tests.TestScripts
 		public sbyte[] Value { get { return value; } set { this.value = value; } }
 	}
 
-	public class SByteArrayFields1 : MonoBehaviour, IValues<sbyte[]>
+	public class SbyteArrayFields1 : MonoBehaviour, IValues<sbyte[]>
 	{
 		[ExposeToLevelEditor(VALUE_0_ID)]
 		private sbyte[] value1;
@@ -125,7 +129,7 @@ namespace Hertzole.ALE.Tests.TestScripts
 		public sbyte[] Value2 { get { return value2; } set { value2 = value; } }
 	}
 
-	public class SByteArrayFields2 : MonoBehaviour, IValues<sbyte[]>
+	public class SbyteArrayFields2 : MonoBehaviour, IValues<sbyte[]>
 	{
 		[ExposeToLevelEditor(VALUE_10_ID)]
 		private sbyte[] value1;
@@ -139,7 +143,7 @@ namespace Hertzole.ALE.Tests.TestScripts
 		public sbyte[] Value2 { get { return value2; } set { value2 = value; } }
 	}
 
-	public class SByteArrayProperty1 : MonoBehaviour, IValue<sbyte[]>
+	public class SbyteArrayProperty1 : MonoBehaviour, IValue<sbyte[]>
 	{
 		public int ValueID { get { return VALUE_0_ID; } }
 
@@ -147,7 +151,7 @@ namespace Hertzole.ALE.Tests.TestScripts
 		public sbyte[] Value { get; set; }
 	}
 
-	public class SByteArrayProperty2 : MonoBehaviour, IValue<sbyte[]>
+	public class SbyteArrayProperty2 : MonoBehaviour, IValue<sbyte[]>
 	{
 		public int ValueID { get { return VALUE_100_ID; } }
 
@@ -155,7 +159,7 @@ namespace Hertzole.ALE.Tests.TestScripts
 		public sbyte[] Value { get; set; }
 	}
 
-	public class SByteArrayProperties1 : MonoBehaviour, IValues<sbyte[]>
+	public class SbyteArrayProperties1 : MonoBehaviour, IValues<sbyte[]>
 	{
 		public int Value1ID { get { return VALUE_0_ID; } }
 		public int Value2ID { get { return VALUE_5_ID; } }
@@ -166,7 +170,7 @@ namespace Hertzole.ALE.Tests.TestScripts
 		public sbyte[] Value2 { get; set; }
 	}
 
-	public class SByteArrayProperties2 : MonoBehaviour, IValues<sbyte[]>
+	public class SbyteArrayProperties2 : MonoBehaviour, IValues<sbyte[]>
 	{
 		public int Value1ID { get { return VALUE_10_ID; } }
 		public int Value2ID { get { return VALUE_100_ID; } }
@@ -177,7 +181,7 @@ namespace Hertzole.ALE.Tests.TestScripts
 		public sbyte[] Value2 { get; set; }
 	}
 
-	public class SByteListField1 : MonoBehaviour, IValue<List<sbyte>>
+	public class SbyteListField1 : MonoBehaviour, IValue<List<sbyte>>
 	{
 		[ExposeToLevelEditor(VALUE_0_ID)]
 		private List<sbyte> value;
@@ -186,7 +190,7 @@ namespace Hertzole.ALE.Tests.TestScripts
 		public List<sbyte> Value { get { return value; } set { this.value = value; } }
 	}
 
-	public class SByteListField2 : MonoBehaviour, IValue<List<sbyte>>
+	public class SbyteListField2 : MonoBehaviour, IValue<List<sbyte>>
 	{
 		[ExposeToLevelEditor(VALUE_100_ID)]
 		private List<sbyte> value;
@@ -195,7 +199,7 @@ namespace Hertzole.ALE.Tests.TestScripts
 		public List<sbyte> Value { get { return value; } set { this.value = value; } }
 	}
 
-	public class SByteListFields1 : MonoBehaviour, IValues<List<sbyte>>
+	public class SbyteListFields1 : MonoBehaviour, IValues<List<sbyte>>
 	{
 		[ExposeToLevelEditor(VALUE_0_ID)]
 		private List<sbyte> value1;
@@ -209,7 +213,7 @@ namespace Hertzole.ALE.Tests.TestScripts
 		public List<sbyte> Value2 { get { return value2; } set { value2 = value; } }
 	}
 
-	public class SByteListFields2 : MonoBehaviour, IValues<List<sbyte>>
+	public class SbyteListFields2 : MonoBehaviour, IValues<List<sbyte>>
 	{
 		[ExposeToLevelEditor(VALUE_10_ID)]
 		private List<sbyte> value1;
@@ -223,7 +227,7 @@ namespace Hertzole.ALE.Tests.TestScripts
 		public List<sbyte> Value2 { get { return value2; } set { value2 = value; } }
 	}
 
-	public class SByteListProperty1 : MonoBehaviour, IValue<List<sbyte>>
+	public class SbyteListProperty1 : MonoBehaviour, IValue<List<sbyte>>
 	{
 		public int ValueID { get { return VALUE_0_ID; } }
 
@@ -231,7 +235,7 @@ namespace Hertzole.ALE.Tests.TestScripts
 		public List<sbyte> Value { get; set; }
 	}
 
-	public class SByteListProperty2 : MonoBehaviour, IValue<List<sbyte>>
+	public class SbyteListProperty2 : MonoBehaviour, IValue<List<sbyte>>
 	{
 		public int ValueID { get { return VALUE_100_ID; } }
 
@@ -239,7 +243,7 @@ namespace Hertzole.ALE.Tests.TestScripts
 		public List<sbyte> Value { get; set; }
 	}
 
-	public class SByteListProperties1 : MonoBehaviour, IValues<List<sbyte>>
+	public class SbyteListProperties1 : MonoBehaviour, IValues<List<sbyte>>
 	{
 		public int Value1ID { get { return VALUE_0_ID; } }
 		public int Value2ID { get { return VALUE_5_ID; } }
@@ -250,7 +254,7 @@ namespace Hertzole.ALE.Tests.TestScripts
 		public List<sbyte> Value2 { get; set; }
 	}
 
-	public class SByteListProperties2 : MonoBehaviour, IValues<List<sbyte>>
+	public class SbyteListProperties2 : MonoBehaviour, IValues<List<sbyte>>
 	{
 		public int Value1ID { get { return VALUE_10_ID; } }
 		public int Value2ID { get { return VALUE_100_ID; } }
@@ -261,7 +265,7 @@ namespace Hertzole.ALE.Tests.TestScripts
 		public List<sbyte> Value2 { get; set; }
 	}
 
-	public class SByteNullableField1 : MonoBehaviour, IValue<sbyte?>
+	public class SbyteNullableField1 : MonoBehaviour, IValue<sbyte?>
 	{
 		[ExposeToLevelEditor(VALUE_0_ID)]
 		private sbyte? value;
@@ -270,7 +274,7 @@ namespace Hertzole.ALE.Tests.TestScripts
 		public sbyte? Value { get { return value; } set { this.value = value; } }
 	}
 
-	public class SByteNullableField2 : MonoBehaviour, IValue<sbyte?>
+	public class SbyteNullableField2 : MonoBehaviour, IValue<sbyte?>
 	{
 		[ExposeToLevelEditor(VALUE_100_ID)]
 		private sbyte? value;
@@ -279,7 +283,7 @@ namespace Hertzole.ALE.Tests.TestScripts
 		public sbyte? Value { get { return value; } set { this.value = value; } }
 	}
 
-	public class SByteNullableFields1 : MonoBehaviour, IValues<sbyte?>
+	public class SbyteNullableFields1 : MonoBehaviour, IValues<sbyte?>
 	{
 		[ExposeToLevelEditor(VALUE_0_ID)]
 		private sbyte? value1;
@@ -293,7 +297,7 @@ namespace Hertzole.ALE.Tests.TestScripts
 		public sbyte? Value2 { get { return value2; } set { value2 = value; } }
 	}
 
-	public class SByteNullableFields2 : MonoBehaviour, IValues<sbyte?>
+	public class SbyteNullableFields2 : MonoBehaviour, IValues<sbyte?>
 	{
 		[ExposeToLevelEditor(VALUE_10_ID)]
 		private sbyte? value1;
@@ -307,7 +311,7 @@ namespace Hertzole.ALE.Tests.TestScripts
 		public sbyte? Value2 { get { return value2; } set { value2 = value; } }
 	}
 
-	public class SByteNullableProperty1 : MonoBehaviour, IValue<sbyte?>
+	public class SbyteNullableProperty1 : MonoBehaviour, IValue<sbyte?>
 	{
 		public int ValueID { get { return VALUE_0_ID; } }
 
@@ -315,7 +319,7 @@ namespace Hertzole.ALE.Tests.TestScripts
 		public sbyte? Value { get; set; }
 	}
 
-	public class SByteNullableProperty2 : MonoBehaviour, IValue<sbyte?>
+	public class SbyteNullableProperty2 : MonoBehaviour, IValue<sbyte?>
 	{
 		public int ValueID { get { return VALUE_100_ID; } }
 
@@ -323,7 +327,7 @@ namespace Hertzole.ALE.Tests.TestScripts
 		public sbyte? Value { get; set; }
 	}
 
-	public class SByteNullableProperties1 : MonoBehaviour, IValues<sbyte?>
+	public class SbyteNullableProperties1 : MonoBehaviour, IValues<sbyte?>
 	{
 		public int Value1ID { get { return VALUE_0_ID; } }
 		public int Value2ID { get { return VALUE_5_ID; } }
@@ -334,7 +338,7 @@ namespace Hertzole.ALE.Tests.TestScripts
 		public sbyte? Value2 { get; set; }
 	}
 
-	public class SByteNullableProperties2 : MonoBehaviour, IValues<sbyte?>
+	public class SbyteNullableProperties2 : MonoBehaviour, IValues<sbyte?>
 	{
 		public int Value1ID { get { return VALUE_10_ID; } }
 		public int Value2ID { get { return VALUE_100_ID; } }
@@ -345,7 +349,7 @@ namespace Hertzole.ALE.Tests.TestScripts
 		public sbyte? Value2 { get; set; }
 	}
 
-	public class SByteArrayNullableField1 : MonoBehaviour, IValue<sbyte?[]>
+	public class SbyteArrayNullableField1 : MonoBehaviour, IValue<sbyte?[]>
 	{
 		[ExposeToLevelEditor(VALUE_0_ID)]
 		private sbyte?[] value;
@@ -354,7 +358,7 @@ namespace Hertzole.ALE.Tests.TestScripts
 		public sbyte?[] Value { get { return value; } set { this.value = value; } }
 	}
 
-	public class SByteArrayNullableField2 : MonoBehaviour, IValue<sbyte?[]>
+	public class SbyteArrayNullableField2 : MonoBehaviour, IValue<sbyte?[]>
 	{
 		[ExposeToLevelEditor(VALUE_100_ID)]
 		private sbyte?[] value;
@@ -363,7 +367,7 @@ namespace Hertzole.ALE.Tests.TestScripts
 		public sbyte?[] Value { get { return value; } set { this.value = value; } }
 	}
 
-	public class SByteArrayNullableFields1 : MonoBehaviour, IValues<sbyte?[]>
+	public class SbyteArrayNullableFields1 : MonoBehaviour, IValues<sbyte?[]>
 	{
 		[ExposeToLevelEditor(VALUE_0_ID)]
 		private sbyte?[] value1;
@@ -377,7 +381,7 @@ namespace Hertzole.ALE.Tests.TestScripts
 		public sbyte?[] Value2 { get { return value2; } set { value2 = value; } }
 	}
 
-	public class SByteArrayNullableFields2 : MonoBehaviour, IValues<sbyte?[]>
+	public class SbyteArrayNullableFields2 : MonoBehaviour, IValues<sbyte?[]>
 	{
 		[ExposeToLevelEditor(VALUE_10_ID)]
 		private sbyte?[] value1;
@@ -391,7 +395,7 @@ namespace Hertzole.ALE.Tests.TestScripts
 		public sbyte?[] Value2 { get { return value2; } set { value2 = value; } }
 	}
 
-	public class SByteArrayNullableProperty1 : MonoBehaviour, IValue<sbyte?[]>
+	public class SbyteArrayNullableProperty1 : MonoBehaviour, IValue<sbyte?[]>
 	{
 		public int ValueID { get { return VALUE_0_ID; } }
 
@@ -399,7 +403,7 @@ namespace Hertzole.ALE.Tests.TestScripts
 		public sbyte?[] Value { get; set; }
 	}
 
-	public class SByteArrayNullableProperty2 : MonoBehaviour, IValue<sbyte?[]>
+	public class SbyteArrayNullableProperty2 : MonoBehaviour, IValue<sbyte?[]>
 	{
 		public int ValueID { get { return VALUE_100_ID; } }
 
@@ -407,7 +411,7 @@ namespace Hertzole.ALE.Tests.TestScripts
 		public sbyte?[] Value { get; set; }
 	}
 
-	public class SByteArrayNullableProperties1 : MonoBehaviour, IValues<sbyte?[]>
+	public class SbyteArrayNullableProperties1 : MonoBehaviour, IValues<sbyte?[]>
 	{
 		public int Value1ID { get { return VALUE_0_ID; } }
 		public int Value2ID { get { return VALUE_5_ID; } }
@@ -418,7 +422,7 @@ namespace Hertzole.ALE.Tests.TestScripts
 		public sbyte?[] Value2 { get; set; }
 	}
 
-	public class SByteArrayNullableProperties2 : MonoBehaviour, IValues<sbyte?[]>
+	public class SbyteArrayNullableProperties2 : MonoBehaviour, IValues<sbyte?[]>
 	{
 		public int Value1ID { get { return VALUE_10_ID; } }
 		public int Value2ID { get { return VALUE_100_ID; } }
@@ -429,7 +433,7 @@ namespace Hertzole.ALE.Tests.TestScripts
 		public sbyte?[] Value2 { get; set; }
 	}
 
-	public class SByteListNullableField1 : MonoBehaviour, IValue<List<sbyte?>>
+	public class SbyteListNullableField1 : MonoBehaviour, IValue<List<sbyte?>>
 	{
 		[ExposeToLevelEditor(VALUE_0_ID)]
 		private List<sbyte?> value;
@@ -438,7 +442,7 @@ namespace Hertzole.ALE.Tests.TestScripts
 		public List<sbyte?> Value { get { return value; } set { this.value = value; } }
 	}
 
-	public class SByteListNullableField2 : MonoBehaviour, IValue<List<sbyte?>>
+	public class SbyteListNullableField2 : MonoBehaviour, IValue<List<sbyte?>>
 	{
 		[ExposeToLevelEditor(VALUE_100_ID)]
 		private List<sbyte?> value;
@@ -447,7 +451,7 @@ namespace Hertzole.ALE.Tests.TestScripts
 		public List<sbyte?> Value { get { return value; } set { this.value = value; } }
 	}
 
-	public class SByteListNullableFields1 : MonoBehaviour, IValues<List<sbyte?>>
+	public class SbyteListNullableFields1 : MonoBehaviour, IValues<List<sbyte?>>
 	{
 		[ExposeToLevelEditor(VALUE_0_ID)]
 		private List<sbyte?> value1;
@@ -461,7 +465,7 @@ namespace Hertzole.ALE.Tests.TestScripts
 		public List<sbyte?> Value2 { get { return value2; } set { value2 = value; } }
 	}
 
-	public class SByteListNullableFields2 : MonoBehaviour, IValues<List<sbyte?>>
+	public class SbyteListNullableFields2 : MonoBehaviour, IValues<List<sbyte?>>
 	{
 		[ExposeToLevelEditor(VALUE_10_ID)]
 		private List<sbyte?> value1;
@@ -475,7 +479,7 @@ namespace Hertzole.ALE.Tests.TestScripts
 		public List<sbyte?> Value2 { get { return value2; } set { value2 = value; } }
 	}
 
-	public class SByteListNullableProperty1 : MonoBehaviour, IValue<List<sbyte?>>
+	public class SbyteListNullableProperty1 : MonoBehaviour, IValue<List<sbyte?>>
 	{
 		public int ValueID { get { return VALUE_0_ID; } }
 
@@ -483,7 +487,7 @@ namespace Hertzole.ALE.Tests.TestScripts
 		public List<sbyte?> Value { get; set; }
 	}
 
-	public class SByteListNullableProperty2 : MonoBehaviour, IValue<List<sbyte?>>
+	public class SbyteListNullableProperty2 : MonoBehaviour, IValue<List<sbyte?>>
 	{
 		public int ValueID { get { return VALUE_100_ID; } }
 
@@ -491,7 +495,7 @@ namespace Hertzole.ALE.Tests.TestScripts
 		public List<sbyte?> Value { get; set; }
 	}
 
-	public class SByteListNullableProperties1 : MonoBehaviour, IValues<List<sbyte?>>
+	public class SbyteListNullableProperties1 : MonoBehaviour, IValues<List<sbyte?>>
 	{
 		public int Value1ID { get { return VALUE_0_ID; } }
 		public int Value2ID { get { return VALUE_5_ID; } }
@@ -502,7 +506,7 @@ namespace Hertzole.ALE.Tests.TestScripts
 		public List<sbyte?> Value2 { get; set; }
 	}
 
-	public class SByteListNullableProperties2 : MonoBehaviour, IValues<List<sbyte?>>
+	public class SbyteListNullableProperties2 : MonoBehaviour, IValues<List<sbyte?>>
 	{
 		public int Value1ID { get { return VALUE_10_ID; } }
 		public int Value2ID { get { return VALUE_100_ID; } }
@@ -513,3 +517,4 @@ namespace Hertzole.ALE.Tests.TestScripts
 		public List<sbyte?> Value2 { get; set; }
 	}
 }
+#pragma warning restore CS8618

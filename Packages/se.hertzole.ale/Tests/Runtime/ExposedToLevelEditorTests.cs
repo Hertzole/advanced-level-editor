@@ -185,42 +185,42 @@ namespace Hertzole.ALE.Tests
 		[UnityTest]
 		public IEnumerator SetValueScript()
 		{
-			sphere.AddComponent<TempTestScript>();
-			capsule.AddComponent<TempTestScript>();
+			sphere.AddComponent<TestScripts.ScriptReference>();
+			capsule.AddComponent<TestScripts.ScriptReference>();
 			
 			ILevelEditorObject newSphere = objectManager.CreateObject("sphere");
 			ILevelEditorObject newCapsule = objectManager.CreateObject("capsule");
 
-			ComponentDataWrapper sphereRef = new ComponentDataWrapper(newSphere.MyGameObject.GetComponent<TempTestScript>());
-			ComponentDataWrapper capsuleRef = new ComponentDataWrapper(newCapsule.MyGameObject.GetComponent<TempTestScript>());
+			ComponentDataWrapper sphereRef = new ComponentDataWrapper(newSphere.MyGameObject.GetComponent<TestScripts.ScriptReference>());
+			ComponentDataWrapper capsuleRef = new ComponentDataWrapper(newCapsule.MyGameObject.GetComponent<TestScripts.ScriptReference>());
 			yield return SetValueTest<ComponentDataWrapper, ScriptReference>(sphereRef, capsuleRef);
 		}
 
 		[UnityTest]
 		public IEnumerator SetValueScriptArray()
 		{
-			sphere.AddComponent<TempTestScript>();
-			capsule.AddComponent<TempTestScript>();
+			sphere.AddComponent<TestScripts.ScriptReference>();
+			capsule.AddComponent<TestScripts.ScriptReference>();
 			
 			ILevelEditorObject newSphere = objectManager.CreateObject("sphere");
 			ILevelEditorObject newCapsule = objectManager.CreateObject("capsule");
 
-			ComponentDataWrapper array1 = new ComponentDataWrapper(new TempTestScript[] { newSphere.MyGameObject.GetComponent<TempTestScript>(), newCapsule.MyGameObject.GetComponent<TempTestScript>() });
-			ComponentDataWrapper array2 = new ComponentDataWrapper(new TempTestScript[] { newCapsule.MyGameObject.GetComponent<TempTestScript>(), newSphere.MyGameObject.GetComponent<TempTestScript>() });
+			ComponentDataWrapper array1 = new ComponentDataWrapper(new TestScripts.ScriptReference[] { newSphere.MyGameObject.GetComponent<TestScripts.ScriptReference>(), newCapsule.MyGameObject.GetComponent<TestScripts.ScriptReference>() });
+			ComponentDataWrapper array2 = new ComponentDataWrapper(new TestScripts.ScriptReference[] { newCapsule.MyGameObject.GetComponent<TestScripts.ScriptReference>(), newSphere.MyGameObject.GetComponent<TestScripts.ScriptReference>() });
 			yield return SetValueTest<ComponentDataWrapper, ScriptArray>(array1, array2);
 		}
 
 		[UnityTest]
 		public IEnumerator SetValueScriptList()
 		{
-			sphere.AddComponent<TempTestScript>();
-			capsule.AddComponent<TempTestScript>();
+			sphere.AddComponent<TestScripts.ScriptReference>();
+			capsule.AddComponent<TestScripts.ScriptReference>();
 			
 			ILevelEditorObject newSphere = objectManager.CreateObject("sphere");
 			ILevelEditorObject newCapsule = objectManager.CreateObject("capsule");
 
-			ComponentDataWrapper array1 = new ComponentDataWrapper(new TempTestScript[] { newSphere.MyGameObject.GetComponent<TempTestScript>(), newCapsule.MyGameObject.GetComponent<TempTestScript>() });
-			ComponentDataWrapper array2 = new ComponentDataWrapper(new TempTestScript[] { newCapsule.MyGameObject.GetComponent<TempTestScript>(), newSphere.MyGameObject.GetComponent<TempTestScript>() });
+			ComponentDataWrapper array1 = new ComponentDataWrapper(new TestScripts.ScriptReference[] { newSphere.MyGameObject.GetComponent<TestScripts.ScriptReference>(), newCapsule.MyGameObject.GetComponent<TestScripts.ScriptReference>() });
+			ComponentDataWrapper array2 = new ComponentDataWrapper(new TestScripts.ScriptReference[] { newCapsule.MyGameObject.GetComponent<TestScripts.ScriptReference>(), newSphere.MyGameObject.GetComponent<TestScripts.ScriptReference>() });
 			yield return SetValueTest<ComponentDataWrapper, ScriptList>(array1, array2);
 		}
 
@@ -733,10 +733,10 @@ namespace Hertzole.ALE.Tests
 			private bool notImportant; // Just to make sure there aren't all ComponentDataWrappers.
 			
 			[ExposeToLevelEditor(512)]
-			private TempTestScript value;
+			private TestScripts.ScriptReference value;
 
 			[ExposeToLevelEditor(0)]
-			private TempTestScript Value { get; set; }
+			private TestScripts.ScriptReference Value { get; set; }
 		}
 
 		private class ScriptArray : MonoBehaviour
@@ -745,10 +745,10 @@ namespace Hertzole.ALE.Tests
 			private bool notImportant; // Just to make sure there aren't all ComponentDataWrappers.
 			
 			[ExposeToLevelEditor(512)]
-			private TempTestScript[] value;
+			private TestScripts.ScriptReference[] value;
 
 			[ExposeToLevelEditor(0)]
-			private TempTestScript[] Value { get; set; }
+			private TestScripts.ScriptReference[] Value { get; set; }
 		}
 
 		private class ScriptList : MonoBehaviour
@@ -757,10 +757,10 @@ namespace Hertzole.ALE.Tests
 			private bool notImportant; // Just to make sure there aren't all ComponentDataWrappers.
 			
 			[ExposeToLevelEditor(512)]
-			private List<TempTestScript> value;
+			private List<TestScripts.ScriptReference> value;
 
 			[ExposeToLevelEditor(0)]
-			private List<TempTestScript> Value { get; set; }
+			private List<TestScripts.ScriptReference> Value { get; set; }
 		}
 
 		private class StructValue : MonoBehaviour
