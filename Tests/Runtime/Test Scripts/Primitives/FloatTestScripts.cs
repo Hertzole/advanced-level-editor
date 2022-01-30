@@ -1,11 +1,15 @@
 // DO NOT MODIFY! THIS IS A GENERATED FILE!
 
+#nullable enable
+
 using System;
 using System.Collections.Generic;
 using UnityEngine;
 using static Hertzole.ALE.Tests.SerializationTest;
 
 // ReSharper disable ConvertToAutoProperty
+
+#pragma warning disable CS8618
 
 namespace Hertzole.ALE.Tests.TestScripts
 {
@@ -513,3 +517,4 @@ namespace Hertzole.ALE.Tests.TestScripts
 		public List<float?> Value2 { get; set; }
 	}
 }
+#pragma warning restore CS8618

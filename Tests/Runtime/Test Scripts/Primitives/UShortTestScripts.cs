@@ -1,5 +1,7 @@
 // DO NOT MODIFY! THIS IS A GENERATED FILE!
 
+#nullable enable
+
 using System;
 using System.Collections.Generic;
 using UnityEngine;
@@ -7,9 +9,11 @@ using static Hertzole.ALE.Tests.SerializationTest;
 
 // ReSharper disable ConvertToAutoProperty
 
+#pragma warning disable CS8618
+
 namespace Hertzole.ALE.Tests.TestScripts
 {
-	public class UShortField1 : MonoBehaviour, IValue<ushort>
+	public class UshortField1 : MonoBehaviour, IValue<ushort>
 	{
 		[ExposeToLevelEditor(VALUE_0_ID)]
 		private ushort value;
@@ -18,7 +22,7 @@ namespace Hertzole.ALE.Tests.TestScripts
 		public ushort Value { get { return value; } set { this.value = value; } }
 	}
 
-	public class UShortField2 : MonoBehaviour, IValue<ushort>
+	public class UshortField2 : MonoBehaviour, IValue<ushort>
 	{
 		[ExposeToLevelEditor(VALUE_100_ID)]
 		private ushort value;
@@ -27,7 +31,7 @@ namespace Hertzole.ALE.Tests.TestScripts
 		public ushort Value { get { return value; } set { this.value = value; } }
 	}
 
-	public class UShortFields1 : MonoBehaviour, IValues<ushort>
+	public class UshortFields1 : MonoBehaviour, IValues<ushort>
 	{
 		[ExposeToLevelEditor(VALUE_0_ID)]
 		private ushort value1;
@@ -41,7 +45,7 @@ namespace Hertzole.ALE.Tests.TestScripts
 		public ushort Value2 { get { return value2; } set { value2 = value; } }
 	}
 
-	public class UShortFields2 : MonoBehaviour, IValues<ushort>
+	public class UshortFields2 : MonoBehaviour, IValues<ushort>
 	{
 		[ExposeToLevelEditor(VALUE_10_ID)]
 		private ushort value1;
@@ -55,7 +59,7 @@ namespace Hertzole.ALE.Tests.TestScripts
 		public ushort Value2 { get { return value2; } set { value2 = value; } }
 	}
 
-	public class UShortProperty1 : MonoBehaviour, IValue<ushort>
+	public class UshortProperty1 : MonoBehaviour, IValue<ushort>
 	{
 		public int ValueID { get { return VALUE_0_ID; } }
 
@@ -63,7 +67,7 @@ namespace Hertzole.ALE.Tests.TestScripts
 		public ushort Value { get; set; }
 	}
 
-	public class UShortProperty2 : MonoBehaviour, IValue<ushort>
+	public class UshortProperty2 : MonoBehaviour, IValue<ushort>
 	{
 		public int ValueID { get { return VALUE_100_ID; } }
 
@@ -71,7 +75,7 @@ namespace Hertzole.ALE.Tests.TestScripts
 		public ushort Value { get; set; }
 	}
 
-	public class UShortProperties1 : MonoBehaviour, IValues<ushort>
+	public class UshortProperties1 : MonoBehaviour, IValues<ushort>
 	{
 		public int Value1ID { get { return VALUE_0_ID; } }
 		public int Value2ID { get { return VALUE_5_ID; } }
@@ -82,7 +86,7 @@ namespace Hertzole.ALE.Tests.TestScripts
 		public ushort Value2 { get; set; }
 	}
 
-	public class UShortProperties2 : MonoBehaviour, IValues<ushort>
+	public class UshortProperties2 : MonoBehaviour, IValues<ushort>
 	{
 		public int Value1ID { get { return VALUE_10_ID; } }
 		public int Value2ID { get { return VALUE_100_ID; } }
@@ -93,7 +97,7 @@ namespace Hertzole.ALE.Tests.TestScripts
 		public ushort Value2 { get; set; }
 	}
 
-	public class UShortArrayField1 : MonoBehaviour, IValue<ushort[]>
+	public class UshortArrayField1 : MonoBehaviour, IValue<ushort[]>
 	{
 		[ExposeToLevelEditor(VALUE_0_ID)]
 		private ushort[] value;
@@ -102,7 +106,7 @@ namespace Hertzole.ALE.Tests.TestScripts
 		public ushort[] Value { get { return value; } set { this.value = value; } }
 	}
 
-	public class UShortArrayField2 : MonoBehaviour, IValue<ushort[]>
+	public class UshortArrayField2 : MonoBehaviour, IValue<ushort[]>
 	{
 		[ExposeToLevelEditor(VALUE_100_ID)]
 		private ushort[] value;
@@ -111,7 +115,7 @@ namespace Hertzole.ALE.Tests.TestScripts
 		public ushort[] Value { get { return value; } set { this.value = value; } }
 	}
 
-	public class UShortArrayFields1 : MonoBehaviour, IValues<ushort[]>
+	public class UshortArrayFields1 : MonoBehaviour, IValues<ushort[]>
 	{
 		[ExposeToLevelEditor(VALUE_0_ID)]
 		private ushort[] value1;
@@ -125,7 +129,7 @@ namespace Hertzole.ALE.Tests.TestScripts
 		public ushort[] Value2 { get { return value2; } set { value2 = value; } }
 	}
 
-	public class UShortArrayFields2 : MonoBehaviour, IValues<ushort[]>
+	public class UshortArrayFields2 : MonoBehaviour, IValues<ushort[]>
 	{
 		[ExposeToLevelEditor(VALUE_10_ID)]
 		private ushort[] value1;
@@ -139,7 +143,7 @@ namespace Hertzole.ALE.Tests.TestScripts
 		public ushort[] Value2 { get { return value2; } set { value2 = value; } }
 	}
 
-	public class UShortArrayProperty1 : MonoBehaviour, IValue<ushort[]>
+	public class UshortArrayProperty1 : MonoBehaviour, IValue<ushort[]>
 	{
 		public int ValueID { get { return VALUE_0_ID; } }
 
@@ -147,7 +151,7 @@ namespace Hertzole.ALE.Tests.TestScripts
 		public ushort[] Value { get; set; }
 	}
 
-	public class UShortArrayProperty2 : MonoBehaviour, IValue<ushort[]>
+	public class UshortArrayProperty2 : MonoBehaviour, IValue<ushort[]>
 	{
 		public int ValueID { get { return VALUE_100_ID; } }
 
@@ -155,7 +159,7 @@ namespace Hertzole.ALE.Tests.TestScripts
 		public ushort[] Value { get; set; }
 	}
 
-	public class UShortArrayProperties1 : MonoBehaviour, IValues<ushort[]>
+	public class UshortArrayProperties1 : MonoBehaviour, IValues<ushort[]>
 	{
 		public int Value1ID { get { return VALUE_0_ID; } }
 		public int Value2ID { get { return VALUE_5_ID; } }
@@ -166,7 +170,7 @@ namespace Hertzole.ALE.Tests.TestScripts
 		public ushort[] Value2 { get; set; }
 	}
 
-	public class UShortArrayProperties2 : MonoBehaviour, IValues<ushort[]>
+	public class UshortArrayProperties2 : MonoBehaviour, IValues<ushort[]>
 	{
 		public int Value1ID { get { return VALUE_10_ID; } }
 		public int Value2ID { get { return VALUE_100_ID; } }
@@ -177,7 +181,7 @@ namespace Hertzole.ALE.Tests.TestScripts
 		public ushort[] Value2 { get; set; }
 	}
 
-	public class UShortListField1 : MonoBehaviour, IValue<List<ushort>>
+	public class UshortListField1 : MonoBehaviour, IValue<List<ushort>>
 	{
 		[ExposeToLevelEditor(VALUE_0_ID)]
 		private List<ushort> value;
@@ -186,7 +190,7 @@ namespace Hertzole.ALE.Tests.TestScripts
 		public List<ushort> Value { get { return value; } set { this.value = value; } }
 	}
 
-	public class UShortListField2 : MonoBehaviour, IValue<List<ushort>>
+	public class UshortListField2 : MonoBehaviour, IValue<List<ushort>>
 	{
 		[ExposeToLevelEditor(VALUE_100_ID)]
 		private List<ushort> value;
@@ -195,7 +199,7 @@ namespace Hertzole.ALE.Tests.TestScripts
 		public List<ushort> Value { get { return value; } set { this.value = value; } }
 	}
 
-	public class UShortListFields1 : MonoBehaviour, IValues<List<ushort>>
+	public class UshortListFields1 : MonoBehaviour, IValues<List<ushort>>
 	{
 		[ExposeToLevelEditor(VALUE_0_ID)]
 		private List<ushort> value1;
@@ -209,7 +213,7 @@ namespace Hertzole.ALE.Tests.TestScripts
 		public List<ushort> Value2 { get { return value2; } set { value2 = value; } }
 	}
 
-	public class UShortListFields2 : MonoBehaviour, IValues<List<ushort>>
+	public class UshortListFields2 : MonoBehaviour, IValues<List<ushort>>
 	{
 		[ExposeToLevelEditor(VALUE_10_ID)]
 		private List<ushort> value1;
@@ -223,7 +227,7 @@ namespace Hertzole.ALE.Tests.TestScripts
 		public List<ushort> Value2 { get { return value2; } set { value2 = value; } }
 	}
 
-	public class UShortListProperty1 : MonoBehaviour, IValue<List<ushort>>
+	public class UshortListProperty1 : MonoBehaviour, IValue<List<ushort>>
 	{
 		public int ValueID { get { return VALUE_0_ID; } }
 
@@ -231,7 +235,7 @@ namespace Hertzole.ALE.Tests.TestScripts
 		public List<ushort> Value { get; set; }
 	}
 
-	public class UShortListProperty2 : MonoBehaviour, IValue<List<ushort>>
+	public class UshortListProperty2 : MonoBehaviour, IValue<List<ushort>>
 	{
 		public int ValueID { get { return VALUE_100_ID; } }
 
@@ -239,7 +243,7 @@ namespace Hertzole.ALE.Tests.TestScripts
 		public List<ushort> Value { get; set; }
 	}
 
-	public class UShortListProperties1 : MonoBehaviour, IValues<List<ushort>>
+	public class UshortListProperties1 : MonoBehaviour, IValues<List<ushort>>
 	{
 		public int Value1ID { get { return VALUE_0_ID; } }
 		public int Value2ID { get { return VALUE_5_ID; } }
@@ -250,7 +254,7 @@ namespace Hertzole.ALE.Tests.TestScripts
 		public List<ushort> Value2 { get; set; }
 	}
 
-	public class UShortListProperties2 : MonoBehaviour, IValues<List<ushort>>
+	public class UshortListProperties2 : MonoBehaviour, IValues<List<ushort>>
 	{
 		public int Value1ID { get { return VALUE_10_ID; } }
 		public int Value2ID { get { return VALUE_100_ID; } }
@@ -261,7 +265,7 @@ namespace Hertzole.ALE.Tests.TestScripts
 		public List<ushort> Value2 { get; set; }
 	}
 
-	public class UShortNullableField1 : MonoBehaviour, IValue<ushort?>
+	public class UshortNullableField1 : MonoBehaviour, IValue<ushort?>
 	{
 		[ExposeToLevelEditor(VALUE_0_ID)]
 		private ushort? value;
@@ -270,7 +274,7 @@ namespace Hertzole.ALE.Tests.TestScripts
 		public ushort? Value { get { return value; } set { this.value = value; } }
 	}
 
-	public class UShortNullableField2 : MonoBehaviour, IValue<ushort?>
+	public class UshortNullableField2 : MonoBehaviour, IValue<ushort?>
 	{
 		[ExposeToLevelEditor(VALUE_100_ID)]
 		private ushort? value;
@@ -279,7 +283,7 @@ namespace Hertzole.ALE.Tests.TestScripts
 		public ushort? Value { get { return value; } set { this.value = value; } }
 	}
 
-	public class UShortNullableFields1 : MonoBehaviour, IValues<ushort?>
+	public class UshortNullableFields1 : MonoBehaviour, IValues<ushort?>
 	{
 		[ExposeToLevelEditor(VALUE_0_ID)]
 		private ushort? value1;
@@ -293,7 +297,7 @@ namespace Hertzole.ALE.Tests.TestScripts
 		public ushort? Value2 { get { return value2; } set { value2 = value; } }
 	}
 
-	public class UShortNullableFields2 : MonoBehaviour, IValues<ushort?>
+	public class UshortNullableFields2 : MonoBehaviour, IValues<ushort?>
 	{
 		[ExposeToLevelEditor(VALUE_10_ID)]
 		private ushort? value1;
@@ -307,7 +311,7 @@ namespace Hertzole.ALE.Tests.TestScripts
 		public ushort? Value2 { get { return value2; } set { value2 = value; } }
 	}
 
-	public class UShortNullableProperty1 : MonoBehaviour, IValue<ushort?>
+	public class UshortNullableProperty1 : MonoBehaviour, IValue<ushort?>
 	{
 		public int ValueID { get { return VALUE_0_ID; } }
 
@@ -315,7 +319,7 @@ namespace Hertzole.ALE.Tests.TestScripts
 		public ushort? Value { get; set; }
 	}
 
-	public class UShortNullableProperty2 : MonoBehaviour, IValue<ushort?>
+	public class UshortNullableProperty2 : MonoBehaviour, IValue<ushort?>
 	{
 		public int ValueID { get { return VALUE_100_ID; } }
 
@@ -323,7 +327,7 @@ namespace Hertzole.ALE.Tests.TestScripts
 		public ushort? Value { get; set; }
 	}
 
-	public class UShortNullableProperties1 : MonoBehaviour, IValues<ushort?>
+	public class UshortNullableProperties1 : MonoBehaviour, IValues<ushort?>
 	{
 		public int Value1ID { get { return VALUE_0_ID; } }
 		public int Value2ID { get { return VALUE_5_ID; } }
@@ -334,7 +338,7 @@ namespace Hertzole.ALE.Tests.TestScripts
 		public ushort? Value2 { get; set; }
 	}
 
-	public class UShortNullableProperties2 : MonoBehaviour, IValues<ushort?>
+	public class UshortNullableProperties2 : MonoBehaviour, IValues<ushort?>
 	{
 		public int Value1ID { get { return VALUE_10_ID; } }
 		public int Value2ID { get { return VALUE_100_ID; } }
@@ -345,7 +349,7 @@ namespace Hertzole.ALE.Tests.TestScripts
 		public ushort? Value2 { get; set; }
 	}
 
-	public class UShortArrayNullableField1 : MonoBehaviour, IValue<ushort?[]>
+	public class UshortArrayNullableField1 : MonoBehaviour, IValue<ushort?[]>
 	{
 		[ExposeToLevelEditor(VALUE_0_ID)]
 		private ushort?[] value;
@@ -354,7 +358,7 @@ namespace Hertzole.ALE.Tests.TestScripts
 		public ushort?[] Value { get { return value; } set { this.value = value; } }
 	}
 
-	public class UShortArrayNullableField2 : MonoBehaviour, IValue<ushort?[]>
+	public class UshortArrayNullableField2 : MonoBehaviour, IValue<ushort?[]>
 	{
 		[ExposeToLevelEditor(VALUE_100_ID)]
 		private ushort?[] value;
@@ -363,7 +367,7 @@ namespace Hertzole.ALE.Tests.TestScripts
 		public ushort?[] Value { get { return value; } set { this.value = value; } }
 	}
 
-	public class UShortArrayNullableFields1 : MonoBehaviour, IValues<ushort?[]>
+	public class UshortArrayNullableFields1 : MonoBehaviour, IValues<ushort?[]>
 	{
 		[ExposeToLevelEditor(VALUE_0_ID)]
 		private ushort?[] value1;
@@ -377,7 +381,7 @@ namespace Hertzole.ALE.Tests.TestScripts
 		public ushort?[] Value2 { get { return value2; } set { value2 = value; } }
 	}
 
-	public class UShortArrayNullableFields2 : MonoBehaviour, IValues<ushort?[]>
+	public class UshortArrayNullableFields2 : MonoBehaviour, IValues<ushort?[]>
 	{
 		[ExposeToLevelEditor(VALUE_10_ID)]
 		private ushort?[] value1;
@@ -391,7 +395,7 @@ namespace Hertzole.ALE.Tests.TestScripts
 		public ushort?[] Value2 { get { return value2; } set { value2 = value; } }
 	}
 
-	public class UShortArrayNullableProperty1 : MonoBehaviour, IValue<ushort?[]>
+	public class UshortArrayNullableProperty1 : MonoBehaviour, IValue<ushort?[]>
 	{
 		public int ValueID { get { return VALUE_0_ID; } }
 
@@ -399,7 +403,7 @@ namespace Hertzole.ALE.Tests.TestScripts
 		public ushort?[] Value { get; set; }
 	}
 
-	public class UShortArrayNullableProperty2 : MonoBehaviour, IValue<ushort?[]>
+	public class UshortArrayNullableProperty2 : MonoBehaviour, IValue<ushort?[]>
 	{
 		public int ValueID { get { return VALUE_100_ID; } }
 
@@ -407,7 +411,7 @@ namespace Hertzole.ALE.Tests.TestScripts
 		public ushort?[] Value { get; set; }
 	}
 
-	public class UShortArrayNullableProperties1 : MonoBehaviour, IValues<ushort?[]>
+	public class UshortArrayNullableProperties1 : MonoBehaviour, IValues<ushort?[]>
 	{
 		public int Value1ID { get { return VALUE_0_ID; } }
 		public int Value2ID { get { return VALUE_5_ID; } }
@@ -418,7 +422,7 @@ namespace Hertzole.ALE.Tests.TestScripts
 		public ushort?[] Value2 { get; set; }
 	}
 
-	public class UShortArrayNullableProperties2 : MonoBehaviour, IValues<ushort?[]>
+	public class UshortArrayNullableProperties2 : MonoBehaviour, IValues<ushort?[]>
 	{
 		public int Value1ID { get { return VALUE_10_ID; } }
 		public int Value2ID { get { return VALUE_100_ID; } }
@@ -429,7 +433,7 @@ namespace Hertzole.ALE.Tests.TestScripts
 		public ushort?[] Value2 { get; set; }
 	}
 
-	public class UShortListNullableField1 : MonoBehaviour, IValue<List<ushort?>>
+	public class UshortListNullableField1 : MonoBehaviour, IValue<List<ushort?>>
 	{
 		[ExposeToLevelEditor(VALUE_0_ID)]
 		private List<ushort?> value;
@@ -438,7 +442,7 @@ namespace Hertzole.ALE.Tests.TestScripts
 		public List<ushort?> Value { get { return value; } set { this.value = value; } }
 	}
 
-	public class UShortListNullableField2 : MonoBehaviour, IValue<List<ushort?>>
+	public class UshortListNullableField2 : MonoBehaviour, IValue<List<ushort?>>
 	{
 		[ExposeToLevelEditor(VALUE_100_ID)]
 		private List<ushort?> value;
@@ -447,7 +451,7 @@ namespace Hertzole.ALE.Tests.TestScripts
 		public List<ushort?> Value { get { return value; } set { this.value = value; } }
 	}
 
-	public class UShortListNullableFields1 : MonoBehaviour, IValues<List<ushort?>>
+	public class UshortListNullableFields1 : MonoBehaviour, IValues<List<ushort?>>
 	{
 		[ExposeToLevelEditor(VALUE_0_ID)]
 		private List<ushort?> value1;
@@ -461,7 +465,7 @@ namespace Hertzole.ALE.Tests.TestScripts
 		public List<ushort?> Value2 { get { return value2; } set { value2 = value; } }
 	}
 
-	public class UShortListNullableFields2 : MonoBehaviour, IValues<List<ushort?>>
+	public class UshortListNullableFields2 : MonoBehaviour, IValues<List<ushort?>>
 	{
 		[ExposeToLevelEditor(VALUE_10_ID)]
 		private List<ushort?> value1;
@@ -475,7 +479,7 @@ namespace Hertzole.ALE.Tests.TestScripts
 		public List<ushort?> Value2 { get { return value2; } set { value2 = value; } }
 	}
 
-	public class UShortListNullableProperty1 : MonoBehaviour, IValue<List<ushort?>>
+	public class UshortListNullableProperty1 : MonoBehaviour, IValue<List<ushort?>>
 	{
 		public int ValueID { get { return VALUE_0_ID; } }
 
@@ -483,7 +487,7 @@ namespace Hertzole.ALE.Tests.TestScripts
 		public List<ushort?> Value { get; set; }
 	}
 
-	public class UShortListNullableProperty2 : MonoBehaviour, IValue<List<ushort?>>
+	public class UshortListNullableProperty2 : MonoBehaviour, IValue<List<ushort?>>
 	{
 		public int ValueID { get { return VALUE_100_ID; } }
 
@@ -491,7 +495,7 @@ namespace Hertzole.ALE.Tests.TestScripts
 		public List<ushort?> Value { get; set; }
 	}
 
-	public class UShortListNullableProperties1 : MonoBehaviour, IValues<List<ushort?>>
+	public class UshortListNullableProperties1 : MonoBehaviour, IValues<List<ushort?>>
 	{
 		public int Value1ID { get { return VALUE_0_ID; } }
 		public int Value2ID { get { return VALUE_5_ID; } }
@@ -502,7 +506,7 @@ namespace Hertzole.ALE.Tests.TestScripts
 		public List<ushort?> Value2 { get; set; }
 	}
 
-	public class UShortListNullableProperties2 : MonoBehaviour, IValues<List<ushort?>>
+	public class UshortListNullableProperties2 : MonoBehaviour, IValues<List<ushort?>>
 	{
 		public int Value1ID { get { return VALUE_10_ID; } }
 		public int Value2ID { get { return VALUE_100_ID; } }
@@ -513,3 +517,4 @@ namespace Hertzole.ALE.Tests.TestScripts
 		public List<ushort?> Value2 { get; set; }
 	}
 }
+#pragma warning restore CS8618
