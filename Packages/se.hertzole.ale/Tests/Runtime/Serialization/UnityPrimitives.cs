@@ -330,7 +330,6 @@ namespace Hertzole.ALE.Tests
 			if (value is ICollection valueCol && type.Value is ICollection typeCol)
 			{
 				Assert.IsTrue(valueCol.IsSameAs(typeCol), "Value collection was not properly set.");
-				Debug.Log(typeCol.Count);
 			}
 			else
 			{

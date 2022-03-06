@@ -2,10 +2,10 @@
     "name": "Hertzole.ALE.Tests",
     "rootNamespace": "Hertzole.ALE.Tests",
     "references": [
-        "UnityEngine.TestRunner",
-        "UnityEditor.TestRunner",
-        "Hertzole.ALE",
-        "Hertzole.ALE.MessagePack"
+        "GUID:27619889b8ba8c24980f49ee34dbb44a",
+        "GUID:0acc523941302664db1f4e527237feb3",
+        "GUID:3e74764ede24c8844b29a4b3c662ce33",
+        "GUID:bbde805d927e795439d7a746d1749cab"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],

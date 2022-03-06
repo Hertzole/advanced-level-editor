@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Runtime.CompilerServices;
 using System.Threading;
 using Hertzole.ALE.CodeGen.Helpers;
@@ -28,6 +29,16 @@ namespace Hertzole.ALE.CodeGen
 
 		private MethodReference getPropertiesClear;
 		private MethodReference getPropertiesAddRange;
+		
+#if ALE_DEBUG
+		private readonly Stopwatch beginEditStopwatch = new Stopwatch();
+		private readonly Stopwatch modifyValueStopwatch = new Stopwatch();
+		private readonly Stopwatch createEndEditStopwatch = new Stopwatch();
+		private readonly Stopwatch getPropertiesStopwatch = new Stopwatch();
+		private readonly Stopwatch getValueStopwatch = new Stopwatch();
+		private readonly Stopwatch getWrapperStopwatch = new Stopwatch();
+		private readonly Stopwatch applyWrapperStopwatch = new Stopwatch();
+#endif
 
 		public override bool IsValidClass(TypeDefinition type)
 		{
@@ -86,20 +97,83 @@ namespace Hertzole.ALE.CodeGen
 			CreateProperty<Type>(type, Module, "ComponentType", type, isChild);
 			CreateProperty<bool>(type, Module, "HasVisibleFields", hasVisibleFields, isChild);
 
+#if ALE_DEBUG
+			beginEditStopwatch.Start();
+#endif
 			CreateBeginEdit(type, Module, resultExposedProperties, isChild, out FieldDefinition editingIdField, out FieldDefinition beginEditValueField);
+#if ALE_DEBUG
+			beginEditStopwatch.Stop();
+#endif
+
+#if ALE_DEBUG
+			modifyValueStopwatch.Start();
+#endif
 			CreateModifyValue(type, Module, resultExposedProperties, isChild, out FieldDefinition lastModifyValueField, editingIdField);
+#if ALE_DEBUG
+			modifyValueStopwatch.Stop();
+#endif
+			
 			if (!isChild)
 			{
+#if ALE_DEBUG
+				createEndEditStopwatch.Start();
+#endif
 				CreateEndEdit(type, Module, editingIdField, lastModifyValueField, beginEditValueField);
+#if ALE_DEBUG
+				createEndEditStopwatch.Stop();
+#endif
 			}
 
+#if ALE_DEBUG
+			getPropertiesStopwatch.Start();
+#endif
 			CreateGetProperties(type, Module, resultExposedProperties, isChild);
+#if ALE_DEBUG
+			getPropertiesStopwatch.Stop();
+#endif
+
+#if ALE_DEBUG
+			getValueStopwatch.Start();
+#endif
 			CreateGetValue(type, Module, resultExposedProperties, isChild);
+#if ALE_DEBUG
+			getValueStopwatch.Stop();
+#endif
+
+#if ALE_DEBUG
+			getWrapperStopwatch.Start();
+#endif
 			CreateGetWrapper(type, Module, allExposedProperties, isChild, wrapper);
+#if ALE_DEBUG
+			getWrapperStopwatch.Stop();
+#endif
+
+#if ALE_DEBUG
+			applyWrapperStopwatch.Start();
+#endif
 			CreateApplyWrapper(type, Module, resultExposedProperties, isChild);
+#if ALE_DEBUG
+			applyWrapperStopwatch.Stop();
+#endif
 		
 			processedTypes.Add(type);
 		}
+
+#if ALE_DEBUG
+		public override void EndEdit()
+		{
+			string timings = "ExposedPropertyProcessor timings: " +
+			                 $"Begin edit: {beginEditStopwatch.ElapsedMilliseconds}ms " +
+			                 $"Modify value: {modifyValueStopwatch.ElapsedMilliseconds}ms " +
+			                 $"End edit: {createEndEditStopwatch.ElapsedMilliseconds}ms " +
+			                 $"Get properties: {getPropertiesStopwatch.ElapsedMilliseconds}ms " +
+			                 $"Get value: {getValueStopwatch.ElapsedMilliseconds}ms " +
+			                 $"Get wrapper: {getWrapperStopwatch.ElapsedMilliseconds}ms " +
+			                 $"Apply wrapper: {applyWrapperStopwatch.ElapsedMilliseconds}ms";
+
+			Warning(timings);
+		}
+#endif
 
 		private void SetInterface(bool checkParents, TypeDefinition type, IList<TypeDefinition> parentList, out bool isChild)
 		{
@@ -365,19 +439,17 @@ namespace Hertzole.ALE.CodeGen
 
 		private static MethodDefinition CreateBeginEditHelperMethod(TypeDefinition type, ModuleDefinition module, IReadOnlyList<IExposedProperty> properties, FieldReference beginEditValueField, bool isChild)
 		{
-			MethodDefinition m;
-			if (isChild)
+			MethodDefinition m = type.AddMethod<bool>(BEGIN_EDIT_METHOD, MethodAttributes.Family | MethodAttributes.HideBySig | MethodAttributes.Virtual);
+			if (!isChild)
 			{
-				m = type.AddMethod<bool>(BEGIN_EDIT_METHOD, MethodAttributes.Family | MethodAttributes.HideBySig | MethodAttributes.Virtual);
-			}
-			else
-			{
-				m = type.AddMethod<bool>(BEGIN_EDIT_METHOD, MethodAttributes.Family | MethodAttributes.HideBySig | MethodAttributes.NewSlot | MethodAttributes.Virtual);
+				m.Attributes |= MethodAttributes.NewSlot;
 			}
 
 			ParameterDefinition idPara = m.AddParameter<int>("id");
 
 			ILProcessor il = m.BeginEdit();
+			
+			MethodDefinition baseMethod = isChild ? type.GetMethodInBaseType(BEGIN_EDIT_METHOD, false) : null;
 
 			il.EmitIfElse(properties, (item, index, target, body, fill) =>
 			{
@@ -424,7 +496,6 @@ namespace Hertzole.ALE.CodeGen
 				if (isChild)
 				{
 					// return base.ALE__GENERATED__BeginEdit(id)
-					MethodDefinition baseMethod = type.GetMethodInBaseType(BEGIN_EDIT_METHOD, false);
 					fill.Add(ILHelper.Ldarg(il));
 					fill.Add(ILHelper.Ldarg(il, idPara));
 					fill.Add(Instruction.Create(OpCodes.Call, baseMethod));
@@ -528,14 +599,10 @@ namespace Hertzole.ALE.CodeGen
 
 		private MethodDefinition CreateModifyValueHelperMethod(TypeDefinition type, ModuleDefinition module, IReadOnlyList<IExposedProperty> properties, bool isChild, FieldReference editingIdField, FieldReference lastModifyValueField)
 		{
-			MethodDefinition m;
-			if (isChild)
+			MethodDefinition m = type.AddMethod<bool>(MODIFY_VALUE_METHOD, MethodAttributes.Family | MethodAttributes.HideBySig | MethodAttributes.Virtual);
+			if (!isChild)
 			{
-				m = type.AddMethod<bool>(MODIFY_VALUE_METHOD, MethodAttributes.Family | MethodAttributes.HideBySig | MethodAttributes.Virtual);
-			}
-			else
-			{
-				m = type.AddMethod<bool>(MODIFY_VALUE_METHOD, MethodAttributes.Family | MethodAttributes.HideBySig | MethodAttributes.NewSlot | MethodAttributes.Virtual);
+				m.Attributes |= MethodAttributes.NewSlot;
 			}
 
 			ParameterDefinition paraValue = m.AddParameter<object>("value");
@@ -548,8 +615,13 @@ namespace Hertzole.ALE.CodeGen
 			VariableDefinition[] localVariables = new VariableDefinition[properties.Count];
 			for (int i = 0; i < localVariables.Length; i++)
 			{
-				localVariables[i] = m.AddLocalVariable(properties[i].FieldType.IsNullable(out var nullableType) ? nullableType : properties[i].FieldTypeComponentAware);
+				localVariables[i] = m.AddLocalVariable(properties[i].FieldType.IsNullable(out TypeReference nullableType) ? nullableType : properties[i].FieldTypeComponentAware);
 			}
+
+			TypeReference componentDataWrapper = module.GetTypeReference<ComponentDataWrapper>();
+			MethodDefinition baseMethod = isChild ? type.GetMethodInBaseType(MODIFY_VALUE_METHOD, false) : null;
+			MethodReference componentEqualsGameObject = module.GetMethod<ComponentDataWrapper>("Equals", typeof(GameObject));
+			MethodReference componentEqualsComponent = module.GetMethod<ComponentDataWrapper>("Equals", typeof(Component));
 
 			il.EmitIfElse(properties, (item, index, target, body, fill) =>
 			{
@@ -574,11 +646,11 @@ namespace Hertzole.ALE.CodeGen
 				{
 					// ComponentDataWrapper wrapper = (ComponentDataWrapper) value
 					fill.Add(ILHelper.Ldarg(il, paraValue));
-					fill.Add(Instruction.Create(OpCodes.Isinst, module.GetTypeReference<ComponentDataWrapper>()));
+					fill.Add(Instruction.Create(OpCodes.Isinst, componentDataWrapper));
 					fill.Add(Instruction.Create(OpCodes.Brfalse, last));
 
 					fill.Add(ILHelper.Ldarg(il, paraValue));
-					fill.Add(Instruction.Create(OpCodes.Unbox_Any, module.GetTypeReference<ComponentDataWrapper>()));
+					fill.Add(Instruction.Create(OpCodes.Unbox_Any, componentDataWrapper));
 					fill.AddRange(ILHelper.Stloc(localVariables[index]));
 
 					// if (!wrapper.Equals(value))
@@ -597,7 +669,7 @@ namespace Hertzole.ALE.CodeGen
 					}
 					else
 					{
-						fill.Add(Instruction.Create(OpCodes.Call, module.GetMethod<ComponentDataWrapper>("Equals", item.FieldType.Is<GameObject>() ? typeof(GameObject) : typeof(Component))));
+						fill.Add(Instruction.Create(OpCodes.Call, item.FieldType.Is<GameObject>() ? componentEqualsGameObject : componentEqualsComponent));
 					}
 
 					fill.Add(Instruction.Create(OpCodes.Brtrue, last));
@@ -651,7 +723,7 @@ namespace Hertzole.ALE.CodeGen
 						// ALE__GENERATED__lastModifyValue = wrapper
 						fill.Add(ILHelper.Ldarg(il));
 						fill.AddRange(ILHelper.Ldloc(localVariables[index]));
-						fill.Add(Instruction.Create(OpCodes.Box, module.GetTypeReference<ComponentDataWrapper>()));
+						fill.Add(Instruction.Create(OpCodes.Box, componentDataWrapper));
 						fill.Add(Instruction.Create(OpCodes.Stfld, lastModifyValueField));
 					}
 					else
@@ -875,7 +947,6 @@ namespace Hertzole.ALE.CodeGen
 			{
 				if (isChild)
 				{
-					MethodDefinition baseMethod = type.GetMethodInBaseType(MODIFY_VALUE_METHOD, false);
 					fill.Add(ILHelper.Ldarg(il));
 					fill.Add(ILHelper.Ldarg(il, paraValue));
 					fill.Add(ILHelper.Ldarg(il, paraChanged));

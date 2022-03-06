@@ -1,23 +1,20 @@
 ﻿using System;
-using System.CodeDom;
 using System.Collections.Generic;
-using System.Reflection;
 using System.Text;
-using MessagePack.Formatters;
+using Hertzole.ALE.CodeGen.Helpers;
 using Mono.Cecil;
 using Mono.Cecil.Cil;
 using Mono.Cecil.Rocks;
 using UnityEngine;
-using FieldAttributes = Mono.Cecil.FieldAttributes;
-using MethodAttributes = Mono.Cecil.MethodAttributes;
 using Object = UnityEngine.Object;
-using PropertyAttributes = Mono.Cecil.PropertyAttributes;
-using TypeAttributes = Mono.Cecil.TypeAttributes;
 
 namespace Hertzole.ALE.CodeGen
 {
 	public static partial class WeaverExtensions
 	{
+		private static readonly object lockObj = new object();
+		private static readonly StringBuilder sb = new StringBuilder();
+
 		// https://github.com/vis2k/Mirror/blob/master/Assets/Mirror/Editor/Weaver/Extensions.cs#L10
 		public static bool Is(this TypeReference tr, Type t)
 		{
@@ -99,7 +96,7 @@ namespace Hertzole.ALE.CodeGen
 		public static void GetParents(this TypeDefinition type, IList<TypeDefinition> parentsList, Predicate<TypeDefinition> predicate = null)
 		{
 			parentsList.Clear();
-			
+
 			// Go until we hit a null base type.
 			TypeReference baseType = type.BaseType;
 			while (baseType != null)
@@ -129,9 +126,6 @@ namespace Hertzole.ALE.CodeGen
 			}
 		}
 
-		private static readonly object lockObj = new object();
-		private static readonly StringBuilder sb = new StringBuilder();
-		
 		public static string GetFullName(this TypeReference type)
 		{
 			lock (lockObj)
@@ -150,6 +144,7 @@ namespace Hertzole.ALE.CodeGen
 						{
 							sb.Append(genericType.GenericArguments[i].Namespace + ".");
 						}
+
 						sb.Append(genericType.GenericArguments[i].Name);
 						if (i != genericType.GenericArguments.Count - 1)
 						{
@@ -312,7 +307,7 @@ namespace Hertzole.ALE.CodeGen
 			{
 				throw new ArgumentNullException(nameof(type));
 			}
-			
+
 			TypeDefinition typedef = type;
 			while (typedef != null)
 			{
@@ -498,7 +493,7 @@ namespace Hertzole.ALE.CodeGen
 		{
 			return type.AddProperty(name, attributes, type.Module.GetTypeReference<T>());
 		}
-		
+
 		public static PropertyDefinition AddProperty(this TypeDefinition type, string name, PropertyAttributes attributes, TypeReference propertyType)
 		{
 			PropertyDefinition p = new PropertyDefinition(name, attributes, propertyType);
@@ -586,12 +581,19 @@ namespace Hertzole.ALE.CodeGen
 			if (type.IsValueType)
 			{
 				isInequality = false;
-				return type.Module.GetMethod<object>("Equals", typeof(object));
+
+				MethodReference method = type.Module.GetMethod<object>("Equals", typeof(object));
+#if UNITY_2021_2_OR_NEWER
+				method = TypeHelpers.Fix(method, type.Module);
+#endif
+
+				return method;
 			}
-			
+
 			if (type.TryGetMethodInBaseTypeWithParameters("Equals", out equalsMethod, type.Module.GetTypeReference<object>()))
 			{
 				isInequality = false;
+				Console.WriteLine($"Equals? {type.FullName} | {equalsMethod.FullName}");
 				return equalsMethod;
 			}
 

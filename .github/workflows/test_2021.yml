@@ -1,0 +1,35 @@
+name: Tests Unity 2021.2
+on:
+  push:
+    branch:
+    - master
+
+env:
+  UNITY_LICENSE: ${{ secrets.UNITY_LICENSE }}
+
+jobs:
+  tests:
+    name: Run Unity 2021.2 Tests
+    runs-on: ubuntu-latest
+    steps:
+    # Checkout
+    - name: Checkout repository
+      uses: actions/checkout@v2
+      with:
+        lfs: true
+
+    # Cache
+    - uses: actions/cache@v2
+      with:
+        path: Library
+        key: Library-Tests
+        restore-keys: |
+          Library-Tests
+          Library-
+    
+    - name: Run tests
+      uses: webbertakken/unity-test-runner@v2
+      with:
+        testMode: all
+        unityVersion: "2021.2.14f1"
+        
