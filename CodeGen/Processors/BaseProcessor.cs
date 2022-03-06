@@ -46,5 +46,7 @@ namespace Hertzole.ALE.CodeGen
         {
             Weaver.Warning(sequencePoint, message);
         }
+
+        public virtual void EndEdit() { }
     }
 }

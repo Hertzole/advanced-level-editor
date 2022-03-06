@@ -565,9 +565,38 @@ namespace Hertzole.ALE.CodeGen
 
         public static MethodReference GetMethod(this TypeReference type, string methodName)
         {
-            return GetMethodInternal(type, methodName, true, Array.Empty<TypeReference>());
+            if (newCachedMethods.TryGetValue((type, methodName), out MethodReference cachedMethod))
+            {
+                return cachedMethod;
+            }
+            
+            MethodReference result = GetMethodInternal(type, methodName, true, Array.Empty<TypeReference>());
+            newCachedMethods.Add((type, methodName), result);
+            return result;
         }
+
+        private static readonly Dictionary<(TypeReference, string), MethodReference> newCachedMethods = new Dictionary<(TypeReference, string), MethodReference>(new MethodCacheEquality());
         
+        private class MethodCacheEquality : EqualityComparer<(TypeReference, string)>
+        {
+            private readonly TypeReferencerComparer typeReferencerComparer = new TypeReferencerComparer();
+            
+            public override bool Equals((TypeReference, string) x, (TypeReference, string) y)
+            {
+                if (x.Item2 != y.Item2)
+                {
+                    return false;
+                }
+
+                return typeReferencerComparer.Equals(x.Item1, y.Item1);
+            }
+
+            public override int GetHashCode((TypeReference, string) obj)
+            {
+                return obj.Item2.GetHashCode() + obj.Item1.GetHashCode();
+            }
+        }
+
         private static MethodReference GetMethodInternal(this TypeReference type, string methodName, bool ignoreParameters, TypeReference[] parameters)
         {
             var resolved = type.Resolve();
