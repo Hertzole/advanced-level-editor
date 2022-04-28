@@ -7,7 +7,7 @@ namespace Hertzole.ALE.CodeGen
 {
 	public sealed class PostProcessorReflectionImporter : DefaultReflectionImporter
 	{
-		private readonly AssemblyNameReference correctCorlib;
+		private readonly AssemblyNameReference correctCorelib;
 		private const string SYSTEM_PRIVATE_CORELIB = "System.Private.CoreLib";
 
 		public PostProcessorReflectionImporter(ModuleDefinition module) : base(module)
@@ -18,16 +18,25 @@ namespace Hertzole.ALE.CodeGen
 				string name = references[i].Name;
 				if (name == "mscorlib" || name == "netstandard" || name == SYSTEM_PRIVATE_CORELIB)
 				{
-					correctCorlib = references[i];
+					correctCorelib = references[i];
+					break;
+				}
+			}
+			
+			for (int i = references.Count - 1; i >= 0; i--)
+			{
+				if (references[i].Name == SYSTEM_PRIVATE_CORELIB || references[i].Name == "System.Private.Uri")
+				{
+					references.RemoveAt(i);
 				}
 			}
 		}
 
 		public override AssemblyNameReference ImportReference(AssemblyName name)
 		{
-			if (correctCorlib != null && name.Name == SYSTEM_PRIVATE_CORELIB)
+			if (correctCorelib != null && (name.Name == SYSTEM_PRIVATE_CORELIB || name.Name == "System.Private.Uri"))
 			{
-				return correctCorlib;
+				return correctCorelib;
 			}
 
 			if (TryImportFast(name, out AssemblyNameReference reference))
