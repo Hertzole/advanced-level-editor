@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using UnityEngine;
+using UnityEngine.Scripting;
 
 namespace Hertzole.ALE
 {
@@ -27,6 +28,9 @@ namespace Hertzole.ALE
         {
             editors.Clear();
         }
+
+        [Preserve]
+        protected LevelEditorComponentEditor() { }
 
         public static bool TryGetEditor(Type type, out LevelEditorComponentEditor editor)
         {
