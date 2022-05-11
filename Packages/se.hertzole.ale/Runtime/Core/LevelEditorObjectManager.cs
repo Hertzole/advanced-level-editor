@@ -73,6 +73,11 @@ namespace Hertzole.ALE
         public event EventHandler<LevelEditorObjectEvent> OnCreatedObjectFromSaveData;
         public event EventHandler<LevelEditorObjectEvent> OnDeletedObject;
 
+        private void OnDestroy()
+        {
+            DeleteAllObjects(false);
+        }
+
         public ILevelEditorObject CreateObject(ILevelEditorResource resource, Vector3 position, Quaternion rotation, Transform parent, uint instanceID, bool registerUndo = true)
         {
             LevelEditorLogger.Log($"Create object | Resource: {resource} | Position: {position} | Rotation: {rotation} | Parent: {parent} | Instance ID: {instanceID} | Register undo: {registerUndo}");
@@ -227,6 +232,11 @@ namespace Hertzole.ALE
         {
             for (int i = 0; i < allObjects.Count; i++)
             {
+                if(allObjects[i] == null || allObjects[i].MyGameObject == null)
+                {
+                    continue;
+                }
+                
                 DeleteObjectInternal(allObjects[i], false);
             }
 
@@ -235,6 +245,11 @@ namespace Hertzole.ALE
 
         private void DeleteObjectInternal(ILevelEditorObject target, bool registerUndo)
         {
+            if (target.MyGameObject == null)
+            {
+                return;
+            }
+            
             if (!pooledObjects.ContainsKey(target.ID))
             {
                 pooledObjects.Add(target.ID, new Stack<ILevelEditorObject>());
