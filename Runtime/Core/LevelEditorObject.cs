@@ -13,6 +13,7 @@ namespace Hertzole.ALE
     {
         private bool gotComponents = false;
         private bool gotPlayModeObjects = false;
+        private bool markedForDeletion = false;
 
         private IExposedToLevelEditor[] exposedComponents;
         private ILevelEditorPlayModeObject[] playModeObjects;
@@ -53,7 +54,7 @@ namespace Hertzole.ALE
 
         public List<ILevelEditorObject> Children { get; set; } = new List<ILevelEditorObject>();
 
-        GameObject ILevelEditorObject.MyGameObject { get { return gameObject; } }
+        GameObject ILevelEditorObject.MyGameObject { get { return markedForDeletion ? null : gameObject; } }
 
         public event EventHandler<LevelEditorObjectStateArgs> OnStateChanged;
 
@@ -77,6 +78,12 @@ namespace Hertzole.ALE
             {
                 LevelEditorGLRenderer.Remove(gizmos[i]);
             }
+        }
+
+        private void OnDestroy()
+        {
+            markedForDeletion = true;
+            LevelEditorWorld.RemoveObject(this);
         }
 
         public IExposedToLevelEditor[] GetExposedComponents()
