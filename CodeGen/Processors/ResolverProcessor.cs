@@ -65,8 +65,9 @@ namespace Hertzole.ALE.CodeGen
 				{
 					AddCustomDataType(genericType.GenericArguments[i]);
 				}
-
-				customDataTypes.Add(type);
+				
+				customDataTypes.Add(genericType);
+				AddTypeWithoutFormatter(genericType);
 
 				return;
 			}
@@ -232,6 +233,11 @@ namespace Hertzole.ALE.CodeGen
 
 			for (int i = 0; i < wrapperFormatters.Count; i++)
 			{
+#if ALE_DEBUG
+				il.Emit(OpCodes.Ldstr, "Registering wrapper formatter: " + wrapperFormatters[i].Item3.FullName + " with hash " + wrapperFormatters[i].Item3.FullName.GetStableHashCode());
+				il.Emit(OpCodes.Call, module.GetMethod(typeof(LevelEditorLogger), "Log", typeof(object)));
+#endif
+				
 				il.EmitInt(wrapperFormatters[i].Item3.FullName.GetStableHashCode());
 				il.Emit(OpCodes.Call, module.GetMethod(typeof(LevelEditorSerializer), "RegisterType", typeof(int)).MakeGenericMethod(wrapperFormatters[i].Item3));
 
@@ -247,6 +253,11 @@ namespace Hertzole.ALE.CodeGen
 
 			for (int i = 0; i < customDataTypes.Count; i++)
 			{
+#if ALE_DEBUG
+				il.Emit(OpCodes.Ldstr, "Registering custom type: " + customDataTypes[i].GetFullName() + " with hash " + customDataTypes[i].GetFullName().GetStableHashCode());
+				il.Emit(OpCodes.Call, module.GetMethod(typeof(LevelEditorLogger), "Log", typeof(object)));
+#endif
+				
 				il.EmitInt(customDataTypes[i].GetFullName().GetStableHashCode());
 				il.Emit(OpCodes.Call, module.GetMethod(typeof(LevelEditorSerializer), "RegisterType", typeof(int)).MakeGenericMethod(customDataTypes[i]));
 
@@ -343,17 +354,23 @@ namespace Hertzole.ALE.CodeGen
 				{
 					ctor = module.GetGenericConstructor(typeof(ListFormatter<>), formatter.type.GetCollectionType());
 				}
-				else if (formatter.Item2.IsEnum())
+				else if (formatter.type.IsEnum())
 				{
 					ctor = module.GetGenericConstructor(typeof(GenericEnumFormatter<>), formatter.type);
 				}
-				else if (formatter.Item2.IsNullable(out TypeReference nullableType))
+				else if (formatter.type.IsDictionary() && formatter.type is GenericInstanceType dictionaryType)
+				{
+					ctor = module.GetGenericConstructor(typeof(DictionaryFormatter<,>), dictionaryType.GenericArguments[0], dictionaryType.GenericArguments[1]);
+				}
+				else if (formatter.type.IsNullable(out TypeReference nullableType))
 				{
 					ctor = module.GetGenericConstructor(typeof(NullableFormatter<>), nullableType);
 				}
 				else
 				{
-					ctor = module.ImportReference(formatter.Item1).Resolve().GetConstructor();
+					Console.WriteLine(formatter.type.FullName + " |" + formatter.type.IsDictionary() + " | " + formatter.type.GetType() + " | Formatter: " + formatter.formatter);
+					
+					ctor = module.ImportReference(formatter.formatter).Resolve().GetConstructor();
 
 					if (formatter.Item1 is GenericInstanceType genericType)
 					{
