@@ -23,11 +23,15 @@ namespace Hertzole.ALE
 
 		public static void RegisterType<T>()
 		{
+			LevelEditorLogger.Log("RegisterType<" + typeof(T).FullName + ">(hash: " + typeof(T).FullName.GetStableHashCode() + ")");
+			
 			typeMap[typeof(T).FullName.GetStableHashCode()] = typeof(T);
 		}
 
 		public static void RegisterType<T>(int hash)
 		{
+			LevelEditorLogger.Log("RegisterType<" + typeof(T).FullName + ">(" + hash + ")");
+			
 			typeMap[hash] = typeof(T);
 		}
 
