@@ -180,7 +180,7 @@ namespace Hertzole.ALE
 			}
 		}
 
-		private static T GetModal<T>(T old, GameObject go, Action onClose) where T : ILevelEditorModal
+		public static T GetModal<T>(T old, GameObject go, Action onClose) where T : ILevelEditorModal
 		{
 			if (old != null)
 			{
@@ -196,7 +196,7 @@ namespace Hertzole.ALE
 			return default;
 		}
 
-		private void UpdateModalBackground()
+		protected virtual void UpdateModalBackground()
 		{
 			UpdateModalBackground(IsModalActiveAndExists(SaveModal) || IsModalActiveAndExists(LoadModal) || IsModalActiveAndExists(MessageModal));
 		}
@@ -209,7 +209,7 @@ namespace Hertzole.ALE
 			}
 		}
 
-		private static bool IsModalActiveAndExists(ILevelEditorModal go)
+		public static bool IsModalActiveAndExists(ILevelEditorModal go)
 		{
 			return go != null && go.MyGameObject.activeInHierarchy;
 		}
