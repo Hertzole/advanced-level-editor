@@ -625,7 +625,7 @@ namespace Hertzole.ALE.CodeGen
 	
 			int targetIndex = 0;
 			
-#if DEBUG
+#if ALE_DEBUG
 			// LevelEditorLogger.Log($"ModifyValue of {gameObject.name} | Id: {ALE__GENERATED__editingId}, Value: {value}, Value type: {value.GetType()}")
 			il.Emit(OpCodes.Ldstr, "ModifyValue of {0} | Id: {1}, Value: {2}, Value type: {3}");
 			il.EmitInt(4);
