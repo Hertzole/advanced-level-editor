@@ -33,23 +33,53 @@ namespace Hertzole.ALE.Tests
 		{
 			yield return RunTest<CustomDataByte>();
 		}
+
+		[UnityTest]
+		public IEnumerator SaveByteList()
+		{
+			yield return RunTest<CustomDataByteList>();
+		}
 		
+		[UnityTest]
+		public IEnumerator SaveByteDictionary()
+		{
+			yield return RunTest<CustomDataByteDictionary>();
+		}
+
 		[UnityTest]
 		public IEnumerator SaveCustomStructList()
 		{
 			yield return RunTest<CustomDataCustomStructList>();
 		}
-		
+
 		[UnityTest]
 		public IEnumerator SaveCustomStructDictionary()
 		{
 			yield return RunTest<CustomDataCustomStructDictionary>();
 		}
-		
+
 		[UnityTest]
 		public IEnumerator SaveCustomStructDictionaryWithList()
 		{
 			yield return RunTest<CustomDataDictionaryWithList>();
+		}
+
+		[UnityTest]
+		public IEnumerator SaveCustomEnum()
+		{
+			yield return RunTest<CustomDataEnum>();
+		}
+
+		[UnityTest]
+		public IEnumerator SaveCustomDictionaryWithEnum()
+		{
+			yield return RunTest<CustomDataEnumDictionary>();
+		}
+
+		[UnityTest]
+		public IEnumerator SaveCustomEnumList()
+		{
+			yield return RunTest<CustomDataEnumList>();
 		}
 
 		private IEnumerator RunTest<T>() where T : BaseCustomDataTestScript

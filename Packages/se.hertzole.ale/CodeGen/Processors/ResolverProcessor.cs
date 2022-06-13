@@ -20,8 +20,10 @@ namespace Hertzole.ALE.CodeGen
 		private readonly List<TypeDefinition> enums = new List<TypeDefinition>();
 		private readonly ModuleDefinition module;
 		private readonly List<(TypeReference, TypeReference)> typeFormatters = new List<(TypeReference, TypeReference)>();
-
 		private readonly List<(TypeDefinition, TypeDefinition, TypeDefinition)> wrapperFormatters = new List<(TypeDefinition, TypeDefinition, TypeDefinition)>();
+
+		private readonly HashSet<TypeReference> addedTypes = new HashSet<TypeReference>(new TypeReferencerComparer());
+
 		private FieldDefinition formatterField;
 		private MethodDefinition getFormatterHelperMethod;
 		private MethodDefinition getFormatterMethod;
@@ -54,7 +56,7 @@ namespace Hertzole.ALE.CodeGen
 
 		public void AddCustomDataType(TypeReference type)
 		{
-			if (customDataTypes.Contains(type))
+			if (customDataTypes.Contains(type) || addedTypes.Contains(type))
 			{
 				return;
 			}
@@ -67,6 +69,7 @@ namespace Hertzole.ALE.CodeGen
 				}
 				
 				customDataTypes.Add(genericType);
+				addedTypes.Add(genericType);
 				AddTypeWithoutFormatter(genericType);
 
 				return;
@@ -75,6 +78,7 @@ namespace Hertzole.ALE.CodeGen
 			if (type.IsArray())
 			{
 				customDataTypes.Add(type);
+				addedTypes.Add(type);
 				AddCustomDataType(type.GetCollectionType());
 				return;
 			}
@@ -88,20 +92,35 @@ namespace Hertzole.ALE.CodeGen
 			if (resolved.IsEnum())
 			{
 				customDataTypes.Add(resolved);
+				allFormatters.Add((null, resolved));
+				addedTypes.Add(resolved);
 				return;
 			}
 
 			customDataTypes.Add(type);
+			addedTypes.Add(type);
 		}
 
 		public void AddEnum(TypeDefinition type)
 		{
+			if (addedTypes.Contains(type))
+			{
+				return;
+			}
+			
 			enums.Add(type);
+			addedTypes.Add(type);
 		}
 
 		public void AddTypeWithoutFormatter(TypeReference type)
 		{
+			if (addedTypes.Contains(type))
+			{
+				return;
+			}
+			
 			allFormatters.Add((null, type));
+			addedTypes.Add(type);
 		}
 
 		public void EndEditing(bool isBuilding)
@@ -368,8 +387,6 @@ namespace Hertzole.ALE.CodeGen
 				}
 				else
 				{
-					Console.WriteLine(formatter.type.FullName + " |" + formatter.type.IsDictionary() + " | " + formatter.type.GetType() + " | Formatter: " + formatter.formatter);
-					
 					ctor = module.ImportReference(formatter.formatter).Resolve().GetConstructor();
 
 					if (formatter.Item1 is GenericInstanceType genericType)

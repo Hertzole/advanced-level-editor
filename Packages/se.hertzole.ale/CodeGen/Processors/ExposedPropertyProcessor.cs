@@ -622,6 +622,91 @@ namespace Hertzole.ALE.CodeGen
 			MethodDefinition baseMethod = isChild ? type.GetMethodInBaseType(MODIFY_VALUE_METHOD, false) : null;
 			MethodReference componentEqualsGameObject = module.GetMethod<ComponentDataWrapper>("Equals", typeof(GameObject));
 			MethodReference componentEqualsComponent = module.GetMethod<ComponentDataWrapper>("Equals", typeof(Component));
+	
+			int targetIndex = 0;
+			
+#if DEBUG
+			// LevelEditorLogger.Log($"ModifyValue of {gameObject.name} | Id: {ALE__GENERATED__editingId}, Value: {value}, Value type: {value.GetType()}")
+			il.Emit(OpCodes.Ldstr, "ModifyValue of {0} | Id: {1}, Value: {2}, Value type: {3}");
+			il.EmitInt(4);
+			il.Emit(OpCodes.Newarr, module.GetTypeReference<object>());
+			il.Emit(OpCodes.Dup);
+			il.EmitInt(0);
+			il.EmitLdarg();
+			il.Emit(OpCodes.Call, module.GetMethod<GameObject>("get_gameObject"));
+			il.Emit(OpCodes.Callvirt, module.GetMethod<GameObject>("get_name"));
+			il.Emit(OpCodes.Stelem_Ref);
+			il.Emit(OpCodes.Dup);
+			il.EmitInt(1);
+			il.EmitLdarg();
+			il.Emit(OpCodes.Ldfld, editingIdField);
+			il.Emit(OpCodes.Box, module.GetTypeReference<int>());
+			il.Emit(OpCodes.Stelem_Ref);
+			il.Emit(OpCodes.Dup);
+			il.EmitInt(2);
+			il.EmitLdarg(paraValue);
+			il.Emit(OpCodes.Stelem_Ref);
+			il.Emit(OpCodes.Dup);
+			il.EmitInt(3);
+			il.EmitLdarg(paraValue);
+			il.Emit(OpCodes.Call, module.GetMethod<object>("GetType"));
+			il.Emit(OpCodes.Stelem_Ref);
+			il.Emit(OpCodes.Call, module.GetMethod<string>("Format", typeof(string), typeof(object[])));
+			il.Emit(OpCodes.Call, module.GetMethod(typeof(LevelEditorLogger), "Log", typeof(object)));
+
+			targetIndex = il.Body.Instructions.Count;
+#endif
+			
+			// Build in reverse to make it easier.
+			Instruction jumpTarget;
+
+			if (isChild)
+			{
+				jumpTarget = Instruction.Create(OpCodes.Ldarg_0);
+				
+				// return base.ModifyValue(value, changed)
+				il.InsertAt(targetIndex, Instruction.Create(OpCodes.Ret));
+				il.InsertAt(targetIndex, Instruction.Create(OpCodes.Call, baseMethod));
+				il.InsertAt(targetIndex, ILHelper.Ldarg(il, paraChanged));
+				il.InsertAt(targetIndex, ILHelper.Ldarg(il, paraValue));
+				il.InsertAt(targetIndex, jumpTarget);
+			}
+			else
+			{
+				jumpTarget = ILHelper.Bool(false);
+				
+				// return false
+				il.InsertAt(targetIndex, Instruction.Create(OpCodes.Ret));
+				il.InsertAt(targetIndex, jumpTarget);
+			}
+			
+			for (int i = properties.Count - 1; i >= 0; i--)
+			{
+				var valueModify = CreateValueModify(module, il, m, properties[i], componentDataWrapper,
+					componentEqualsGameObject, componentEqualsComponent, localVariables, i, paraValue,
+					paraChanged, lastModifyValueField);
+
+				il.InsertAt(targetIndex, valueModify);
+
+				// if (ALE__GENERATED__editingId == X)
+				var id = properties[i].Id;
+				if (id == 0)
+				{
+					il.InsertAt(targetIndex, Instruction.Create(OpCodes.Brtrue, jumpTarget));
+				}
+				else
+				{
+					il.InsertAt(targetIndex, Instruction.Create(OpCodes.Bne_Un, jumpTarget));
+					il.InsertAt(targetIndex, ILHelper.Int(id));
+				}
+				il.InsertAt(targetIndex, Instruction.Create(OpCodes.Ldfld, editingIdField));
+				jumpTarget = Instruction.Create(OpCodes.Ldarg_0);
+				il.InsertAt(targetIndex, jumpTarget);
+			}
+			
+			m.EndEdit();
+
+			return m;
 
 			il.EmitIfElse(properties, (item, index, target, body, fill) =>
 			{
@@ -639,310 +724,7 @@ namespace Hertzole.ALE.CodeGen
 				}
 			}, (item, index, last, fill) =>
 			{
-				MethodReference equals = module.ImportReference(item.FieldTypeResolved.GetEqualsMethod(out bool isInEquality));
-				bool skipAssignValue = false;
 				
-				if (item.IsComponent)
-				{
-					// ComponentDataWrapper wrapper = (ComponentDataWrapper) value
-					fill.Add(ILHelper.Ldarg(il, paraValue));
-					fill.Add(Instruction.Create(OpCodes.Isinst, componentDataWrapper));
-					fill.Add(Instruction.Create(OpCodes.Brfalse, last));
-
-					fill.Add(ILHelper.Ldarg(il, paraValue));
-					fill.Add(Instruction.Create(OpCodes.Unbox_Any, componentDataWrapper));
-					fill.AddRange(ILHelper.Stloc(localVariables[index]));
-
-					// if (!wrapper.Equals(value))
-					fill.AddRange(ILHelper.Ldloc(localVariables[index], true));
-					fill.Add(ILHelper.Ldarg(il));
-					fill.Add(item.GetLoadInstruction());
-					if (item.IsCollection)
-					{
-						if (item.IsDictionary)
-						{
-							Error("You can't have a dictionary.");
-							return;
-						}
-
-						fill.Add(Instruction.Create(OpCodes.Call, module.GetMethod<ComponentDataWrapper>("Equals", item.FieldType.GetCollectionType().Is<GameObject>() ? typeof(IReadOnlyList<GameObject>) : typeof(IReadOnlyList<Component>))));
-					}
-					else
-					{
-						fill.Add(Instruction.Create(OpCodes.Call, item.FieldType.Is<GameObject>() ? componentEqualsGameObject : componentEqualsComponent));
-					}
-
-					fill.Add(Instruction.Create(OpCodes.Brtrue, last));
-					fill.Add(ILHelper.Ldarg(il));
-
-					if (item.IsCollection)
-					{
-						if (item.IsList)
-						{
-							Instruction addStart = ILHelper.Ldarg(il);
-
-							fill.AddRange(ILHelper.IfElse((last, list) =>
-							{
-								// if (value == null)
-								list.Add(item.GetLoadInstruction());
-								list.Add(Instruction.Create(OpCodes.Brtrue, last));
-							}, (last, list) =>
-							{
-								// value = new List<Type>()
-								list.Add(ILHelper.Ldarg(il));
-								list.Add(Instruction.Create(OpCodes.Newobj, module.GetConstructor(typeof(List<>)).MakeHostInstanceGeneric(
-									module.GetTypeReference(typeof(List<>)).MakeGenericInstanceType(item.FieldType.GetCollectionType()))));
-
-								list.Add(item.GetSetInstruction());
-								list.Add(Instruction.Create(OpCodes.Br, addStart));
-							}, list =>
-							{
-								// value.Clear()
-								list.Add(ILHelper.Ldarg(il));
-								list.Add(item.GetLoadInstruction());
-								list.Add(Instruction.Create(OpCodes.Callvirt, module.GetMethod(typeof(List<>), "Clear").MakeHostInstanceGeneric(
-									module.GetTypeReference(typeof(List<>)).MakeGenericInstanceType(item.FieldType.GetCollectionType()))));
-							}));
-
-							// value.AddRange(wrapper.GetObjects<Type>())
-							fill.Add(addStart);
-							fill.Add(item.GetLoadInstruction());
-							fill.AddRange(ILHelper.Ldloc(localVariables[index], true));
-							fill.Add(Instruction.Create(OpCodes.Call, module.GetMethod<ComponentDataWrapper>("GetObjects", Array.Empty<Type>()).MakeGenericMethod(item.FieldType.GetCollectionType())));
-							fill.Add(Instruction.Create(OpCodes.Callvirt, module.GetMethod(typeof(List<>), "AddRange").MakeHostInstanceGeneric(
-								module.GetTypeReference(typeof(List<>)).MakeGenericInstanceType(item.FieldType.GetCollectionType()))));
-						}
-						else
-						{
-							// valueArray = wrapper.GetObjects<Type>()
-							fill.AddRange(ILHelper.Ldloc(localVariables[index], true));
-							fill.Add(Instruction.Create(OpCodes.Call, module.GetMethod<ComponentDataWrapper>("GetObjects", Array.Empty<Type>()).MakeGenericMethod(item.FieldType.GetCollectionType())));
-							fill.Add(item.GetSetInstruction());
-						}
-
-						// ALE__GENERATED__lastModifyValue = wrapper
-						fill.Add(ILHelper.Ldarg(il));
-						fill.AddRange(ILHelper.Ldloc(localVariables[index]));
-						fill.Add(Instruction.Create(OpCodes.Box, componentDataWrapper));
-						fill.Add(Instruction.Create(OpCodes.Stfld, lastModifyValueField));
-					}
-					else
-					{
-						fill.AddRange(ILHelper.Ldloc(localVariables[index], true));
-						fill.Add(Instruction.Create(OpCodes.Call, module.GetMethod<ComponentDataWrapper>("GetObject", Array.Empty<Type>()).MakeGenericMethod(item.FieldType.GetCollectionType())));
-						fill.Add(item.GetSetInstruction());
-					}
-				}
-				else if (item.FieldType.IsNullable(out TypeReference nullableType))
-				{
-					// We want to handle the value assignment ourselves.
-					skipAssignValue = true;
-
-					var nullInt1 = m.AddLocalVariable<int?>(); // 5
-					var tempInt = m.AddLocalVariable<int>(); // 6
-					var tempNullable = m.AddLocalVariable(item.FieldType); // 7
-					var nullInt2 = m.AddLocalVariable<int?>(); // 8
-
-					GenericInstanceType nullableContainer = module.GetTypeReference(typeof(Nullable<>)).MakeGenericInstanceType(nullableType);
-					GenericInstanceType nullableInt = module.GetTypeReference(typeof(Nullable<>)).MakeGenericInstanceType(module.GetTypeReference<int>());
-
-					fill.AddRange(ILHelper.IfElse((elseCheck, list) =>
-					{
-						// if (value is Type)
-						list.Add(ILHelper.Ldarg(il, paraValue));
-						list.Add(Instruction.Create(OpCodes.Isinst, nullableType));
-						list.Add(Instruction.Create(OpCodes.Brfalse, elseCheck));
-
-					}, (next, list) =>
-					{
-						Instruction[] temp = ILHelper.Ldloc(tempNullable, true);
-						Instruction[] temp2 = ILHelper.Stloc(nullInt1);
-
-						// var val = (Type) value
-						list.Add(ILHelper.Ldarg(il, paraValue));
-						list.Add(Instruction.Create(OpCodes.Unbox_Any, nullableType));
-						list.AddRange(ILHelper.Stloc(localVariables[index]));
-
-						// if (field != val)
-						list.Add(ILHelper.Ldarg(il));
-						list.Add(item.GetLoadInstruction());
-						list.AddRange(ILHelper.Stloc(tempNullable));
-
-						list.AddRange(ILHelper.Ldloc(tempNullable, true));
-						list.Add(Instruction.Create(OpCodes.Call, nullableContainer.GetMethod("get_HasValue")));
-						list.Add(Instruction.Create(OpCodes.Brtrue, temp[0]));
-
-						list.AddRange(ILHelper.Ldloc(nullInt2, true));
-						list.Add(Instruction.Create(OpCodes.Initobj, module.GetTypeReference<int?>()));
-						list.AddRange(ILHelper.Ldloc(nullInt2));
-						list.Add(Instruction.Create(OpCodes.Br, temp2[0]));
-
-						list.AddRange(temp);
-						list.Add(Instruction.Create(OpCodes.Call, nullableContainer.GetMethod("GetValueOrDefault")));
-						list.Add(Instruction.Create(OpCodes.Newobj, nullableInt.GetMethod(".ctor")));
-
-						list.AddRange(temp2);
-						list.AddRange(ILHelper.Ldloc(localVariables[index]));
-						list.AddRange(ILHelper.Stloc(tempInt));
-						
-						// field = val
-						list.AddRange(ILHelper.Ldloc(nullInt1, true));
-						list.Add(Instruction.Create(OpCodes.Call, module.GetMethod<int?>("GetValueOrDefault", Array.Empty<Type>())));
-						list.AddRange(ILHelper.Ldloc(tempInt));
-						list.Add(Instruction.Create(OpCodes.Ceq));
-						list.AddRange(ILHelper.Ldloc(nullInt1, true));
-						list.Add(Instruction.Create(OpCodes.Call, module.GetMethod<int?>("get_HasValue")));
-						list.Add(Instruction.Create(OpCodes.And));
-						list.Add(Instruction.Create(OpCodes.Brtrue, next));
-
-						list.Add(ILHelper.Ldarg(il));
-						list.AddRange(ILHelper.Ldloc(localVariables[index]));
-						list.Add(Instruction.Create(OpCodes.Newobj, nullableContainer.GetMethod(".ctor")));
-						list.Add(item.GetSetInstruction());
-						
-						// ALE__GENERATED__lastModifyValue = var
-						list.Add(ILHelper.Ldarg(il));
-						list.AddRange(ILHelper.Ldloc(localVariables[index]));
-						list.Add(Instruction.Create(OpCodes.Box, nullableType));
-						list.Add(Instruction.Create(OpCodes.Stfld, lastModifyValueField));
-
-						// changed = true
-						list.Add(ILHelper.Ldarg(il, paraChanged));
-						list.Add(ILHelper.Bool(true));
-						list.Add(Instruction.Create(OpCodes.Stind_I1));
-
-						// return true
-						list.Add(ILHelper.Bool(true));
-						list.Add(Instruction.Create(OpCodes.Ret));
-					}, list =>
-					{
-						// if (value == null && field.HasValue)
-						list.Add(ILHelper.Ldarg(il, paraValue));
-						list.Add(Instruction.Create(OpCodes.Brtrue, last));
-
-						list.Add(ILHelper.Ldarg(il));
-						list.Add(item.GetLoadInstruction(true));
-						list.Add(Instruction.Create(OpCodes.Call, module.GetMethod(typeof(Nullable<>), "get_HasValue").MakeHostInstanceGeneric(module.GetTypeReference(typeof(Nullable<>)).MakeGenericInstanceType(nullableType))));
-						list.Add(Instruction.Create(OpCodes.Brfalse, last));
-						
-						// field = null
-						list.Add(ILHelper.Ldarg(il));
-						list.Add(item.GetLoadInstruction(true));
-						list.Add(Instruction.Create(OpCodes.Initobj, item.FieldType));
-					
-						// ALE__GENERATED__lastModifyValue = null
-						list.Add(ILHelper.Ldarg(il));
-						list.Add(Instruction.Create(OpCodes.Ldnull));
-						list.Add(Instruction.Create(OpCodes.Stfld, lastModifyValueField));
-						
-						// changed = true
-						list.Add(ILHelper.Ldarg(il, paraChanged));
-						list.Add(ILHelper.Bool(true));
-						list.Add(Instruction.Create(OpCodes.Stind_I1));
-
-						// return true
-						list.Add(ILHelper.Bool(true));
-						list.Add(Instruction.Create(OpCodes.Ret));
-					}));
-				}
-				else if (!item.IsValueType && !item.IsCollection)
-				{
-					// Type var = value as Type
-					fill.Add(ILHelper.Ldarg(il, paraValue));
-					fill.Add(Instruction.Create(OpCodes.Isinst, item.FieldTypeComponentAware));
-					fill.AddRange(ILHelper.Stloc(localVariables[index]));
-
-					// if (var != null)
-					fill.AddRange(ILHelper.Ldloc(localVariables[index]));
-					fill.Add(Instruction.Create(OpCodes.Brfalse, last));
-
-					// value = var
-					fill.Add(ILHelper.Ldarg(il));
-					fill.AddRange(ILHelper.Ldloc(localVariables[index]));
-					fill.Add(item.GetSetInstruction());
-
-					// ALE__GENERATED__lastModifyValue = var
-					fill.Add(ILHelper.Ldarg(il));
-					fill.AddRange(ILHelper.Ldloc(localVariables[index]));
-					fill.Add(Instruction.Create(OpCodes.Stfld, lastModifyValueField));
-				}
-				else if (item.IsValueType && !item.IsCollection)
-				{
-					// if (value is Type)
-					fill.Add(ILHelper.Ldarg(il, paraValue));
-					fill.Add(Instruction.Create(OpCodes.Isinst, item.FieldTypeComponentAware));
-					fill.Add(Instruction.Create(OpCodes.Brfalse, last));
-
-					// int var = (Type) value
-					fill.Add(ILHelper.Ldarg(il, paraValue));
-					fill.Add(Instruction.Create(OpCodes.Unbox_Any, item.FieldTypeComponentAware));
-					fill.AddRange(ILHelper.Stloc(localVariables[index]));
-
-					bool objectEquals = equals.DeclaringType.FullName == module.GetTypeReference<object>().FullName;
-
-					// if (localVar != var)
-					fill.Add(ILHelper.Ldarg(il));
-					fill.Add(item.GetLoadInstruction(!item.FieldType.IsPrimitive && !isInEquality));
-					// If we're not doing inequality check and it's a property that is also a value type but is not a primitive,
-					// create a new local variable for some reason and set it and load it, then never talk about it again.
-					if (!isInEquality && item.IsProperty && item.IsValueType && !item.IsPrimitive)
-					{
-						VariableDefinition propertyVar = m.AddLocalVariable(item.FieldTypeComponentAware);
-						fill.AddRange(ILHelper.Stloc(propertyVar));
-						fill.AddRange(ILHelper.Ldloc(propertyVar, true));
-					}
-
-					fill.AddRange(ILHelper.Ldloc(localVariables[index]));
-					if (!item.FieldType.IsPrimitive)
-					{
-						// If it's a value type and it's using the generic Equals(object), it needs to be boxed.
-						if (item.IsValueType && objectEquals)
-						{
-							fill.Add(Instruction.Create(OpCodes.Box, item.FieldTypeComponentAware));
-						}
-
-						// If it's using Equals(object), it need to be constrained and whatnot.
-						// Else just call equals method.
-						if (objectEquals)
-						{
-							fill.Add(Instruction.Create(OpCodes.Constrained, item.FieldTypeComponentAware));
-							fill.Add(Instruction.Create(OpCodes.Callvirt, equals));
-						}
-						else
-						{
-							fill.Add(Instruction.Create(OpCodes.Call, equals));
-						}
-
-						fill.Add(Instruction.Create(isInEquality ? OpCodes.Brfalse : OpCodes.Brtrue, last));
-					}
-					else
-					{
-						fill.Add(Instruction.Create(OpCodes.Beq, last));
-					}
-
-					// localVar = var
-					fill.Add(ILHelper.Ldarg(il));
-					fill.AddRange(ILHelper.Ldloc(localVariables[index]));
-					fill.Add(item.GetSetInstruction());
-				}
-
-				if (!skipAssignValue)
-				{
-					// ALE__GENERATED__lastModifyValue = var
-					fill.Add(ILHelper.Ldarg(il));
-					fill.AddRange(ILHelper.Ldloc(localVariables[index]));
-					fill.Add(Instruction.Create(OpCodes.Box, item.FieldTypeComponentAware));
-					fill.Add(Instruction.Create(OpCodes.Stfld, lastModifyValueField));
-					
-					// changed = true
-					fill.Add(ILHelper.Ldarg(il, paraChanged));
-					fill.Add(ILHelper.Bool(true));
-					fill.Add(Instruction.Create(OpCodes.Stind_I1));
-
-					// return true
-					fill.Add(ILHelper.Bool(true));
-					fill.Add(Instruction.Create(OpCodes.Ret));
-				}
 			}, fill =>
 			{
 				if (isChild)
@@ -963,6 +745,323 @@ namespace Hertzole.ALE.CodeGen
 			m.EndEdit();
 
 			return m;
+		}
+
+		private List<Instruction> CreateValueModify(ModuleDefinition module, ILProcessor il, MethodDefinition targetMethod, 
+			IExposedProperty item, TypeReference componentDataWrapper, MethodReference componentEqualsGameObject, 
+			MethodReference componentEqualsComponent, VariableDefinition[] localVariables, int index,
+			ParameterDefinition paraValue, ParameterDefinition paraChanged, FieldReference lastModifyValueField)
+		{
+			List<Instruction> fill = new List<Instruction>();
+
+			MethodReference equals = module.ImportReference(item.FieldTypeResolved.GetEqualsMethod(out bool isInEquality));
+			bool skipAssignValue = false;
+			
+			Instruction jumpTarget = ILHelper.Bool(true);
+			
+			if (item.IsComponent)
+			{
+				// ComponentDataWrapper wrapper = (ComponentDataWrapper) value
+				fill.Add(ILHelper.Ldarg(il, paraValue));
+				fill.Add(Instruction.Create(OpCodes.Isinst, componentDataWrapper));
+				fill.Add(Instruction.Create(OpCodes.Brfalse, jumpTarget));
+
+				fill.Add(ILHelper.Ldarg(il, paraValue));
+				fill.Add(Instruction.Create(OpCodes.Unbox_Any, componentDataWrapper));
+				fill.AddRange(ILHelper.Stloc(localVariables[index]));
+
+				// if (!wrapper.Equals(value))
+				fill.AddRange(ILHelper.Ldloc(localVariables[index], true));
+				fill.Add(ILHelper.Ldarg(il));
+				fill.Add(item.GetLoadInstruction());
+				if (item.IsCollection)
+				{
+					if (item.IsDictionary)
+					{
+						Error("You can't have a dictionary.");
+						return fill;
+					}
+
+					fill.Add(Instruction.Create(OpCodes.Call, module.GetMethod<ComponentDataWrapper>("Equals", item.FieldType.GetCollectionType().Is<GameObject>() ? typeof(IReadOnlyList<GameObject>) : typeof(IReadOnlyList<Component>))));
+				}
+				else
+				{
+					fill.Add(Instruction.Create(OpCodes.Call, item.FieldType.Is<GameObject>() ? componentEqualsGameObject : componentEqualsComponent));
+				}
+
+				fill.Add(Instruction.Create(OpCodes.Brtrue, jumpTarget));
+				fill.Add(ILHelper.Ldarg(il));
+
+				if (item.IsCollection)
+				{
+					if (item.IsList)
+					{
+						Instruction addStart = ILHelper.Ldarg(il);
+
+						fill.AddRange(ILHelper.IfElse((last, list) =>
+						{
+							// if (value == null)
+							list.Add(item.GetLoadInstruction());
+							list.Add(Instruction.Create(OpCodes.Brtrue, last));
+						}, (last, list) =>
+						{
+							// value = new List<Type>()
+							list.Add(ILHelper.Ldarg(il));
+							list.Add(Instruction.Create(OpCodes.Newobj, module.GetConstructor(typeof(List<>)).MakeHostInstanceGeneric(
+								module.GetTypeReference(typeof(List<>)).MakeGenericInstanceType(item.FieldType.GetCollectionType()))));
+
+							list.Add(item.GetSetInstruction());
+							list.Add(Instruction.Create(OpCodes.Br, addStart));
+						}, list =>
+						{
+							// value.Clear()
+							list.Add(ILHelper.Ldarg(il));
+							list.Add(item.GetLoadInstruction());
+							list.Add(Instruction.Create(OpCodes.Callvirt, module.GetMethod(typeof(List<>), "Clear").MakeHostInstanceGeneric(
+								module.GetTypeReference(typeof(List<>)).MakeGenericInstanceType(item.FieldType.GetCollectionType()))));
+						}));
+
+						// value.AddRange(wrapper.GetObjects<Type>())
+						fill.Add(addStart);
+						fill.Add(item.GetLoadInstruction());
+						fill.AddRange(ILHelper.Ldloc(localVariables[index], true));
+						fill.Add(Instruction.Create(OpCodes.Call, module.GetMethod<ComponentDataWrapper>("GetObjects", Array.Empty<Type>()).MakeGenericMethod(item.FieldType.GetCollectionType())));
+						fill.Add(Instruction.Create(OpCodes.Callvirt, module.GetMethod(typeof(List<>), "AddRange").MakeHostInstanceGeneric(
+							module.GetTypeReference(typeof(List<>)).MakeGenericInstanceType(item.FieldType.GetCollectionType()))));
+					}
+					else
+					{
+						// valueArray = wrapper.GetObjects<Type>()
+						fill.AddRange(ILHelper.Ldloc(localVariables[index], true));
+						fill.Add(Instruction.Create(OpCodes.Call, module.GetMethod<ComponentDataWrapper>("GetObjects", Array.Empty<Type>()).MakeGenericMethod(item.FieldType.GetCollectionType())));
+						fill.Add(item.GetSetInstruction());
+					}
+
+					// ALE__GENERATED__lastModifyValue = wrapper
+					fill.Add(ILHelper.Ldarg(il));
+					fill.AddRange(ILHelper.Ldloc(localVariables[index]));
+					fill.Add(Instruction.Create(OpCodes.Box, componentDataWrapper));
+					fill.Add(Instruction.Create(OpCodes.Stfld, lastModifyValueField));
+				}
+				else
+				{
+					fill.AddRange(ILHelper.Ldloc(localVariables[index], true));
+					fill.Add(Instruction.Create(OpCodes.Call, module.GetMethod<ComponentDataWrapper>("GetObject", Array.Empty<Type>()).MakeGenericMethod(item.FieldType.GetCollectionType())));
+					fill.Add(item.GetSetInstruction());
+				}
+			}
+			else if (item.FieldType.IsNullable(out TypeReference nullableType))
+			{
+				// We want to handle the value assignment ourselves.
+				skipAssignValue = true;
+
+				var nullInt1 = targetMethod.AddLocalVariable<int?>(); // 5
+				var tempInt = targetMethod.AddLocalVariable<int>(); // 6
+				var tempNullable = targetMethod.AddLocalVariable(item.FieldType); // 7
+				var nullInt2 = targetMethod.AddLocalVariable<int?>(); // 8
+
+				GenericInstanceType nullableContainer = module.GetTypeReference(typeof(Nullable<>)).MakeGenericInstanceType(nullableType);
+				GenericInstanceType nullableInt = module.GetTypeReference(typeof(Nullable<>)).MakeGenericInstanceType(module.GetTypeReference<int>());
+
+				fill.AddRange(ILHelper.IfElse((elseCheck, list) =>
+				{
+					// if (value is Type)
+					list.Add(ILHelper.Ldarg(il, paraValue));
+					list.Add(Instruction.Create(OpCodes.Isinst, nullableType));
+					list.Add(Instruction.Create(OpCodes.Brfalse, elseCheck));
+
+				}, (next, list) =>
+				{
+					Instruction[] temp = ILHelper.Ldloc(tempNullable, true);
+					Instruction[] temp2 = ILHelper.Stloc(nullInt1);
+
+					// var val = (Type) value
+					list.Add(ILHelper.Ldarg(il, paraValue));
+					list.Add(Instruction.Create(OpCodes.Unbox_Any, nullableType));
+					list.AddRange(ILHelper.Stloc(localVariables[index]));
+
+					// if (field != val)
+					list.Add(ILHelper.Ldarg(il));
+					list.Add(item.GetLoadInstruction());
+					list.AddRange(ILHelper.Stloc(tempNullable));
+
+					list.AddRange(ILHelper.Ldloc(tempNullable, true));
+					list.Add(Instruction.Create(OpCodes.Call, nullableContainer.GetMethod("get_HasValue")));
+					list.Add(Instruction.Create(OpCodes.Brtrue, temp[0]));
+
+					list.AddRange(ILHelper.Ldloc(nullInt2, true));
+					list.Add(Instruction.Create(OpCodes.Initobj, module.GetTypeReference<int?>()));
+					list.AddRange(ILHelper.Ldloc(nullInt2));
+					list.Add(Instruction.Create(OpCodes.Br, temp2[0]));
+
+					list.AddRange(temp);
+					list.Add(Instruction.Create(OpCodes.Call, nullableContainer.GetMethod("GetValueOrDefault")));
+					list.Add(Instruction.Create(OpCodes.Newobj, nullableInt.GetMethod(".ctor")));
+
+					list.AddRange(temp2);
+					list.AddRange(ILHelper.Ldloc(localVariables[index]));
+					list.AddRange(ILHelper.Stloc(tempInt));
+					
+					// field = val
+					list.AddRange(ILHelper.Ldloc(nullInt1, true));
+					list.Add(Instruction.Create(OpCodes.Call, module.GetMethod<int?>("GetValueOrDefault", Array.Empty<Type>())));
+					list.AddRange(ILHelper.Ldloc(tempInt));
+					list.Add(Instruction.Create(OpCodes.Ceq));
+					list.AddRange(ILHelper.Ldloc(nullInt1, true));
+					list.Add(Instruction.Create(OpCodes.Call, module.GetMethod<int?>("get_HasValue")));
+					list.Add(Instruction.Create(OpCodes.And));
+					list.Add(Instruction.Create(OpCodes.Brtrue, next));
+
+					list.Add(ILHelper.Ldarg(il));
+					list.AddRange(ILHelper.Ldloc(localVariables[index]));
+					list.Add(Instruction.Create(OpCodes.Newobj, nullableContainer.GetMethod(".ctor")));
+					list.Add(item.GetSetInstruction());
+					
+					// ALE__GENERATED__lastModifyValue = var
+					list.Add(ILHelper.Ldarg(il));
+					list.AddRange(ILHelper.Ldloc(localVariables[index]));
+					list.Add(Instruction.Create(OpCodes.Box, nullableType));
+					list.Add(Instruction.Create(OpCodes.Stfld, lastModifyValueField));
+
+					// changed = true
+					list.Add(ILHelper.Ldarg(il, paraChanged));
+					list.Add(ILHelper.Bool(true));
+					list.Add(Instruction.Create(OpCodes.Stind_I1));
+
+					// return true
+					list.Add(ILHelper.Bool(true));
+					list.Add(Instruction.Create(OpCodes.Ret));
+				}, list =>
+				{
+					// if (value == null && field.HasValue)
+					list.Add(ILHelper.Ldarg(il, paraValue));
+					list.Add(Instruction.Create(OpCodes.Brtrue, jumpTarget));
+
+					list.Add(ILHelper.Ldarg(il));
+					list.Add(item.GetLoadInstruction(true));
+					list.Add(Instruction.Create(OpCodes.Call, module.GetMethod(typeof(Nullable<>), "get_HasValue").MakeHostInstanceGeneric(module.GetTypeReference(typeof(Nullable<>)).MakeGenericInstanceType(nullableType))));
+					list.Add(Instruction.Create(OpCodes.Brfalse, jumpTarget));
+					
+					// field = null
+					list.Add(ILHelper.Ldarg(il));
+					list.Add(item.GetLoadInstruction(true));
+					list.Add(Instruction.Create(OpCodes.Initobj, item.FieldType));
+				
+					// ALE__GENERATED__lastModifyValue = null
+					list.Add(ILHelper.Ldarg(il));
+					list.Add(Instruction.Create(OpCodes.Ldnull));
+					list.Add(Instruction.Create(OpCodes.Stfld, lastModifyValueField));
+					
+					// changed = true
+					list.Add(ILHelper.Ldarg(il, paraChanged));
+					list.Add(ILHelper.Bool(true));
+					list.Add(Instruction.Create(OpCodes.Stind_I1));
+
+					// return true
+					list.Add(ILHelper.Bool(true));
+					list.Add(Instruction.Create(OpCodes.Ret));
+				}));
+			}
+			else if (!item.IsValueType && !item.IsCollection)
+			{
+				// Type var = value as Type
+				fill.Add(ILHelper.Ldarg(il, paraValue));
+				fill.Add(Instruction.Create(OpCodes.Isinst, item.FieldTypeComponentAware));
+				fill.AddRange(ILHelper.Stloc(localVariables[index]));
+
+				// if (var != null)
+				fill.AddRange(ILHelper.Ldloc(localVariables[index]));
+				fill.Add(Instruction.Create(OpCodes.Brfalse, jumpTarget));
+
+				// value = var
+				fill.Add(ILHelper.Ldarg(il));
+				fill.AddRange(ILHelper.Ldloc(localVariables[index]));
+				fill.Add(item.GetSetInstruction());
+
+				// ALE__GENERATED__lastModifyValue = var
+				fill.Add(ILHelper.Ldarg(il));
+				fill.AddRange(ILHelper.Ldloc(localVariables[index]));
+				fill.Add(Instruction.Create(OpCodes.Stfld, lastModifyValueField));
+			}
+			else if (item.IsValueType && !item.IsCollection)
+			{
+				// if (value is Type)
+				fill.Add(ILHelper.Ldarg(il, paraValue));
+				fill.Add(Instruction.Create(OpCodes.Isinst, item.FieldTypeComponentAware));
+				fill.Add(Instruction.Create(OpCodes.Brfalse, jumpTarget));
+
+				// int var = (Type) value
+				fill.Add(ILHelper.Ldarg(il, paraValue));
+				fill.Add(Instruction.Create(OpCodes.Unbox_Any, item.FieldTypeComponentAware));
+				fill.AddRange(ILHelper.Stloc(localVariables[index]));
+
+				bool objectEquals = equals.DeclaringType.FullName == module.GetTypeReference<object>().FullName;
+
+				// if (localVar != var)
+				fill.Add(ILHelper.Ldarg(il));
+				fill.Add(item.GetLoadInstruction(!item.FieldType.IsPrimitive && !isInEquality));
+				// If we're not doing inequality check and it's a property that is also a value type but is not a primitive,
+				// create a new local variable for some reason and set it and load it, then never talk about it again.
+				if (!isInEquality && item.IsProperty && item.IsValueType && !item.IsPrimitive)
+				{
+					VariableDefinition propertyVar = targetMethod.AddLocalVariable(item.FieldTypeComponentAware);
+					fill.AddRange(ILHelper.Stloc(propertyVar));
+					fill.AddRange(ILHelper.Ldloc(propertyVar, true));
+				}
+
+				fill.AddRange(ILHelper.Ldloc(localVariables[index]));
+				if (!item.FieldType.IsPrimitive)
+				{
+					// If it's a value type and it's using the generic Equals(object), it needs to be boxed.
+					if (item.IsValueType && objectEquals)
+					{
+						fill.Add(Instruction.Create(OpCodes.Box, item.FieldTypeComponentAware));
+					}
+
+					// If it's using Equals(object), it need to be constrained and whatnot.
+					// Else just call equals method.
+					if (objectEquals)
+					{
+						fill.Add(Instruction.Create(OpCodes.Constrained, item.FieldTypeComponentAware));
+						fill.Add(Instruction.Create(OpCodes.Callvirt, equals));
+					}
+					else
+					{
+						fill.Add(Instruction.Create(OpCodes.Call, equals));
+					}
+
+					fill.Add(Instruction.Create(isInEquality ? OpCodes.Brfalse : OpCodes.Brtrue, jumpTarget));
+				}
+				else
+				{
+					fill.Add(Instruction.Create(OpCodes.Beq, jumpTarget));
+				}
+
+				// localVar = var
+				fill.Add(ILHelper.Ldarg(il));
+				fill.AddRange(ILHelper.Ldloc(localVariables[index]));
+				fill.Add(item.GetSetInstruction());
+			}
+
+			if (!skipAssignValue)
+			{
+				// ALE__GENERATED__lastModifyValue = var
+				fill.Add(ILHelper.Ldarg(il));
+				fill.AddRange(ILHelper.Ldloc(localVariables[index]));
+				fill.Add(Instruction.Create(OpCodes.Box, item.FieldTypeComponentAware));
+				fill.Add(Instruction.Create(OpCodes.Stfld, lastModifyValueField));
+				
+				// changed = true
+				fill.Add(ILHelper.Ldarg(il, paraChanged));
+				fill.Add(ILHelper.Bool(true));
+				fill.Add(Instruction.Create(OpCodes.Stind_I1));
+			}
+
+			// return true
+			fill.Add(jumpTarget);
+			fill.Add(Instruction.Create(OpCodes.Ret));
+
+			return fill;
 		}
 
 		private static void CreateEndEdit(TypeDefinition type, ModuleDefinition module,  FieldReference editingIdField, FieldReference lastModifyValueField, FieldReference beginEditValueField)
