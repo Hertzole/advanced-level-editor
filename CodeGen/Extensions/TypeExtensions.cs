@@ -131,7 +131,15 @@ namespace Hertzole.ALE.CodeGen
 			lock (lockObj)
 			{
 				sb.Clear();
-				sb.Append(type.Namespace + ".");
+				if (!string.IsNullOrEmpty(type.Namespace))
+				{
+					sb.Append(type.Namespace + ".");
+				}
+
+				if (type.DeclaringType != null)
+				{
+					sb.Append(type.DeclaringType.FullName + ".");
+				}
 				sb.Append(type.Name);
 
 				if (type is GenericInstanceType genericType)
@@ -145,6 +153,11 @@ namespace Hertzole.ALE.CodeGen
 							sb.Append(genericType.GenericArguments[i].Namespace + ".");
 						}
 
+						if (genericType.GenericArguments[i].DeclaringType != null)
+						{
+							sb.Append(genericType.GenericArguments[i].DeclaringType.FullName + ".");
+						}
+						
 						sb.Append(genericType.GenericArguments[i].Name);
 						if (i != genericType.GenericArguments.Count - 1)
 						{
@@ -593,7 +606,6 @@ namespace Hertzole.ALE.CodeGen
 			if (type.TryGetMethodInBaseTypeWithParameters("Equals", out equalsMethod, type.Module.GetTypeReference<object>()))
 			{
 				isInequality = false;
-				Console.WriteLine($"Equals? {type.FullName} | {equalsMethod.FullName}");
 				return equalsMethod;
 			}
 

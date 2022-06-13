@@ -44,14 +44,34 @@ namespace Hertzole.ALE.CodeGen
 
 		public static void InsertAt(this ILProcessor il, int index, Instruction instruction)
 		{
-			Instruction target = il.Body.Instructions[index];
-			il.InsertBefore(target, instruction);
+			if (il.Body.Instructions.Count == 0)
+			{
+				il.Append(instruction);
+			}
+			else if (index >= il.Body.Instructions.Count)
+			{
+				il.InsertAfter(il.Body.Instructions[il.Body.Instructions.Count - 1], instruction);
+			}
+			else
+			{
+				il.InsertBefore(il.Body.Instructions[index], instruction);
+			}
 		}
 
 		public static void InsertAt(this ILProcessor il, int index, IEnumerable<Instruction> instruction)
 		{
-			Instruction target = il.Body.Instructions[index];
-			il.InsertBefore(target, instruction);
+			if (il.Body.Instructions.Count == 0)
+			{
+				il.Append(instruction);
+			}
+			else if (index >= il.Body.Instructions.Count)
+			{
+				il.InsertAfter(il.Body.Instructions[il.Body.Instructions.Count - 1], instruction);
+			}
+			else
+			{
+				il.InsertBefore(il.Body.Instructions[index], instruction);
+			}
 		}
 
 		public static void Append(this ILProcessor il, IEnumerable<Instruction> instructions)

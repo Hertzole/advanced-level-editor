@@ -326,7 +326,7 @@ namespace Hertzole.ALE
             if (string.IsNullOrWhiteSpace(value))
             {
                 convertedValue = (TValue)Convert.ChangeType(0, typeof(TValue));
-                ModifyPropertyValue(0, true);
+                ModifyPropertyValue(convertedValue, true);
                 if (endEdit)
                 {
                     textField.SetTextWithoutNotify("0");

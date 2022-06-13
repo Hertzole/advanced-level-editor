@@ -493,10 +493,10 @@ namespace Hertzole.ALE.Tests
 				changedValue = value;
 			});
 
-			exposed.SetValue(0, 10, true);
+			exposed.SetValue(id, 10, true);
 
 			Assert.AreEqual(true, eventCalled);
-			Assert.AreEqual(0, changedId);
+			Assert.AreEqual(id, changedId);
 			Assert.AreEqual(10, changedValue);
 		
 			yield return null;

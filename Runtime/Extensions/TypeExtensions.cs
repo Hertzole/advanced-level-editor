@@ -13,7 +13,15 @@ namespace Hertzole.ALE
 			lock (lockObj)
 			{
 				sb.Clear();
-				sb.Append(type.Namespace + ".");
+				if (!string.IsNullOrEmpty(type.Namespace))
+				{
+					sb.Append(type.Namespace + ".");
+				}
+
+				if (type.DeclaringType != null)
+				{
+					sb.Append(type.DeclaringType.Name + ".");
+				}
 				sb.Append(type.Name);
 
 				if (type.IsGenericType && type.GenericTypeArguments.Length > 0)
@@ -25,6 +33,11 @@ namespace Hertzole.ALE
 						if (!string.IsNullOrEmpty(type.GenericTypeArguments[i].Namespace))
 						{
 							sb.Append(type.GenericTypeArguments[i].Namespace + ".");
+						}
+
+						if (type.GenericTypeArguments[i].DeclaringType != null)
+						{
+							sb.Append(type.GenericTypeArguments[i].DeclaringType.Name + ".");
 						}
 						
 						sb.Append(type.GenericTypeArguments[i].Name);
