@@ -162,7 +162,7 @@ namespace Hertzole.ALE
             }
         }
 
-        private void ShowButton(Component button, TMP_Text label, string buttonText)
+        private static void ShowButton(Component button, TMP_Text label, string buttonText)
         {
             if (button != null)
             {
@@ -175,12 +175,14 @@ namespace Hertzole.ALE
                     if (label != null)
                     {
                         label.text = buttonText;
-                    }    
+                    }
+
+                    button.gameObject.SetActive(true);
                 }
             }
         }
 
-        private void ToggleButton(Component button, bool toggle)
+        private static void ToggleButton(Component button, bool toggle)
         {
             if (button != null)
             {

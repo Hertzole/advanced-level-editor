@@ -303,7 +303,7 @@ namespace Hertzole.ALE
 			return false;
 		}
 
-		public void NewLevel()
+		public virtual void NewLevel()
 		{
 			ObjectManager.DeleteAllObjects();
 			ObjectManager.ResetInstanceID();

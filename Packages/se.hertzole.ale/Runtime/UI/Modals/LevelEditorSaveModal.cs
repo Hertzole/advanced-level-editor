@@ -28,8 +28,12 @@ namespace Hertzole.ALE
 		[SerializeField]
 		[RequireType(typeof(ILevelEditorSaveManager))]
 		private GameObject saveManager;
+		[SerializeField] 
+		[RequireType(typeof(ILevelEditorUI))]
+		private GameObject ui = default;
 
 		public ILevelEditorSaveManager SaveManager { get; set; }
+		public ILevelEditorUI UI { get; set; }
 
 		public bool ApplyLevelNameOnLoad { get { return applyLevelNameOnLoad; } set { applyLevelNameOnLoad = value; } }
 
@@ -53,23 +57,31 @@ namespace Hertzole.ALE
 				SaveManager.OnLevelLoaded += OnLevelLoaded;
 			}
 
+			if (ui != null)
+			{
+				UI = ui.NeedComponent<ILevelEditorUI>();
+			}
+
 			if (saveButton != null)
 			{
 				saveButton.onClick.AddListener(() =>
 				{
-					if (SaveManager != null)
-					{
-						SaveManager.SaveLevel(nameField.text);
-					}
-
-					OnSave?.Invoke(nameField.text);
-					if (closeOnSave)
-					{
-						Close();
-					}
-
 					//TODO: Ask before override.
 					LevelEditorLogger.LogTodo("Ask before override");
+					if (UI != null && askBeforeOverride)
+					{
+						UI.MessageModal.ShowPrompt("Save", $"Do you want to overwrite the level '{LevelName}'?", "Yes", "No", onClickConfirm: Save, onClickDecline: () =>
+						{
+							UI.ToggleSaveModal(true);
+						});
+
+						UI.ToggleSaveModal(false);
+						UI.ToggleMessageModal(true);
+					}
+					else
+					{
+						Save();
+					}
 				});
 			}
 
@@ -86,6 +98,20 @@ namespace Hertzole.ALE
 			ValidateSaveButton();
 		}
 
+		private void Save()
+		{
+			if (SaveManager != null)
+			{
+				SaveManager.SaveLevel(nameField.text);
+			}
+
+			OnSave?.Invoke(nameField.text);
+			if (closeOnSave)
+			{
+				Close();
+			}
+		}
+
 		private void OnDestroy()
 		{
 			if (SaveManager != null)
@@ -99,6 +125,7 @@ namespace Hertzole.ALE
 			if (applyLevelNameOnLoad)
 			{
 				nameField.SetTextWithoutNotify(e.Data.name);
+				ValidateSaveButton();
 			}
 		}
 
