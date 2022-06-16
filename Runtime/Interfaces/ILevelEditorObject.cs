@@ -20,6 +20,7 @@ namespace Hertzole.ALE
     {
         string Name { get; set; }
         bool IsActive { get; set; }
+        bool IsDestroyed { get; }
 
         LevelEditorIdentifier ID { get; set; }
         uint InstanceID { get; set; }

@@ -47,6 +47,8 @@ namespace Hertzole.ALE
             }
         }
 
+        public bool IsDestroyed { get; private set; }
+
         public LevelEditorIdentifier ID { get; set; }
         public uint InstanceID { get; set; }
 
@@ -227,6 +229,7 @@ namespace Hertzole.ALE
         public void OnPooled()
         {
             LevelEditorWorld.RemoveObject(this);
+            IsDestroyed = true;
 
             for (int i = 0; i < poolables.Length; i++)
             {
@@ -236,6 +239,7 @@ namespace Hertzole.ALE
 
         public void OnUnPooled()
         {
+            IsDestroyed = false;
             LevelEditorWorld.AddObject(this);
 
             if (originalValues != null)

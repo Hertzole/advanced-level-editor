@@ -138,16 +138,16 @@ namespace Hertzole.ALE
 
 		public virtual void ClickNewLevel()
 		{
-			if (LevelEditor.IsDirty)
+			if (LevelEditor.IsDirty && MessageModal != null)
 			{
-				// ShowNotification("Notice!", "All your unsaved changes will be lost.\nAre you sure you want to create a new level?", "Yes", "No", ConfirmNewLevel, CloseNotification);
+				MessageModal.ShowPrompt("New Level", "Are you sure you want to create a new level?\nAll unsaved changes will be lost!", "Yes", "No", onClickConfirm: ConfirmNewLevel);
+				ToggleMessageModal(true, false);
 			}
 		}
 
 		protected virtual void ConfirmNewLevel()
 		{
 			LevelEditor.NewLevel();
-			// CloseNotification();
 		}
 
 		public virtual void ClickSaveLevel()
