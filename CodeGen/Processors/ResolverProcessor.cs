@@ -56,8 +56,11 @@ namespace Hertzole.ALE.CodeGen
 
 		public void AddCustomDataType(TypeReference type)
 		{
+			CodeGenLogger.Log("Adding custom data type: " + type + " (Full name: " + type.FullName + ")");
+			
 			if (customDataTypes.Contains(type) || addedTypes.Contains(type))
 			{
+				CodeGenLogger.Log($"{type} is already added.");
 				return;
 			}
 			
@@ -68,8 +71,9 @@ namespace Hertzole.ALE.CodeGen
 					AddCustomDataType(genericType.GenericArguments[i]);
 				}
 				
+				CodeGenLogger.Log($"Adding generic type {genericType}");
+				
 				customDataTypes.Add(genericType);
-				addedTypes.Add(genericType);
 				AddTypeWithoutFormatter(genericType);
 
 				return;
