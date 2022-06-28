@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using UnityEngine;
 using UnityEngine.UI;
@@ -10,9 +11,7 @@ namespace Hertzole.ALE
 		[SerializeField]
 		private Button closeButton;
 		[SerializeField]
-		private ListToggle levelToggle;
-		[SerializeField]
-		private RecycledListView listView;
+		private PathTree tree;
 		[SerializeField]
 		private Button loadButton;
 
@@ -21,9 +20,9 @@ namespace Hertzole.ALE
 		[RequireType(typeof(ILevelEditorSaveManager))]
 		private GameObject saveManager;
 
-		private int selectedLevel = -1;
+		private string selectedLevel;
 
-		private string[] levels;
+		private PathNode[] rootNodes;
 
 		public ILevelEditorSaveManager SaveManager { get; set; }
 
@@ -34,10 +33,20 @@ namespace Hertzole.ALE
 
 		private void Awake()
 		{
-			listView.OnCreateItem = OnCreateListItem;
-			listView.OnBindItem += OnBindListItem;
+			tree.Initialize(x => x?.Parent, s =>
+			{
+				List<PathNode> result = new List<PathNode>();
 
-			listView.Initialize(null, ((RectTransform) levelToggle.transform).sizeDelta.y);
+				if (s != null && s.HasChildren)
+				{
+					result.AddRange(s.Children);
+				}
+
+				return result;
+			});
+			tree.OnBindItem += OnBindTreeItem;
+			tree.OnItemExpandingCollapsing += OnTreeExpandingCollapsing;
+			tree.OnSelectionChanged += OnTreeSelectionChanged;
 
 			loadButton.onClick.AddListener(ClickLoadLevel);
 			closeButton.onClick.AddListener(Close);
@@ -54,60 +63,46 @@ namespace Hertzole.ALE
 		{
 			if (SaveManager != null)
 			{
-				PopulateLevels(SaveManager.GetLevels());
+				PopulateLevels(SaveManager.LevelsPath);
 			}
 		}
 
-		private RecycledListItem OnCreateListItem()
+		private static void OnBindTreeItem(object sender, TreeBindItemEventArgs<PathTreeItem, PathNode> e)
 		{
-			ListToggle toggle = Instantiate(levelToggle);
-			toggle.OnToggled += OnLevelToggled;
-			return toggle;
+			e.TreeItem.LabelText.text = Path.GetFileNameWithoutExtension(e.Item.Path);
+			e.TreeItem.HasChildren = e.Item.HasChildren;
+			e.TreeItem.Icon.gameObject.SetActive(e.Item.HasChildren);
 		}
-
-		private void OnLevelToggled(int index, bool isOn)
+		
+		private static void OnTreeExpandingCollapsing(object sender, TreeExpandingEventArgs<PathNode> e)
 		{
-			if (isOn)
+			if (e.Parent.HasChildren)
 			{
-				selectedLevel = index;
-				ValidateLoadButton();
+				e.Children.AddRange(e.Parent.Children);
 			}
-
-			listView.ForEachListItem((i, item) =>
-			{
-				if (item is ListToggle toggle)
-				{
-					toggle.SetToggledWithoutNotify(i == index);
-					toggle.Interactable = i != index;
-				}
-			});
 		}
-
-		private void OnBindListItem(int index, object item, RecycledListItem listItem)
+		
+		private void OnTreeSelectionChanged(object sender, TreeSelectionArgs<PathNode> e)
 		{
-			if (listItem is ListToggle toggle)
-			{
-				toggle.Index = index;
-				toggle.Label.text = Path.GetFileNameWithoutExtension((string) item);
-				toggle.SetToggledWithoutNotify(index == selectedLevel);
-				toggle.Interactable = index != selectedLevel;
-			}
+			// Set it to null if it's a directory. We don't want to load a folder!
+			selectedLevel = !e.New.IsDirectory ? e.New.Path : null;
+			ValidateLoadButton();
 		}
 
 		private void ClickLoadLevel()
 		{
 			if (SaveManager != null)
 			{
-				SaveManager.LoadLevel(levels[selectedLevel]);
+				SaveManager.LoadLevel(selectedLevel);
 			}
 			
-			OnLoadLevel?.Invoke(levels[selectedLevel]);
+			OnLoadLevel?.Invoke(selectedLevel);
 			OnClose?.Invoke();
 		}
 
 		private void ValidateLoadButton()
 		{
-			loadButton.interactable = selectedLevel >= 0 && selectedLevel < levels.Length;
+			loadButton.interactable = !string.IsNullOrEmpty(selectedLevel);
 		}
 
 		public void Close()
@@ -115,13 +110,33 @@ namespace Hertzole.ALE
 			OnClose?.Invoke();
 		}
 
-		public void PopulateLevels(string[] paths)
+		public void PopulateLevels(string rootPath)
 		{
-			levels = paths;
-			selectedLevel = -1;
+			selectedLevel = null;
 
-			listView.SetItems(paths);
-			ValidateLoadButton();
+			rootNodes = BuildPath(null, rootPath);
+
+			tree.SetItems(rootNodes);
+		}
+
+		private static PathNode[] BuildPath(PathNode parent, string path)
+		{
+			string[] directories = Directory.GetDirectories(path);
+			string[] levels = Directory.GetFiles(path, "*.bin");
+			
+			PathNode[] children = new PathNode[directories.Length + levels.Length];
+			for (int i = 0; i < directories.Length; i++)
+			{
+				children[i] = new PathNode(directories[i], true, parent);
+				children[i].Children = BuildPath(children[i], directories[i]);
+			}
+			
+			for (int i = directories.Length; i < levels.Length + directories.Length; i++)
+			{
+				children[i] = new PathNode(levels[i - directories.Length], false, parent);
+			}
+
+			return children;
 		}
 	}
 }

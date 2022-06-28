@@ -31,6 +31,8 @@ namespace Hertzole.ALE
         public FormatType LevelFormat { get { return levelFormat; } set { levelFormat = value; } }
 
         public ILevelEditorObjectManager ObjectManager { get { return realObjectManager; } set { realObjectManager = value; } }
+     
+        public string LevelsPath { get { return BuildSaveLocation(baseSaveLocation, saveSuffix); } }
 
         public event EventHandler<LevelSavingLoadingArgs> OnLevelSaving;
         public event EventHandler<LevelSavingLoadingArgs> OnLevelLoading;
@@ -59,10 +61,10 @@ namespace Hertzole.ALE
             
             return data;
         }
-
+        
         public virtual string[] GetLevels()
         {
-            string location = BuildSaveLocation(baseSaveLocation, saveSuffix);
+            string location = LevelsPath;
             if (!Directory.Exists(location))
             {
                 return Array.Empty<string>();
@@ -132,7 +134,7 @@ namespace Hertzole.ALE
 
             return data;
         }
-
+        
         public virtual void SaveLevel(string levelName)
         {
             LevelEditorSaveData data = GetLevelData(levelName);

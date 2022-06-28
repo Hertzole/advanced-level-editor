@@ -2094,11 +2094,12 @@ MonoBehaviour:
   iconHandling: 1
   generateAsync: 0
   asyncWaitMethod: 2
-  isOrthographic: 1
-  backgroundColor: {r: 0, g: 0, b: 0, a: 0}
-  padding: 0
-  previewDirection: {x: -1, y: -1, z: -1}
-  imageSize: {x: 128, y: 128}
+  previewSettings:
+    isOrthographic: 1
+    backgroundColor: {r: 0, g: 0, b: 0, a: 0}
+    padding: 0
+    previewDirection: {x: -1, y: -1, z: -1}
+    imageSize: {x: 128, y: 128}
 --- !u!1 &1015949953
 GameObject:
   m_ObjectHideFlags: 0
@@ -3345,6 +3346,27 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   scroll: {fileID: 1513243811}
+--- !u!114 &1513243816
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1513243810}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 552fc04e3a34b17448b15372cd4547a1, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  canReorderItems: 0
+  dragDropTargetVisual: {fileID: 0}
+  dragItemReferencePrefab: {fileID: 0}
+  siblingIndexModificationArea: 5
+  scrollableArea: 75
+  canUnselect: 1
+  scroll: {fileID: 1513243811}
+  listView: {fileID: 1513243812}
+  itemPrefab: {fileID: 1162730032555892814, guid: c187443dc03b6eb4e894c411191813a6, type: 3}
 --- !u!1 &1550958555
 GameObject:
   m_ObjectHideFlags: 0
@@ -3541,6 +3563,7 @@ MonoBehaviour:
     serializedVersion: 2
     m_Bits: 1
   m_VolumeTrigger: {fileID: 0}
+  m_VolumeFrameworkUpdateModeOption: 2
   m_RenderPostProcessing: 1
   m_Antialiasing: 1
   m_AntialiasingQuality: 2
@@ -3884,8 +3907,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   closeButton: {fileID: 153301141}
-  levelToggle: {fileID: 144795487843596021, guid: e3ad8c84a8c156c49a1d9ce641089a14, type: 3}
-  listView: {fileID: 1513243812}
+  tree: {fileID: 1513243816}
   loadButton: {fileID: 861624481}
   saveManager: {fileID: 1918987434}
 --- !u!1 &1889336232
@@ -4844,6 +4866,7 @@ MonoBehaviour:
   closeOnSave: 1
   askBeforeOverride: 1
   saveManager: {fileID: 1918987434}
+  ui: {fileID: 0}
 --- !u!114 &2007701581 stripped
 MonoBehaviour:
   m_CorrespondingSourceObject: {fileID: 3929326819928647551, guid: 10902f01addff5545876c7a4dee44aec, type: 3}
