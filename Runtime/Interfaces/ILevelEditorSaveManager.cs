@@ -62,6 +62,7 @@ namespace Hertzole.ALE
         event EventHandler<LevelEventArgs> OnLevelLoaded;
         
         string LevelsPath { get; }
+        string FileExtension { get; }
 
         void SaveLevel(string levelName);
 

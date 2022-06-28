@@ -89,7 +89,7 @@ namespace Hertzole.ALE
 		private void OnTreeSelectionChanged(object sender, TreeSelectionArgs<PathNode> e)
 		{
 			// Set it to null if it's a directory. We don't want to load a folder!
-			selectedLevel = !e.New.IsDirectory ? e.New.Path : null;
+			selectedLevel = e.New != null && !e.New.IsDirectory ? e.New.Path : null;
 			ValidateLoadButton();
 		}
 
@@ -117,22 +117,24 @@ namespace Hertzole.ALE
 		public void PopulateLevels(string rootPath)
 		{
 			selectedLevel = null;
+			
+			Debug.Log($"Find levels at {rootPath} with {SaveManager.FileExtension}");
 
-			rootNodes = BuildPath(null, rootPath);
+			rootNodes = BuildPath(null, rootPath, SaveManager.FileExtension);
 
 			tree.SetItems(rootNodes);
 		}
 
-		private static PathNode[] BuildPath(PathNode parent, string path)
+		private static PathNode[] BuildPath(PathNode parent, string path, string fileExtension)
 		{
 			string[] directories = Directory.GetDirectories(path);
-			string[] levels = Directory.GetFiles(path, "*.bin");
+			string[] levels = Directory.GetFiles(path, $"*{fileExtension}");
 			
 			PathNode[] children = new PathNode[directories.Length + levels.Length];
 			for (int i = 0; i < directories.Length; i++)
 			{
 				children[i] = new PathNode(directories[i], true, parent);
-				children[i].Children = BuildPath(children[i], directories[i]);
+				children[i].Children = BuildPath(children[i], directories[i], fileExtension);
 			}
 			
 			for (int i = directories.Length; i < levels.Length + directories.Length; i++)
