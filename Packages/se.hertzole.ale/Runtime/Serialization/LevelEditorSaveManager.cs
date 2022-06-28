@@ -34,6 +34,8 @@ namespace Hertzole.ALE
      
         public string LevelsPath { get { return BuildSaveLocation(baseSaveLocation, saveSuffix); } }
 
+        public string FileExtension { get { return ToFileExtension(fileExtension); } set { fileExtension = value; } }
+
         public event EventHandler<LevelSavingLoadingArgs> OnLevelSaving;
         public event EventHandler<LevelSavingLoadingArgs> OnLevelLoading;
 
