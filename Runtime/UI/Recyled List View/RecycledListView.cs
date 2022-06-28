@@ -322,6 +322,7 @@ namespace Hertzole.ALE
 
                 item.gameObject.SetActive(false);
                 pooledItems.Push(item);
+                items.Remove(i);
             }
         }
 

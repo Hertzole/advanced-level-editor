@@ -753,14 +753,8 @@ namespace Hertzole.ALE
         private void OnItemSelected(object sender, TreeItemSelectedEventArgs e)
         {
             SelectItemInternal(e.Item, false);
-
-            listView.ForEachListItem((i, item) =>
-            {
-                if (i != e.Index)
-                {
-                    ((ITreeItem)item).SetSelectedWithoutNotify(false);
-                }
-            });
+            
+            listView.ForEachListItem((i, item) => { ((ITreeItem) item).SetSelectedWithoutNotify(i == e.Index); });
         }
 
         private void OnItemExpanded(TItem item, bool isExpanded, bool updateList = true)

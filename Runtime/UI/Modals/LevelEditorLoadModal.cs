@@ -71,7 +71,11 @@ namespace Hertzole.ALE
 		{
 			e.TreeItem.LabelText.text = Path.GetFileNameWithoutExtension(e.Item.Path);
 			e.TreeItem.HasChildren = e.Item.HasChildren;
-			e.TreeItem.Icon.gameObject.SetActive(e.Item.HasChildren);
+			e.TreeItem.Icon.gameObject.SetActive(e.Item.IsDirectory);
+			
+#if UNITY_EDITOR
+			e.TreeItem.gameObject.name = $"Path Tree Item - {Path.GetFileNameWithoutExtension(e.Item.Path)}";
+#endif
 		}
 		
 		private static void OnTreeExpandingCollapsing(object sender, TreeExpandingEventArgs<PathNode> e)
