@@ -26,6 +26,8 @@ namespace Hertzole.ALE
     {
         [SerializeField]
         private TextMeshProUGUI labelText = null;
+        [SerializeField] 
+        private Image icon = default;
         [SerializeField]
         private LevelEditorExpander expander = null;
         [SerializeField]
@@ -38,6 +40,7 @@ namespace Hertzole.ALE
         private Toggle toggle = null;
 
         public TextMeshProUGUI LabelText { get { return labelText; } set { labelText = value; } }
+        public Image Icon { get { return icon; } set { icon = value; } }
 
         private bool hasChildren;
         private bool selected;
