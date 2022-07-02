@@ -234,9 +234,18 @@ namespace Hertzole.ALE
 		public TransformSpaces Space { get { return space; } set { space = value; } }
 
 		public ScaleTypes ScaleType { get { return scaleType; } set { scaleType = value; } }
+		
+		private bool CanDrag { get { return !input.IsMouseOverUI(); } }
 
 		private void Update()
 		{
+			if (!CanDrag)
+			{
+				// If it isn't set back to None, the transform will be highlighted.
+				TranslatingAxis = Axis.None;
+				return;
+			}
+			
 			SetNearAxis();
 
 			if (MainTargetRoot == null)
@@ -249,7 +258,7 @@ namespace Hertzole.ALE
 
 		private void LateUpdate()
 		{
-			if (MainTargetRoot == null)
+			if (!CanDrag || MainTargetRoot == null)
 			{
 				return;
 			}
