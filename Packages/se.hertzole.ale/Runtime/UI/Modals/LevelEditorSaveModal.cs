@@ -1,11 +1,12 @@
 ﻿using System;
+using System.IO;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 
 namespace Hertzole.ALE
 {
-	public class LevelEditorSaveModal : MonoBehaviour, ILevelEditorSaveModal
+	public class LevelEditorSaveModal : MonoBehaviour, ILevelEditorSaveModal, ILevelEditorInitialize
 	{
 		[SerializeField]
 		private TMP_InputField nameField;
@@ -44,7 +45,7 @@ namespace Hertzole.ALE
 		public event Action<string> OnSave;
 		public event Action OnClose;
 
-		private void Awake()
+		public void Initialize()
 		{
 			if (nameField != null)
 			{
@@ -66,9 +67,7 @@ namespace Hertzole.ALE
 			{
 				saveButton.onClick.AddListener(() =>
 				{
-					//TODO: Ask before override.
-					LevelEditorLogger.LogTodo("Ask before override");
-					if (UI != null && askBeforeOverride)
+					if (UI != null && askBeforeOverride && File.Exists(Path.Combine(SaveManager.LevelsPath, $"{LevelName}{SaveManager.FileExtension}")))
 					{
 						UI.MessageModal.ShowPrompt("Save", $"Do you want to overwrite the level '{LevelName}'?", "Yes", "No", onClickConfirm: Save, onClickDecline: () =>
 						{

@@ -6,7 +6,7 @@ using UnityEngine.UI;
 
 namespace Hertzole.ALE
 {
-	public class LevelEditorLoadModal : MonoBehaviour, ILevelEditorLoadModal
+	public class LevelEditorLoadModal : MonoBehaviour, ILevelEditorLoadModal, ILevelEditorInitialize
 	{
 		[SerializeField]
 		private Button closeButton;
@@ -31,7 +31,7 @@ namespace Hertzole.ALE
 		public event Action<string> OnLoadLevel;
 		public event Action OnClose;
 
-		private void Awake()
+		public void Initialize()
 		{
 			tree.Initialize(x => x?.Parent, s =>
 			{
@@ -117,8 +117,6 @@ namespace Hertzole.ALE
 		public void PopulateLevels(string rootPath)
 		{
 			selectedLevel = null;
-			
-			Debug.Log($"Find levels at {rootPath} with {SaveManager.FileExtension}");
 
 			rootNodes = BuildPath(null, rootPath, SaveManager.FileExtension);
 
