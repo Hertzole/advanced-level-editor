@@ -1,5 +1,8 @@
 ﻿using System;
+using TMPro;
 using UnityEngine;
+using UnityEngine.EventSystems;
+using UnityEngine.UI;
 
 namespace Hertzole.ALE
 {
@@ -53,6 +56,12 @@ namespace Hertzole.ALE
 		[RequireType(typeof(ILevelEditorObjectPickerWindow))]
 		private GameObject objectPickerWindow;
 
+		private bool isInputFieldSelected;
+		private bool isInputting;
+
+		// The previously selected game object in the event system.
+		protected GameObject previouslySelectedGameObject;
+		
 		private ILevelEditorResources realResources;
 
 		public ILevelEditor LevelEditor { get; private set; }
@@ -119,6 +128,43 @@ namespace Hertzole.ALE
 			{
 				LevelEditor.Selection.OnSelectionChanged -= OnSelectionChanged;
 			}
+		}
+
+		protected virtual void Update()
+		{
+			isInputFieldSelected = UpdateIfInputFieldSelected();
+		}
+		
+		protected virtual bool UpdateIfInputFieldSelected()
+		{
+			EventSystem current = EventSystem.current;
+            
+			// There is no EventSystem, just return false.
+			if (current == null)
+			{
+				previouslySelectedGameObject = null;
+				return false;
+			}
+
+			// Use a cached value to minimize TryGetComponent calls.
+			// Check if it isn't the same as the previous object first.
+			if (current.currentSelectedGameObject != previouslySelectedGameObject)
+			{
+				// Update the previous object.
+				previouslySelectedGameObject = current.currentSelectedGameObject;
+				// If it isn't null and has a input field component, the user is probably inputting text..
+				// Else, they are not.
+				if (previouslySelectedGameObject != null && (previouslySelectedGameObject.TryGetComponent(out TMP_InputField _) || previouslySelectedGameObject.TryGetComponent(out InputField _)))
+				{
+					isInputting = true;
+				}
+				else
+				{
+					isInputting = false;
+				}
+			}
+			
+			return isInputting;
 		}
 
 		private void OnMessageModalClose()
@@ -275,6 +321,11 @@ namespace Hertzole.ALE
 
 			MessageModal.MyGameObject.SetActive(toggle);
 			UpdateModalBackground();
+		}
+
+		public virtual bool IsInputFieldSelected()
+		{
+			return isInputFieldSelected;
 		}
 
 		public virtual void OnStartPlayMode()

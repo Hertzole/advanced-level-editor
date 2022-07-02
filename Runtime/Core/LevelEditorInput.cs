@@ -11,6 +11,8 @@ namespace Hertzole.ALE
         [SerializeField]
         private InputItem[] inputs = null;
 
+        private bool isOverUi;
+
         private Dictionary<string, InputItem> inputLookup;
 
         public Vector2 MousePosition { get { return Input.mousePosition; } }
@@ -22,6 +24,18 @@ namespace Hertzole.ALE
             {
                 inputLookup.Add(inputs[i].name, inputs[i]);
             }
+        }
+
+        private void Update()
+        {
+            isOverUi = IsOverUi();
+        }
+
+        private static bool IsOverUi()
+        {
+            EventSystem current = EventSystem.current;
+            
+            return current != null && current.IsPointerOverGameObject();
         }
 
         public bool GetButton(string action)
@@ -52,7 +66,8 @@ namespace Hertzole.ALE
 
         public bool IsMouseOverUI()
         {
-            return EventSystem.current != null && EventSystem.current.IsPointerOverGameObject();
+            // Use a cached value so we don't need to check this multiple times each frame.
+            return isOverUi;
         }
     }
 

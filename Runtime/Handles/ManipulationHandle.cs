@@ -239,13 +239,6 @@ namespace Hertzole.ALE
 
 		private void Update()
 		{
-			if (!CanDrag)
-			{
-				// If it isn't set back to None, the transform will be highlighted.
-				TranslatingAxis = Axis.None;
-				return;
-			}
-			
 			SetNearAxis();
 
 			if (MainTargetRoot == null)
@@ -258,7 +251,7 @@ namespace Hertzole.ALE
 
 		private void LateUpdate()
 		{
-			if (!CanDrag || MainTargetRoot == null)
+			if (MainTargetRoot == null)
 			{
 				return;
 			}
@@ -301,6 +294,12 @@ namespace Hertzole.ALE
 
 		public void Initialize(ILevelEditorInput newInput, ILevelEditorUndo newUndo = null)
 		{
+			if (initialized)
+			{
+				// Unsubscribe from undo first if we're already initialized.
+				ListenToUndo(false);
+			}
+			
 			input = newInput;
 			undo = newUndo;
 
@@ -426,7 +425,7 @@ namespace Hertzole.ALE
 
 		private void TransformSelected()
 		{
-			if (MainTargetRoot != null && TranslatingAxis != Axis.None && input.GetButtonDown(selectInput))
+			if (CanDrag && MainTargetRoot != null && TranslatingAxis != Axis.None && input.GetButtonDown(selectInput))
 			{
 				StartCoroutine(TransformSelected(TransformingType));
 			}
@@ -962,7 +961,7 @@ namespace Hertzole.ALE
 
 			SetTranslatingAxis(transformType, Axis.None);
 
-			if (MainTargetRoot == null)
+			if (!CanDrag || MainTargetRoot == null)
 			{
 				return;
 			}
