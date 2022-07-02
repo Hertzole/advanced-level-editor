@@ -102,9 +102,10 @@ namespace Hertzole.ALE
             int dataIndex = (int)contentYPos / (int)itemHeight;
 
             object target = listView.GetItem(dataIndex);
+            
             if (target == null)
             {
-                InvokeOnReparent(draggingItem, target, ItemDropAction.SetLastChild);
+                InvokeOnReparent(draggingItem, null, ItemDropAction.SetLastChild);
             }
             else
             {
@@ -693,8 +694,25 @@ namespace Hertzole.ALE
             {
                 return true;
             }
+            
+            TItem dragItem = (TItem) draggingItem;
+            TItem targetItem = (TItem) target;
 
-            TreeReparentingEventArgs<TItem> args = new TreeReparentingEventArgs<TItem>((TItem)draggingItem, (TItem)target, action);
+            // Checks if target has the draggingItem as parent.
+            TItem parent = getParent.Invoke(targetItem);
+            // Keep going until we find the draggingItem or we reach the root.
+            while (!EqualityComparer<TItem>.Default.Equals(parent, default))
+            {
+                if (EqualityComparer<TItem>.Default.Equals(parent, dragItem))
+                {
+                    // The target is a child of the draggingItem, we can't reparent.
+                    return false;
+                }
+                
+                parent = getParent.Invoke(parent);
+            }
+
+            TreeReparentingEventArgs<TItem> args = new TreeReparentingEventArgs<TItem>(dragItem, targetItem, action);
             OnReparenting?.Invoke(this, args);
 
             return !args.Cancel;
@@ -702,38 +720,45 @@ namespace Hertzole.ALE
 
         protected override void InvokeOnReparent(object draggingItem, object target, ItemDropAction action)
         {
-            if (target == null)
-            {
-                return;
-            }
+            TItem dragItem = (TItem) draggingItem;
+            TItem targetItem = (TItem) target;
 
-            TreeReparentEventArgs<TItem> args = new TreeReparentEventArgs<TItem>((TItem)draggingItem, (TItem)target, action);
+            TreeReparentEventArgs<TItem> args = new TreeReparentEventArgs<TItem>(dragItem, targetItem, action);
             OnReparent?.Invoke(this, args);
             if (action != ItemDropAction.SetLastChild)
             {
-                MoveChildren((TItem)draggingItem);
+                MoveChildren(dragItem);
             }
-
-            ITreeItem listItem = (ITreeItem)listView.GetListItem(listView.IndexOf(target));
 
             if (action == ItemDropAction.SetLastChild)
             {
-                List<TItem> children = new List<TItem>();
-                GetAllChildren((TItem)target, children, true);
-
-                if (!listItem.Expanded)
+                // If the target exists, add it as a child of the target.
+                // Else just set it as the last item in the list.
+                if (target != null)
                 {
-                    listItem.SetIsExpandedWithoutNotify(true);
-                    expandedStates[target] = true;
+                    ITreeItem listItem = (ITreeItem)listView.GetListItem(listView.IndexOf(target));
+                    List<TItem> children = new List<TItem>();
+                    GetAllChildren(targetItem, children, true);
 
-                    for (int i = children.Count - 1; i >= 0; i--)
+                    if (!listItem.Expanded)
                     {
-                        listView.InsertItem(children[i], listView.IndexOf(target) + 1, false);
+                        listItem.SetIsExpandedWithoutNotify(true);
+                        expandedStates[target] = true;
+
+                        for (int i = children.Count - 1; i >= 0; i--)
+                        {
+                            listView.InsertItem(children[i], listView.IndexOf(target) + 1, false);
+                        }
+                    }
+                    else
+                    {
+                        listView.InsertItem(draggingItem, listView.IndexOf(target) + children.Count, false);
                     }
                 }
                 else
                 {
-                    listView.InsertItem(draggingItem, listView.IndexOf(target) + children.Count, false);
+                    listView.MoveItem(draggingItem, listView.ItemCount, false);
+                    SelectItem(dragItem);
                 }
             }
 
