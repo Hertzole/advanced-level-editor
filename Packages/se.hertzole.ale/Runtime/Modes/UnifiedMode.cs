@@ -52,7 +52,7 @@ namespace Hertzole.ALE
 
 		public override void OnModeUpdate()
 		{
-			if (handle != null && !LevelEditor.LevelEditorCamera.IsUsingMouse())
+			if (handle != null && !LevelEditor.LevelEditorCamera.IsUsingMouse() && !LevelEditor.UI.IsInputFieldSelected())
 			{
 				if (Input.GetButtonDown(moveTypeInput))
 				{

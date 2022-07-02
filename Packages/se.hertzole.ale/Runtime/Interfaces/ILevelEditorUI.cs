@@ -22,5 +22,7 @@
 		void ToggleSaveModal(bool toggle, bool instant);
 		void ToggleLoadModal(bool toggle, bool instant);
 		void ToggleMessageModal(bool toggle, bool instant);
+
+		bool IsInputFieldSelected();
 	}
 }
