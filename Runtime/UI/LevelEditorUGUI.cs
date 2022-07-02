@@ -120,6 +120,8 @@ namespace Hertzole.ALE
 			ToggleSaveModal(false, true);
 			ToggleLoadModal(false, true);
 			ToggleMessageModal(false, true);
+			
+			InitializeObjects();
 		}
 
 		private void OnDestroy()
@@ -165,6 +167,20 @@ namespace Hertzole.ALE
 			}
 			
 			return isInputting;
+		}
+
+		protected virtual void InitializeObjects()
+		{
+			InitializeHelper.TryInitializeObject(inspectorPanel);
+			InitializeHelper.TryInitializeObject(hierarchyPanel);
+			InitializeHelper.TryInitializeObject(resourcePanel);
+			
+			InitializeHelper.TryInitializeObject(saveModal);
+			InitializeHelper.TryInitializeObject(loadModal);
+			InitializeHelper.TryInitializeObject(messageModal);
+			
+			InitializeHelper.TryInitializeObject(colorPickerWindow);
+			InitializeHelper.TryInitializeObject(objectPickerWindow);
 		}
 
 		private void OnMessageModalClose()

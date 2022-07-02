@@ -71,9 +71,6 @@ namespace Hertzole.ALE
 
             itemHeight = GetItemHeight();
 
-            listView.OnCreateItem = CreateItem;
-            listView.OnBindItem += BindItem;
-
             if (canReorderItems && dragDropTargetVisual != null)
             {
                 dragDropTargetVisual.gameObject.SetActive(false);
@@ -225,6 +222,9 @@ namespace Hertzole.ALE
 
                 return;
             }
+            
+            listView.OnCreateItem = CreateItem;
+            listView.OnBindItem += BindItem;
 
             initialized = true;
         }
@@ -584,13 +584,6 @@ namespace Hertzole.ALE
 
         public TItem SelectedItem { get { return (TItem)selectedItem; } }
 
-        protected override void Awake()
-        {
-            base.Awake();
-
-            listView.Initialize(null, ((RectTransform)itemPrefab.transform).sizeDelta.y);
-        }
-
         public event EventHandler<TreeBindItemEventArgs<TTreeItem, TItem>> OnBindItem;
         public event EventHandler<TreeReparentingEventArgs<TItem>> OnReparenting;
         public event EventHandler<TreeReparentEventArgs<TItem>> OnReparent;
@@ -601,8 +594,9 @@ namespace Hertzole.ALE
         {
             this.getParent = getParent;
             this.getChildren = getChildren;
-
+            
             InternalInitialize();
+            listView.Initialize(null, ((RectTransform)itemPrefab.transform).sizeDelta.y);
         }
 
         protected override void SelectItemInternal(object item, bool updateUI = true)
