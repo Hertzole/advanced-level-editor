@@ -1,0 +1,16 @@
+{
+  "name": "Hertzole.ALE",
+  "rootNamespace": "Hertzole.ALE",
+  "references": [
+    "GUID:bbde805d927e795439d7a746d1749cab"
+  ],
+  "includePlatforms": [],
+  "excludePlatforms": [],
+  "allowUnsafeCode": false,
+  "overrideReferences": false,
+  "precompiledReferences": [],
+  "autoReferenced": true,
+  "defineConstraints": [],
+  "versionDefines": [],
+  "noEngineReferences": false
+}

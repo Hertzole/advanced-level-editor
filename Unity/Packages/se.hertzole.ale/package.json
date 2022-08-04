@@ -1,0 +1,19 @@
+{
+    "name": "se.hertzole.ale",
+    "version": "0.2.0-preview",
+    "displayName": "Advanced Level Editor",
+    "description": "This is an example package",
+    "unity": "2021.2",
+    "unityRelease": "0f1",
+    "documentationUrl": "https://hertzole.github.io/advanced-level-editor/",
+    "dependencies": {
+   },
+   "keywords": [
+      "level editor"
+    ],
+    "author": {
+      "name": "Hertzole",
+      "email": "contact@hertzole.se",
+      "url": "https://www.hertzole.se"
+    }
+  }

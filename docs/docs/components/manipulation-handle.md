@@ -1,3 +1,0 @@
-# Manipulation Handle
-
-TODO
