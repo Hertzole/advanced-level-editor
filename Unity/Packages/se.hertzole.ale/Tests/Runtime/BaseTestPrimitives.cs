@@ -260,7 +260,7 @@ namespace Hertzole.ALE.Tests
 		{
 			DateTime.MinValue,
 			DateTime.MaxValue,
-			DateTime.Now
+			DateTime.UtcNow
 		};
 
 		protected static readonly TimeSpan[] timeSpanValues =
