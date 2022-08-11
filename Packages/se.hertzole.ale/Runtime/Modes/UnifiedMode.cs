@@ -25,6 +25,8 @@ namespace Hertzole.ALE
 		private string scaleTypeInput = "Handle Set Scale";
 		[SerializeField]
 		private string allType = "Handle Set All";
+		[SerializeField] 
+		private string deleteInput = "Delete";
 
 		private ILevelEditorResourceView realResourcePanel;
 
@@ -70,6 +72,11 @@ namespace Hertzole.ALE
 				{
 					handle.TransformType = ManipulationHandle.TransformTypes.All;
 				}
+			}
+
+			if (Input.GetButtonDown(deleteInput) && Selection.Selection != null)
+			{
+				ObjectManager.DeleteObject(Selection.Selection, true);
 			}
 		}
 

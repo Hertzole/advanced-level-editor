@@ -4369,6 +4369,10 @@ MonoBehaviour:
     type: 0
     action: Handle Set All
     action2: 
+  - name: Delete
+    type: 0
+    action: Delete
+    action2: 
 --- !u!114 &1918987438
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -4434,6 +4438,7 @@ MonoBehaviour:
   rotateTypeInput: Handle Set Rotate
   scaleTypeInput: Handle Set Scale
   allType: Handle Set All
+  deleteInput: Delete
 --- !u!114 &1918987442
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -5759,7 +5764,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 6754460938870161672, guid: 4db609688c32a2e47a205ef6ddb8c57b, type: 3}
       propertyPath: m_AnchoredPosition.y
-      value: 11.9999695
+      value: 11.999939
       objectReference: {fileID: 0}
     - target: {fileID: 7704428647056756016, guid: 4db609688c32a2e47a205ef6ddb8c57b, type: 3}
       propertyPath: m_AnchorMax.x

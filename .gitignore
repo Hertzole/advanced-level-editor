@@ -85,4 +85,6 @@ crashlytics-build.properties
 /[Dd]ocs/yarn-debug.log*
 /[Dd]ocs/yarn-error.log*
 
-
+# v2 leftovers
+/[Gg]enerator/
+/[Uu]nity/
