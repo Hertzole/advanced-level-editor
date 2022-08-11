@@ -116,11 +116,13 @@ namespace Hertzole.ALE
 
 		private bool CanSelectObject()
 		{
-			if (handle != null)
+			if (handle != null && handle.IsTransforming)
 			{
-				return !handle.IsTransforming && !Input.IsMouseOverUI();
+				// Is transforming
+				return false;
 			}
 
+			// Is over UI
 			return !Input.IsMouseOverUI();
 		}
 	}

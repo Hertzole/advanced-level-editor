@@ -85,7 +85,6 @@ namespace Hertzole.ALE
         private void OnDestroy()
         {
             markedForDeletion = true;
-            LevelEditorWorld.RemoveObject(this);
         }
 
         public IExposedToLevelEditor[] GetExposedComponents()
