@@ -73,7 +73,7 @@ namespace Hertzole.ALE
         public event EventHandler<LevelEditorObjectEvent> OnCreatedObjectFromSaveData;
         public event EventHandler<LevelEditorObjectEvent> OnDeletedObject;
 
-        private void OnDestroy()
+        private void OnDisable()
         {
             DeleteAllObjects(false);
         }
@@ -232,8 +232,14 @@ namespace Hertzole.ALE
         {
             for (int i = 0; i < allObjects.Count; i++)
             {
-                if(allObjects[i] == null || allObjects[i].MyGameObject == null)
+                if(allObjects[i] == null)
                 {
+                    continue;
+                }
+                
+                if (allObjects[i].MyGameObject == null)
+                {
+                    LevelEditorWorld.RemoveObject(allObjects[i].InstanceID);
                     continue;
                 }
                 
