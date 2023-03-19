@@ -6,9 +6,9 @@ namespace Hertzole.ALE
     {
         #region Wrappers
         [SerializeField]
-        private bool applyTransformWrapper;
+        private bool applyTransformWrapper = true;
         [SerializeField]
-        private bool applyRigidbodyWrapper;
+        private bool applyRigidbodyWrapper = true;
         #endregion
 
         public bool ApplyTransformWrapper { get { return applyTransformWrapper; } set { applyTransformWrapper = value; } }
