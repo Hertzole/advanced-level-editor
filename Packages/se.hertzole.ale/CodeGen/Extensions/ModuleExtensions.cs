@@ -8,9 +8,6 @@ namespace Hertzole.ALE.CodeGen
 {
 	public static partial class WeaverExtensions
 	{
-		private static readonly Dictionary<(Type type, string methodName), MethodReference> cachedMethods = new Dictionary<(Type, string), MethodReference>(new CachedMethodsComparer());
-		private static readonly Dictionary<(Type type, string methodName, Type[] parameters), MethodReference> cachedParameterMethods = new Dictionary<(Type, string, Type[]), MethodReference>(new CachedParametersMethodsComparer());
-
 		private class CachedMethodsComparer : IEqualityComparer<(Type type, string methodName)>
 		{
 			public bool Equals((Type type, string methodName) x, (Type type, string methodName) y)
@@ -93,11 +90,6 @@ namespace Hertzole.ALE.CodeGen
 
 		public static MethodReference GetMethod(this ModuleDefinition module, Type type, string methodName)
 		{
-			if (cachedMethods.TryGetValue((type, methodName), out MethodReference cachedMethod))
-			{
-				return cachedMethod;
-			}
-
 			try
 			{
 				MethodInfo method = type.GetMethod(methodName);
@@ -107,8 +99,6 @@ namespace Hertzole.ALE.CodeGen
 				}
 
 				MethodReference result = module.ImportReference(method);
-
-				cachedMethods.Add((type, methodName), result);
 
 				return result;
 			}
@@ -125,11 +115,6 @@ namespace Hertzole.ALE.CodeGen
 
 		public static MethodReference GetMethod(this ModuleDefinition module, Type type, string methodName, params Type[] parameters)
 		{
-			if (cachedParameterMethods.TryGetValue((type, methodName, parameters), out MethodReference cachedMethod))
-			{
-				return cachedMethod;
-			}
-
 			MethodInfo method = type.GetMethod(methodName, parameters);
 			if (method == null)
 			{
@@ -137,8 +122,6 @@ namespace Hertzole.ALE.CodeGen
 			}
 
 			MethodReference result = module.ImportReference(method);
-
-			cachedParameterMethods.Add((type, methodName, parameters), result);
 
 			return result;
 		}
@@ -192,11 +175,6 @@ namespace Hertzole.ALE.CodeGen
 
 		public static MethodReference GetConstructor(this ModuleDefinition module, Type type, params Type[] parameters)
 		{
-			if (cachedParameterMethods.TryGetValue((type, ".ctor", parameters), out var cachedMethod))
-			{
-				return cachedMethod;
-			}
-			
 			MethodReference result = module.ImportReference(type.GetConstructor(parameters));
 
 			if (result == null)
@@ -204,8 +182,6 @@ namespace Hertzole.ALE.CodeGen
 				throw new ArgumentException($"There's no constructor with those parameters in type {type.FullName}");
 			}
 			
-			cachedParameterMethods.Add((type, ".ctor", parameters), result);
-
 			return result;
 		}
 
