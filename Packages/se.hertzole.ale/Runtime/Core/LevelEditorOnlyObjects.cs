@@ -14,7 +14,7 @@ namespace Hertzole.ALE
 
 		private void Awake()
 		{
-			isInLevelEditor = FindObjectOfType<ILevelEditor>() != null;
+			isInLevelEditor = FindObjectOfType<LevelEditor>() != null;
 		}
 
 		private void ToggleGraphics(bool isOn)
