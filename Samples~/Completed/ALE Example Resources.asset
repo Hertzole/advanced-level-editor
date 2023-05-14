@@ -1,0 +1,147 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a681bd64e7e74b54ea519ae679725b3d, type: 3}
+  m_Name: ALE Example Resources
+  m_EditorClassIdentifier: 
+  resources:
+  - name: Root
+    id:
+      stringValue: ale_tree_view_root
+      value: -108415644
+    customIcon: 0
+    icon: {fileID: 0}
+    limit: 0
+    hidden: 0
+    asset: {fileID: 0}
+    treeID: 0
+    treeDepth: -1
+  - name: Primitives
+    id:
+      stringValue: 
+      value: 23
+    customIcon: 0
+    icon: {fileID: 0}
+    limit: 0
+    hidden: 0
+    asset: {fileID: 0}
+    treeID: 17
+    treeDepth: 0
+  - name: Physics
+    id:
+      stringValue: 
+      value: 23
+    customIcon: 0
+    icon: {fileID: 0}
+    limit: 0
+    hidden: 0
+    asset: {fileID: 0}
+    treeID: 21
+    treeDepth: 1
+  - name: Physics Sphere
+    id:
+      stringValue: sphere_physics
+      value: 1919247276
+    customIcon: 0
+    icon: {fileID: 0}
+    limit: 0
+    hidden: 0
+    asset: {fileID: 7625732075349104533, guid: 12bad912ef1a8d94caeeba07ccdb1c61, type: 3}
+    treeID: 23
+    treeDepth: 2
+  - name: Physics Cube
+    id:
+      stringValue: cube_physics
+      value: -524557868
+    customIcon: 0
+    icon: {fileID: 0}
+    limit: 0
+    hidden: 0
+    asset: {fileID: 7702517054274453140, guid: beb564ea98eee07419d4bb5b1e89118f, type: 3}
+    treeID: 22
+    treeDepth: 2
+  - name: Sphere
+    id:
+      stringValue: sphere
+      value: -1958233436
+    customIcon: 0
+    icon: {fileID: 0}
+    limit: 0
+    hidden: 0
+    asset: {fileID: 3043909690806649427, guid: e057d41f9289a6e4ab8455d10337aae0, type: 3}
+    treeID: 20
+    treeDepth: 1
+  - name: Plane
+    id:
+      stringValue: plane
+      value: 765218981
+    customIcon: 0
+    icon: {fileID: 0}
+    limit: 0
+    hidden: 0
+    asset: {fileID: 1724478455058759730, guid: 6bfb412b625296e4ea99c61862ca9b93, type: 3}
+    treeID: 19
+    treeDepth: 1
+  - name: Cube
+    id:
+      stringValue: cube
+      value: 24305868
+    customIcon: 0
+    icon: {fileID: 0}
+    limit: 0
+    hidden: 0
+    asset: {fileID: 6430083556673827367, guid: 90e8b3b8048bbc44da074b6c2cc72199, type: 3}
+    treeID: 18
+    treeDepth: 1
+  - name: Game
+    id:
+      stringValue: 
+      value: 23
+    customIcon: 0
+    icon: {fileID: 0}
+    limit: 0
+    hidden: 0
+    asset: {fileID: 0}
+    treeID: 15
+    treeDepth: 0
+  - name: Button
+    id:
+      stringValue: button
+      value: 1855027721
+    customIcon: 0
+    icon: {fileID: 0}
+    limit: 0
+    hidden: 0
+    asset: {fileID: 7387270374257488624, guid: dde09f89182160b41b3230ee5f97488a, type: 3}
+    treeID: 25
+    treeDepth: 1
+  - name: Door
+    id:
+      stringValue: door
+      value: 24330309
+    customIcon: 0
+    icon: {fileID: 0}
+    limit: 0
+    hidden: 0
+    asset: {fileID: 6840525915480325059, guid: 6fbed72f3f74a6b41b037b5fc72bbe1e, type: 3}
+    treeID: 24
+    treeDepth: 1
+  - name: Spawnpoint
+    id:
+      stringValue: spawnpoint
+      value: -1327143348
+    customIcon: 0
+    icon: {fileID: 0}
+    limit: 0
+    hidden: 0
+    asset: {fileID: 8784208662631096516, guid: ca673eeb08fb003419817dcb7f59161f, type: 3}
+    treeID: 16
+    treeDepth: 1
