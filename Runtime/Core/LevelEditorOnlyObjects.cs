@@ -1,4 +1,5 @@
 using UnityEngine;
+using System.Linq;
 
 namespace Hertzole.ALE
 {
@@ -14,7 +15,7 @@ namespace Hertzole.ALE
 
 		private void Awake()
 		{
-			isInLevelEditor = FindObjectOfType<LevelEditor>() != null;
+			isInLevelEditor = FindObjectsOfType<MonoBehaviour>().OfType<ILevelEditor>().FirstOrDefault() != null;
 		}
 
 		private void ToggleGraphics(bool isOn)
