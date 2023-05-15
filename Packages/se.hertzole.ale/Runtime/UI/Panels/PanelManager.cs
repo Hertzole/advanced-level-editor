@@ -383,7 +383,7 @@ namespace Hertzole.ALE
 
             hoveredAnchorZone = null;
 
-            if (previewPanel.gameObject.activeSelf)
+            if (previewPanel != null && previewPanel.gameObject.activeSelf)
             {
                 previewPanel.gameObject.SetActive(false);
             }
