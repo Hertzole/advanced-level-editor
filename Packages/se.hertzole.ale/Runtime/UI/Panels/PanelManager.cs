@@ -124,6 +124,11 @@ namespace Hertzole.ALE
             {
                 previewPanelCanvas = draggedPanel != null ? draggedPanel.Canvas : null;
             }
+            
+            if (canvas?.RectTransform == null || previewPanel == null)
+            {
+                return;
+            }
 
             if (previewPanel.parent == canvas.RectTransform)
             {
